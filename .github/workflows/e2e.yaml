@@ -1,0 +1,51 @@
+name: E2E
+
+# Controls when the workflow will run
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '* */6 * * *' # Every 6 hours
+  workflow_dispatch: # To start from UI
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.CI_READ_ACCESS }}
+          submodules: 'recursive' # runtime and sdk repo contains submodules to proto repo
+
+      # Setup Java and Rust
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      # Build runtime
+      # TODO replace this with built snapshots
+      - name: Build Runtime
+        run: |
+          pushd runtime
+          cargo build
+          popd
+          cp runtime/target/debug/runtime ./runtime-exec
+
+      - name: Build Test functions and code
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: build shadowJar
+
+      # TODO Test
+      - name: Test
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: test
+
+

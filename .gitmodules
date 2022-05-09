@@ -1,0 +1,6 @@
+[submodule "java-sdk"]
+	path = java-sdk
+	url = git@github.com:restatedev/java-sdk.git
+[submodule "runtime"]
+	path = runtime
+	url = git@github.com:restatedev/runtime.git
