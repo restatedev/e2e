@@ -23,3 +23,21 @@ You also need to login to the container registry using podman/docker (the comman
 ```shell
 podman login ghcr.io --username $GH_PACKAGE_READ_ACCESS_USER --password $GH_PACKAGE_READ_ACCESS_TOKEN
 ```
+
+## Run tests
+
+To run tests, first build the project with:
+
+```shell
+gradle build jibDockerBuild -x test
+```
+
+This will populate your local image registry with the various function containers, required for testing.
+
+Now just execute:
+
+```shell
+gradle test
+```
+
+To run the tests.

@@ -58,6 +58,7 @@ dependencyResolutionManagement {
             plugin("protobuf", "com.google.protobuf").version("0.8.18")
             plugin("test-logger", "com.adarshr.test-logger").version("3.2.0")
             plugin("shadowJar", "com.github.johnrengelman.shadow").version("7.1.2")
+            plugin("jib", "com.google.cloud.tools.jib").version("3.2.1")
         }
     }
 }

@@ -11,6 +11,7 @@ plugins {
 dependencies {
     testImplementation(kotlin("test"))
     testImplementation(project(":test-utils"))
+    testImplementation(libs.assertj)
 }
 
 tasks.withType<KotlinCompile> {
