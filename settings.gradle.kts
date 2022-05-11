@@ -8,6 +8,7 @@ include(
 
 dependencyResolutionManagement {
     repositories {
+        mavenCentral()
         maven {
             url = uri("https://maven.pkg.github.com/restatedev/java-sdk")
             credentials {

@@ -6,10 +6,6 @@ plugins {
     alias(libs.plugins.errorprone)
 }
 
-repositories {
-    mavenCentral()
-}
-
 dependencies {
     implementation(libs.restate.sdk)
     implementation(project(":functions:counter:contract"))

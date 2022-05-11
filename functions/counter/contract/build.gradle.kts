@@ -6,10 +6,6 @@ plugins {
     alias(libs.plugins.protobuf)
 }
 
-repositories {
-    mavenCentral()
-}
-
 dependencies {
     implementation(libs.protobuf.java)
     implementation(libs.grpc.stub)
