@@ -12,8 +12,8 @@ E2E tests for Restate
 To run locally, you need to setup two env variables to download artifacts from Github Packages:
 
 ```bash
-export GITHUB_ACTOR=<yourusername>
-export GITHUB_TOKEN=<PAM>
+export GH_PACKAGE_READ_ACCESS_USER=<yourusername>
+export GH_PACKAGE_READ_ACCESS_TOKEN=<PAT>
 ```
 
-To create a PAM check https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token
+To create a PAT check https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token

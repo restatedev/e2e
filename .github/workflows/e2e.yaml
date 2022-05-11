@@ -26,22 +26,19 @@ jobs:
         uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ secrets.GH_PACKAGE_READ_ACCESS_USER }}
+          password: ${{ secrets.GH_PACKAGE_READ_ACCESS_TOKEN }}
 
       - name: Build Test functions and code
         uses: gradle/gradle-build-action@v2
         env:
-          GITHUB_ACTOR: restatedev
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_PACKAGE_READ_ACCESS_USER: ${{ secrets.GH_PACKAGE_READ_ACCESS_USER }}
+          GH_PACKAGE_READ_ACCESS_TOKEN: ${{ secrets.GH_PACKAGE_READ_ACCESS_TOKEN }}
         with:
           arguments: build shadowJar
 
       - name: Test
         uses: gradle/gradle-build-action@v2
-        env:
-          GITHUB_ACTOR: ${{ github.actor }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           arguments: test
 
