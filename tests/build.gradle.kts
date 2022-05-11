@@ -13,10 +13,6 @@ dependencies {
     testImplementation(project(":test-utils"))
 }
 
-tasks.test {
-    useJUnitPlatform()
-}
-
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "11"
 }
