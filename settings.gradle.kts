@@ -12,8 +12,8 @@ dependencyResolutionManagement {
         maven {
             url = uri("https://maven.pkg.github.com/restatedev/java-sdk")
             credentials {
-                username = System.getenv("GITHUB_ACTOR")
-                password = System.getenv("GITHUB_TOKEN")
+                username = System.getenv("GH_PACKAGE_READ_ACCESS_USER")
+                password = System.getenv("GH_PACKAGE_READ_ACCESS_TOKEN")
             }
         }
     }
