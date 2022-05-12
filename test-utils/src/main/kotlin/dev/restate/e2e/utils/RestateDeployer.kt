@@ -100,7 +100,7 @@ class RestateDeployer private constructor(functions: List<FunctionContainer>) {
 
     fun getRuntimeFunctionEndpointUrl(name: String): URL {
         return runtimeContainer?.getMappedPort(RUNTIME_GRPC_ENTRYPOINT)?.let {
-            URL("http", "127.0.0.1", it, "/$name")
+            URL("http", "127.0.0.1", it, "/")
         }
             ?: throw java.lang.IllegalStateException("Runtime is not configured, as RestateDeployer::deploy has not been invoked")
     }
