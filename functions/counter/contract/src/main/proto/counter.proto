@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "dev.restate.e2e.functions.counter";
+option java_outer_classname = "CounterProto";
+option objc_class_prefix = "CP";
+
+import "google/protobuf/empty.proto";
+package greeter;
+
+service Counter {
+  rpc reset (google.protobuf.Empty) returns (google.protobuf.Empty);
+  rpc add (Number) returns (google.protobuf.Empty);
+  rpc getAndAdd (Number) returns (CounterUpdateResult);
+}
+
+message Number {
+  int64 value = 1;
+}
+
+message CounterUpdateResult {
+  int64 oldValue = 1;
+  int64 newValue = 2;
+}
