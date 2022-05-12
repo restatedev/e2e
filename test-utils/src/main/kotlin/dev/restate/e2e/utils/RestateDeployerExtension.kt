@@ -20,16 +20,16 @@ class RestateDeployerExtension(private val deployer: RestateDeployer) : BeforeAl
 
     override fun supportsParameter(parameterContext: ParameterContext, extensionContext: ExtensionContext): Boolean {
         return parameterContext.isAnnotated(InjectBlockingStub::class.java) &&
-                parameterContext.parameter.type.isAssignableFrom(AbstractBlockingStub::class.java)
+                AbstractBlockingStub::class.java.isAssignableFrom(parameterContext.parameter.type)
     }
 
     override fun resolveParameter(parameterContext: ParameterContext, extensionContext: ExtensionContext): Any {
         val functionName = parameterContext.findAnnotation(InjectBlockingStub::class.java).get().functionName
         val stubType = parameterContext.parameter.type
-        val stubFactoryMethod = stubType.getDeclaredMethod("newBlockingStub", Channel::class.java)
+        val stubFactoryMethod = stubType.enclosingClass.getDeclaredMethod("newBlockingStub", Channel::class.java)
         return stubFactoryMethod.invoke(
             null,
             deployer.getRuntimeFunctionEndpointUrl(functionName)
-                .let { url -> NettyChannelBuilder.forAddress(url.host, url.port) })
+                .let { url -> NettyChannelBuilder.forAddress(url.host, url.port).usePlaintext().build() })
     }
 }

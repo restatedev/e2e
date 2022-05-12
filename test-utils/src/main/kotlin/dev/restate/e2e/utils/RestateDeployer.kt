@@ -13,7 +13,7 @@ import java.nio.file.Files
 class RestateDeployer private constructor(functions: List<FunctionContainer>) {
 
     companion object {
-        private const val RUNTIME_CONTAINER = "ghcr.io/restatedev/runtime"
+        private const val RUNTIME_CONTAINER = "ghcr.io/restatedev/runtime:main"
         private const val RUNTIME_GRPC_ENTRYPOINT = 8090
 
         private val logger = LoggerFactory.getLogger(RestateDeployer::class.java)
@@ -78,10 +78,11 @@ class RestateDeployer private constructor(functions: List<FunctionContainer>) {
             DockerImageName.parse(RUNTIME_CONTAINER)
         )
             .dependsOn(functionContainers.values)
+            .withEnv("RUST_LOG", "debug")
             .withExposedPorts(RUNTIME_GRPC_ENTRYPOINT)
             .withLogConsumer(Slf4jLogConsumer(logger))
             .withCopyFileToContainer(MountableFile.forHostPath(configFile), "/restate.yaml")
-            .withCommand("/usr/local/bin/runtime --id 1 --configuration-file restate.yml")
+            .withCommand("--id 1 --configuration-file /restate.yaml")
 
         runtimeContainer!!.start()
     }
@@ -94,12 +95,12 @@ class RestateDeployer private constructor(functions: List<FunctionContainer>) {
     fun getFunctionEndpointUrl(name: String): URL {
         val funcContainer =
             functionContainers[name] ?: throw java.lang.IllegalStateException("Function does not exists")
-        return URL("http", "localhost", funcContainer.getMappedPort(8080), "/")
+        return URL("http", "127.0.0.1", funcContainer.getMappedPort(8080), "/")
     }
 
     fun getRuntimeFunctionEndpointUrl(name: String): URL {
         return runtimeContainer?.getMappedPort(RUNTIME_GRPC_ENTRYPOINT)?.let {
-            URL("http", "localhost", RUNTIME_GRPC_ENTRYPOINT, "/$name")
+            URL("http", "127.0.0.1", it, "/$name")
         }
             ?: throw java.lang.IllegalStateException("Runtime is not configured, as RestateDeployer::deploy has not been invoked")
     }

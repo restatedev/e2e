@@ -9,10 +9,12 @@ import org.junit.jupiter.api.extension.RegisterExtension
 
 class CounterTest {
 
-    @RegisterExtension
-    val deployerExt: RestateDeployerExtension = RestateDeployerExtension(
-        RestateDeployer.Builder().function("e2e-counter").build()
-    )
+    companion object {
+        @RegisterExtension
+        val deployerExt: RestateDeployerExtension = RestateDeployerExtension(
+            RestateDeployer.Builder().function("e2e-counter").build()
+        )
+    }
 
     @Test
     fun test(@InjectBlockingStub("e2e-counter") counterClient: CounterBlockingStub) {

@@ -15,6 +15,10 @@ dependencies {
     testImplementation(libs.junit5)
     testImplementation(libs.assertj)
 
+    testRuntimeOnly(libs.log4j.api)
+    testRuntimeOnly(libs.log4j.core)
+    testRuntimeOnly(libs.log4j.slf4j)
+
     testImplementation(platform(libs.testcontainers.bom))
     testImplementation(libs.testcontainers.core)
 }
