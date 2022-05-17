@@ -1,17 +1,17 @@
 import com.google.protobuf.gradle.*
 
 plugins {
-    java
+    `java-library`
     idea
     alias(libs.plugins.protobuf)
 }
 
 dependencies {
-    implementation(libs.protobuf.java)
-    implementation(libs.grpc.stub)
-    implementation(libs.grpc.protobuf)
+    api(libs.protobuf.java)
+    api(libs.grpc.stub)
+    api(libs.grpc.protobuf)
 
-    implementation(libs.javax.annotation.api)
+    compileOnly(libs.javax.annotation.api)
 }
 
 protobuf {
