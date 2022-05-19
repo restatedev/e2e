@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+    <Appenders>
+        <Console name="STDERR" target="SYSTEM_ERR">
+            <PatternLayout pattern="%-4r [%t] %-5p %c %x - %m%n"/>
+        </Console>
+    </Appenders>
+    <Loggers>
+        <Logger name="dev.restate.e2e.utils" level="DEBUG" additivity="false">
+            <AppenderRef ref="STDERR"/>
+        </Logger>
+        <Root level="Info">
+            <AppenderRef ref="STDERR"/>
+        </Root>
+    </Loggers>
+</Configuration>

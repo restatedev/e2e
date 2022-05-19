@@ -13,7 +13,7 @@ public class Main {
     private static final Logger logger = LogManager.getLogger(Main.class);
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        final int port = Optional.of(System.getenv("PORT"))
+        final int port = Optional.ofNullable(System.getenv("PORT"))
                 .map(Integer::parseInt).orElse(8080);
 
         logger.info("Start counter on port {}", port);

@@ -1,17 +1,14 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
-    // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
+    java
     kotlin("jvm") version "1.6.20"
-
-    // Apply the java-library plugin for API and implementation separation.
-    `java-library`
 }
 
 dependencies {
-    testImplementation(kotlin("test"))
-}
+    implementation(libs.slf4j)
+    implementation(libs.junit5)
+    implementation(platform(libs.testcontainers.bom))
+    implementation(libs.testcontainers.core)
 
-tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "11"
+    implementation(libs.grpc.stub)
+    implementation(libs.grpc.netty.shaded)
 }

@@ -1,19 +1,20 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
-    // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
+    java
     kotlin("jvm") version "1.6.20"
-
-    // Apply the java-library plugin for API and implementation separation.
-    `java-library`
 }
 
 dependencies {
     testImplementation(kotlin("test"))
     testImplementation(project(":test-utils"))
-    testImplementation(libs.assertj)
-}
+    testImplementation(project(":functions:counter:contract"))
 
-tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "11"
+    testImplementation(libs.junit5)
+    testImplementation(libs.assertj)
+
+    testRuntimeOnly(libs.log4j.api)
+    testRuntimeOnly(libs.log4j.core)
+    testRuntimeOnly(libs.log4j.slf4j)
+
+    testImplementation(platform(libs.testcontainers.bom))
+    testImplementation(libs.testcontainers.core)
 }

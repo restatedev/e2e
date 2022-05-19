@@ -11,10 +11,6 @@ dependencies {
     implementation(libs.restate.sdk)
     implementation(project(":functions:counter:contract"))
 
-    implementation(libs.protobuf.java)
-    implementation(libs.grpc.stub)
-    implementation(libs.grpc.protobuf)
-
     implementation(libs.log4j.api)
     implementation(libs.log4j.core)
 
