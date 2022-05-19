@@ -1,21 +1,21 @@
 package dev.restate.e2e.utils
 
-import org.junit.jupiter.api.fail
 import org.slf4j.LoggerFactory
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.Network
 import org.testcontainers.containers.output.Slf4jLogConsumer
+import org.testcontainers.images.PullPolicy
 import org.testcontainers.utility.DockerImageName
 import org.testcontainers.utility.MountableFile
 import java.io.File
 import java.net.URL
 import java.nio.file.Files
 
-class RestateDeployer private constructor(val runtimeDeployments: Int, functions: List<FunctionContainer>) {
+class RestateDeployer private constructor(runtimeDeployments: Int, functions: List<FunctionContainer>) {
 
     companion object {
         private const val RUNTIME_CONTAINER = "ghcr.io/restatedev/runtime:main"
-        private const val RUNTIME_GRPC_ENTRYPOINT = 8090
+        private const val RUNTIME_GRPC_ENDPOINT = 8090
 
         private val logger = LoggerFactory.getLogger(RestateDeployer::class.java)
     }
@@ -31,7 +31,7 @@ class RestateDeployer private constructor(val runtimeDeployments: Int, functions
     data class FunctionContainer(val name: String) {
         internal fun toGenericContainer(): GenericContainer<*> {
             return GenericContainer(
-                DockerImageName.parse("localhost/restatedev/$name")
+                DockerImageName.parse("restatedev/$name")
             )
                 .withEnv("PORT", "8080")
                 .withLogConsumer(Slf4jLogConsumer(logger))
@@ -68,7 +68,7 @@ class RestateDeployer private constructor(val runtimeDeployments: Int, functions
         |peers:
         |  - 127.0.0.1:9001
         |
-        |grpc_port: $RUNTIME_GRPC_ENTRYPOINT
+        |grpc_port: $RUNTIME_GRPC_ENDPOINT
         |
         |consensus:
         |  storage_type: Memory
@@ -86,11 +86,12 @@ class RestateDeployer private constructor(val runtimeDeployments: Int, functions
         )
             .dependsOn(functionContainers.values)
             .withEnv("RUST_LOG", "debug")
-            .withExposedPorts(RUNTIME_GRPC_ENTRYPOINT)
+            .withExposedPorts(RUNTIME_GRPC_ENDPOINT)
             .withNetwork(network)
             .withNetworkAliases("runtime")
             .withLogConsumer(Slf4jLogConsumer(logger))
             .withCopyFileToContainer(MountableFile.forHostPath(configFile), "/restate.yaml")
+            .withImagePullPolicy(PullPolicy.alwaysPull())
             .withCommand("--id 1 --configuration-file /restate.yaml")
 
         runtimeContainer!!.start()
@@ -105,8 +106,8 @@ class RestateDeployer private constructor(val runtimeDeployments: Int, functions
         return URL("http", name, 8080, "/")
     }
 
-    fun getRuntimeFunctionEndpointUrl(name: String): URL {
-        return runtimeContainer?.getMappedPort(RUNTIME_GRPC_ENTRYPOINT)?.let {
+    fun getRuntimeFunctionEndpointUrl(_name: String): URL {
+        return runtimeContainer?.getMappedPort(RUNTIME_GRPC_ENDPOINT)?.let {
             URL("http", "127.0.0.1", it, "/")
         }
             ?: throw java.lang.IllegalStateException("Runtime is not configured, as RestateDeployer::deploy has not been invoked")
