@@ -6,12 +6,11 @@
         </Console>
     </Appenders>
     <Loggers>
+        <Logger name="dev.restate.e2e.utils" level="DEBUG" additivity="false">
+            <AppenderRef ref="STDERR"/>
+        </Logger>
         <Root level="Info">
             <AppenderRef ref="STDERR"/>
         </Root>
-
-        <Logger name="dev.restate.e2e.utils" level="DEBUG">
-            <AppenderRef ref="STDERR"/>
-        </Logger>
     </Loggers>
 </Configuration>
