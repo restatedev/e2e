@@ -35,6 +35,7 @@ class RestateDeployer private constructor(runtimeDeployments: Int, functions: Li
             )
                 .withEnv("PORT", "8080")
                 .withLogConsumer(Slf4jLogConsumer(logger).withPrefix("function-$name"))
+                .withExposedPorts(8080)
         }
     }
 
