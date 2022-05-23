@@ -34,7 +34,7 @@ class RestateDeployer private constructor(runtimeDeployments: Int, functions: Li
                 DockerImageName.parse("restatedev/$name")
             )
                 .withEnv("PORT", "8080")
-                .withLogConsumer(Slf4jLogConsumer(logger))
+                .withLogConsumer(Slf4jLogConsumer(logger).withPrefix("function-$name"))
         }
     }
 
@@ -89,7 +89,7 @@ class RestateDeployer private constructor(runtimeDeployments: Int, functions: Li
             .withExposedPorts(RUNTIME_GRPC_ENDPOINT)
             .withNetwork(network)
             .withNetworkAliases("runtime")
-            .withLogConsumer(Slf4jLogConsumer(logger))
+            .withLogConsumer(Slf4jLogConsumer(logger).withPrefix("runtime"))
             .withCopyFileToContainer(MountableFile.forHostPath(configFile), "/restate.yaml")
             .withImagePullPolicy(PullPolicy.alwaysPull())
             .withCommand("--id 1 --configuration-file /restate.yaml")
