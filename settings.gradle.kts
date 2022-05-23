@@ -34,6 +34,7 @@ dependencyResolutionManagement {
             version("junit-jupiter", "5.8.1")
             version("assertj", "3.22.0")
             version("testcontainers", "1.16.3")
+            version("awaitility", "4.2.0")
 
             version("errorprone", "2.13.1")
 
@@ -57,6 +58,7 @@ dependencyResolutionManagement {
             library("assertj", "org.assertj", "assertj-core").versionRef("assertj")
             library("testcontainers-bom", "org.testcontainers", "testcontainers-bom").versionRef("testcontainers")
             library("testcontainers-core", "org.testcontainers", "testcontainers").withoutVersion()
+            library("awaitility", "org.awaitility", "awaitility-kotlin").versionRef("awaitility")
 
             library("errorprone", "com.google.errorprone", "error_prone_core").versionRef("errorprone")
 

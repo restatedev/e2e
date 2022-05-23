@@ -1,10 +1,15 @@
 package dev.restate.e2e
 
+import com.google.protobuf.Empty
 import dev.restate.e2e.functions.counter.CounterGrpc.CounterBlockingStub
+import dev.restate.e2e.functions.counter.NoopGrpc.NoopBlockingStub
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
 import dev.restate.e2e.utils.RestateDeployerExtension.InjectBlockingStub
 import org.assertj.core.api.Assertions.assertThat
+import org.awaitility.kotlin.await
+import org.awaitility.kotlin.matches
+import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
@@ -31,6 +36,18 @@ class CounterTest {
         val res2 = counterClient.getAndAdd(dev.restate.e2e.functions.counter.Number.newBuilder().setValue(2).build())
         assertThat(res2.oldValue).isEqualTo(1);
         assertThat(res2.newValue).isEqualTo(3);
+    }
+
+    @Test
+    fun fireAndForget(
+        @InjectBlockingStub("e2e-counter") noopClient: NoopBlockingStub,
+        @InjectBlockingStub("e2e-counter", "doAndReportInvocationCount") counterClient: CounterBlockingStub
+    ) {
+        noopClient.doAndReportInvocationCount(Empty.getDefaultInstance())
+        noopClient.doAndReportInvocationCount(Empty.getDefaultInstance())
+        noopClient.doAndReportInvocationCount(Empty.getDefaultInstance())
+
+        await untilCallTo { counterClient.get(Empty.getDefaultInstance()) } matches { num -> num!!.value == 3L }
     }
 
 }

@@ -6,11 +6,12 @@ option java_outer_classname = "CounterProto";
 option objc_class_prefix = "CP";
 
 import "google/protobuf/empty.proto";
-package greeter;
+package counter;
 
 service Counter {
   rpc reset (google.protobuf.Empty) returns (google.protobuf.Empty);
   rpc add (Number) returns (google.protobuf.Empty);
+  rpc get (google.protobuf.Empty) returns (Number);
   rpc getAndAdd (Number) returns (CounterUpdateResult);
 }
 

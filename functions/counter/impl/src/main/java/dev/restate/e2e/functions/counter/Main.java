@@ -2,11 +2,11 @@ package dev.restate.e2e.functions.counter;
 
 import dev.restate.sdk.RestateGrpcInterceptors;
 import io.grpc.ServerBuilder;
-import java.io.IOException;
-import java.util.Optional;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import java.io.IOException;
+import java.util.Optional;
 
 public class Main {
 
@@ -20,6 +20,7 @@ public class Main {
         final var server =
                 ServerBuilder.forPort(port)
                         .addService(RestateGrpcInterceptors.from(new CounterService()))
+                        .addService(RestateGrpcInterceptors.from(new NoopService()))
                         .build();
 
         server.start().awaitTermination();

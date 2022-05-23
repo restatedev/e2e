@@ -41,7 +41,8 @@ class RestateDeployer private constructor(runtimeDeployments: Int, functions: Li
 
     data class Builder(var runtimeDeployments: Int = 1, var functions: MutableList<FunctionContainer> = mutableListOf()) {
 
-        fun function(name: String) = apply { this.functions.add(FunctionContainer(name)) }
+        fun function(functionContainerName: String) =
+            apply { this.functions.add(FunctionContainer(functionContainerName)) }
 
         fun function(functionContainer: FunctionContainer) = apply { this.functions.add(functionContainer) }
 
