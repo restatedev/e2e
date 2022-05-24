@@ -1,3 +1,5 @@
+import dev.restate.e2e.gradle.util.hostArchitecture
+
 plugins {
     java
     idea
@@ -21,6 +23,15 @@ dependencies {
 
 jib {
     to.image = "restatedev/e2e-counter"
+
+    from {
+        platforms {
+            platform {
+                architecture = hostArchitecture()
+                os = "linux"
+            }
+        }
+    }
 }
 
 // Use gradle shadowJar to build the fat jar
