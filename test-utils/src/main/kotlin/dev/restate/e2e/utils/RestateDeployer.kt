@@ -1,5 +1,8 @@
 package dev.restate.e2e.utils
 
+import java.io.File
+import java.net.URL
+import java.nio.file.Files
 import org.slf4j.LoggerFactory
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.Network
@@ -7,66 +10,69 @@ import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.images.PullPolicy
 import org.testcontainers.utility.DockerImageName
 import org.testcontainers.utility.MountableFile
-import java.io.File
-import java.net.URL
-import java.nio.file.Files
 
-class RestateDeployer private constructor(runtimeDeployments: Int, functions: List<FunctionContainer>) {
+class RestateDeployer
+private constructor(runtimeDeployments: Int, functions: List<FunctionContainer>) {
 
-    companion object {
-        private const val RUNTIME_CONTAINER = "ghcr.io/restatedev/runtime:main"
-        private const val RUNTIME_GRPC_ENDPOINT = 8090
+  companion object {
+    private const val RUNTIME_CONTAINER = "ghcr.io/restatedev/runtime:main"
+    private const val RUNTIME_GRPC_ENDPOINT = 8090
 
-        private val logger = LoggerFactory.getLogger(RestateDeployer::class.java)
+    private val logger = LoggerFactory.getLogger(RestateDeployer::class.java)
+  }
+
+  private val functionContainers = functions.associate { fn -> fn.name to fn.toGenericContainer() }
+  private var runtimeContainer: GenericContainer<*>? = null
+
+  init {
+    assert(functionContainers.size == 1) {
+      "At the moment you MUST specify exactly one function container"
+    }
+    assert(runtimeDeployments == 1) { "At the moment only one runtime deployment is supported" }
+  }
+
+  data class FunctionContainer(val name: String) {
+    internal fun toGenericContainer(): GenericContainer<*> {
+      return GenericContainer(DockerImageName.parse("restatedev/$name"))
+          .withEnv("PORT", "8080")
+          .withLogConsumer(Slf4jLogConsumer(logger).withPrefix("function-$name"))
+          .withExposedPorts(8080)
+    }
+  }
+
+  data class Builder(
+      var runtimeDeployments: Int = 1,
+      var functions: MutableList<FunctionContainer> = mutableListOf()
+  ) {
+
+    fun function(functionContainerName: String) = apply {
+      this.functions.add(FunctionContainer(functionContainerName))
     }
 
-    private val functionContainers = functions.associate { fn -> fn.name to fn.toGenericContainer() }
-    private var runtimeContainer: GenericContainer<*>? = null
-
-    init {
-        assert(functionContainers.size == 1) {"At the moment you MUST specify exactly one function container"}
-        assert(runtimeDeployments == 1) { "At the moment only one runtime deployment is supported" }
+    fun function(functionContainer: FunctionContainer) = apply {
+      this.functions.add(functionContainer)
     }
 
-    data class FunctionContainer(val name: String) {
-        internal fun toGenericContainer(): GenericContainer<*> {
-            return GenericContainer(
-                DockerImageName.parse("restatedev/$name")
-            )
-                .withEnv("PORT", "8080")
-                .withLogConsumer(Slf4jLogConsumer(logger).withPrefix("function-$name"))
-                .withExposedPorts(8080)
-        }
+    fun runtimeDeployments(runtimeDeployments: Int) = apply {
+      this.runtimeDeployments = runtimeDeployments
     }
 
-    data class Builder(var runtimeDeployments: Int = 1, var functions: MutableList<FunctionContainer> = mutableListOf()) {
+    fun build() = RestateDeployer(runtimeDeployments, functions)
+  }
 
-        fun function(functionContainerName: String) =
-            apply { this.functions.add(FunctionContainer(functionContainerName)) }
+  fun deploy() {
+    val network = Network.newNetwork()
 
-        fun function(functionContainer: FunctionContainer) = apply { this.functions.add(functionContainer) }
-
-        fun runtimeDeployments(runtimeDeployments: Int) = apply {
-            this.runtimeDeployments = runtimeDeployments
-        }
-
-        fun build() = RestateDeployer(runtimeDeployments, functions)
+    // Deploy functions
+    functionContainers.forEach { (name, genericContainer) ->
+      genericContainer.withNetwork(network).withNetworkAliases(name).start()
+      logger.debug(
+          "Started function container {} with endpoint {}", name, getFunctionEndpointUrl(name))
     }
 
-    fun deploy() {
-        val network = Network.newNetwork()
-
-        // Deploy functions
-        functionContainers.forEach { (name, genericContainer) ->
-            genericContainer
-                .withNetwork(network)
-                .withNetworkAliases(name)
-                .start()
-            logger.debug("Started function container {} with endpoint {}", name, getFunctionEndpointUrl(name))
-        }
-
-        // Generate config and write to temp dir
-        val config = """
+    // Generate config and write to temp dir
+    val config =
+        """
         |peers:
         |  - 127.0.0.1:9001
         |
@@ -76,16 +82,17 @@ class RestateDeployer private constructor(runtimeDeployments: Int, functions: Li
         |  storage_type: Memory
         |  
         |function_endpoint: ${getFunctionEndpointUrl(functionContainers.keys.first())}
-        """.trimMargin("|")
+        """.trimMargin(
+            "|")
 
-        val configFile = File(Files.createTempDirectory("restate-e2e").toFile(), "restate.yaml").toPath()
-        Files.writeString(configFile, config)
-        logger.debug("Written config to {}", configFile)
+    val configFile =
+        File(Files.createTempDirectory("restate-e2e").toFile(), "restate.yaml").toPath()
+    Files.writeString(configFile, config)
+    logger.debug("Written config to {}", configFile)
 
-        // Generate runtime container
-        runtimeContainer = GenericContainer(
-            DockerImageName.parse(RUNTIME_CONTAINER)
-        )
+    // Generate runtime container
+    runtimeContainer =
+        GenericContainer(DockerImageName.parse(RUNTIME_CONTAINER))
             .dependsOn(functionContainers.values)
             .withEnv("RUST_LOG", "debug")
             .withExposedPorts(RUNTIME_GRPC_ENDPOINT)
@@ -96,23 +103,23 @@ class RestateDeployer private constructor(runtimeDeployments: Int, functions: Li
             .withImagePullPolicy(PullPolicy.alwaysPull())
             .withCommand("--id 1 --configuration-file /restate.yaml")
 
-        runtimeContainer!!.start()
-    }
+    runtimeContainer!!.start()
+  }
 
-    fun teardown() {
-        runtimeContainer!!.stop()
-        functionContainers.forEach { (_, container) -> container.stop() }
-    }
+  fun teardown() {
+    runtimeContainer!!.stop()
+    functionContainers.forEach { (_, container) -> container.stop() }
+  }
 
-    fun getFunctionEndpointUrl(name: String): URL {
-        return URL("http", name, 8080, "/")
-    }
+  fun getFunctionEndpointUrl(name: String): URL {
+    return URL("http", name, 8080, "/")
+  }
 
-    fun getRuntimeFunctionEndpointUrl(_name: String): URL {
-        return runtimeContainer?.getMappedPort(RUNTIME_GRPC_ENDPOINT)?.let {
-            URL("http", "127.0.0.1", it, "/")
-        }
-            ?: throw java.lang.IllegalStateException("Runtime is not configured, as RestateDeployer::deploy has not been invoked")
+  fun getRuntimeFunctionEndpointUrl(_name: String): URL {
+    return runtimeContainer?.getMappedPort(RUNTIME_GRPC_ENDPOINT)?.let {
+      URL("http", "127.0.0.1", it, "/")
     }
-
+        ?: throw java.lang.IllegalStateException(
+            "Runtime is not configured, as RestateDeployer::deploy has not been invoked")
+  }
 }

@@ -15,39 +15,48 @@ import org.junit.jupiter.api.extension.RegisterExtension
 
 class CounterTest {
 
-    companion object {
-        @RegisterExtension
-        val deployerExt: RestateDeployerExtension = RestateDeployerExtension(
-            RestateDeployer.Builder().function("e2e-counter").build()
-        )
-    }
+  companion object {
+    @RegisterExtension
+    val deployerExt: RestateDeployerExtension =
+        RestateDeployerExtension(RestateDeployer.Builder().function("e2e-counter").build())
+  }
 
-    @Test
-    fun noReturnValue(@InjectBlockingStub("e2e-counter") counterClient: CounterBlockingStub) {
-        counterClient.add(dev.restate.e2e.functions.counter.Number.newBuilder().setValue(1).build())
-    }
+  @Test
+  fun noReturnValue(@InjectBlockingStub("e2e-counter") counterClient: CounterBlockingStub) {
+    counterClient.add(dev.restate.e2e.functions.counter.Number.newBuilder().setValue(1).build())
+  }
 
-    @Test
-    fun keyedState(@InjectBlockingStub("e2e-counter", "my-key") counterClient: CounterBlockingStub) {
-        val res1 = counterClient.getAndAdd(dev.restate.e2e.functions.counter.Number.newBuilder().setValue(1).build())
-        assertThat(res1.oldValue).isEqualTo(0);
-        assertThat(res1.newValue).isEqualTo(1);
+  @Test
+  fun keyedState(@InjectBlockingStub("e2e-counter", "my-key") counterClient: CounterBlockingStub) {
+    val res1 =
+        counterClient.getAndAdd(
+            dev.restate.e2e.functions.counter.Number.newBuilder().setValue(1).build())
+    assertThat(res1.oldValue).isEqualTo(0)
+    assertThat(res1.newValue).isEqualTo(1)
 
-        val res2 = counterClient.getAndAdd(dev.restate.e2e.functions.counter.Number.newBuilder().setValue(2).build())
-        assertThat(res2.oldValue).isEqualTo(1);
-        assertThat(res2.newValue).isEqualTo(3);
-    }
+    val res2 =
+        counterClient.getAndAdd(
+            dev.restate.e2e.functions.counter.Number.newBuilder().setValue(2).build())
+    assertThat(res2.oldValue).isEqualTo(1)
+    assertThat(res2.newValue).isEqualTo(3)
+  }
 
-    @Test
-    fun fireAndForget(
-        @InjectBlockingStub("e2e-counter") noopClient: NoopBlockingStub,
-        @InjectBlockingStub("e2e-counter", "doAndReportInvocationCount") counterClient: CounterBlockingStub
-    ) {
-        noopClient.doAndReportInvocationCount(Empty.getDefaultInstance())
-        noopClient.doAndReportInvocationCount(Empty.getDefaultInstance())
-        noopClient.doAndReportInvocationCount(Empty.getDefaultInstance())
+  @Test
+  fun fireAndForget(
+      @InjectBlockingStub("e2e-counter") noopClient: NoopBlockingStub,
+      @InjectBlockingStub("e2e-counter", "doAndReportInvocationCount")
+      counterClient: CounterBlockingStub
+  ) {
+    noopClient.doAndReportInvocationCount(Empty.getDefaultInstance())
+    noopClient.doAndReportInvocationCount(Empty.getDefaultInstance())
+    noopClient.doAndReportInvocationCount(Empty.getDefaultInstance())
 
-        await untilCallTo { counterClient.get(Empty.getDefaultInstance()) } matches { num -> num!!.value == 3L }
-    }
-
+    await untilCallTo
+        {
+          counterClient.get(Empty.getDefaultInstance())
+        } matches
+        { num ->
+          num!!.value == 3L
+        }
+  }
 }
