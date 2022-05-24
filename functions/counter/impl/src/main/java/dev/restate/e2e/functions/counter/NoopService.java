@@ -18,7 +18,7 @@ public class NoopService extends NoopGrpc.NoopImplBase {
 
         // Increment the counter
         CounterGrpc.CounterBlockingStub stub = CounterGrpc
-                .newBlockingStub(ctx.channel("doAndReportInvocationCount")).withCompression("identity");
+                .newBlockingStub(ctx.channel("doAndReportInvocationCount"));
 
         ctx.asyncDefer(() -> stub.add(Number.newBuilder().setValue(1).build()));
 

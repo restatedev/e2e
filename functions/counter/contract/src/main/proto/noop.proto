@@ -3,7 +3,6 @@ syntax = "proto3";
 option java_multiple_files = true;
 option java_package = "dev.restate.e2e.functions.counter";
 option java_outer_classname = "NoopProto";
-option objc_class_prefix = "CP";
 
 import "google/protobuf/empty.proto";
 package counter;
