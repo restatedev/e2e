@@ -2,6 +2,7 @@ rootProject.name = "restate-e2e"
 include(
     "functions:counter:contract",
     "functions:counter:impl",
+    "functions:utils",
     "test-utils",
     "tests"
 )
@@ -44,6 +45,7 @@ dependencyResolutionManagement {
             library("guava", "com.google.guava", "guava").versionRef("guava")
             library("protobuf-java", "com.google.protobuf", "protobuf-java").versionRef("protobuf")
             library("protoc", "com.google.protobuf", "protoc").versionRef("protobuf")
+            library("grpc-api", "io.grpc", "grpc-api").versionRef("grpc")
             library("grpc-stub", "io.grpc", "grpc-stub").versionRef("grpc")
             library("grpc-protobuf", "io.grpc", "grpc-protobuf").versionRef("grpc")
             library("grpc-netty-shaded", "io.grpc", "grpc-netty-shaded").versionRef("grpc")
