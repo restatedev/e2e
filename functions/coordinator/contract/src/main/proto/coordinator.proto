@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "dev.restate.e2e.functions.coordinator";
+option java_outer_classname = "CoordinatorProto";
+
+import "google/protobuf/empty.proto";
+package coordinator;
+
+service Coordinator {
+  rpc sleep (Duration) returns (google.protobuf.Empty);
+}
+
+message Duration {
+  int64 millis = 1;
+}
