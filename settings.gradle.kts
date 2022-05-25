@@ -63,7 +63,7 @@ dependencyResolutionManagement {
             library("errorprone", "com.google.errorprone", "error_prone_core").versionRef("errorprone")
 
             // Plugins
-            plugin("spotless", "com.diffplug.spotless").version("6.5.0")
+            plugin("spotless", "com.diffplug.spotless").version("6.6.1")
             plugin("errorprone", "net.ltgt.errorprone").version("2.0.2")
             plugin("protobuf", "com.google.protobuf").version("0.8.18")
             plugin("test-logger", "com.adarshr.test-logger").version("3.2.0")

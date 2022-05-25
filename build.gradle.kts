@@ -5,6 +5,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     kotlin("jvm") version "1.6.20"
     java
+    alias(libs.plugins.spotless)
 }
 
 val testReport = tasks.register<TestReport>("testReport") {
@@ -15,11 +16,21 @@ val testReport = tasks.register<TestReport>("testReport") {
 }
 
 subprojects {
+    apply(plugin = "java")
+    apply(plugin = "kotlin")
+    apply(plugin = "com.diffplug.spotless")
+
     tasks.withType<Test> {
         useJUnitPlatform()
         finalizedBy(testReport)
         testLogging {
-            events(TestLogEvent.PASSED, TestLogEvent.SKIPPED, TestLogEvent.FAILED, TestLogEvent.STANDARD_ERROR, TestLogEvent.STANDARD_OUT)
+            events(
+                TestLogEvent.PASSED,
+                TestLogEvent.SKIPPED,
+                TestLogEvent.FAILED,
+                TestLogEvent.STANDARD_ERROR,
+                TestLogEvent.STANDARD_OUT
+            )
             exceptionFormat = TestExceptionFormat.FULL
         }
     }
@@ -31,5 +42,17 @@ subprojects {
 
     tasks.withType<KotlinCompile> {
         kotlinOptions.jvmTarget = "11"
+    }
+
+    configure<com.diffplug.gradle.spotless.SpotlessExtension> {
+        kotlin {
+            ktfmt()
+        }
+        kotlinGradle {
+            ktfmt()
+        }
+        java {
+            googleJavaFormat()
+        }
     }
 }

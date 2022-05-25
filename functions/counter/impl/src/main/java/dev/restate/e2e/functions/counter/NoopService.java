@@ -8,21 +8,21 @@ import org.apache.logging.log4j.Logger;
 
 public class NoopService extends NoopGrpc.NoopImplBase {
 
-    private static final Logger logger = LogManager.getLogger(NoopService.class);
+  private static final Logger logger = LogManager.getLogger(NoopService.class);
 
-    @Override
-    public void doAndReportInvocationCount(Empty request, StreamObserver<Empty> responseObserver) {
-        logger.info("doAndReportInvocationCount invoked");
+  @Override
+  public void doAndReportInvocationCount(Empty request, StreamObserver<Empty> responseObserver) {
+    logger.info("doAndReportInvocationCount invoked");
 
-        RestateContext ctx = RestateContext.current();
+    RestateContext ctx = RestateContext.current();
 
-        // Increment the counter
-        CounterGrpc.CounterBlockingStub stub = CounterGrpc
-                .newBlockingStub(ctx.channel("doAndReportInvocationCount"));
+    // Increment the counter
+    CounterGrpc.CounterBlockingStub stub =
+        CounterGrpc.newBlockingStub(ctx.channel("doAndReportInvocationCount"));
 
-        ctx.asyncDefer(() -> stub.add(Number.newBuilder().setValue(1).build()));
+    ctx.asyncDefer(() -> stub.add(Number.newBuilder().setValue(1).build()));
 
-        responseObserver.onNext(Empty.getDefaultInstance());
-        responseObserver.onCompleted();
-    }
+    responseObserver.onNext(Empty.getDefaultInstance());
+    responseObserver.onCompleted();
+  }
 }
