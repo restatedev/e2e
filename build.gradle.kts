@@ -55,4 +55,10 @@ subprojects {
             googleJavaFormat()
         }
     }
+
+    configurations.all {
+        // This disables caching for -SNAPSHOT dependencies
+        resolutionStrategy.cacheChangingModulesFor(0, "seconds")
+    }
+
 }
