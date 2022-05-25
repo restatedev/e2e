@@ -1,44 +1,40 @@
 import dev.restate.e2e.gradle.util.hostArchitecture
 
 plugins {
-    java
-    idea
-    alias(libs.plugins.shadowJar)
-    alias(libs.plugins.spotless)
-    alias(libs.plugins.errorprone)
-    alias(libs.plugins.jib)
+  java
+  idea
+  alias(libs.plugins.shadowJar)
+  alias(libs.plugins.spotless)
+  alias(libs.plugins.errorprone)
+  alias(libs.plugins.jib)
 }
 
 dependencies {
-    implementation(libs.restate.sdk)
+  implementation(libs.restate.sdk)
 
-    implementation(project(":functions:utils"))
-    implementation(project(":functions:coordinator:contract"))
+  implementation(project(":functions:utils"))
+  implementation(project(":functions:coordinator:contract"))
 
-    implementation(libs.log4j.api)
-    implementation(libs.log4j.core)
+  implementation(libs.log4j.api)
+  implementation(libs.log4j.core)
 
-    implementation(libs.grpc.netty.shaded)
+  implementation(libs.grpc.netty.shaded)
 
-    errorprone(libs.errorprone)
+  errorprone(libs.errorprone)
 }
 
 jib {
-    to.image = "restatedev/e2e-coordinator"
+  to.image = "restatedev/e2e-coordinator"
 
-    from {
-        platforms {
-            platform {
-                architecture = hostArchitecture()
-                os = "linux"
-            }
-        }
+  from {
+    platforms {
+      platform {
+        architecture = hostArchitecture()
+        os = "linux"
+      }
     }
+  }
 }
 
 // Use gradle shadowJar to build the fat jar
-tasks.jar {
-    manifest {
-        attributes["Main-Class"] = "dev.restate.e2e.functions.coordinator.Main"
-    }
-}
+tasks.jar { manifest { attributes["Main-Class"] = "dev.restate.e2e.functions.coordinator.Main" } }
