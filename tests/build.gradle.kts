@@ -17,4 +17,5 @@ dependencies {
 
     testImplementation(platform(libs.testcontainers.bom))
     testImplementation(libs.testcontainers.core)
+    testImplementation(libs.awaitility)
 }
