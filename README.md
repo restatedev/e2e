@@ -41,3 +41,8 @@ gradle test
 ```
 
 To run the tests.
+
+### Picking the container image for testing
+
+In order to always pull the runtime image you can set the environment variable `E2E_IMAGE_PULL_POLICY=always`.
+If you want to test against a runtime image that is available locally, unset this environment variable to let testcontainers pick the local image. 

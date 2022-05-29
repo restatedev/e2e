@@ -18,6 +18,9 @@ private constructor(runtimeDeployments: Int, functions: List<FunctionContainer>)
     private const val RUNTIME_CONTAINER = "ghcr.io/restatedev/runtime:main"
     private const val RUNTIME_GRPC_ENDPOINT = 8090
 
+    private const val IMAGE_PULL_POLICY = "E2E_IMAGE_PULL_POLICY"
+    private const val ALWAYS_PULL = "always"
+
     private val logger = LoggerFactory.getLogger(RestateDeployer::class.java)
   }
 
@@ -100,8 +103,11 @@ private constructor(runtimeDeployments: Int, functions: List<FunctionContainer>)
             .withNetworkAliases("runtime")
             .withLogConsumer(Slf4jLogConsumer(logger).withPrefix("runtime"))
             .withCopyFileToContainer(MountableFile.forHostPath(configFile), "/restate.yaml")
-            .withImagePullPolicy(PullPolicy.alwaysPull())
             .withCommand("--id 1 --configuration-file /restate.yaml")
+
+    if (System.getenv(IMAGE_PULL_POLICY) == ALWAYS_PULL) {
+      runtimeContainer!!.withImagePullPolicy(PullPolicy.alwaysPull())
+    }
 
     runtimeContainer!!.start()
   }

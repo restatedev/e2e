@@ -45,6 +45,7 @@ jobs:
         env:
           GH_PACKAGE_READ_ACCESS_USER: ${{ secrets.GH_PACKAGE_READ_ACCESS_USER }}
           GH_PACKAGE_READ_ACCESS_TOKEN: ${{ secrets.GH_PACKAGE_READ_ACCESS_TOKEN }}
+          E2E_IMAGE_PULL_POLICY: always
         with:
           arguments: test
 
