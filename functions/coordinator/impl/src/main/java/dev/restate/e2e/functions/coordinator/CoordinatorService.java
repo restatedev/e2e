@@ -1,6 +1,7 @@
 package dev.restate.e2e.functions.coordinator;
 
 import com.google.protobuf.Empty;
+import dev.restate.e2e.functions.receiver.ReceiverGrpc;
 import dev.restate.sdk.RestateContext;
 import io.grpc.stub.StreamObserver;
 import org.apache.logging.log4j.LogManager;
@@ -18,6 +19,18 @@ public class CoordinatorService extends CoordinatorGrpc.CoordinatorImplBase {
     ctx.sleep(java.time.Duration.ofMillis(request.getMillis()));
 
     responseObserver.onNext(Empty.newBuilder().build());
+    responseObserver.onCompleted();
+  }
+
+  @Override
+  public void proxy(Empty request, StreamObserver<ProxyResponse> responseObserver) {
+    RestateContext ctx = RestateContext.current();
+
+    var receiverBlockingStub = ReceiverGrpc.newBlockingStub(ctx.channel());
+
+    var pong = receiverBlockingStub.ping(Empty.newBuilder().build());
+
+    responseObserver.onNext(ProxyResponse.newBuilder().setMessage(pong.getMessage()).build());
     responseObserver.onCompleted();
   }
 }

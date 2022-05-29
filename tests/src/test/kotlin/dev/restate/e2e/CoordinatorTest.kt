@@ -1,5 +1,6 @@
 package dev.restate.e2e
 
+import com.google.protobuf.Empty
 import dev.restate.e2e.functions.coordinator.CoordinatorGrpc
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
@@ -31,5 +32,15 @@ class CoordinatorTest {
     }
 
     assertThat(Duration.ofNanos(elapsed)).isGreaterThanOrEqualTo(sleepDuration)
+  }
+
+  @Test
+  fun invoke_other_function(
+      @RestateDeployerExtension.InjectBlockingStub("e2e-coordinator")
+      coordinatorClient: CoordinatorGrpc.CoordinatorBlockingStub
+  ) {
+    val response = coordinatorClient.proxy(Empty.getDefaultInstance())
+
+    assertThat(response.message).isEqualTo("pong")
   }
 }

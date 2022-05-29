@@ -9,8 +9,13 @@ package coordinator;
 
 service Coordinator {
   rpc sleep (Duration) returns (google.protobuf.Empty);
+  rpc proxy (google.protobuf.Empty) returns (ProxyResponse);
 }
 
 message Duration {
   int64 millis = 1;
+}
+
+message ProxyResponse {
+  string message = 1;
 }

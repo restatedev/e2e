@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "dev.restate.e2e.functions.receiver";
+option java_outer_classname = "ReceiverProto";
+option objc_class_prefix = "RecvP";
+
+import "google/protobuf/empty.proto";
+package coordinator;
+
+service Receiver {
+  rpc ping (google.protobuf.Empty) returns (Pong);
+}
+
+message Pong {
+  string message = 1;
+}

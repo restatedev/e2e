@@ -6,6 +6,6 @@ import java.io.IOException;
 public class Main {
 
   public static void main(String[] args) throws IOException, InterruptedException {
-    ServiceRunner.create(new CoordinatorService()).run();
+    ServiceRunner.create(new CoordinatorService(), new ReceiverService()).run();
   }
 }
