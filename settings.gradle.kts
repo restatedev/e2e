@@ -72,3 +72,12 @@ dependencyResolutionManagement {
         }
     }
 }
+
+// Include composite build for easier local testing
+if (!System.getenv("E2E_LOCAL_BUILD").isNullOrEmpty()) {
+    includeBuild("../java-sdk") {
+        dependencySubstitution {
+            substitute(module("dev.restate.sdk:java-sdk")).using(project(":sdk"))
+        }
+    }
+}

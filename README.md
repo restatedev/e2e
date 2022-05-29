@@ -24,6 +24,12 @@ You also need to login to the container registry using podman/docker (the comman
 podman login ghcr.io --username $GH_PACKAGE_READ_ACCESS_USER --password $GH_PACKAGE_READ_ACCESS_TOKEN
 ```
 
+### How to test with latest sdk changes
+
+In order to test local changes to the `java-sdk`, you need to check it out under `../java-sdk`.
+When building the `e2e` project you have to set the environment variable `E2E_LOCAL_BUILD=true` to include `java-sdk` as a composite build and substitute the `dev.restate.sdk:java-sdk` dependency with it.
+The build will fail if Gradle cannot find the `java-sdk` project.
+
 ## Run tests
 
 To run tests, first build the project with:
