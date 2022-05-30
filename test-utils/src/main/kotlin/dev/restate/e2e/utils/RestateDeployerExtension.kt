@@ -13,7 +13,10 @@ class RestateDeployerExtension(private val deployer: RestateDeployer) :
   @Target(AnnotationTarget.VALUE_PARAMETER)
   annotation class InjectBlockingStub(val functionContainerName: String, val key: String = "")
 
-  override fun beforeAll(context: ExtensionContext) {
+  @Target(AnnotationTarget.VALUE_PARAMETER)
+  annotation class InjectContainerAddress(val hostName: String, val port: Int)
+
+  override fun beforeAll(context: ExtensionContext?) {
     deployer.deploy(context.requiredTestClass)
   }
 
@@ -25,14 +28,26 @@ class RestateDeployerExtension(private val deployer: RestateDeployer) :
       parameterContext: ParameterContext,
       extensionContext: ExtensionContext
   ): Boolean {
-    return parameterContext.isAnnotated(InjectBlockingStub::class.java) &&
-        AbstractBlockingStub::class.java.isAssignableFrom(parameterContext.parameter.type)
+    return (parameterContext.isAnnotated(InjectBlockingStub::class.java) &&
+        AbstractBlockingStub::class.java.isAssignableFrom(parameterContext.parameter.type)) ||
+        (parameterContext.isAnnotated(InjectContainerAddress::class.java) &&
+            String::class.java.isAssignableFrom(parameterContext.parameter.type))
   }
 
   override fun resolveParameter(
       parameterContext: ParameterContext,
       extensionContext: ExtensionContext
-  ): Any {
+  ): Any? {
+    return if (parameterContext.isAnnotated(InjectBlockingStub::class.java)) {
+      resolveBlockingStub(parameterContext)
+    } else if (parameterContext.isAnnotated(InjectContainerAddress::class.java)) {
+      resolveContainerAddress(parameterContext)
+    } else {
+      null
+    }
+  }
+
+  private fun resolveBlockingStub(parameterContext: ParameterContext): Any {
     val annotation = parameterContext.findAnnotation(InjectBlockingStub::class.java).get()
 
     val stubType = parameterContext.parameter.type
@@ -52,5 +67,11 @@ class RestateDeployerExtension(private val deployer: RestateDeployer) :
     }
 
     return stub
+  }
+
+  private fun resolveContainerAddress(parameterContext: ParameterContext): Any {
+    val annotation = parameterContext.findAnnotation(InjectContainerAddress::class.java).get()
+
+    return deployer.getAdditionalContainerExposedPort(annotation.hostName, annotation.port)
   }
 }
