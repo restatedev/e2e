@@ -1,13 +1,13 @@
 rootProject.name = "restate-e2e"
+
 include(
-  "functions:coordinator:contract",
-  "functions:coordinator:impl",
-  "functions:counter:contract",
-  "functions:counter:impl",
-  "functions:utils",
-  "test-utils",
-  "tests"
-)
+    "functions:coordinator:contract",
+    "functions:coordinator:impl",
+    "functions:counter:contract",
+    "functions:counter:impl",
+    "functions:utils",
+    "test-utils",
+    "tests")
 
 dependencyResolutionManagement {
   repositories {
@@ -34,12 +34,11 @@ dependencyResolutionManagement {
       version("log4j", "2.17.2")
       version("javax-annotation", "1.3.2")
 
-        version("jackson", "2.13.3")
+      version("jackson", "2.13.3")
 
-        version("cloudevents", "2.3.0")
+      version("cloudevents", "2.3.0")
 
-
-        version("junit-jupiter", "5.8.1")
+      version("junit-jupiter", "5.8.1")
       version("assertj", "3.22.0")
       version("testcontainers", "1.16.3")
       version("awaitility", "4.2.0")
@@ -61,23 +60,26 @@ dependencyResolutionManagement {
       library("log4j-api", "org.apache.logging.log4j", "log4j-api").versionRef("log4j")
       library("log4j-core", "org.apache.logging.log4j", "log4j-core").versionRef("log4j")
       library("log4j-slf4j", "org.apache.logging.log4j", "log4j-slf4j18-impl").versionRef("log4j")
-      library("javax-annotation-api", "javax.annotation", "javax.annotation-api").versionRef("javax-annotation")
+      library("javax-annotation-api", "javax.annotation", "javax.annotation-api")
+          .versionRef("javax-annotation")
 
-        library("jackson-bom", "com.fasterxml.jackson", "jackson-bom").versionRef("jackson")
-        library("jackson-core", "com.fasterxml.jackson.core", "jackson-core").withoutVersion()
-        library("jackson-databind", "com.fasterxml.jackson.core", "jackson-databind").withoutVersion()
-        library("jackson-yaml", "com.fasterxml.jackson.dataformat", "jackson-dataformat-yaml").withoutVersion()
+      library("jackson-bom", "com.fasterxml.jackson", "jackson-bom").versionRef("jackson")
+      library("jackson-core", "com.fasterxml.jackson.core", "jackson-core").withoutVersion()
+      library("jackson-databind", "com.fasterxml.jackson.core", "jackson-databind").withoutVersion()
+      library("jackson-yaml", "com.fasterxml.jackson.dataformat", "jackson-dataformat-yaml")
+          .withoutVersion()
 
-        library("cloudevents-bom", "io.cloudevents", "cloudevents-bom").versionRef("cloudevents")
-        library("cloudevents-core", "io.cloudevents", "cloudevents-core").withoutVersion()
-        library("cloudevents-kafka", "io.cloudevents", "cloudevents-kafka").withoutVersion()
-        library("cloudevents-json", "io.cloudevents", "cloudevents-json-jackson").withoutVersion()
+      library("cloudevents-bom", "io.cloudevents", "cloudevents-bom").versionRef("cloudevents")
+      library("cloudevents-core", "io.cloudevents", "cloudevents-core").withoutVersion()
+      library("cloudevents-kafka", "io.cloudevents", "cloudevents-kafka").withoutVersion()
+      library("cloudevents-json", "io.cloudevents", "cloudevents-json-jackson").withoutVersion()
 
       library("junit5", "org.junit.jupiter", "junit-jupiter").versionRef("junit-jupiter")
       library("assertj", "org.assertj", "assertj-core").versionRef("assertj")
-      library("testcontainers-bom", "org.testcontainers", "testcontainers-bom").versionRef("testcontainers")
+      library("testcontainers-bom", "org.testcontainers", "testcontainers-bom")
+          .versionRef("testcontainers")
       library("testcontainers-core", "org.testcontainers", "testcontainers").withoutVersion()
-        library("testcontainers-kafka", "org.testcontainers", "kafka").withoutVersion()
+      library("testcontainers-kafka", "org.testcontainers", "kafka").withoutVersion()
       library("awaitility", "org.awaitility", "awaitility-kotlin").versionRef("awaitility")
 
       library("errorprone", "com.google.errorprone", "error_prone_core").versionRef("errorprone")
@@ -96,8 +98,6 @@ dependencyResolutionManagement {
 // Include composite build for easier local testing
 if (!System.getenv("E2E_LOCAL_BUILD").isNullOrEmpty()) {
   includeBuild("../java-sdk") {
-    dependencySubstitution {
-      substitute(module("dev.restate.sdk:java-sdk")).using(project(":sdk"))
-    }
+    dependencySubstitution { substitute(module("dev.restate.sdk:java-sdk")).using(project(":sdk")) }
   }
 }
