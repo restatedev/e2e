@@ -3,10 +3,12 @@ package dev.restate.e2e.utils
 import java.io.File
 import java.net.URL
 import java.nio.file.Files
+import java.nio.file.Path
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import org.slf4j.LoggerFactory
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.Network
-import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.images.PullPolicy
 import org.testcontainers.utility.DockerImageName
 import org.testcontainers.utility.MountableFile
@@ -38,7 +40,6 @@ private constructor(runtimeDeployments: Int, functions: List<FunctionContainer>)
     internal fun toGenericContainer(): GenericContainer<*> {
       return GenericContainer(DockerImageName.parse("restatedev/$name"))
           .withEnv("PORT", "8080")
-          .withLogConsumer(Slf4jLogConsumer(logger).withPrefix("function-$name"))
           .withExposedPorts(8080)
     }
   }
@@ -63,12 +64,20 @@ private constructor(runtimeDeployments: Int, functions: List<FunctionContainer>)
     fun build() = RestateDeployer(runtimeDeployments, functions)
   }
 
-  fun deploy() {
+  fun deploy(testClass: Class<*>) {
+    // Generate test report directory
+    val testReportDir = computeContainerTestLogsDir(testClass).toAbsolutePath().toString()
+    check(File(testReportDir).mkdirs()) { "Cannot create test report directory $testReportDir" }
+
     val network = Network.newNetwork()
 
     // Deploy functions
     functionContainers.forEach { (name, genericContainer) ->
-      genericContainer.withNetwork(network).withNetworkAliases(name).start()
+      genericContainer
+          .withNetwork(network)
+          .withNetworkAliases(name)
+          .withLogConsumer(ContainerLogger(testReportDir, name))
+          .start()
       logger.debug(
           "Started function container {} with endpoint {}", name, getFunctionEndpointUrl(name))
     }
@@ -101,7 +110,7 @@ private constructor(runtimeDeployments: Int, functions: List<FunctionContainer>)
             .withExposedPorts(RUNTIME_GRPC_ENDPOINT)
             .withNetwork(network)
             .withNetworkAliases("runtime")
-            .withLogConsumer(Slf4jLogConsumer(logger).withPrefix("runtime"))
+            .withLogConsumer(ContainerLogger(testReportDir, "restate-runtime"))
             .withCopyFileToContainer(MountableFile.forHostPath(configFile), "/restate.yaml")
             .withCommand("--id 1 --configuration-file /restate.yaml")
 
@@ -127,5 +136,12 @@ private constructor(runtimeDeployments: Int, functions: List<FunctionContainer>)
     }
         ?: throw java.lang.IllegalStateException(
             "Runtime is not configured, as RestateDeployer::deploy has not been invoked")
+  }
+
+  private fun computeContainerTestLogsDir(testClass: Class<*>): Path {
+    val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")
+    return Path.of(
+        System.getenv("CONTAINER_LOGS_DIR")!!,
+        "${testClass.canonicalName}_${LocalDateTime.now().format(formatter)}")
   }
 }

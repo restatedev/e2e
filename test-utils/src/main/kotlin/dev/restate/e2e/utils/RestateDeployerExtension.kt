@@ -13,11 +13,11 @@ class RestateDeployerExtension(private val deployer: RestateDeployer) :
   @Target(AnnotationTarget.VALUE_PARAMETER)
   annotation class InjectBlockingStub(val functionContainerName: String, val key: String = "")
 
-  override fun beforeAll(context: ExtensionContext?) {
-    deployer.deploy()
+  override fun beforeAll(context: ExtensionContext) {
+    deployer.deploy(context.requiredTestClass)
   }
 
-  override fun afterAll(context: ExtensionContext?) {
+  override fun afterAll(context: ExtensionContext) {
     deployer.teardown()
   }
 
