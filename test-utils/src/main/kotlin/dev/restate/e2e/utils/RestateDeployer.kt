@@ -137,7 +137,7 @@ private constructor(
             .withNetwork(network)
             .withNetworkAliases("runtime")
             .withLogConsumer(ContainerLogger(testReportDir, "restate-runtime"))
-            .withCopyFileToContainer(MountableFile.forHostPath(configFile), "/restate.yaml")
+            .withCopyFileToContainer(MountableFile.forHostPath(configFile.toPath()), "/restate.yaml")
             .withCommand("--id 1 --configuration-file /restate.yaml")
 
     if (System.getenv(IMAGE_PULL_POLICY) == ALWAYS_PULL) {
