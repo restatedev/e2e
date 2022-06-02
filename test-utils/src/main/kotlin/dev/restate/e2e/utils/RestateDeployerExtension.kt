@@ -16,7 +16,7 @@ class RestateDeployerExtension(private val deployer: RestateDeployer) :
   @Target(AnnotationTarget.VALUE_PARAMETER)
   annotation class InjectContainerAddress(val hostName: String, val port: Int)
 
-  override fun beforeAll(context: ExtensionContext?) {
+  override fun beforeAll(context: ExtensionContext) {
     deployer.deploy(context.requiredTestClass)
   }
 

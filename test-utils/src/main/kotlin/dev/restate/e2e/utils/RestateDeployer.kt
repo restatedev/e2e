@@ -108,7 +108,7 @@ private constructor(
       container
           .withNetwork(network)
           .withNetworkAliases(containerHost)
-          .withLogConsumer(Slf4jLogConsumer(logger).withPrefix(containerHost))
+        .withLogConsumer(ContainerLogger(testReportDir, containerHost))
           .start()
       logger.debug("Started container {} with image {}", containerHost, container.dockerImageName)
     }
