@@ -49,4 +49,10 @@ jobs:
         with:
           arguments: test
 
+      # Upload container logs
+      - uses: actions/upload-artifact@v3
+        with:
+          name: container-logs
+          path: "tests/build/test-results/container-logs/**"
+
 
