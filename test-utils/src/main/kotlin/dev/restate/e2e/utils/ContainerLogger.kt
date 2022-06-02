@@ -7,7 +7,7 @@ import java.nio.file.StandardOpenOption
 import java.util.function.Consumer
 import org.testcontainers.containers.output.OutputFrame
 
-/** Logger to dump to a specific files the stdout and stderr of the containers */
+/** Logger to dump to specific files the stdout and stderr of the containers */
 class ContainerLogger(testReportDirectory: String, loggerName: String) : Consumer<OutputFrame> {
 
   private val stdoutStream = newStream(testReportDirectory, loggerName, "stdout")
