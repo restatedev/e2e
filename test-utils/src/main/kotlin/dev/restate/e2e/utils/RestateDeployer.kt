@@ -1,5 +1,7 @@
 package dev.restate.e2e.utils
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import java.io.File
 import java.net.URL
 import java.nio.file.Files
@@ -14,7 +16,12 @@ import org.testcontainers.utility.DockerImageName
 import org.testcontainers.utility.MountableFile
 
 class RestateDeployer
-private constructor(runtimeDeployments: Int, functions: List<FunctionContainer>) {
+private constructor(
+    runtimeDeployments: Int,
+    functions: List<FunctionContainer>,
+    private val additionalContainers: Map<String, GenericContainer<*>>,
+    private val additionalConfig: Map<String, Any>
+) {
 
   companion object {
     private const val RUNTIME_CONTAINER = "ghcr.io/restatedev/runtime:main"
@@ -28,6 +35,7 @@ private constructor(runtimeDeployments: Int, functions: List<FunctionContainer>)
 
   private val functionContainers = functions.associate { fn -> fn.name to fn.toGenericContainer() }
   private var runtimeContainer: GenericContainer<*>? = null
+  private var network: Network? = null
 
   init {
     assert(functionContainers.size == 1) {
@@ -46,7 +54,9 @@ private constructor(runtimeDeployments: Int, functions: List<FunctionContainer>)
 
   data class Builder(
       var runtimeDeployments: Int = 1,
-      var functions: MutableList<FunctionContainer> = mutableListOf()
+      var functions: MutableList<FunctionContainer> = mutableListOf(),
+      var additionalContainers: MutableMap<String, GenericContainer<*>> = mutableMapOf(),
+      var additionalConfig: MutableMap<String, Any> = mutableMapOf()
   ) {
 
     fun function(functionContainerName: String) = apply {
@@ -61,7 +71,15 @@ private constructor(runtimeDeployments: Int, functions: List<FunctionContainer>)
       this.runtimeDeployments = runtimeDeployments
     }
 
-    fun build() = RestateDeployer(runtimeDeployments, functions)
+    /** Add a container that will be added within the same network of functions and runtime. */
+    fun withContainer(hostName: String, container: GenericContainer<*>) = apply {
+      this.additionalContainers[hostName] = container
+    }
+
+    fun withConfigEntries(key: String, value: Any) = apply { this.additionalConfig[key] = value }
+
+    fun build() =
+        RestateDeployer(runtimeDeployments, functions, additionalContainers, additionalConfig)
   }
 
   fun deploy(testClass: Class<*>) {
@@ -69,49 +87,59 @@ private constructor(runtimeDeployments: Int, functions: List<FunctionContainer>)
     val testReportDir = computeContainerTestLogsDir(testClass).toAbsolutePath().toString()
     check(File(testReportDir).mkdirs()) { "Cannot create test report directory $testReportDir" }
 
-    val network = Network.newNetwork()
+    network = Network.newNetwork()
 
     // Deploy functions
-    functionContainers.forEach { (name, genericContainer) ->
-      genericContainer
+    functionContainers.forEach { (functionName, container) ->
+      container.networkAliases = ArrayList()
+      container
           .withNetwork(network)
-          .withNetworkAliases(name)
-          .withLogConsumer(ContainerLogger(testReportDir, name))
+          .withNetworkAliases(functionName)
+          .withLogConsumer(ContainerLogger(testReportDir, functionName))
           .start()
       logger.debug(
-          "Started function container {} with endpoint {}", name, getFunctionEndpointUrl(name))
+          "Started function container {} with endpoint {}",
+          functionName,
+          getFunctionEndpointUrl(functionName))
     }
 
-    // Generate config and write to temp dir
-    val config =
-        """
-        |peers:
-        |  - 127.0.0.1:9001
-        |
-        |grpc_port: $RUNTIME_GRPC_ENDPOINT
-        |
-        |consensus:
-        |  storage_type: Memory
-        |  
-        |function_endpoint: ${getFunctionEndpointUrl(functionContainers.keys.first())}
-        """.trimMargin(
-            "|")
+    // Deploy additional containers
+    additionalContainers.forEach { (containerHost, container) ->
+      container.networkAliases = ArrayList()
+      container
+          .withNetwork(network)
+          .withNetworkAliases(containerHost)
+          .withLogConsumer(ContainerLogger(testReportDir, containerHost))
+          .start()
+      logger.debug("Started container {} with image {}", containerHost, container.dockerImageName)
+    }
 
-    val configFile =
-        File(Files.createTempDirectory("restate-e2e").toFile(), "restate.yaml").toPath()
-    Files.writeString(configFile, config)
+    val configFile = File(Files.createTempDirectory("restate-e2e").toFile(), "restate.yaml")
+
+    val config = mutableMapOf<String, Any>()
+    config["peers"] = listOf("127.0.0.1:9001")
+    config["consensus"] = mutableMapOf("storage_type" to "Memory")
+    config["grpc_port"] = RUNTIME_GRPC_ENDPOINT
+    config["function_endpoint"] = getFunctionEndpointUrl(functionContainers.keys.first())
+    config.putAll(additionalConfig)
+
+    val mapper = ObjectMapper(YAMLFactory())
+    mapper.writeValue(configFile, config)
+
     logger.debug("Written config to {}", configFile)
 
     // Generate runtime container
     runtimeContainer =
         GenericContainer(DockerImageName.parse(RUNTIME_CONTAINER))
             .dependsOn(functionContainers.values)
+            .dependsOn(additionalContainers.values)
             .withEnv("RUST_LOG", "debug")
             .withExposedPorts(RUNTIME_GRPC_ENDPOINT)
             .withNetwork(network)
             .withNetworkAliases("runtime")
             .withLogConsumer(ContainerLogger(testReportDir, "restate-runtime"))
-            .withCopyFileToContainer(MountableFile.forHostPath(configFile), "/restate.yaml")
+            .withCopyFileToContainer(
+                MountableFile.forHostPath(configFile.toPath()), "/restate.yaml")
             .withCommand("--id 1 --configuration-file /restate.yaml")
 
     if (System.getenv(IMAGE_PULL_POLICY) == ALWAYS_PULL) {
@@ -123,7 +151,9 @@ private constructor(runtimeDeployments: Int, functions: List<FunctionContainer>)
 
   fun teardown() {
     runtimeContainer!!.stop()
+    additionalContainers.forEach { (_, container) -> container.stop() }
     functionContainers.forEach { (_, container) -> container.stop() }
+    network!!.close()
   }
 
   fun getFunctionEndpointUrl(name: String): URL {
@@ -136,6 +166,12 @@ private constructor(runtimeDeployments: Int, functions: List<FunctionContainer>)
     }
         ?: throw java.lang.IllegalStateException(
             "Runtime is not configured, as RestateDeployer::deploy has not been invoked")
+  }
+
+  fun getAdditionalContainerExposedPort(hostName: String, port: Int): String {
+    return additionalContainers[hostName]?.let { "${it.host}:${it.getMappedPort(port)}" }
+        ?: throw java.lang.IllegalStateException(
+            "Requested additional container with hostname $hostName is not registered")
   }
 
   private fun computeContainerTestLogsDir(testClass: Class<*>): Path {

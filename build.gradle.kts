@@ -8,11 +8,22 @@ plugins {
   alias(libs.plugins.spotless)
 }
 
-val testReport = tasks.register<TestReport>("testReport") {
-  destinationDirectory.set(file("$buildDir/reports/tests/test"))
-  testResults.setFrom(subprojects.mapNotNull {
-    it.tasks.findByPath("test")
-  })
+val testReport =
+    tasks.register<TestReport>("testReport") {
+      destinationDirectory.set(file("$buildDir/reports/tests/test"))
+      testResults.setFrom(subprojects.mapNotNull { it.tasks.findByPath("test") })
+    }
+
+allprojects {
+  apply(plugin = "java")
+  apply(plugin = "kotlin")
+  apply(plugin = "com.diffplug.spotless")
+
+  configure<com.diffplug.gradle.spotless.SpotlessExtension> {
+    kotlin { ktfmt() }
+    kotlinGradle { ktfmt() }
+    java { googleJavaFormat() }
+  }
 }
 
 subprojects {
@@ -25,17 +36,15 @@ subprojects {
     finalizedBy(testReport)
     testLogging {
       events(
-        TestLogEvent.PASSED,
-        TestLogEvent.SKIPPED,
-        TestLogEvent.FAILED,
-        TestLogEvent.STANDARD_ERROR,
-        TestLogEvent.STANDARD_OUT
-      )
+          TestLogEvent.PASSED,
+          TestLogEvent.SKIPPED,
+          TestLogEvent.FAILED,
+          TestLogEvent.STANDARD_ERROR,
+          TestLogEvent.STANDARD_OUT)
       exceptionFormat = TestExceptionFormat.FULL
     }
-    environment = environment + mapOf(
-      "CONTAINER_LOGS_DIR" to "$buildDir/test-results/container-logs"
-    )
+    environment =
+        environment + mapOf("CONTAINER_LOGS_DIR" to "$buildDir/test-results/container-logs")
   }
 
   tasks.withType<JavaCompile>().configureEach {
@@ -43,25 +52,10 @@ subprojects {
     sourceCompatibility = JavaVersion.VERSION_11.toString()
   }
 
-  tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = JavaVersion.VERSION_11.toString()
-  }
-
-  configure<com.diffplug.gradle.spotless.SpotlessExtension> {
-    kotlin {
-      ktfmt()
-    }
-    kotlinGradle {
-      ktfmt()
-    }
-    java {
-      googleJavaFormat()
-    }
-  }
+  tasks.withType<KotlinCompile> { kotlinOptions.jvmTarget = JavaVersion.VERSION_11.toString() }
 
   configurations.all {
     // This disables caching for -SNAPSHOT dependencies
     resolutionStrategy.cacheChangingModulesFor(0, "seconds")
   }
-
 }
