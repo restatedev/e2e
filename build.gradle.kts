@@ -43,9 +43,8 @@ subprojects {
           TestLogEvent.STANDARD_OUT)
       exceptionFormat = TestExceptionFormat.FULL
     }
-    environment = environment + mapOf(
-      "CONTAINER_LOGS_DIR" to "$buildDir/test-results/container-logs"
-    )
+    environment =
+        environment + mapOf("CONTAINER_LOGS_DIR" to "$buildDir/test-results/container-logs")
   }
 
   tasks.withType<JavaCompile>().configureEach {

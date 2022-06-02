@@ -11,7 +11,6 @@ import java.time.format.DateTimeFormatter
 import org.slf4j.LoggerFactory
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.Network
-import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.images.PullPolicy
 import org.testcontainers.utility.DockerImageName
 import org.testcontainers.utility.MountableFile
@@ -93,9 +92,11 @@ private constructor(
     // Deploy functions
     functionContainers.forEach { (functionName, container) ->
       container.networkAliases = ArrayList()
-      container.withNetwork(network).withNetworkAliases(functionName)
-        .withLogConsumer(ContainerLogger(testReportDir, functionName))
-        .start()
+      container
+          .withNetwork(network)
+          .withNetworkAliases(functionName)
+          .withLogConsumer(ContainerLogger(testReportDir, functionName))
+          .start()
       logger.debug(
           "Started function container {} with endpoint {}",
           functionName,
@@ -108,7 +109,7 @@ private constructor(
       container
           .withNetwork(network)
           .withNetworkAliases(containerHost)
-        .withLogConsumer(ContainerLogger(testReportDir, containerHost))
+          .withLogConsumer(ContainerLogger(testReportDir, containerHost))
           .start()
       logger.debug("Started container {} with image {}", containerHost, container.dockerImageName)
     }
@@ -137,7 +138,8 @@ private constructor(
             .withNetwork(network)
             .withNetworkAliases("runtime")
             .withLogConsumer(ContainerLogger(testReportDir, "restate-runtime"))
-            .withCopyFileToContainer(MountableFile.forHostPath(configFile.toPath()), "/restate.yaml")
+            .withCopyFileToContainer(
+                MountableFile.forHostPath(configFile.toPath()), "/restate.yaml")
             .withCommand("--id 1 --configuration-file /restate.yaml")
 
     if (System.getenv(IMAGE_PULL_POLICY) == ALWAYS_PULL) {
