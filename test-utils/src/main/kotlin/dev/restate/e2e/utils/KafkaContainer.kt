@@ -16,6 +16,10 @@ class KafkaContainer(private vararg val topics: String) :
     org.testcontainers.containers.KafkaContainer(
         DockerImageName.parse("confluentinc/cp-kafka:5.5.1")) {
 
+  companion object {
+    const val PORT = KAFKA_PORT
+  }
+
   init {
     // Make sure we have auto.create.topics.enable as true
     withEnv("KAFKA_AUTO_CREATE_TOPICS_ENABLE", "true")
