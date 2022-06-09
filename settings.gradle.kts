@@ -38,9 +38,9 @@ dependencyResolutionManagement {
 
       version("cloudevents", "2.3.0")
 
-      version("junit-jupiter", "5.8.1")
+      version("junit-jupiter", "5.8.2")
       version("assertj", "3.22.0")
-      version("testcontainers", "1.16.3")
+      version("testcontainers", "1.17.2")
       version("awaitility", "4.2.0")
 
       version("errorprone", "2.13.1")
