@@ -8,5 +8,5 @@ import "google/protobuf/empty.proto";
 package counter;
 
 service Noop {
-  rpc doAndReportInvocationCount(google.protobuf.Empty) returns (google.protobuf.Empty);
+  rpc DoAndReportInvocationCount(google.protobuf.Empty) returns (google.protobuf.Empty);
 }

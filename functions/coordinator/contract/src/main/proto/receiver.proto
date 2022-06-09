@@ -9,7 +9,7 @@ import "google/protobuf/empty.proto";
 package coordinator;
 
 service Receiver {
-  rpc ping (google.protobuf.Empty) returns (Pong);
+  rpc Ping (google.protobuf.Empty) returns (Pong);
 }
 
 message Pong {

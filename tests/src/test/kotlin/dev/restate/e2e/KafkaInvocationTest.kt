@@ -67,7 +67,7 @@ class KafkaInvocationTest {
                     newInvocationRecord(
                         TEST_TOPIC,
                         CounterGrpc.SERVICE_NAME,
-                        "add",
+                        "Add",
                         KEY_A,
                         dev.restate.e2e.functions.counter.Number.newBuilder().setValue(1).build()))
                 .get())
@@ -80,7 +80,7 @@ class KafkaInvocationTest {
                     newInvocationRecord(
                         TEST_TOPIC,
                         CounterGrpc.SERVICE_NAME,
-                        "add",
+                        "Add",
                         KEY_B,
                         dev.restate.e2e.functions.counter.Number.newBuilder().setValue(1).build()))
                 .get())

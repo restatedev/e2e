@@ -8,10 +8,10 @@ import "google/protobuf/empty.proto";
 package counter;
 
 service Counter {
-  rpc reset (google.protobuf.Empty) returns (google.protobuf.Empty);
-  rpc add (Number) returns (google.protobuf.Empty);
-  rpc get (google.protobuf.Empty) returns (Number);
-  rpc getAndAdd (Number) returns (CounterUpdateResult);
+  rpc Reset (google.protobuf.Empty) returns (google.protobuf.Empty);
+  rpc Add (Number) returns (google.protobuf.Empty);
+  rpc Get (google.protobuf.Empty) returns (Number);
+  rpc GetAndAdd (Number) returns (CounterUpdateResult);
 }
 
 message Number {
@@ -19,6 +19,6 @@ message Number {
 }
 
 message CounterUpdateResult {
-  int64 oldValue = 1;
-  int64 newValue = 2;
+  int64 old_value = 1;
+  int64 new_value = 2;
 }

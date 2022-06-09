@@ -8,8 +8,8 @@ import "google/protobuf/empty.proto";
 package coordinator;
 
 service Coordinator {
-  rpc sleep (Duration) returns (google.protobuf.Empty);
-  rpc proxy (google.protobuf.Empty) returns (ProxyResponse);
+  rpc Sleep (Duration) returns (google.protobuf.Empty);
+  rpc Proxy (google.protobuf.Empty) returns (ProxyResponse);
 }
 
 message Duration {
