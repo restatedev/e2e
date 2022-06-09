@@ -13,7 +13,7 @@ service Coordinator {
 }
 
 message Duration {
-  int64 millis = 1;
+  uint64 millis = 1;
 }
 
 message ProxyResponse {
