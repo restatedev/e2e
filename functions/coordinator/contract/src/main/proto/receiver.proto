@@ -10,8 +10,18 @@ package coordinator;
 
 service Receiver {
   rpc Ping (google.protobuf.Empty) returns (Pong);
+  rpc SetValue(SetValueRequest) returns (google.protobuf.Empty);
+  rpc GetValue(google.protobuf.Empty) returns (GetValueResponse);
 }
 
 message Pong {
   string message = 1;
+}
+
+message SetValueRequest {
+  string value = 1;
+}
+
+message GetValueResponse {
+  string value = 1;
 }

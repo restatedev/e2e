@@ -10,6 +10,7 @@ package coordinator;
 service Coordinator {
   rpc Sleep (Duration) returns (google.protobuf.Empty);
   rpc Proxy (google.protobuf.Empty) returns (ProxyResponse);
+  rpc Complex (ComplexRequest) returns (ComplexResponse);
 }
 
 message Duration {
@@ -18,4 +19,13 @@ message Duration {
 
 message ProxyResponse {
   string message = 1;
+}
+
+message ComplexRequest {
+  Duration sleep_duration = 1;
+  string request_value = 2;
+}
+
+message ComplexResponse {
+  string response_value = 1;
 }

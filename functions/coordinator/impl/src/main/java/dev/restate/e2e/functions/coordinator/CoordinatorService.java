@@ -2,6 +2,7 @@ package dev.restate.e2e.functions.coordinator;
 
 import com.google.protobuf.Empty;
 import dev.restate.e2e.functions.receiver.ReceiverGrpc;
+import dev.restate.e2e.functions.receiver.SetValueRequest;
 import dev.restate.sdk.RestateContext;
 import io.grpc.stub.StreamObserver;
 import org.apache.logging.log4j.LogManager;
@@ -31,6 +32,33 @@ public class CoordinatorService extends CoordinatorGrpc.CoordinatorImplBase {
     var pong = receiverBlockingStub.ping(Empty.newBuilder().build());
 
     responseObserver.onNext(ProxyResponse.newBuilder().setMessage(pong.getMessage()).build());
+    responseObserver.onCompleted();
+  }
+
+  @Override
+  public void complex(ComplexRequest request, StreamObserver<ComplexResponse> responseObserver) {
+    var ctx = RestateContext.current();
+
+    ctx.sleep(java.time.Duration.ofMillis(request.getSleepDuration().getMillis()));
+
+    var channel = ctx.channel();
+
+    var receiverClient = ReceiverGrpc.newBlockingStub(channel);
+
+    // Functions should be invoked in the same order they were called. This means that
+    // fire-and-forget calls as well as coordinator calls have an absolute ordering that is defined
+    // by their call order. In this concrete case, setValue is guaranteed to be executed before
+    // getValue.
+    // TODO this only works atm because fire-and-forget messages are sent first.
+    //  See https://github.com/restatedev/java-sdk/issues/32 for more details
+    ctx.asyncDefer(
+        () ->
+            receiverClient.setValue(
+                SetValueRequest.newBuilder().setValue(request.getRequestValue()).build()));
+    var response = receiverClient.getValue(Empty.getDefaultInstance());
+
+    responseObserver.onNext(
+        ComplexResponse.newBuilder().setResponseValue(response.getValue()).build());
     responseObserver.onCompleted();
   }
 }
