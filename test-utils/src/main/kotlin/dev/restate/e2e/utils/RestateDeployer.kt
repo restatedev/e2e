@@ -138,6 +138,7 @@ private constructor(
               }
             }
             .toMap()
+    config.putAll(additionalConfig)
 
     val mapper = ObjectMapper(YAMLFactory())
     mapper.writeValue(configFile, config)
