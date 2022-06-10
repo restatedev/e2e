@@ -15,7 +15,8 @@ class CoordinatorTest {
   companion object {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension =
-        RestateDeployerExtension(RestateDeployer.Builder().function("e2e-coordinator").build())
+        RestateDeployerExtension(
+            RestateDeployer.Builder().functionSpec(Containers.COORDINATOR_CONTAINER_SPEC).build())
   }
 
   @Test

@@ -18,7 +18,7 @@ import org.testcontainers.utility.MountableFile
 class RestateDeployer
 private constructor(
     runtimeDeployments: Int,
-    functions: List<FunctionContainer>,
+    functionSpecs: List<FunctionSpec>,
     private val additionalContainers: Map<String, GenericContainer<*>>,
     private val additionalConfig: Map<String, Any>
 ) {
@@ -33,7 +33,8 @@ private constructor(
     private val logger = LoggerFactory.getLogger(RestateDeployer::class.java)
   }
 
-  private val functionContainers = functions.associate { fn -> fn.name to fn.toGenericContainer() }
+  private val functionContainers =
+      functionSpecs.associate { spec -> spec.name to spec.toFunctionContainer() }
   private var runtimeContainer: GenericContainer<*>? = null
   private var network: Network? = null
 
@@ -44,27 +45,34 @@ private constructor(
     assert(runtimeDeployments == 1) { "At the moment only one runtime deployment is supported" }
   }
 
-  data class FunctionContainer(val name: String) {
-    internal fun toGenericContainer(): GenericContainer<*> {
-      return GenericContainer(DockerImageName.parse("restatedev/$name"))
-          .withEnv("PORT", "8080")
-          .withExposedPorts(8080)
+  @Suppress("ArrayInDataClass")
+  data class FunctionSpec(val name: String, val service_endpoints: Array<out String>) {
+    internal fun toFunctionContainer(): FunctionContainer {
+      return FunctionContainer(
+          this,
+          GenericContainer(DockerImageName.parse("restatedev/$name"))
+              .withEnv("PORT", "8080")
+              .withExposedPorts(8080))
+    }
+  }
+
+  class FunctionContainer(val spec: FunctionSpec, val genericContainer: GenericContainer<*>) {
+    fun stop() {
+      genericContainer.stop()
     }
   }
 
   data class Builder(
       var runtimeDeployments: Int = 1,
-      var functions: MutableList<FunctionContainer> = mutableListOf(),
+      var functions: MutableList<FunctionSpec> = mutableListOf(),
       var additionalContainers: MutableMap<String, GenericContainer<*>> = mutableMapOf(),
       var additionalConfig: MutableMap<String, Any> = mutableMapOf()
   ) {
 
-    fun function(functionContainerName: String) = apply {
-      this.functions.add(FunctionContainer(functionContainerName))
-    }
+    fun functionSpec(functionSpec: FunctionSpec) = apply { this.functions.add(functionSpec) }
 
-    fun function(functionContainer: FunctionContainer) = apply {
-      this.functions.add(functionContainer)
+    fun functionSpec(name: String, vararg serviceEndpoints: String) = apply {
+      this.functions.add(FunctionSpec(name, serviceEndpoints))
     }
 
     fun runtimeDeployments(runtimeDeployments: Int) = apply {
@@ -90,9 +98,9 @@ private constructor(
     network = Network.newNetwork()
 
     // Deploy functions
-    functionContainers.forEach { (functionName, container) ->
-      container.networkAliases = ArrayList()
-      container
+    functionContainers.forEach { (functionName, functionContainer) ->
+      functionContainer.genericContainer.networkAliases = ArrayList()
+      functionContainer.genericContainer
           .withNetwork(network)
           .withNetworkAliases(functionName)
           .withLogConsumer(ContainerLogger(testReportDir, functionName))
@@ -118,10 +126,18 @@ private constructor(
 
     val config = mutableMapOf<String, Any>()
     config["peers"] = listOf("127.0.0.1:9001")
-    config["consensus"] = mutableMapOf("storage_type" to "Memory")
+    config["consensus"] = mapOf("storage_type" to "Memory")
     config["grpc_port"] = RUNTIME_GRPC_ENDPOINT
-    config["function_endpoint"] = getFunctionEndpointUrl(functionContainers.keys.first())
-    config.putAll(additionalConfig)
+    config["service_endpoints"] =
+        functionContainers.values
+            .flatMap { functionContainer ->
+              val serviceEndpointUrl = getFunctionEndpointUrl(functionContainer.spec.name)
+
+              functionContainer.spec.service_endpoints.map { serviceEndpoint ->
+                serviceEndpoint to serviceEndpointUrl.toString()
+              }
+            }
+            .toMap()
 
     val mapper = ObjectMapper(YAMLFactory())
     mapper.writeValue(configFile, config)
@@ -131,9 +147,13 @@ private constructor(
     // Generate runtime container
     runtimeContainer =
         GenericContainer(DockerImageName.parse(RUNTIME_CONTAINER))
-            .dependsOn(functionContainers.values)
+            .dependsOn(
+                functionContainers.values.map { functionContainer ->
+                  functionContainer.genericContainer
+                })
             .dependsOn(additionalContainers.values)
             .withEnv("RUST_LOG", "debug")
+            .withEnv("RUST_BACKTRACE", "full")
             .withExposedPorts(RUNTIME_GRPC_ENDPOINT)
             .withNetwork(network)
             .withNetworkAliases("runtime")

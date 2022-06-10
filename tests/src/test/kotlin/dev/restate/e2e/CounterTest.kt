@@ -18,7 +18,8 @@ class CounterTest {
   companion object {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension =
-        RestateDeployerExtension(RestateDeployer.Builder().function("e2e-counter").build())
+        RestateDeployerExtension(
+            RestateDeployer.Builder().functionSpec(Containers.COUNTER_CONTAINER_SPEC).build())
   }
 
   @Test
