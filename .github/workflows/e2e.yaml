@@ -2,12 +2,13 @@ name: E2E
 
 # Controls when the workflow will run
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  schedule:
-    - cron: '* */6 * * *' # Every 6 hours
+# Disabled until runtime works with new contract again
+#  push:
+#    branches: [ main ]
+#  pull_request:
+#    branches: [ main ]
+#  schedule:
+#    - cron: '* */6 * * *' # Every 6 hours
   workflow_dispatch: # To start from UI
 
 jobs:
