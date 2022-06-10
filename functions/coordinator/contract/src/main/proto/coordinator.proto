@@ -11,6 +11,7 @@ service Coordinator {
   rpc Sleep (Duration) returns (google.protobuf.Empty);
   rpc Proxy (google.protobuf.Empty) returns (ProxyResponse);
   rpc Complex (ComplexRequest) returns (ComplexResponse);
+  rpc Timeout (Duration) returns (TimeoutResponse);
 }
 
 message Duration {
@@ -28,4 +29,8 @@ message ComplexRequest {
 
 message ComplexResponse {
   string response_value = 1;
+}
+
+message TimeoutResponse {
+  bool timeout_occurred = 1;
 }

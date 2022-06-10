@@ -2,7 +2,7 @@ package dev.restate.e2e
 
 import com.google.protobuf.Empty
 import dev.restate.e2e.functions.coordinator.ComplexRequest
-import dev.restate.e2e.functions.coordinator.CoordinatorGrpc
+import dev.restate.e2e.functions.coordinator.CoordinatorGrpc.CoordinatorBlockingStub
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
 import java.time.Duration
@@ -22,7 +22,7 @@ class CoordinatorTest {
   @Test
   fun sleep(
       @RestateDeployerExtension.InjectBlockingStub("e2e-coordinator")
-      coordinatorClient: CoordinatorGrpc.CoordinatorBlockingStub
+      coordinatorClient: CoordinatorBlockingStub
   ) {
     val sleepDuration = Duration.ofMillis(10L)
 
@@ -39,7 +39,7 @@ class CoordinatorTest {
   @Test
   fun invoke_other_function(
       @RestateDeployerExtension.InjectBlockingStub("e2e-coordinator")
-      coordinatorClient: CoordinatorGrpc.CoordinatorBlockingStub
+      coordinatorClient: CoordinatorBlockingStub
   ) {
     val response = coordinatorClient.proxy(Empty.getDefaultInstance())
 
@@ -49,7 +49,7 @@ class CoordinatorTest {
   @Test
   fun complex_coordination(
       @RestateDeployerExtension.InjectBlockingStub("e2e-coordinatator")
-      coordinatorClient: CoordinatorGrpc.CoordinatorBlockingStub
+      coordinatorClient: CoordinatorBlockingStub
   ) {
     val sleepDuration = Duration.ofMillis(10L)
 
@@ -62,5 +62,20 @@ class CoordinatorTest {
     }
 
     assertThat(Duration.ofNanos(elapsed)).isGreaterThanOrEqualTo(sleepDuration)
+  }
+
+  @Test
+  fun timeout(
+      @RestateDeployerExtension.InjectBlockingStub("e2e-coordinator")
+      coordinatorClient: CoordinatorBlockingStub
+  ) {
+    val timeout = Duration.ofMillis(10L)
+    val response =
+        coordinatorClient.timeout(
+            dev.restate.e2e.functions.coordinator.Duration.newBuilder()
+                .setMillis(timeout.toMillis())
+                .build())
+
+    assertThat(response.timeoutOccurred).isTrue
   }
 }

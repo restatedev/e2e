@@ -5,6 +5,7 @@ import dev.restate.e2e.functions.receiver.ReceiverGrpc;
 import dev.restate.e2e.functions.receiver.SetValueRequest;
 import dev.restate.sdk.RestateContext;
 import io.grpc.stub.StreamObserver;
+import java.util.concurrent.TimeoutException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -59,6 +60,25 @@ public class CoordinatorService extends CoordinatorGrpc.CoordinatorImplBase {
 
     responseObserver.onNext(
         ComplexResponse.newBuilder().setResponseValue(response.getValue()).build());
+    responseObserver.onCompleted();
+  }
+
+  @Override
+  public void timeout(Duration request, StreamObserver<TimeoutResponse> responseObserver) {
+    RestateContext ctx = RestateContext.current();
+
+    var timeoutOccurred = false;
+
+    var sleepAwaitable = ctx.asyncCall(Void.TYPE, ignored -> {});
+
+    try {
+      sleepAwaitable.await(java.time.Duration.ofMillis(request.getMillis()));
+    } catch (TimeoutException te) {
+      timeoutOccurred = true;
+    }
+
+    responseObserver.onNext(
+        TimeoutResponse.newBuilder().setTimeoutOccurred(timeoutOccurred).build());
     responseObserver.onCompleted();
   }
 }
