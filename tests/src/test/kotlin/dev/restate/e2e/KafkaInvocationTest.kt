@@ -12,7 +12,6 @@ import io.cloudevents.CloudEvent
 import io.cloudevents.core.message.Encoding
 import io.cloudevents.kafka.CloudEventSerializer
 import java.util.*
-import java.util.concurrent.TimeUnit
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.serialization.StringSerializer
@@ -20,7 +19,6 @@ import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.slf4j.LoggerFactory
 
@@ -50,7 +48,6 @@ class KafkaInvocationTest {
                 .build())
   }
 
-  @Timeout(10, unit = TimeUnit.SECONDS)
   @Test
   fun incrementCounterFromKafka(
       @InjectBlockingStub("e2e-counter", KEY_A) counterClientA: CounterBlockingStub,
