@@ -46,12 +46,17 @@ private constructor(
   }
 
   @Suppress("ArrayInDataClass")
-  data class FunctionSpec(val name: String, val service_endpoints: Array<out String>) {
+  data class FunctionSpec(
+      val name: String,
+      val service_endpoints: Array<out String>,
+      val envs: Map<String, String>
+  ) {
     internal fun toFunctionContainer(): FunctionContainer {
       return FunctionContainer(
           this,
           GenericContainer(DockerImageName.parse("restatedev/$name"))
               .withEnv("PORT", "8080")
+              .withEnv(envs)
               .withExposedPorts(8080))
     }
   }
@@ -63,17 +68,13 @@ private constructor(
   }
 
   data class Builder(
-      var runtimeDeployments: Int = 1,
-      var functions: MutableList<FunctionSpec> = mutableListOf(),
-      var additionalContainers: MutableMap<String, GenericContainer<*>> = mutableMapOf(),
-      var additionalConfig: MutableMap<String, Any> = mutableMapOf()
+      private var runtimeDeployments: Int = 1,
+      private var functions: MutableList<FunctionSpec> = mutableListOf(),
+      private var additionalContainers: MutableMap<String, GenericContainer<*>> = mutableMapOf(),
+      private var additionalConfig: MutableMap<String, Any> = mutableMapOf()
   ) {
 
     fun functionSpec(functionSpec: FunctionSpec) = apply { this.functions.add(functionSpec) }
-
-    fun functionSpec(name: String, vararg serviceEndpoints: String) = apply {
-      this.functions.add(FunctionSpec(name, serviceEndpoints))
-    }
 
     fun runtimeDeployments(runtimeDeployments: Int) = apply {
       this.runtimeDeployments = runtimeDeployments
@@ -82,6 +83,10 @@ private constructor(
     /** Add a container that will be added within the same network of functions and runtime. */
     fun withContainer(hostName: String, container: GenericContainer<*>) = apply {
       this.additionalContainers[hostName] = container
+    }
+
+    fun withContainer(entry: Pair<String, GenericContainer<*>>) = apply {
+      this.additionalContainers[entry.first] = entry.second
     }
 
     fun withConfigEntries(key: String, value: Any) = apply { this.additionalConfig[key] = value }

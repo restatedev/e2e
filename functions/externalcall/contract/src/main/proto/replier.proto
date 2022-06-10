@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "dev.restate.e2e.functions.externalcall";
+option java_outer_classname = "ReplierProto";
+
+import "google/protobuf/empty.proto";
+package restate.e2e.externalcall.replier;
+
+service Replier {
+  rpc ReplyToRandomNumberListGenerator(Reply) returns (google.protobuf.Empty);
+}
+
+message Reply {
+  bytes reply_identifier = 1;
+  bytes payload = 2;
+}

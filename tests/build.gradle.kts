@@ -8,6 +8,7 @@ dependencies {
   testImplementation(project(":test-utils"))
   testImplementation(project(":functions:counter:contract"))
   testImplementation(project(":functions:coordinator:contract"))
+  testImplementation(project(":functions:externalcall:contract"))
 
   testImplementation(libs.junit5)
   testImplementation(libs.assertj)
