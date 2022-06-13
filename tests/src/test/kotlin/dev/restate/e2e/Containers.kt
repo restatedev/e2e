@@ -1,16 +1,23 @@
 package dev.restate.e2e
 
+import dev.restate.e2e.functions.coordinator.CoordinatorGrpc
+import dev.restate.e2e.functions.counter.CounterGrpc
+import dev.restate.e2e.functions.counter.NoopGrpc
+import dev.restate.e2e.functions.externalcall.RandomNumberListGeneratorGrpc
+import dev.restate.e2e.functions.externalcall.ReplierGrpc
 import dev.restate.e2e.utils.RestateDeployer
 import org.testcontainers.containers.GenericContainer
 
 object Containers {
   val COUNTER_CONTAINER_SPEC =
       RestateDeployer.FunctionSpec(
-          "e2e-counter", arrayOf("counter.Counter", "counter.Noop"), mapOf())
+          "e2e-counter", arrayOf(CounterGrpc.SERVICE_NAME, NoopGrpc.SERVICE_NAME), mapOf())
 
   val COORDINATOR_CONTAINER_SPEC =
       RestateDeployer.FunctionSpec(
-          "e2e-coordinator", arrayOf("coordinator.Coordinator", "coordinator.Receiver"), mapOf())
+          "e2e-coordinator",
+          arrayOf(CoordinatorGrpc.SERVICE_NAME, CoordinatorGrpc.SERVICE_NAME),
+          mapOf())
 
   val EXTERNALCALL_HTTP_SERVER_CONTAINER_SPEC =
       "e2e-http-server" to
@@ -21,9 +28,7 @@ object Containers {
   val EXTERNALCALL_CONTAINER_SPEC =
       RestateDeployer.FunctionSpec(
           "e2e-externalcall",
-          arrayOf(
-              "restate.e2e.externalcall.rnlg.RandomNumberListGenerator",
-              "restate.e2e.externalcall.replier.Replier"),
+          arrayOf(RandomNumberListGeneratorGrpc.SERVICE_NAME, ReplierGrpc.SERVICE_NAME),
           mapOf(
               "HTTP_SERVER_ADDRESS" to
                   "http://${EXTERNALCALL_HTTP_SERVER_CONTAINER_SPEC.first}:8080"))
