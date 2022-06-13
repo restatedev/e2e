@@ -5,6 +5,9 @@ include(
     "functions:coordinator:impl",
     "functions:counter:contract",
     "functions:counter:impl",
+    "functions:externalcall:contract",
+    "functions:externalcall:impl",
+    "functions:http-server",
     "functions:utils",
     "test-utils",
     "tests")
@@ -101,3 +104,7 @@ if (!System.getenv("E2E_LOCAL_BUILD").isNullOrEmpty()) {
     dependencySubstitution { substitute(module("dev.restate.sdk:java-sdk")).using(project(":sdk")) }
   }
 }
+
+include("functions:http-server")
+
+findProject(":functions:http-server")?.name = "http-server"

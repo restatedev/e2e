@@ -35,7 +35,7 @@ class KafkaInvocationTest {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .functionSpec(Containers.COUNTER_CONTAINER_SPEC)
+                .functionSpec(Containers.COUNTER_FUNCTION_SPEC)
                 .withContainer("kafka", KafkaContainer(TEST_TOPIC))
                 .withConfigEntries(
                     "kafka",

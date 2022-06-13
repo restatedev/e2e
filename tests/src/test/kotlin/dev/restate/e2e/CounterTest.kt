@@ -19,7 +19,7 @@ class CounterTest {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
-            RestateDeployer.Builder().functionSpec(Containers.COUNTER_CONTAINER_SPEC).build())
+            RestateDeployer.Builder().functionSpec(Containers.COUNTER_FUNCTION_SPEC).build())
   }
 
   @Test
