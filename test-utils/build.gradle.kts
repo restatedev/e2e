@@ -1,6 +1,7 @@
 plugins {
   java
   kotlin("jvm") version "1.6.20"
+  `maven-publish`
 }
 
 dependencies {
@@ -17,4 +18,26 @@ dependencies {
 
   implementation(libs.grpc.stub)
   implementation(libs.grpc.netty.shaded)
+}
+
+publishing {
+  repositories {
+    maven {
+      name = "GitHubPackages"
+      url = uri("https://maven.pkg.github.com/restatedev/e2e")
+      credentials {
+        username = System.getenv("GITHUB_ACTOR")
+        password = System.getenv("GITHUB_TOKEN")
+      }
+    }
+  }
+  publications {
+    register<MavenPublication>("gpr") {
+      groupId = "dev.restate.testing"
+      artifactId = "e2e-utils"
+      version = "1.0-SNAPSHOT"
+
+      from(components["java"])
+    }
+  }
 }
