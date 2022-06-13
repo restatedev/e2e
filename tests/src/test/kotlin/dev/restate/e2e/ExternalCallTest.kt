@@ -16,7 +16,7 @@ class ExternalCallTest {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .functionSpec(Containers.EXTERNALCALL_CONTAINER_SPEC)
+                .functionSpec(Containers.EXTERNALCALL_FUNCTION_SPEC)
                 .withContainer(Containers.EXTERNALCALL_HTTP_SERVER_CONTAINER_SPEC)
                 .build())
   }

@@ -41,7 +41,8 @@ public class RandomNumberListGeneratorService
             .asyncCall(
                 replyId -> {
                   try {
-                    sendExternalHttpRequest(replyId, objectMapper.writeValueAsBytes(numbers));
+                    sendExternalSortNumbersRequest(
+                        replyId, objectMapper.writeValueAsBytes(numbers));
                   } catch (Exception e) {
                     throw new RuntimeException(
                         "Something went wrong while trying to invoking the external http server",
@@ -62,7 +63,7 @@ public class RandomNumberListGeneratorService
     responseObserver.onCompleted();
   }
 
-  private void sendExternalHttpRequest(ReplyIdentifier replyId, byte[] serializedNumbers)
+  private void sendExternalSortNumbersRequest(ReplyIdentifier replyId, byte[] serializedNumbers)
       throws Exception {
     HttpClient client = HttpClient.newHttpClient();
 

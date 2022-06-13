@@ -16,7 +16,7 @@ class CoordinatorTest {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
-            RestateDeployer.Builder().functionSpec(Containers.COORDINATOR_CONTAINER_SPEC).build())
+            RestateDeployer.Builder().functionSpec(Containers.COORDINATOR_FUNCTION_SPEC).build())
   }
 
   @Test

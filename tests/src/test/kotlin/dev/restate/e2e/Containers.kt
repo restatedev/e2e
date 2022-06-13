@@ -9,11 +9,11 @@ import dev.restate.e2e.utils.RestateDeployer
 import org.testcontainers.containers.GenericContainer
 
 object Containers {
-  val COUNTER_CONTAINER_SPEC =
+  val COUNTER_FUNCTION_SPEC =
       RestateDeployer.FunctionSpec(
           "e2e-counter", arrayOf(CounterGrpc.SERVICE_NAME, NoopGrpc.SERVICE_NAME), mapOf())
 
-  val COORDINATOR_CONTAINER_SPEC =
+  val COORDINATOR_FUNCTION_SPEC =
       RestateDeployer.FunctionSpec(
           "e2e-coordinator",
           arrayOf(CoordinatorGrpc.SERVICE_NAME, CoordinatorGrpc.SERVICE_NAME),
@@ -25,7 +25,7 @@ object Containers {
               .withEnv("PORT", "8080")
               .withExposedPorts(8080)
 
-  val EXTERNALCALL_CONTAINER_SPEC =
+  val EXTERNALCALL_FUNCTION_SPEC =
       RestateDeployer.FunctionSpec(
           "e2e-externalcall",
           arrayOf(RandomNumberListGeneratorGrpc.SERVICE_NAME, ReplierGrpc.SERVICE_NAME),
