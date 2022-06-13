@@ -1,6 +1,6 @@
 package dev.restate.e2e.functions.utils;
 
-import dev.restate.sdk.RestateGrpcInterceptors;
+import dev.restate.sdk.RestateGrpcInterceptor;
 import io.grpc.BindableService;
 import io.grpc.ServerBuilder;
 import io.grpc.ServerServiceDefinition;
@@ -19,7 +19,7 @@ public class ServiceRunner {
 
   private ServiceRunner(List<? extends BindableService> bindableServices, int port) {
     this.serverServiceDefinitions =
-        bindableServices.stream().map(RestateGrpcInterceptors::from).collect(Collectors.toList());
+        bindableServices.stream().map(RestateGrpcInterceptor::from).collect(Collectors.toList());
     this.port = port;
   }
 

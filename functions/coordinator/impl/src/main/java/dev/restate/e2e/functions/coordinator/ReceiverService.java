@@ -7,7 +7,6 @@ import dev.restate.e2e.functions.receiver.ReceiverGrpc;
 import dev.restate.e2e.functions.receiver.SetValueRequest;
 import dev.restate.sdk.RestateContext;
 import io.grpc.stub.StreamObserver;
-import java.nio.charset.StandardCharsets;
 
 public class ReceiverService extends ReceiverGrpc.ReceiverImplBase {
 
@@ -23,7 +22,7 @@ public class ReceiverService extends ReceiverGrpc.ReceiverImplBase {
   public void setValue(SetValueRequest request, StreamObserver<Empty> responseObserver) {
     var ctx = RestateContext.current();
 
-    ctx.set(STATE_KEY, request.getValue().getBytes(StandardCharsets.UTF_8));
+    ctx.set(STATE_KEY, request.getValue());
 
     responseObserver.onNext(Empty.getDefaultInstance());
     responseObserver.onCompleted();
@@ -33,8 +32,7 @@ public class ReceiverService extends ReceiverGrpc.ReceiverImplBase {
   public void getValue(Empty request, StreamObserver<GetValueResponse> responseObserver) {
     var ctx = RestateContext.current();
 
-    var state =
-        ctx.get(STATE_KEY).map(bytes -> new String(bytes, StandardCharsets.UTF_8)).orElse("");
+    var state = ctx.get(STATE_KEY, String.class).orElse("");
 
     responseObserver.onNext(GetValueResponse.newBuilder().setValue(state).build());
     responseObserver.onCompleted();
