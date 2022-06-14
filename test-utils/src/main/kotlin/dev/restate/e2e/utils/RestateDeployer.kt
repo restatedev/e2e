@@ -34,7 +34,7 @@ private constructor(
   }
 
   private val functionContainers =
-      functionSpecs.associate { spec -> spec.name to spec.toFunctionContainer() }
+      functionSpecs.associate { spec -> spec.hostName to spec.toFunctionContainer() }
   private var runtimeContainer: GenericContainer<*>? = null
   private var network: Network? = null
 
@@ -45,28 +45,6 @@ private constructor(
     assert(runtimeDeployments == 1) { "At the moment only one runtime deployment is supported" }
   }
 
-  @Suppress("ArrayInDataClass")
-  data class FunctionSpec(
-      val name: String,
-      val service_endpoints: Array<out String>,
-      val envs: Map<String, String>
-  ) {
-    internal fun toFunctionContainer(): FunctionContainer {
-      return FunctionContainer(
-          this,
-          GenericContainer(DockerImageName.parse("restatedev/$name"))
-              .withEnv("PORT", "8080")
-              .withEnv(envs)
-              .withExposedPorts(8080))
-    }
-  }
-
-  class FunctionContainer(val spec: FunctionSpec, val genericContainer: GenericContainer<*>) {
-    fun stop() {
-      genericContainer.stop()
-    }
-  }
-
   data class Builder(
       private var runtimeDeployments: Int = 1,
       private var functions: MutableList<FunctionSpec> = mutableListOf(),
@@ -74,7 +52,16 @@ private constructor(
       private var additionalConfig: MutableMap<String, Any> = mutableMapOf()
   ) {
 
-    fun functionSpec(functionSpec: FunctionSpec) = apply { this.functions.add(functionSpec) }
+    fun withFunction(functionSpec: FunctionSpec) = apply { this.functions.add(functionSpec) }
+
+    fun withFunction(functionSpecBuilder: FunctionSpec.Builder) = apply {
+      this.functions.add(functionSpecBuilder.build())
+    }
+
+    /** Add a function with default configuration. */
+    fun withFunction(containerImageName: String, grpcServiceName: String) = apply {
+      this.withFunction(FunctionSpec.builder(containerImageName, grpcServiceName))
+    }
 
     fun runtimeDeployments(runtimeDeployments: Int) = apply {
       this.runtimeDeployments = runtimeDeployments
@@ -104,8 +91,8 @@ private constructor(
 
     // Deploy functions
     functionContainers.forEach { (functionName, functionContainer) ->
-      functionContainer.genericContainer.networkAliases = ArrayList()
-      functionContainer.genericContainer
+      functionContainer.second.networkAliases = ArrayList()
+      functionContainer.second
           .withNetwork(network)
           .withNetworkAliases(functionName)
           .withLogConsumer(ContainerLogger(testReportDir, functionName))
@@ -136,9 +123,9 @@ private constructor(
     config["service_endpoints"] =
         functionContainers.values
             .flatMap { functionContainer ->
-              val serviceEndpointUrl = getFunctionEndpointUrl(functionContainer.spec.name)
+              val serviceEndpointUrl = getFunctionEndpointUrl(functionContainer.first.hostName)
 
-              functionContainer.spec.service_endpoints.map { serviceEndpoint ->
+              functionContainer.first.service_endpoints.map { serviceEndpoint ->
                 serviceEndpoint to serviceEndpointUrl.toString()
               }
             }
@@ -153,10 +140,7 @@ private constructor(
     // Generate runtime container
     runtimeContainer =
         GenericContainer(DockerImageName.parse(RUNTIME_CONTAINER))
-            .dependsOn(
-                functionContainers.values.map { functionContainer ->
-                  functionContainer.genericContainer
-                })
+            .dependsOn(functionContainers.values.map { it.second })
             .dependsOn(additionalContainers.values)
             .withEnv("RUST_LOG", "debug")
             .withEnv("RUST_BACKTRACE", "full")
@@ -178,7 +162,7 @@ private constructor(
   fun teardown() {
     runtimeContainer!!.stop()
     additionalContainers.forEach { (_, container) -> container.stop() }
-    functionContainers.forEach { (_, container) -> container.stop() }
+    functionContainers.forEach { (_, container) -> container.second.stop() }
     network!!.close()
   }
 
@@ -186,7 +170,7 @@ private constructor(
     return URL("http", name, 8080, "/")
   }
 
-  fun getRuntimeFunctionEndpointUrl(_name: String): URL {
+  fun getRuntimeFunctionEndpointUrl(): URL {
     return runtimeContainer?.getMappedPort(RUNTIME_GRPC_ENDPOINT)?.let {
       URL("http", "127.0.0.1", it, "/")
     }

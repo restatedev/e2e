@@ -3,11 +3,11 @@ package dev.restate.e2e
 import com.google.protobuf.Empty
 import dev.restate.e2e.functions.counter.CounterGrpc
 import dev.restate.e2e.functions.counter.CounterGrpc.CounterBlockingStub
+import dev.restate.e2e.utils.InjectBlockingStub
+import dev.restate.e2e.utils.InjectContainerAddress
 import dev.restate.e2e.utils.KafkaContainer
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
-import dev.restate.e2e.utils.RestateDeployerExtension.InjectBlockingStub
-import dev.restate.e2e.utils.RestateDeployerExtension.InjectContainerAddress
 import io.cloudevents.CloudEvent
 import io.cloudevents.core.message.Encoding
 import io.cloudevents.kafka.CloudEventSerializer
@@ -35,7 +35,7 @@ class KafkaInvocationTest {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .functionSpec(Containers.COUNTER_FUNCTION_SPEC)
+                .withFunction(Containers.COUNTER_FUNCTION_SPEC)
                 .withContainer("kafka", KafkaContainer(TEST_TOPIC))
                 .withConfigEntries(
                     "kafka",
@@ -50,8 +50,8 @@ class KafkaInvocationTest {
 
   @Test
   fun incrementCounterFromKafka(
-      @InjectBlockingStub("e2e-counter", KEY_A) counterClientA: CounterBlockingStub,
-      @InjectBlockingStub("e2e-counter", KEY_B) counterClientB: CounterBlockingStub,
+      @InjectBlockingStub(KEY_A) counterClientA: CounterBlockingStub,
+      @InjectBlockingStub(KEY_B) counterClientB: CounterBlockingStub,
       @InjectContainerAddress("kafka", KafkaContainer.PORT) kafkaAddress: String
   ) {
     createProducer(kafkaAddress).use { producer ->

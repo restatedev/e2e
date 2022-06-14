@@ -3,6 +3,7 @@ package dev.restate.e2e
 import com.google.protobuf.Empty
 import dev.restate.e2e.functions.coordinator.ComplexRequest
 import dev.restate.e2e.functions.coordinator.CoordinatorGrpc.CoordinatorBlockingStub
+import dev.restate.e2e.utils.InjectBlockingStub
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
 import java.time.Duration
@@ -16,14 +17,11 @@ class CoordinatorTest {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
-            RestateDeployer.Builder().functionSpec(Containers.COORDINATOR_FUNCTION_SPEC).build())
+            RestateDeployer.Builder().withFunction(Containers.COORDINATOR_FUNCTION_SPEC).build())
   }
 
   @Test
-  fun sleep(
-      @RestateDeployerExtension.InjectBlockingStub("e2e-coordinator")
-      coordinatorClient: CoordinatorBlockingStub
-  ) {
+  fun sleep(@InjectBlockingStub coordinatorClient: CoordinatorBlockingStub) {
     val sleepDuration = Duration.ofMillis(10L)
 
     val elapsed = measureNanoTime {
@@ -37,20 +35,14 @@ class CoordinatorTest {
   }
 
   @Test
-  fun invoke_other_function(
-      @RestateDeployerExtension.InjectBlockingStub("e2e-coordinator")
-      coordinatorClient: CoordinatorBlockingStub
-  ) {
+  fun invoke_other_function(@InjectBlockingStub coordinatorClient: CoordinatorBlockingStub) {
     val response = coordinatorClient.proxy(Empty.getDefaultInstance())
 
     assertThat(response.message).isEqualTo("pong")
   }
 
   @Test
-  fun complex_coordination(
-      @RestateDeployerExtension.InjectBlockingStub("e2e-coordinatator")
-      coordinatorClient: CoordinatorBlockingStub
-  ) {
+  fun complex_coordination(@InjectBlockingStub coordinatorClient: CoordinatorBlockingStub) {
     val sleepDuration = Duration.ofMillis(10L)
 
     val elapsed = measureNanoTime {
@@ -65,10 +57,7 @@ class CoordinatorTest {
   }
 
   @Test
-  fun timeout(
-      @RestateDeployerExtension.InjectBlockingStub("e2e-coordinator")
-      coordinatorClient: CoordinatorBlockingStub
-  ) {
+  fun timeout(@InjectBlockingStub coordinatorClient: CoordinatorBlockingStub) {
     val timeout = Duration.ofMillis(10L)
     val response =
         coordinatorClient.timeout(

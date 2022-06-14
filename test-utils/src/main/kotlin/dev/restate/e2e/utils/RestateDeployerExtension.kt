@@ -10,12 +10,6 @@ import org.junit.jupiter.api.extension.*
 class RestateDeployerExtension(private val deployer: RestateDeployer) :
     BeforeAllCallback, AfterAllCallback, ParameterResolver {
 
-  @Target(AnnotationTarget.VALUE_PARAMETER)
-  annotation class InjectBlockingStub(val functionContainerName: String, val key: String = "")
-
-  @Target(AnnotationTarget.VALUE_PARAMETER)
-  annotation class InjectContainerAddress(val hostName: String, val port: Int)
-
   override fun beforeAll(context: ExtensionContext) {
     deployer.deploy(context.requiredTestClass)
   }
@@ -56,7 +50,7 @@ class RestateDeployerExtension(private val deployer: RestateDeployer) :
     var stub: AbstractBlockingStub<*> =
         stubFactoryMethod.invoke(
             null,
-            deployer.getRuntimeFunctionEndpointUrl(annotation.functionContainerName).let { url ->
+            deployer.getRuntimeFunctionEndpointUrl().let { url ->
               NettyChannelBuilder.forAddress(url.host, url.port).usePlaintext().build()
             }) as AbstractBlockingStub<*>
 
