@@ -123,8 +123,7 @@ private constructor(
     config["service_endpoints"] =
         functionContainers.values
             .flatMap { functionContainer ->
-              val serviceEndpointUrl =
-                  getFunctionEndpointUrl(functionContainer.first.containerImage)
+              val serviceEndpointUrl = getFunctionEndpointUrl(functionContainer.first.hostName)
 
               functionContainer.first.service_endpoints.map { serviceEndpoint ->
                 serviceEndpoint to serviceEndpointUrl.toString()
@@ -171,7 +170,7 @@ private constructor(
     return URL("http", name, 8080, "/")
   }
 
-  fun getRuntimeFunctionEndpointUrl(_name: String): URL {
+  fun getRuntimeFunctionEndpointUrl(): URL {
     return runtimeContainer?.getMappedPort(RUNTIME_GRPC_ENDPOINT)?.let {
       URL("http", "127.0.0.1", it, "/")
     }

@@ -21,7 +21,7 @@ class CoordinatorTest {
   }
 
   @Test
-  fun sleep(@InjectBlockingStub("e2e-coordinator") coordinatorClient: CoordinatorBlockingStub) {
+  fun sleep(@InjectBlockingStub coordinatorClient: CoordinatorBlockingStub) {
     val sleepDuration = Duration.ofMillis(10L)
 
     val elapsed = measureNanoTime {
@@ -35,18 +35,14 @@ class CoordinatorTest {
   }
 
   @Test
-  fun invoke_other_function(
-      @InjectBlockingStub("e2e-coordinator") coordinatorClient: CoordinatorBlockingStub
-  ) {
+  fun invoke_other_function(@InjectBlockingStub coordinatorClient: CoordinatorBlockingStub) {
     val response = coordinatorClient.proxy(Empty.getDefaultInstance())
 
     assertThat(response.message).isEqualTo("pong")
   }
 
   @Test
-  fun complex_coordination(
-      @InjectBlockingStub("e2e-coordinatator") coordinatorClient: CoordinatorBlockingStub
-  ) {
+  fun complex_coordination(@InjectBlockingStub coordinatorClient: CoordinatorBlockingStub) {
     val sleepDuration = Duration.ofMillis(10L)
 
     val elapsed = measureNanoTime {
@@ -61,10 +57,7 @@ class CoordinatorTest {
   }
 
   @Test
-  fun timeout(
-      @RestateDeployerExtension.InjectBlockingStub("e2e-coordinator")
-      coordinatorClient: CoordinatorBlockingStub
-  ) {
+  fun timeout(@InjectBlockingStub coordinatorClient: CoordinatorBlockingStub) {
     val timeout = Duration.ofMillis(10L)
     val response =
         coordinatorClient.timeout(

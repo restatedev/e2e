@@ -50,8 +50,8 @@ class KafkaInvocationTest {
 
   @Test
   fun incrementCounterFromKafka(
-      @InjectBlockingStub("e2e-counter", KEY_A) counterClientA: CounterBlockingStub,
-      @InjectBlockingStub("e2e-counter", KEY_B) counterClientB: CounterBlockingStub,
+      @InjectBlockingStub(KEY_A) counterClientA: CounterBlockingStub,
+      @InjectBlockingStub(KEY_B) counterClientB: CounterBlockingStub,
       @InjectContainerAddress("kafka", KafkaContainer.PORT) kafkaAddress: String
   ) {
     createProducer(kafkaAddress).use { producer ->

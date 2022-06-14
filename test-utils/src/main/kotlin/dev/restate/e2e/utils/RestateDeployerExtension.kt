@@ -50,7 +50,7 @@ class RestateDeployerExtension(private val deployer: RestateDeployer) :
     var stub: AbstractBlockingStub<*> =
         stubFactoryMethod.invoke(
             null,
-            deployer.getRuntimeFunctionEndpointUrl(annotation.functionContainerName).let { url ->
+            deployer.getRuntimeFunctionEndpointUrl().let { url ->
               NettyChannelBuilder.forAddress(url.host, url.port).usePlaintext().build()
             }) as AbstractBlockingStub<*>
 

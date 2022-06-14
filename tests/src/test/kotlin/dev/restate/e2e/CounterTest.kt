@@ -23,12 +23,12 @@ class CounterTest {
   }
 
   @Test
-  fun noReturnValue(@InjectBlockingStub("e2e-counter") counterClient: CounterBlockingStub) {
+  fun noReturnValue(@InjectBlockingStub counterClient: CounterBlockingStub) {
     counterClient.add(dev.restate.e2e.functions.counter.Number.newBuilder().setValue(1).build())
   }
 
   @Test
-  fun keyedState(@InjectBlockingStub("e2e-counter", "my-key") counterClient: CounterBlockingStub) {
+  fun keyedState(@InjectBlockingStub("my-key") counterClient: CounterBlockingStub) {
     val res1 =
         counterClient.getAndAdd(
             dev.restate.e2e.functions.counter.Number.newBuilder().setValue(1).build())
@@ -44,9 +44,8 @@ class CounterTest {
 
   @Test
   fun fireAndForget(
-      @InjectBlockingStub("e2e-counter") noopClient: NoopBlockingStub,
-      @InjectBlockingStub("e2e-counter", "doAndReportInvocationCount")
-      counterClient: CounterBlockingStub
+      @InjectBlockingStub noopClient: NoopBlockingStub,
+      @InjectBlockingStub("doAndReportInvocationCount") counterClient: CounterBlockingStub
   ) {
     noopClient.doAndReportInvocationCount(Empty.getDefaultInstance())
     noopClient.doAndReportInvocationCount(Empty.getDefaultInstance())

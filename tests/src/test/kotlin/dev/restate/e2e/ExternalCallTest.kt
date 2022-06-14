@@ -24,7 +24,6 @@ class ExternalCallTest {
   @Test
   fun generate(
       @InjectBlockingStub(
-          "e2e-externalcall",
           // TODO The reason for setting the key here is to avoid a deadlock, which is caused by the
           // partition processor blocking on the http request to the function service. Once the
           // partition processor will be able to process asynchronously the responses from the
