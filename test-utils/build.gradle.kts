@@ -5,19 +5,23 @@ plugins {
 }
 
 dependencies {
-  implementation(libs.slf4j)
-  implementation(libs.junit5)
-  implementation(platform(libs.testcontainers.bom))
-  implementation(libs.testcontainers.core)
-  implementation(libs.testcontainers.kafka)
+  api(libs.junit.api)
+  api(platform(libs.testcontainers.bom))
+  api(libs.testcontainers.core)
+  api(libs.testcontainers.kafka)
+
+  api(libs.grpc.stub)
 
   implementation(platform(libs.jackson.bom))
   implementation(libs.jackson.core)
   implementation(libs.jackson.databind)
   implementation(libs.jackson.yaml)
 
-  implementation(libs.grpc.stub)
+  implementation(libs.slf4j)
   implementation(libs.grpc.netty.shaded)
+
+  testImplementation(libs.junit.all)
+  testImplementation(libs.assertj)
 }
 
 publishing {

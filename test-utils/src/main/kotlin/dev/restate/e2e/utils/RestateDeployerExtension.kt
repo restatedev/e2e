@@ -10,12 +10,6 @@ import org.junit.jupiter.api.extension.*
 class RestateDeployerExtension(private val deployer: RestateDeployer) :
     BeforeAllCallback, AfterAllCallback, ParameterResolver {
 
-  @Target(AnnotationTarget.VALUE_PARAMETER)
-  annotation class InjectBlockingStub(val functionContainerName: String, val key: String = "")
-
-  @Target(AnnotationTarget.VALUE_PARAMETER)
-  annotation class InjectContainerAddress(val hostName: String, val port: Int)
-
   override fun beforeAll(context: ExtensionContext) {
     deployer.deploy(context.requiredTestClass)
   }

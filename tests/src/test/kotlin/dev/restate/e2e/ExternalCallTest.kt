@@ -2,9 +2,9 @@ package dev.restate.e2e
 
 import dev.restate.e2e.functions.externalcall.GenerateNumbersRequest
 import dev.restate.e2e.functions.externalcall.RandomNumberListGeneratorGrpc.RandomNumberListGeneratorBlockingStub
+import dev.restate.e2e.utils.InjectBlockingStub
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
-import dev.restate.e2e.utils.RestateDeployerExtension.InjectBlockingStub
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
@@ -16,7 +16,7 @@ class ExternalCallTest {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .functionSpec(Containers.EXTERNALCALL_FUNCTION_SPEC)
+                .withFunction(Containers.EXTERNALCALL_FUNCTION_SPEC)
                 .withContainer(Containers.EXTERNALCALL_HTTP_SERVER_CONTAINER_SPEC)
                 .build())
   }

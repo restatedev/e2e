@@ -10,7 +10,7 @@ dependencies {
   testImplementation(project(":functions:coordinator:contract"))
   testImplementation(project(":functions:externalcall:contract"))
 
-  testImplementation(libs.junit5)
+  testImplementation(libs.junit.all)
   testImplementation(libs.assertj)
 
   testRuntimeOnly(libs.log4j.api)

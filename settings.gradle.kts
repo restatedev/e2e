@@ -77,7 +77,8 @@ dependencyResolutionManagement {
       library("cloudevents-kafka", "io.cloudevents", "cloudevents-kafka").withoutVersion()
       library("cloudevents-json", "io.cloudevents", "cloudevents-json-jackson").withoutVersion()
 
-      library("junit5", "org.junit.jupiter", "junit-jupiter").versionRef("junit-jupiter")
+      library("junit-all", "org.junit.jupiter", "junit-jupiter").versionRef("junit-jupiter")
+      library("junit-api", "org.junit.jupiter", "junit-jupiter-api").versionRef("junit-jupiter")
       library("assertj", "org.assertj", "assertj-core").versionRef("assertj")
       library("testcontainers-bom", "org.testcontainers", "testcontainers-bom")
           .versionRef("testcontainers")
