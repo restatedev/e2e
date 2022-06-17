@@ -2,6 +2,7 @@ package dev.restate.e2e.functions.counter;
 
 import com.google.protobuf.Empty;
 import dev.restate.sdk.RestateContext;
+import dev.restate.sdk.StateKey;
 import io.grpc.stub.StreamObserver;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -10,7 +11,7 @@ public class CounterService extends CounterGrpc.CounterImplBase {
 
   private static final Logger logger = LogManager.getLogger(CounterService.class);
 
-  private static final String COUNTER_KEY = "counter";
+  private static final StateKey<Long> COUNTER_KEY = StateKey.of("counter", Long.TYPE);
 
   @Override
   public void reset(Empty request, StreamObserver<Empty> responseObserver) {
@@ -28,7 +29,7 @@ public class CounterService extends CounterGrpc.CounterImplBase {
   public void add(Number request, StreamObserver<Empty> responseObserver) {
     RestateContext ctx = RestateContext.current();
 
-    long counter = ctx.get(COUNTER_KEY, Long.TYPE).orElse(0L);
+    long counter = ctx.get(COUNTER_KEY).orElse(0L);
     logger.info("Old counter value: {}", counter);
 
     counter += request.getValue();
@@ -44,8 +45,7 @@ public class CounterService extends CounterGrpc.CounterImplBase {
   public void get(Empty request, StreamObserver<Number> responseObserver) {
     RestateContext ctx = RestateContext.current();
 
-    Number result =
-        Number.newBuilder().setValue(ctx.get(COUNTER_KEY, Long.TYPE).orElse(0L)).build();
+    Number result = Number.newBuilder().setValue(ctx.get(COUNTER_KEY).orElse(0L)).build();
 
     responseObserver.onNext(result);
     responseObserver.onCompleted();
@@ -55,7 +55,7 @@ public class CounterService extends CounterGrpc.CounterImplBase {
   public void getAndAdd(Number request, StreamObserver<CounterUpdateResult> responseObserver) {
     RestateContext ctx = RestateContext.current();
 
-    long oldCount = ctx.get(COUNTER_KEY, Long.TYPE).orElse(0L);
+    long oldCount = ctx.get(COUNTER_KEY).orElse(0L);
     long newCount = oldCount + request.getValue();
     ctx.set(COUNTER_KEY, newCount);
 

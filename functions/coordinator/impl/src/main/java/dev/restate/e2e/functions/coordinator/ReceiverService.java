@@ -6,11 +6,12 @@ import dev.restate.e2e.functions.receiver.Pong;
 import dev.restate.e2e.functions.receiver.ReceiverGrpc;
 import dev.restate.e2e.functions.receiver.SetValueRequest;
 import dev.restate.sdk.RestateContext;
+import dev.restate.sdk.StateKey;
 import io.grpc.stub.StreamObserver;
 
 public class ReceiverService extends ReceiverGrpc.ReceiverImplBase {
 
-  public static final String STATE_KEY = "my-state";
+  public static final StateKey<String> STATE_KEY = StateKey.of("my-state", String.class);
 
   @Override
   public void ping(Empty request, StreamObserver<Pong> responseObserver) {
@@ -32,7 +33,7 @@ public class ReceiverService extends ReceiverGrpc.ReceiverImplBase {
   public void getValue(Empty request, StreamObserver<GetValueResponse> responseObserver) {
     var ctx = RestateContext.current();
 
-    var state = ctx.get(STATE_KEY, String.class).orElse("");
+    var state = ctx.get(STATE_KEY).orElse("");
 
     responseObserver.onNext(GetValueResponse.newBuilder().setValue(state).build());
     responseObserver.onCompleted();
