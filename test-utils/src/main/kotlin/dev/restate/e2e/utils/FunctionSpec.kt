@@ -13,6 +13,7 @@ data class FunctionSpec(
 ) {
 
   companion object {
+    @JvmStatic
     fun builder(
         containerImage: String,
         grpcServiceName: String,

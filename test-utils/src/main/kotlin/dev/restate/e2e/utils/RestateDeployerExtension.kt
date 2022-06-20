@@ -1,10 +1,10 @@
 package dev.restate.e2e.utils
 
+import dev.restate.e2e.utils.GrpcUtils.withRestateKey
 import io.grpc.Channel
-import io.grpc.Metadata
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder
 import io.grpc.stub.AbstractBlockingStub
-import io.grpc.stub.MetadataUtils
+import io.grpc.stub.AbstractStub
 import org.junit.jupiter.api.extension.*
 
 class RestateDeployerExtension(private val deployer: RestateDeployer) :
@@ -41,23 +41,22 @@ class RestateDeployerExtension(private val deployer: RestateDeployer) :
     }
   }
 
-  private fun resolveBlockingStub(parameterContext: ParameterContext): Any {
+  @Suppress("UNCHECKED_CAST")
+  private fun <T : AbstractStub<T>> resolveBlockingStub(parameterContext: ParameterContext): Any {
     val annotation = parameterContext.findAnnotation(InjectBlockingStub::class.java).get()
 
     val stubType = parameterContext.parameter.type
     val stubFactoryMethod =
         stubType.enclosingClass.getDeclaredMethod("newBlockingStub", Channel::class.java)
-    var stub: AbstractBlockingStub<*> =
+    var stub: T =
         stubFactoryMethod.invoke(
             null,
             deployer.getRuntimeFunctionEndpointUrl().let { url ->
               NettyChannelBuilder.forAddress(url.host, url.port).usePlaintext().build()
-            }) as AbstractBlockingStub<*>
+            }) as T
 
     if (annotation.key != "") {
-      val meta = Metadata()
-      meta.put(Metadata.Key.of("x-restate-id", Metadata.ASCII_STRING_MARSHALLER), annotation.key)
-      stub = stub.withInterceptors(MetadataUtils.newAttachHeadersInterceptor(meta))
+      stub = stub.withRestateKey(annotation.key)
     }
 
     return stub
