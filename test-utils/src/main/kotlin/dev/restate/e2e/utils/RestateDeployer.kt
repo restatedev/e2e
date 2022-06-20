@@ -31,6 +31,11 @@ private constructor(
     private const val ALWAYS_PULL = "always"
 
     private val logger = LoggerFactory.getLogger(RestateDeployer::class.java)
+
+    @JvmStatic
+    fun builder(): Builder {
+      return Builder()
+    }
   }
 
   private val functionContainers =
@@ -39,9 +44,6 @@ private constructor(
   private var network: Network? = null
 
   init {
-    assert(functionContainers.size == 1) {
-      "At the moment you MUST specify exactly one function container"
-    }
     assert(runtimeDeployments == 1) { "At the moment only one runtime deployment is supported" }
   }
 
@@ -59,8 +61,13 @@ private constructor(
     }
 
     /** Add a function with default configuration. */
-    fun withFunction(containerImageName: String, grpcServiceName: String) = apply {
-      this.withFunction(FunctionSpec.builder(containerImageName, grpcServiceName))
+    fun withFunction(
+        containerImageName: String,
+        grpcServiceName: String,
+        vararg otherGrpcServices: String
+    ) = apply {
+      this.withFunction(
+          FunctionSpec.builder(containerImageName, grpcServiceName, *otherGrpcServices))
     }
 
     fun runtimeDeployments(runtimeDeployments: Int) = apply {
