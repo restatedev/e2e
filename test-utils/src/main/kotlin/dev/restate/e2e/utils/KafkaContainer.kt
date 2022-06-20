@@ -1,7 +1,6 @@
 package dev.restate.e2e.utils
 
 import com.github.dockerjava.api.command.InspectContainerResponse
-import kotlin.check
 import org.testcontainers.utility.DockerImageName
 
 /**
@@ -32,15 +31,13 @@ class KafkaContainer(private vararg val topics: String) :
 
     // Create topics first
     topics.forEach { topic ->
-      val result =
-          execInContainer(
-              "kafka-topics",
-              "--create",
-              "--topic",
-              topic,
-              "--bootstrap-server",
-              currentBrokerAdvertisedAddress)
-      check(result.exitCode == 0) { result.toString() }
+      execInContainer(
+          "kafka-topics",
+          "--create",
+          "--topic",
+          topic,
+          "--bootstrap-server",
+          currentBrokerAdvertisedAddress)
     }
 
     val listenerList = networkAliases.map { "BROKER://$it:9092" } + bootstrapServers
