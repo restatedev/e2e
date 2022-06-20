@@ -29,16 +29,6 @@ jobs:
           username: ${{ secrets.GH_PACKAGE_READ_ACCESS_USER }}
           password: ${{ secrets.GH_PACKAGE_READ_ACCESS_TOKEN }}
 
-      # Build the test functions and code, and push to the local image registry the test functions
-      # (these won't be uploaded on GHR or other image registries, but only locally for running the test)
-      - name: Build Test functions and code
-        uses: gradle/gradle-build-action@v2
-        env:
-          GH_PACKAGE_READ_ACCESS_USER: ${{ secrets.GH_PACKAGE_READ_ACCESS_USER }}
-          GH_PACKAGE_READ_ACCESS_TOKEN: ${{ secrets.GH_PACKAGE_READ_ACCESS_TOKEN }}
-        with:
-          arguments: build jibDockerBuild -x test
-
       # Run tests
       - name: Test
         uses: gradle/gradle-build-action@v2

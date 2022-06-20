@@ -32,3 +32,10 @@ dependencies {
   testImplementation(libs.testcontainers.kafka)
   testImplementation(libs.awaitility)
 }
+
+tasks.withType<Test> {
+  dependsOn(":functions:counter:impl:jibDockerBuild")
+  dependsOn(":functions:coordinator:impl:jibDockerBuild")
+  dependsOn(":functions:externalcall:impl:jibDockerBuild")
+  dependsOn(":functions:http-server:jibDockerBuild")
+}

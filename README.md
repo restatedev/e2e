@@ -32,21 +32,13 @@ The build will fail if Gradle cannot find the `java-sdk` project.
 
 ## Run tests
 
-To run tests, first build the project with:
-
-```shell
-gradle build jibDockerBuild -x test
-```
-
-This will populate your local image registry with the various function containers, required for testing.
-
-Now just execute:
+To run tests, just execute:
 
 ```shell
 gradle test
 ```
 
-To run the tests.
+This will populate your local image registry with the various function containers, required for testing, and then execute the tests.
 
 ### Picking the container image for testing
 
