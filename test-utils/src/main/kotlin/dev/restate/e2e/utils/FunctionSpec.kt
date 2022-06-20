@@ -1,6 +1,7 @@
 package dev.restate.e2e.utils
 
 import org.testcontainers.containers.GenericContainer
+import org.testcontainers.lifecycle.Startable
 import org.testcontainers.utility.DockerImageName
 
 /** Definition of a function to deploy. */
@@ -9,7 +10,8 @@ data class FunctionSpec(
     internal val hostName: String,
     internal val service_endpoints: List<String>,
     internal val envs: Map<String, String>,
-    internal val grpcEndpointPort: Int
+    internal val grpcEndpointPort: Int,
+    internal val dependencies: List<Startable>,
 ) {
 
   companion object {
@@ -41,7 +43,8 @@ data class FunctionSpec(
               .split(Regex.fromLiteral(":"))
               .first(),
       private var envs: MutableMap<String, String> = mutableMapOf(),
-      private var grpcEndpointPort: Int = 8080
+      private var grpcEndpointPort: Int = 8080,
+      private var dependencies: MutableList<Startable> = mutableListOf(),
   ) {
     fun withContainerImage(containerImage: String) = apply { this.containerImage = containerImage }
 
@@ -57,7 +60,11 @@ data class FunctionSpec(
 
     fun withEnvs(envs: Map<String, String>) = apply { this.envs.putAll(envs) }
 
-    fun build() = FunctionSpec(containerImage, hostName, service_endpoints, envs, grpcEndpointPort)
+    fun dependsOn(container: Startable) = apply { this.dependencies.add(container) }
+
+    fun build() =
+        FunctionSpec(
+            containerImage, hostName, service_endpoints, envs, grpcEndpointPort, dependencies)
   }
 
   internal fun toFunctionContainer(): Pair<FunctionSpec, GenericContainer<*>> {
@@ -65,6 +72,7 @@ data class FunctionSpec(
         GenericContainer(DockerImageName.parse(containerImage))
             .withEnv("PORT", grpcEndpointPort.toString())
             .withEnv(envs)
+            .dependsOn(dependencies)
             .withExposedPorts(grpcEndpointPort)
   }
 }
