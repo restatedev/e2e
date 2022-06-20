@@ -3,24 +3,20 @@ package dev.restate.e2e
 import com.google.protobuf.Empty
 import dev.restate.e2e.functions.counter.CounterGrpc
 import dev.restate.e2e.functions.counter.CounterGrpc.CounterBlockingStub
-import dev.restate.e2e.utils.InjectBlockingStub
-import dev.restate.e2e.utils.InjectContainerAddress
-import dev.restate.e2e.utils.KafkaContainer
-import dev.restate.e2e.utils.RestateDeployer
-import dev.restate.e2e.utils.RestateDeployerExtension
+import dev.restate.e2e.utils.*
 import io.cloudevents.CloudEvent
 import io.cloudevents.core.message.Encoding
 import io.cloudevents.kafka.CloudEventSerializer
-import java.util.*
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.serialization.StringSerializer
+import org.apache.logging.log4j.LogManager
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
-import org.slf4j.LoggerFactory
+import java.util.*
 
 class KafkaInvocationTest {
 
@@ -29,7 +25,7 @@ class KafkaInvocationTest {
     const val KEY_A = "a"
     const val KEY_B = "b"
 
-    private val logger = LoggerFactory.getLogger(KafkaInvocationTest::class.java)
+    private val logger = LogManager.getLogger(KafkaInvocationTest::class.java)
 
     @RegisterExtension
     val deployerExt: RestateDeployerExtension =

@@ -13,9 +13,8 @@ dependencies {
   testImplementation(libs.junit.all)
   testImplementation(libs.assertj)
 
-  testRuntimeOnly(libs.log4j.api)
+  testImplementation(libs.log4j.api)
   testRuntimeOnly(libs.log4j.core)
-  testRuntimeOnly(libs.log4j.slf4j)
 
   testImplementation(platform(libs.jackson.bom))
   testImplementation(libs.jackson.core)

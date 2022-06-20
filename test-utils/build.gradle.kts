@@ -17,7 +17,7 @@ dependencies {
   implementation(libs.jackson.databind)
   implementation(libs.jackson.yaml)
 
-  implementation(libs.slf4j)
+  implementation(libs.log4j.api)
   implementation(libs.grpc.netty.shaded)
 
   testImplementation(libs.junit.all)

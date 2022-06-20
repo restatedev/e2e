@@ -8,7 +8,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import org.slf4j.LoggerFactory
+import org.apache.logging.log4j.LogManager
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.Network
 import org.testcontainers.images.PullPolicy
@@ -30,7 +30,7 @@ private constructor(
     private const val IMAGE_PULL_POLICY = "E2E_IMAGE_PULL_POLICY"
     private const val ALWAYS_PULL = "always"
 
-    private val logger = LoggerFactory.getLogger(RestateDeployer::class.java)
+    private val logger = LogManager.getLogger(RestateDeployer::class.java)
 
     @JvmStatic
     fun builder(): Builder {

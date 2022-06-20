@@ -33,7 +33,6 @@ dependencyResolutionManagement {
       version("protobuf", "3.20.1")
       version("grpc", "1.45.1")
 
-      version("slf4j", "1.7.36")
       version("log4j", "2.17.2")
       version("javax-annotation", "1.3.2")
 
@@ -59,10 +58,8 @@ dependencyResolutionManagement {
       library("grpc-protobuf", "io.grpc", "grpc-protobuf").versionRef("grpc")
       library("grpc-netty-shaded", "io.grpc", "grpc-netty-shaded").versionRef("grpc")
 
-      library("slf4j", "org.slf4j", "slf4j-api").versionRef("slf4j")
       library("log4j-api", "org.apache.logging.log4j", "log4j-api").versionRef("log4j")
       library("log4j-core", "org.apache.logging.log4j", "log4j-core").versionRef("log4j")
-      library("log4j-slf4j", "org.apache.logging.log4j", "log4j-slf4j18-impl").versionRef("log4j")
       library("javax-annotation-api", "javax.annotation", "javax.annotation-api")
           .versionRef("javax-annotation")
 
