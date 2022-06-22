@@ -7,6 +7,7 @@ import dev.restate.e2e.utils.*
 import io.cloudevents.CloudEvent
 import io.cloudevents.core.message.Encoding
 import io.cloudevents.kafka.CloudEventSerializer
+import java.util.*
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.serialization.StringSerializer
@@ -16,7 +17,6 @@ import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
-import java.util.*
 
 class KafkaInvocationTest {
 

@@ -13,7 +13,7 @@ import org.testcontainers.utility.DockerImageName
  */
 class KafkaContainer(private vararg val topics: String) :
     org.testcontainers.containers.KafkaContainer(
-        DockerImageName.parse("confluentinc/cp-kafka:5.5.1")) {
+        DockerImageName.parse("confluentinc/cp-kafka:7.1.0-1-ubi8")) {
 
   companion object {
     const val PORT = KAFKA_PORT
