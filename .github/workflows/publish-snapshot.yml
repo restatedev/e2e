@@ -33,7 +33,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           arguments: publish
-      - name: Delete old java-sdk packages
+      - name: Delete old e2e-utils packages
         uses: actions/delete-package-versions@v3
         with:
           package-name: 'dev.restate.testing.e2e-utils'
