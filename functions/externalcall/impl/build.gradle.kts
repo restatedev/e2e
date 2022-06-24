@@ -1,4 +1,5 @@
 import dev.restate.e2e.gradle.util.hostArchitecture
+import dev.restate.e2e.gradle.util.testBaseImage
 
 plugins {
   java
@@ -29,6 +30,7 @@ dependencies {
 
 jib {
   to.image = "restatedev/e2e-externalcall"
+  from.image = testBaseImage()
 
   from {
     platforms {
