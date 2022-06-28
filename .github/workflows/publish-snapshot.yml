@@ -11,6 +11,7 @@ jobs:
     if: github.repository == 'restatedev/e2e'
     name: Publish snapshot (Java ${{ matrix.java }})
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
