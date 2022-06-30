@@ -36,7 +36,6 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase {
       stub.fail(request);
     } catch (StatusRuntimeException e) {
       checkSuspension(e);
-      e.printStackTrace();
       responseObserver.onNext(
           ErrorMessage.newBuilder().setErrorMessage(e.getStatus().getDescription()).build());
       responseObserver.onCompleted();
@@ -63,14 +62,13 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase {
                   NumberSortHttpServerUtils.sendSortNumbersRequest(replyId, Arrays.asList(3, 2, 1));
                 } catch (Exception e) {
                   throw new RuntimeException(
-                      "Something went wrong while trying to invoking the external http server", e);
+                      "Something went wrong while trying to invoke the external http server", e);
                 }
                 throw new IllegalStateException("external_call");
               })
           .await();
     } catch (StatusRuntimeException e) {
       checkSuspension(e);
-      e.printStackTrace();
       finalMessage = finalMessage + ":" + e.getStatus().getDescription();
     }
 
@@ -81,7 +79,6 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase {
       stub.fail(ErrorMessage.newBuilder().setErrorMessage("internal_call").build());
     } catch (StatusRuntimeException e) {
       checkSuspension(e);
-      e.printStackTrace();
       finalMessage = finalMessage + ":" + e.getStatus().getDescription();
     }
 
@@ -93,7 +90,6 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase {
     // This is a dirty hack until https://github.com/restatedev/java-sdk/issues/60 is solved
     if (e.getStatus().getCause() instanceof SuspendableException) {
       LOG.info("Suspending");
-      Thread.dumpStack();
       throw SuspendableException.INSTANCE;
     }
   }
