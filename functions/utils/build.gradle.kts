@@ -12,5 +12,9 @@ dependencies {
   implementation(libs.log4j.api)
   implementation(libs.log4j.core)
 
+  implementation(platform(libs.jackson.bom))
+  implementation(libs.jackson.core)
+  implementation(libs.jackson.databind)
+
   errorprone(libs.errorprone)
 }

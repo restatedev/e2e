@@ -7,6 +7,8 @@ include(
     "functions:counter:impl",
     "functions:externalcall:contract",
     "functions:externalcall:impl",
+    "functions:errors:contract",
+    "functions:errors:impl",
     "functions:http-server",
     "functions:utils",
     "test-utils",

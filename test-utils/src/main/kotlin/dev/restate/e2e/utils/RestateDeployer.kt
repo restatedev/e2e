@@ -93,6 +93,7 @@ private constructor(
     // Generate test report directory
     val testReportDir = computeContainerTestLogsDir(testClass).toAbsolutePath().toString()
     check(File(testReportDir).mkdirs()) { "Cannot create test report directory $testReportDir" }
+    logger.debug("Writing container logs to {}", testReportDir)
 
     network = Network.newNetwork()
 
@@ -164,6 +165,8 @@ private constructor(
     }
 
     runtimeContainer!!.start()
+
+    logger.debug("Restate runtime started and available at {}", getRuntimeFunctionEndpointUrl())
   }
 
   fun teardown() {

@@ -2,19 +2,40 @@ package dev.restate.e2e.utils
 
 import dev.restate.e2e.utils.GrpcUtils.withRestateKey
 import io.grpc.Channel
+import io.grpc.ManagedChannel
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder
 import io.grpc.stub.AbstractBlockingStub
 import io.grpc.stub.AbstractStub
+import java.util.concurrent.TimeUnit
 import org.junit.jupiter.api.extension.*
+import org.junit.jupiter.api.extension.ExtensionContext.Namespace
+import org.junit.jupiter.api.extension.ExtensionContext.Store
 
 class RestateDeployerExtension(private val deployer: RestateDeployer) :
     BeforeAllCallback, AfterAllCallback, ParameterResolver {
 
+  companion object {
+    private val NAMESPACE = Namespace.create(RestateDeployerExtension::class.java)
+    private val MANAGED_CHANNEL_KEY = "ManagedChannelKey"
+  }
+
   override fun beforeAll(context: ExtensionContext) {
     deployer.deploy(context.requiredTestClass)
+    context
+        .getStore(NAMESPACE)
+        .put(
+            MANAGED_CHANNEL_KEY,
+            ManagedChannelResource(
+                deployer.getRuntimeFunctionEndpointUrl().let { url ->
+                  NettyChannelBuilder.forAddress(url.host, url.port).usePlaintext().build()
+                }))
   }
 
   override fun afterAll(context: ExtensionContext) {
+    context
+        .getStore(NAMESPACE)
+        .get(MANAGED_CHANNEL_KEY, ManagedChannelResource::class.java)
+        ?.close()
     deployer.teardown()
   }
 
@@ -33,7 +54,7 @@ class RestateDeployerExtension(private val deployer: RestateDeployer) :
       extensionContext: ExtensionContext
   ): Any? {
     return if (parameterContext.isAnnotated(InjectBlockingStub::class.java)) {
-      resolveBlockingStub(parameterContext)
+      resolveBlockingStub(parameterContext, extensionContext)
     } else if (parameterContext.isAnnotated(InjectContainerAddress::class.java)) {
       resolveContainerAddress(parameterContext)
     } else {
@@ -42,18 +63,22 @@ class RestateDeployerExtension(private val deployer: RestateDeployer) :
   }
 
   @Suppress("UNCHECKED_CAST")
-  private fun <T : AbstractStub<T>> resolveBlockingStub(parameterContext: ParameterContext): Any {
+  private fun <T : AbstractStub<T>> resolveBlockingStub(
+      parameterContext: ParameterContext,
+      extensionContext: ExtensionContext
+  ): Any {
     val annotation = parameterContext.findAnnotation(InjectBlockingStub::class.java).get()
 
     val stubType = parameterContext.parameter.type
     val stubFactoryMethod =
         stubType.enclosingClass.getDeclaredMethod("newBlockingStub", Channel::class.java)
-    var stub: T =
-        stubFactoryMethod.invoke(
-            null,
-            deployer.getRuntimeFunctionEndpointUrl().let { url ->
-              NettyChannelBuilder.forAddress(url.host, url.port).usePlaintext().build()
-            }) as T
+
+    val channelResource =
+        extensionContext
+            .getStore(NAMESPACE)
+            .get(MANAGED_CHANNEL_KEY, ManagedChannelResource::class.java)
+
+    var stub: T = stubFactoryMethod.invoke(null, channelResource.channel) as T
 
     if (annotation.key != "") {
       stub = stub.withRestateKey(annotation.key)
@@ -66,5 +91,21 @@ class RestateDeployerExtension(private val deployer: RestateDeployer) :
     val annotation = parameterContext.findAnnotation(InjectContainerAddress::class.java).get()
 
     return deployer.getAdditionalContainerExposedPort(annotation.hostName, annotation.port)
+  }
+
+  private class ManagedChannelResource(val channel: ManagedChannel) : Store.CloseableResource {
+    override fun close() {
+      // Shutdown channel
+      channel.shutdown()
+      if (channel.awaitTermination(5, TimeUnit.SECONDS)) {
+        return
+      }
+
+      // Force shutdown now
+      channel.shutdownNow()
+      check(!channel.awaitTermination(5, TimeUnit.SECONDS)) {
+        "Cannot terminate ManagedChannel on time"
+      }
+    }
   }
 }

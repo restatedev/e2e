@@ -9,6 +9,7 @@ dependencies {
   testImplementation(project(":functions:counter:contract"))
   testImplementation(project(":functions:coordinator:contract"))
   testImplementation(project(":functions:externalcall:contract"))
+  testImplementation(project(":functions:errors:contract"))
 
   testImplementation(libs.junit.all)
   testImplementation(libs.assertj)
@@ -36,5 +37,6 @@ tasks.withType<Test> {
   dependsOn(":functions:counter:impl:jibDockerBuild")
   dependsOn(":functions:coordinator:impl:jibDockerBuild")
   dependsOn(":functions:externalcall:impl:jibDockerBuild")
+  dependsOn(":functions:errors:impl:jibDockerBuild")
   dependsOn(":functions:http-server:jibDockerBuild")
 }
