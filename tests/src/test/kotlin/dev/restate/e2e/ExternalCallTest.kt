@@ -28,6 +28,7 @@ class ExternalCallTest {
           // partition processor blocking on the http request to the function service. Once the
           // partition processor will be able to process asynchronously the responses from the
           // functions, there should be no deadlock anymore and we must remove this key.
+          // https://github.com/restatedev/runtime/issues/134
           "abc")
       randomNumberListGenerator: RandomNumberListGeneratorBlockingStub
   ) {
