@@ -40,12 +40,15 @@ public class CoordinatorService extends CoordinatorGrpc.CoordinatorImplBase {
   public void complex(ComplexRequest request, StreamObserver<ComplexResponse> responseObserver) {
     var ctx = RestateContext.current();
 
+    LOG.info("Starting complex coordination by sleeping for {} ms", request.getSleepDuration().getMillis());
+
     ctx.sleep(java.time.Duration.ofMillis(request.getSleepDuration().getMillis()));
 
     var channel = ctx.channel();
 
     var receiverClient = ReceiverGrpc.newBlockingStub(channel);
 
+    LOG.info("Send fire and forget call to {}", ReceiverGrpc.getServiceDescriptor().getName());
     // Functions should be invoked in the same order they were called. This means that
     // fire-and-forget calls as well as coordinator calls have an absolute ordering that is defined
     // by their call order. In this concrete case, setValue is guaranteed to be executed before
@@ -56,8 +59,11 @@ public class CoordinatorService extends CoordinatorGrpc.CoordinatorImplBase {
         () ->
             receiverClient.setValue(
                 SetValueRequest.newBuilder().setValue(request.getRequestValue()).build()));
+
+    LOG.info("Get current value from {}", ReceiverGrpc.getServiceDescriptor().getName());
     var response = receiverClient.getValue(Empty.getDefaultInstance());
 
+    LOG.info("Finish complex coordination with response value '{}'", response.getValue());
     responseObserver.onNext(
         ComplexResponse.newBuilder().setResponseValue(response.getValue()).build());
     responseObserver.onCompleted();
