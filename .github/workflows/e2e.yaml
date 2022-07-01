@@ -7,7 +7,7 @@ on:
   pull_request:
     branches: [ main ]
   schedule:
-    - cron: '* */6 * * *' # Every 6 hours
+    - cron: '0 */6 * * *' # Every 6 hours
   workflow_dispatch: # To start from UI
 
 jobs:
