@@ -19,6 +19,8 @@ allprojects {
   apply(plugin = "kotlin")
   apply(plugin = "com.diffplug.spotless")
 
+  version = "1.0-SNAPSHOT"
+
   configure<com.diffplug.gradle.spotless.SpotlessExtension> {
     kotlin { ktfmt() }
     kotlinGradle { ktfmt() }

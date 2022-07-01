@@ -24,6 +24,11 @@ dependencies {
   testImplementation(libs.assertj)
 }
 
+java {
+  withJavadocJar()
+  withSourcesJar()
+}
+
 publishing {
   repositories {
     maven {
@@ -34,12 +39,24 @@ publishing {
         password = System.getenv("GITHUB_TOKEN")
       }
     }
+
+    maven {
+      name = "JFrog"
+      val releasesRepoUrl = uri("https://restatedev.jfrog.io/artifactory/restatedev-libs-release")
+      val snapshotsRepoUrl = uri("https://restatedev.jfrog.io/artifactory/restatedev-libs-snapshot")
+      url = uri(if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl)
+
+      credentials {
+        username = System.getenv("JFROG_USERNAME")
+        password = System.getenv("JFROG_TOKEN")
+      }
+    }
   }
+
   publications {
-    register<MavenPublication>("gpr") {
+    register<MavenPublication>("maven") {
       groupId = "dev.restate.testing"
       artifactId = "e2e-utils"
-      version = "1.0-SNAPSHOT"
 
       from(components["java"])
     }

@@ -2,6 +2,15 @@ name: Publish snapshot
 
 on:
   workflow_dispatch:
+    inputs:
+      deploymentTarget:
+        description: 'Deployment target'
+        required: true
+        default: 'GitHub'
+        type: choice
+        options:
+          - GitHub
+          - JFrog
   push:
     branches:
       - main
@@ -34,9 +43,18 @@ jobs:
           package-name: 'dev.restate.testing.e2e-utils'
           delete-only-pre-release-versions: "true"
           token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build with Gradle
+      - name: Build with Gradle & publish to JFrog repository
+        if: ${{ inputs.deploymentTarget == 'JFrog' }}
+        uses: gradle/gradle-build-action@v2
+        env:
+          JFROG_USERNAME: ${{ secrets.JFROG_USERNAME }}
+          JFROG_TOKEN: ${{secrets.JFROG_TOKEN }}
+        with:
+          arguments: publishMavenPublicationToJFrogRepository
+      - name: Build with Gradle & publish to GitHub packages repository
+        if: ${{ inputs.deploymentTarget != 'JFrog' }}
         uses: gradle/gradle-build-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          arguments: publish
+          arguments: publishMavenPublicationToGitHubPackagesRepository
