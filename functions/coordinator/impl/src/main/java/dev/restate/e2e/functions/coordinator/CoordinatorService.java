@@ -28,9 +28,7 @@ public class CoordinatorService extends CoordinatorGrpc.CoordinatorImplBase {
   public void proxy(Empty request, StreamObserver<ProxyResponse> responseObserver) {
     RestateContext ctx = RestateContext.current();
 
-    var receiverBlockingStub = ReceiverGrpc.newBlockingStub(ctx.channel());
-
-    var pong = receiverBlockingStub.ping(Empty.newBuilder().build());
+    var pong = ctx.invoke(ReceiverGrpc.getPingMethod(), Empty.newBuilder().build()).await();
 
     responseObserver.onNext(ProxyResponse.newBuilder().setMessage(pong.getMessage()).build());
     responseObserver.onCompleted();
@@ -44,10 +42,6 @@ public class CoordinatorService extends CoordinatorGrpc.CoordinatorImplBase {
 
     ctx.sleep(java.time.Duration.ofMillis(request.getSleepDuration().getMillis()));
 
-    var channel = ctx.channel();
-
-    var receiverClient = ReceiverGrpc.newBlockingStub(channel);
-
     LOG.info("Send fire and forget call to {}", ReceiverGrpc.getServiceDescriptor().getName());
     // Functions should be invoked in the same order they were called. This means that
     // fire-and-forget calls as well as coordinator calls have an absolute ordering that is defined
@@ -55,13 +49,11 @@ public class CoordinatorService extends CoordinatorGrpc.CoordinatorImplBase {
     // getValue.
     // TODO this only works atm because fire-and-forget messages are sent first.
     //  See https://github.com/restatedev/java-sdk/issues/32 for more details
-    ctx.asyncDefer(
-        () ->
-            receiverClient.setValue(
-                SetValueRequest.newBuilder().setValue(request.getRequestValue()).build()));
+    ctx.fireAndForget(ReceiverGrpc.getSetValueMethod(),
+                SetValueRequest.newBuilder().setValue(request.getRequestValue()).build());
 
     LOG.info("Get current value from {}", ReceiverGrpc.getServiceDescriptor().getName());
-    var response = receiverClient.getValue(Empty.getDefaultInstance());
+    var response = ctx.invoke(ReceiverGrpc.getGetValueMethod(), Empty.getDefaultInstance()).await();
 
     LOG.info("Finish complex coordination with response value '{}'", response.getValue());
     responseObserver.onNext(

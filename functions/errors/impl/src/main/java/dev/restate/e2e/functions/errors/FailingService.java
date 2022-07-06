@@ -28,14 +28,12 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase {
     var ctx = RestateContext.current();
     LOG.info("Invoked failAndHandle");
 
-    var stub =
-        FailingServiceGrpc.newBlockingStub(
-            ctx.channel(ctx.withSideEffect(String.class, () -> UUID.randomUUID().toString())));
-
     try {
-      stub.fail(request);
+      ctx.invoke(
+              FailingServiceGrpc.getFailMethod(),
+              ctx.withSideEffect(String.class, () -> UUID.randomUUID().toString()),
+              request).await();
     } catch (StatusRuntimeException e) {
-      checkSuspension(e);
       responseObserver.onNext(
           ErrorMessage.newBuilder().setErrorMessage(e.getStatus().getDescription()).build());
       responseObserver.onCompleted();
@@ -68,29 +66,19 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase {
               })
           .await();
     } catch (StatusRuntimeException e) {
-      checkSuspension(e);
       finalMessage = finalMessage + ":" + e.getStatus().getDescription();
     }
 
-    var stub =
-        FailingServiceGrpc.newBlockingStub(
-            ctx.channel(ctx.withSideEffect(String.class, () -> UUID.randomUUID().toString())));
     try {
-      stub.fail(ErrorMessage.newBuilder().setErrorMessage("internal_call").build());
+      ctx.invoke(
+              FailingServiceGrpc.getFailMethod(),
+              ctx.withSideEffect(String.class, () -> UUID.randomUUID().toString()),
+              ErrorMessage.newBuilder().setErrorMessage("internal_call").build()).await();
     } catch (StatusRuntimeException e) {
-      checkSuspension(e);
       finalMessage = finalMessage + ":" + e.getStatus().getDescription();
     }
 
     responseObserver.onNext(ErrorMessage.newBuilder().setErrorMessage(finalMessage).build());
     responseObserver.onCompleted();
-  }
-
-  private static void checkSuspension(StatusRuntimeException e) {
-    // This is a dirty hack until https://github.com/restatedev/java-sdk/issues/60 is solved
-    if (e.getStatus().getCause() instanceof SuspendableException) {
-      LOG.info("Suspending");
-      throw SuspendableException.INSTANCE;
-    }
   }
 }
