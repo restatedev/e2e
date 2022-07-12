@@ -28,7 +28,7 @@ public class CoordinatorService extends CoordinatorGrpc.CoordinatorImplBase {
   public void proxy(Empty request, StreamObserver<ProxyResponse> responseObserver) {
     RestateContext ctx = RestateContext.current();
 
-    var pong = ctx.invoke(ReceiverGrpc.getPingMethod(), Empty.newBuilder().build()).await();
+    var pong = ctx.call(ReceiverGrpc.getPingMethod(), Empty.newBuilder().build()).await();
 
     responseObserver.onNext(ProxyResponse.newBuilder().setMessage(pong.getMessage()).build());
     responseObserver.onCompleted();
@@ -38,7 +38,9 @@ public class CoordinatorService extends CoordinatorGrpc.CoordinatorImplBase {
   public void complex(ComplexRequest request, StreamObserver<ComplexResponse> responseObserver) {
     var ctx = RestateContext.current();
 
-    LOG.info("Starting complex coordination by sleeping for {} ms", request.getSleepDuration().getMillis());
+    LOG.info(
+        "Starting complex coordination by sleeping for {} ms",
+        request.getSleepDuration().getMillis());
 
     ctx.sleep(java.time.Duration.ofMillis(request.getSleepDuration().getMillis()));
 
@@ -49,11 +51,12 @@ public class CoordinatorService extends CoordinatorGrpc.CoordinatorImplBase {
     // getValue.
     // TODO this only works atm because fire-and-forget messages are sent first.
     //  See https://github.com/restatedev/java-sdk/issues/32 for more details
-    ctx.fireAndForget(ReceiverGrpc.getSetValueMethod(),
-                SetValueRequest.newBuilder().setValue(request.getRequestValue()).build());
+    ctx.backgroundCall(
+        ReceiverGrpc.getSetValueMethod(),
+        SetValueRequest.newBuilder().setValue(request.getRequestValue()).build());
 
     LOG.info("Get current value from {}", ReceiverGrpc.getServiceDescriptor().getName());
-    var response = ctx.invoke(ReceiverGrpc.getGetValueMethod(), Empty.getDefaultInstance()).await();
+    var response = ctx.call(ReceiverGrpc.getGetValueMethod(), Empty.getDefaultInstance()).await();
 
     LOG.info("Finish complex coordination with response value '{}'", response.getValue());
     responseObserver.onNext(
@@ -67,7 +70,7 @@ public class CoordinatorService extends CoordinatorGrpc.CoordinatorImplBase {
 
     var timeoutOccurred = false;
 
-    var sleepAwaitable = ctx.asyncCall(Void.TYPE, ignored -> {});
+    var sleepAwaitable = ctx.callback(Void.TYPE, ignored -> {});
 
     try {
       sleepAwaitable.await(java.time.Duration.ofMillis(request.getMillis()));

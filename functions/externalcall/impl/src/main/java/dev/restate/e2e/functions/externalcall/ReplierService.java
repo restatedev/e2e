@@ -1,7 +1,7 @@
 package dev.restate.e2e.functions.externalcall;
 
 import com.google.protobuf.Empty;
-import dev.restate.sdk.ReplyIdentifier;
+import dev.restate.sdk.CallbackIdentifier;
 import dev.restate.sdk.RestateContext;
 import io.grpc.stub.StreamObserver;
 import org.apache.logging.log4j.LogManager;
@@ -16,8 +16,8 @@ public class ReplierService extends ReplierGrpc.ReplierImplBase {
       Reply request, StreamObserver<Empty> responseObserver) {
     LOG.info("Received request " + request);
     RestateContext.current()
-        .reply(
-            ReplyIdentifier.fromBytes(request.getReplyIdentifier().toByteArray()),
+        .completeCallback(
+            CallbackIdentifier.fromBytes(request.getReplyIdentifier().toByteArray()),
             request.getPayload().toByteArray());
 
     responseObserver.onNext(Empty.getDefaultInstance());

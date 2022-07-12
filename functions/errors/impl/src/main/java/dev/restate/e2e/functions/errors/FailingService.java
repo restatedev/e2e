@@ -3,7 +3,6 @@ package dev.restate.e2e.functions.errors;
 import com.google.protobuf.Empty;
 import dev.restate.e2e.functions.utils.NumberSortHttpServerUtils;
 import dev.restate.sdk.RestateContext;
-import dev.restate.sdk.SuspendableException;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
@@ -29,10 +28,11 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase {
     LOG.info("Invoked failAndHandle");
 
     try {
-      ctx.invoke(
+      ctx.call(
               FailingServiceGrpc.getFailMethod(),
-              ctx.withSideEffect(String.class, () -> UUID.randomUUID().toString()),
-              request).await();
+              ctx.sideEffect(String.class, () -> UUID.randomUUID().toString()),
+              request)
+          .await();
     } catch (StatusRuntimeException e) {
       responseObserver.onNext(
           ErrorMessage.newBuilder().setErrorMessage(e.getStatus().getDescription()).build());
@@ -53,7 +53,7 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase {
     String finalMessage = "begin";
 
     try {
-      ctx.asyncCall(
+      ctx.callback(
               byte[].class,
               replyId -> {
                 try {
@@ -70,10 +70,11 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase {
     }
 
     try {
-      ctx.invoke(
+      ctx.call(
               FailingServiceGrpc.getFailMethod(),
-              ctx.withSideEffect(String.class, () -> UUID.randomUUID().toString()),
-              ErrorMessage.newBuilder().setErrorMessage("internal_call").build()).await();
+              ctx.sideEffect(String.class, () -> UUID.randomUUID().toString()),
+              ErrorMessage.newBuilder().setErrorMessage("internal_call").build())
+          .await();
     } catch (StatusRuntimeException e) {
       finalMessage = finalMessage + ":" + e.getStatus().getDescription();
     }

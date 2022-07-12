@@ -17,7 +17,10 @@ public class NoopService extends NoopGrpc.NoopImplBase {
     RestateContext ctx = RestateContext.current();
 
     // Increment the counter
-    ctx.fireAndForget(CounterGrpc.getAddMethod(), "doAndReportInvocationCount", Number.newBuilder().setValue(1).build());
+    ctx.backgroundCall(
+        CounterGrpc.getAddMethod(),
+        "doAndReportInvocationCount",
+        Number.newBuilder().setValue(1).build());
 
     responseObserver.onNext(Empty.getDefaultInstance());
     responseObserver.onCompleted();
