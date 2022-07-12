@@ -19,7 +19,6 @@ dependencies {
 
   testImplementation(platform(libs.jackson.bom))
   testImplementation(libs.jackson.core)
-  testImplementation(libs.jackson.databind)
   testImplementation(libs.jackson.yaml)
 
   testImplementation(platform(libs.cloudevents.bom))

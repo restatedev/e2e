@@ -14,7 +14,6 @@ dependencies {
 
   implementation(platform(libs.jackson.bom))
   implementation(libs.jackson.core)
-  implementation(libs.jackson.databind)
   implementation(libs.jackson.yaml)
 
   implementation(libs.log4j.api)

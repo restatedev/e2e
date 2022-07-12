@@ -7,7 +7,6 @@ plugins {
 }
 
 dependencies {
-  api(libs.protobuf.java)
   api(libs.grpc.stub)
   api(libs.grpc.protobuf)
 
