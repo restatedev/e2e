@@ -33,7 +33,7 @@ dependencyResolutionManagement {
 
       version("guava", "30.1.1-jre")
       version("protobuf", "3.21.2")
-      version("grpc", "1.45.1")
+      version("grpc", "1.47.0")
 
       version("log4j", "2.17.2")
       version("javax-annotation", "1.3.2")
