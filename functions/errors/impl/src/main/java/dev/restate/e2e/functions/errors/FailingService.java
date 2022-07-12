@@ -3,7 +3,6 @@ package dev.restate.e2e.functions.errors;
 import com.google.protobuf.Empty;
 import dev.restate.e2e.functions.utils.NumberSortHttpServerUtils;
 import dev.restate.sdk.RestateContext;
-import dev.restate.sdk.SuspendableException;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
@@ -28,14 +27,13 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase {
     var ctx = RestateContext.current();
     LOG.info("Invoked failAndHandle");
 
-    var stub =
-        FailingServiceGrpc.newBlockingStub(
-            ctx.channel(ctx.withSideEffect(String.class, () -> UUID.randomUUID().toString())));
-
     try {
-      stub.fail(request);
+      ctx.call(
+              FailingServiceGrpc.getFailMethod(),
+              ctx.sideEffect(String.class, () -> UUID.randomUUID().toString()),
+              request)
+          .await();
     } catch (StatusRuntimeException e) {
-      checkSuspension(e);
       responseObserver.onNext(
           ErrorMessage.newBuilder().setErrorMessage(e.getStatus().getDescription()).build());
       responseObserver.onCompleted();
@@ -55,7 +53,7 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase {
     String finalMessage = "begin";
 
     try {
-      ctx.asyncCall(
+      ctx.callback(
               byte[].class,
               replyId -> {
                 try {
@@ -68,29 +66,20 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase {
               })
           .await();
     } catch (StatusRuntimeException e) {
-      checkSuspension(e);
       finalMessage = finalMessage + ":" + e.getStatus().getDescription();
     }
 
-    var stub =
-        FailingServiceGrpc.newBlockingStub(
-            ctx.channel(ctx.withSideEffect(String.class, () -> UUID.randomUUID().toString())));
     try {
-      stub.fail(ErrorMessage.newBuilder().setErrorMessage("internal_call").build());
+      ctx.call(
+              FailingServiceGrpc.getFailMethod(),
+              ctx.sideEffect(String.class, () -> UUID.randomUUID().toString()),
+              ErrorMessage.newBuilder().setErrorMessage("internal_call").build())
+          .await();
     } catch (StatusRuntimeException e) {
-      checkSuspension(e);
       finalMessage = finalMessage + ":" + e.getStatus().getDescription();
     }
 
     responseObserver.onNext(ErrorMessage.newBuilder().setErrorMessage(finalMessage).build());
     responseObserver.onCompleted();
-  }
-
-  private static void checkSuspension(StatusRuntimeException e) {
-    // This is a dirty hack until https://github.com/restatedev/java-sdk/issues/60 is solved
-    if (e.getStatus().getCause() instanceof SuspendableException) {
-      LOG.info("Suspending");
-      throw SuspendableException.INSTANCE;
-    }
   }
 }

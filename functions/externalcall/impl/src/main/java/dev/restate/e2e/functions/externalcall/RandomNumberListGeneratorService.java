@@ -33,7 +33,7 @@ public class RandomNumberListGeneratorService
 
     byte[] sortedNumbersJson =
         RestateContext.current()
-            .asyncCall(
+            .callback(
                 byte[].class,
                 replyId -> {
                   try {
