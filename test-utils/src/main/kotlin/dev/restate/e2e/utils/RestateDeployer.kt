@@ -108,7 +108,7 @@ private constructor(
       logger.debug(
           "Started function container {} with endpoint {}",
           functionName,
-          getFunctionEndpointUrl(functionName))
+          functionContainer.first.getFunctionEndpointUrl())
     }
 
     // Deploy additional containers

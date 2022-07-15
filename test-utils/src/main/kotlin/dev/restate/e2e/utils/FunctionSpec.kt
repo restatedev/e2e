@@ -152,7 +152,7 @@ data class FunctionSpec(
     }
   }
 
-  private fun getFunctionEndpointUrl(): URL {
+  internal fun getFunctionEndpointUrl(): URL {
     return URL("http", this.hostName, this.grpcEndpointPort, "/")
   }
 }
