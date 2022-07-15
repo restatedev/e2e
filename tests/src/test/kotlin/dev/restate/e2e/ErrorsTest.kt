@@ -50,16 +50,7 @@ class ErrorsTest {
   }
 
   @Test
-  fun externalCallFailurePropagation(
-      @InjectBlockingStub(
-          // TODO The reason for setting the key here is to avoid a deadlock, which is caused by the
-          // partition processor blocking on the http request to the function service. Once the
-          // partition processor will be able to process asynchronously the responses from the
-          // functions, there should be no deadlock anymore and we must remove this key.
-          // https://github.com/restatedev/runtime/issues/134
-          "abc")
-      stub: FailingServiceBlockingStub
-  ) {
+  fun externalCallFailurePropagation(@InjectBlockingStub stub: FailingServiceBlockingStub) {
     assertThat(stub.invokeExternalAndHandleFailure(Empty.getDefaultInstance()))
         .extracting(ErrorMessage::getErrorMessage)
         .isEqualTo("begin:external_call:internal_call")
