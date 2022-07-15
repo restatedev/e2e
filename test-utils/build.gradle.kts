@@ -18,6 +18,9 @@ dependencies {
 
   implementation(libs.log4j.api)
   implementation(libs.grpc.netty.shaded)
+  implementation(libs.grpc.protobuf)
+
+  implementation(libs.restate.sdk)
 
   testImplementation(libs.junit.all)
   testImplementation(libs.assertj)
