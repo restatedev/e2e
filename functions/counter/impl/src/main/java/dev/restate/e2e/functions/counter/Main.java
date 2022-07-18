@@ -6,6 +6,7 @@ import java.io.IOException;
 public class Main {
 
   public static void main(String[] args) throws IOException, InterruptedException {
-    ServiceRunner.create(new CounterService(), new NoopService()).run();
+    ServiceRunner.create(new CounterService(), new SingletonCounterService(), new NoopService())
+        .run();
   }
 }

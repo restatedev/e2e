@@ -98,7 +98,8 @@ data class FunctionSpec(
     manifestNode.put("endpoint", getFunctionEndpointUrl().toString())
     manifestNode.put(
         "service_instance_type",
-        if (serviceInstanceType == ServiceType.KEYED) "Keyed" else "Unkeyed")
+        if (serviceInstanceType == ServiceType.KEYED) "Keyed"
+        else if (serviceInstanceType == ServiceType.SINGLETON) "Singleton" else "Unkeyed")
 
     val methodsNode = mapper.createArrayNode()
     protoServiceDescriptor.methods

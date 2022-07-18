@@ -7,6 +7,7 @@ import dev.restate.e2e.functions.errors.FailingServiceGrpc
 import dev.restate.e2e.functions.externalcall.RandomNumberListGeneratorGrpc
 import dev.restate.e2e.functions.externalcall.ReplierGrpc
 import dev.restate.e2e.functions.receiver.ReceiverGrpc
+import dev.restate.e2e.functions.singletoncounter.SingletonCounterGrpc
 import dev.restate.e2e.utils.FunctionSpec
 import org.testcontainers.containers.GenericContainer
 
@@ -15,6 +16,7 @@ object Containers {
       FunctionSpec.builder(
               "restatedev/e2e-counter",
               CounterGrpc.getServiceDescriptor(),
+              SingletonCounterGrpc.getServiceDescriptor(),
               NoopGrpc.getServiceDescriptor())
           .build()
 

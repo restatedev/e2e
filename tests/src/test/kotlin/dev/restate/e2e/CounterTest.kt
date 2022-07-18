@@ -5,6 +5,8 @@ import dev.restate.e2e.functions.counter.CounterAddRequest
 import dev.restate.e2e.functions.counter.CounterGrpc.CounterBlockingStub
 import dev.restate.e2e.functions.counter.CounterRequest
 import dev.restate.e2e.functions.counter.NoopGrpc.NoopBlockingStub
+import dev.restate.e2e.functions.singletoncounter.CounterNumber
+import dev.restate.e2e.functions.singletoncounter.SingletonCounterGrpc.SingletonCounterBlockingStub
 import dev.restate.e2e.utils.InjectBlockingStub
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
@@ -43,6 +45,15 @@ class CounterTest {
             CounterAddRequest.newBuilder().setCounterName("my-key").setValue(2).build())
     assertThat(res2.oldValue).isEqualTo(1)
     assertThat(res2.newValue).isEqualTo(3)
+  }
+
+  @Test
+  fun singleton(@InjectBlockingStub counterClient: SingletonCounterBlockingStub) {
+    for (i in 1..10) {
+      counterClient.add(CounterNumber.newBuilder().setValue(1).build())
+    }
+
+    assertThat(counterClient.get(Empty.getDefaultInstance()).value).isEqualTo(10)
   }
 
   @Test
