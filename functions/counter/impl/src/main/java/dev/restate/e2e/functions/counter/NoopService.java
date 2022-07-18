@@ -19,8 +19,10 @@ public class NoopService extends NoopGrpc.NoopImplBase {
     // Increment the counter
     ctx.backgroundCall(
         CounterGrpc.getAddMethod(),
-        "doAndReportInvocationCount",
-        Number.newBuilder().setValue(1).build());
+        CounterAddRequest.newBuilder()
+            .setCounterName("doAndReportInvocationCount")
+            .setValue(1)
+            .build());
 
     responseObserver.onNext(Empty.getDefaultInstance());
     responseObserver.onCompleted();

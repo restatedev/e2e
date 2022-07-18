@@ -5,9 +5,13 @@ option java_package = "dev.restate.e2e.functions.externalcall";
 option java_outer_classname = "ReplierProto";
 
 import "google/protobuf/empty.proto";
+import "dev/restate/ext.proto";
+
 package restate.e2e.externalcall.replier;
 
 service Replier {
+  option (dev.restate.ext.service_type) = UNKEYED;
+
   rpc ReplyToRandomNumberListGenerator(Reply) returns (google.protobuf.Empty);
 }
 

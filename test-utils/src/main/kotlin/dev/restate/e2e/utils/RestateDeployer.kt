@@ -2,6 +2,7 @@ package dev.restate.e2e.utils
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
+import io.grpc.ServiceDescriptor
 import java.io.File
 import java.net.URL
 import java.nio.file.Files
@@ -39,7 +40,7 @@ private constructor(
   }
 
   private val functionContainers =
-      functionSpecs.associate { spec -> spec.hostName to spec.toFunctionContainer() }
+      functionSpecs.associate { spec -> spec.hostName to (spec to spec.toFunctionContainer()) }
   private var runtimeContainer: GenericContainer<*>? = null
   private var network: Network? = null
 
@@ -63,11 +64,10 @@ private constructor(
     /** Add a function with default configuration. */
     fun withFunction(
         containerImageName: String,
-        grpcServiceName: String,
-        vararg otherGrpcServices: String
+        grpcService: ServiceDescriptor,
+        vararg otherGrpcServices: ServiceDescriptor
     ) = apply {
-      this.withFunction(
-          FunctionSpec.builder(containerImageName, grpcServiceName, *otherGrpcServices))
+      this.withFunction(FunctionSpec.builder(containerImageName, grpcService, *otherGrpcServices))
     }
 
     fun runtimeDeployments(runtimeDeployments: Int) = apply {
@@ -108,7 +108,7 @@ private constructor(
       logger.debug(
           "Started function container {} with endpoint {}",
           functionName,
-          getFunctionEndpointUrl(functionName))
+          functionContainer.first.getFunctionEndpointUrl())
     }
 
     // Deploy additional containers
@@ -124,23 +124,15 @@ private constructor(
 
     val configFile = File(Files.createTempDirectory("restate-e2e").toFile(), "restate.yaml")
 
+    val mapper = ObjectMapper(YAMLFactory())
+
     val config = mutableMapOf<String, Any>()
     config["peers"] = listOf("127.0.0.1:9001")
     config["consensus"] = mapOf("storage_type" to "Memory")
     config["grpc_port"] = RUNTIME_GRPC_ENDPOINT
-    config["service_endpoints"] =
-        functionContainers.values
-            .flatMap { functionContainer ->
-              val serviceEndpointUrl = getFunctionEndpointUrl(functionContainer.first.hostName)
-
-              functionContainer.first.service_endpoints.map { serviceEndpoint ->
-                serviceEndpoint to serviceEndpointUrl.toString()
-              }
-            }
-            .toMap()
+    config["services"] = functionContainers.values.flatMap { it.first.toManifests(mapper) }
     config.putAll(additionalConfig)
 
-    val mapper = ObjectMapper(YAMLFactory())
     mapper.writeValue(configFile, config)
 
     logger.debug("Written config to {}", configFile)
@@ -174,10 +166,6 @@ private constructor(
     additionalContainers.forEach { (_, container) -> container.stop() }
     functionContainers.forEach { (_, container) -> container.second.stop() }
     network!!.close()
-  }
-
-  fun getFunctionEndpointUrl(name: String): URL {
-    return URL("http", name, 8080, "/")
   }
 
   fun getRuntimeFunctionEndpointUrl(): URL {

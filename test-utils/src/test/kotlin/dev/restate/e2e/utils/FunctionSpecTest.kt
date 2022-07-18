@@ -1,5 +1,7 @@
 package dev.restate.e2e.utils
 
+import io.grpc.ServiceDescriptor
+import java.util.*
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
@@ -16,7 +18,11 @@ internal class FunctionSpecTest {
               "restatedev/runtime:main",
               "ghcr.io/restatedev/runtime:main"])
   fun correctHostNameInference(containerImageName: String) {
-    assertThat(FunctionSpec.builder(containerImageName, "MySvc").build().hostName)
+    assertThat(
+            FunctionSpec.builder(
+                    containerImageName, ServiceDescriptor("MySvc", Collections.emptyList()))
+                .build()
+                .hostName)
         .isEqualTo("runtime")
   }
 }

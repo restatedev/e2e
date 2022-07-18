@@ -1,20 +1,22 @@
 package dev.restate.e2e.functions.counter;
 
 import com.google.protobuf.Empty;
+import dev.restate.e2e.functions.singletoncounter.CounterNumber;
+import dev.restate.e2e.functions.singletoncounter.SingletonCounterGrpc;
 import dev.restate.sdk.RestateContext;
 import dev.restate.sdk.StateKey;
 import io.grpc.stub.StreamObserver;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class CounterService extends CounterGrpc.CounterImplBase {
+public class SingletonCounterService extends SingletonCounterGrpc.SingletonCounterImplBase {
 
-  private static final Logger logger = LogManager.getLogger(CounterService.class);
+  private static final Logger logger = LogManager.getLogger(SingletonCounterService.class);
 
   private static final StateKey<Long> COUNTER_KEY = StateKey.of("counter", Long.TYPE);
 
   @Override
-  public void reset(CounterRequest request, StreamObserver<Empty> responseObserver) {
+  public void reset(Empty request, StreamObserver<Empty> responseObserver) {
     RestateContext ctx = RestateContext.current();
 
     logger.info("Counter cleaned up");
@@ -26,7 +28,7 @@ public class CounterService extends CounterGrpc.CounterImplBase {
   }
 
   @Override
-  public void add(CounterAddRequest request, StreamObserver<Empty> responseObserver) {
+  public void add(CounterNumber request, StreamObserver<Empty> responseObserver) {
     RestateContext ctx = RestateContext.current();
 
     long counter = ctx.get(COUNTER_KEY).orElse(0L);
@@ -42,29 +44,13 @@ public class CounterService extends CounterGrpc.CounterImplBase {
   }
 
   @Override
-  public void get(CounterRequest request, StreamObserver<GetResponse> responseObserver) {
+  public void get(Empty request, StreamObserver<CounterNumber> responseObserver) {
     RestateContext ctx = RestateContext.current();
 
-    GetResponse result = GetResponse.newBuilder().setValue(ctx.get(COUNTER_KEY).orElse(0L)).build();
+    CounterNumber result =
+        CounterNumber.newBuilder().setValue(ctx.get(COUNTER_KEY).orElse(0L)).build();
 
     responseObserver.onNext(result);
-    responseObserver.onCompleted();
-  }
-
-  @Override
-  public void getAndAdd(
-      CounterAddRequest request, StreamObserver<CounterUpdateResult> responseObserver) {
-    RestateContext ctx = RestateContext.current();
-
-    long oldCount = ctx.get(COUNTER_KEY).orElse(0L);
-    long newCount = oldCount + request.getValue();
-    ctx.set(COUNTER_KEY, newCount);
-
-    logger.info("Old counter value: {}", oldCount);
-    logger.info("New counter value: {}", newCount);
-
-    responseObserver.onNext(
-        CounterUpdateResult.newBuilder().setOldValue(oldCount).setNewValue(newCount).build());
     responseObserver.onCompleted();
   }
 }

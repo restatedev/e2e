@@ -1,6 +1,5 @@
 package dev.restate.e2e.utils
 
-import dev.restate.e2e.utils.GrpcUtils.withRestateKey
 import io.grpc.Channel
 import io.grpc.ManagedChannel
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder
@@ -67,8 +66,6 @@ class RestateDeployerExtension(private val deployer: RestateDeployer) :
       parameterContext: ParameterContext,
       extensionContext: ExtensionContext
   ): Any {
-    val annotation = parameterContext.findAnnotation(InjectBlockingStub::class.java).get()
-
     val stubType = parameterContext.parameter.type
     val stubFactoryMethod =
         stubType.enclosingClass.getDeclaredMethod("newBlockingStub", Channel::class.java)
@@ -79,10 +76,6 @@ class RestateDeployerExtension(private val deployer: RestateDeployer) :
             .get(MANAGED_CHANNEL_KEY, ManagedChannelResource::class.java)
 
     var stub: T = stubFactoryMethod.invoke(null, channelResource.channel) as T
-
-    if (annotation.key != "") {
-      stub = stub.withRestateKey(annotation.key)
-    }
 
     return stub
   }
