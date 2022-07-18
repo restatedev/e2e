@@ -123,7 +123,11 @@ data class FunctionSpec(
       val inputDescriptor = methodDescriptor.inputType
 
       // Look out for the key
-      val keyField = inputDescriptor.fields.find { it.options.hasExtension(Ext.field) }!!
+      val keyField =
+          checkNotNull(inputDescriptor.fields.find { it.options.hasExtension(Ext.field) }) {
+            "Cannot find any field in the type ${inputDescriptor.fullName} annotated with the ${Ext.field} extension. " +
+                "This is required because the service ${methodDescriptor.service.fullName} is annotated as KEYED"
+          }
       val keyNode = mapper.createObjectNode()
       keyNode.put("root_message_key_field_number", keyField.number)
       keyNode.set<JsonNode>("parser_directive", toKeyParserDirective(mapper, keyField))
