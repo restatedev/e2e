@@ -14,7 +14,7 @@ public class CounterService extends CounterGrpc.CounterImplBase {
   private static final StateKey<Long> COUNTER_KEY = StateKey.of("counter", Long.TYPE);
 
   @Override
-  public void reset(Empty request, StreamObserver<Empty> responseObserver) {
+  public void reset(CounterRequest request, StreamObserver<Empty> responseObserver) {
     RestateContext ctx = RestateContext.current();
 
     logger.info("Counter cleaned up");
@@ -26,7 +26,7 @@ public class CounterService extends CounterGrpc.CounterImplBase {
   }
 
   @Override
-  public void add(Number request, StreamObserver<Empty> responseObserver) {
+  public void add(CounterAddRequest request, StreamObserver<Empty> responseObserver) {
     RestateContext ctx = RestateContext.current();
 
     long counter = ctx.get(COUNTER_KEY).orElse(0L);
@@ -42,17 +42,18 @@ public class CounterService extends CounterGrpc.CounterImplBase {
   }
 
   @Override
-  public void get(Empty request, StreamObserver<Number> responseObserver) {
+  public void get(CounterRequest request, StreamObserver<GetResponse> responseObserver) {
     RestateContext ctx = RestateContext.current();
 
-    Number result = Number.newBuilder().setValue(ctx.get(COUNTER_KEY).orElse(0L)).build();
+    GetResponse result = GetResponse.newBuilder().setValue(ctx.get(COUNTER_KEY).orElse(0L)).build();
 
     responseObserver.onNext(result);
     responseObserver.onCompleted();
   }
 
   @Override
-  public void getAndAdd(Number request, StreamObserver<CounterUpdateResult> responseObserver) {
+  public void getAndAdd(
+      CounterAddRequest request, StreamObserver<CounterUpdateResult> responseObserver) {
     RestateContext ctx = RestateContext.current();
 
     long oldCount = ctx.get(COUNTER_KEY).orElse(0L);

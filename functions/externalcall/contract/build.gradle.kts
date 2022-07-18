@@ -10,6 +10,8 @@ dependencies {
   api(libs.grpc.stub)
   api(libs.grpc.protobuf)
 
+  protobuf(libs.restate.sdk)
+
   compileOnly(libs.javax.annotation.api)
 }
 

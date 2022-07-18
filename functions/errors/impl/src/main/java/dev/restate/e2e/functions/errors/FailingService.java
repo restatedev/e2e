@@ -30,8 +30,9 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase {
     try {
       ctx.call(
               FailingServiceGrpc.getFailMethod(),
-              ctx.sideEffect(String.class, () -> UUID.randomUUID().toString()),
-              request)
+              request.toBuilder()
+                  .setKey(ctx.sideEffect(String.class, () -> UUID.randomUUID().toString()))
+                  .build())
           .await();
     } catch (StatusRuntimeException e) {
       responseObserver.onNext(
@@ -45,7 +46,7 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase {
 
   @Override
   public void invokeExternalAndHandleFailure(
-      Empty request, StreamObserver<ErrorMessage> responseObserver) {
+      FailRequest request, StreamObserver<ErrorMessage> responseObserver) {
     LOG.info("Invoked invokeExternalAndHandleFailure");
 
     var ctx = RestateContext.current();
@@ -72,8 +73,10 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase {
     try {
       ctx.call(
               FailingServiceGrpc.getFailMethod(),
-              ctx.sideEffect(String.class, () -> UUID.randomUUID().toString()),
-              ErrorMessage.newBuilder().setErrorMessage("internal_call").build())
+              ErrorMessage.newBuilder()
+                  .setKey(ctx.sideEffect(String.class, () -> UUID.randomUUID().toString()))
+                  .setErrorMessage("internal_call")
+                  .build())
           .await();
     } catch (StatusRuntimeException e) {
       finalMessage = finalMessage + ":" + e.getStatus().getDescription();

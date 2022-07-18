@@ -6,12 +6,20 @@ option java_outer_classname = "ReceiverProto";
 option objc_class_prefix = "RecvP";
 
 import "google/protobuf/empty.proto";
+import "dev/restate/ext.proto";
+
 package coordinator;
 
 service Receiver {
-  rpc Ping (google.protobuf.Empty) returns (Pong);
+  option (dev.restate.ext.service_type) = KEYED;
+
+  rpc Ping(PingRequest) returns (Pong);
   rpc SetValue(SetValueRequest) returns (google.protobuf.Empty);
-  rpc GetValue(google.protobuf.Empty) returns (GetValueResponse);
+  rpc GetValue(GetValueRequest) returns (GetValueResponse);
+}
+
+message PingRequest {
+  string key = 1 [(dev.restate.ext.field) = KEY];
 }
 
 message Pong {
@@ -19,7 +27,13 @@ message Pong {
 }
 
 message SetValueRequest {
-  string value = 1;
+  string key = 1 [(dev.restate.ext.field) = KEY];
+
+  string value = 2;
+}
+
+message GetValueRequest {
+  string key = 1 [(dev.restate.ext.field) = KEY];
 }
 
 message GetValueResponse {

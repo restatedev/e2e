@@ -13,12 +13,16 @@ import org.testcontainers.containers.GenericContainer
 object Containers {
   val COUNTER_FUNCTION_SPEC =
       FunctionSpec.builder(
-              "restatedev/e2e-counter", CounterGrpc.SERVICE_NAME, NoopGrpc.SERVICE_NAME)
+              "restatedev/e2e-counter",
+              CounterGrpc.getServiceDescriptor(),
+              NoopGrpc.getServiceDescriptor())
           .build()
 
   val COORDINATOR_FUNCTION_SPEC =
       FunctionSpec.builder(
-              "restatedev/e2e-coordinator", CoordinatorGrpc.SERVICE_NAME, ReceiverGrpc.SERVICE_NAME)
+              "restatedev/e2e-coordinator",
+              CoordinatorGrpc.getServiceDescriptor(),
+              ReceiverGrpc.getServiceDescriptor())
           .build()
 
   val EXTERNALCALL_HTTP_SERVER_CONTAINER_SPEC =
@@ -30,14 +34,14 @@ object Containers {
   val EXTERNALCALL_FUNCTION_SPEC =
       FunctionSpec.builder(
               "restatedev/e2e-externalcall",
-              RandomNumberListGeneratorGrpc.SERVICE_NAME,
-              ReplierGrpc.SERVICE_NAME)
+              RandomNumberListGeneratorGrpc.getServiceDescriptor(),
+              ReplierGrpc.getServiceDescriptor())
           .withEnv(
               "HTTP_SERVER_ADDRESS", "http://${EXTERNALCALL_HTTP_SERVER_CONTAINER_SPEC.first}:8080")
           .build()
 
   val ERRORS_FUNCTION_SPEC =
-      FunctionSpec.builder("restatedev/e2e-errors", FailingServiceGrpc.SERVICE_NAME)
+      FunctionSpec.builder("restatedev/e2e-errors", FailingServiceGrpc.getServiceDescriptor())
           .withEnv(
               "HTTP_SERVER_ADDRESS", "http://${EXTERNALCALL_HTTP_SERVER_CONTAINER_SPEC.first}:8080")
           .build()

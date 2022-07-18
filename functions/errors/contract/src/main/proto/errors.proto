@@ -5,14 +5,23 @@ option java_package = "dev.restate.e2e.functions.errors";
 option java_outer_classname = "ErrorsProto";
 
 import "google/protobuf/empty.proto";
+import "dev/restate/ext.proto";
 package errors;
 
 service FailingService {
+  option (dev.restate.ext.service_type) = KEYED;
+
   rpc Fail (ErrorMessage) returns (google.protobuf.Empty);
   rpc FailAndHandle (ErrorMessage) returns (ErrorMessage);
-  rpc InvokeExternalAndHandleFailure(google.protobuf.Empty) returns (ErrorMessage);
+  rpc InvokeExternalAndHandleFailure(FailRequest) returns (ErrorMessage);
+}
+
+message FailRequest {
+  string key = 1 [(dev.restate.ext.field) = KEY];
 }
 
 message ErrorMessage {
-  string error_message = 1;
+  string key = 1 [(dev.restate.ext.field) = KEY];
+
+  string error_message = 2;
 }

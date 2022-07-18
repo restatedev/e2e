@@ -1,8 +1,9 @@
 package dev.restate.e2e
 
-import com.google.protobuf.Empty
+import dev.restate.e2e.functions.counter.CounterAddRequest
 import dev.restate.e2e.functions.counter.CounterGrpc
 import dev.restate.e2e.functions.counter.CounterGrpc.CounterBlockingStub
+import dev.restate.e2e.functions.counter.CounterRequest
 import dev.restate.e2e.utils.*
 import io.cloudevents.CloudEvent
 import io.cloudevents.core.message.Encoding
@@ -46,8 +47,7 @@ class KafkaInvocationTest {
 
   @Test
   fun incrementCounterFromKafka(
-      @InjectBlockingStub(KEY_A) counterClientA: CounterBlockingStub,
-      @InjectBlockingStub(KEY_B) counterClientB: CounterBlockingStub,
+      @InjectBlockingStub counterClient: CounterBlockingStub,
       @InjectContainerAddress("kafka", KafkaContainer.PORT) kafkaAddress: String
   ) {
     createProducer(kafkaAddress).use { producer ->
@@ -62,7 +62,7 @@ class KafkaInvocationTest {
                         CounterGrpc.SERVICE_NAME,
                         "Add",
                         KEY_A,
-                        dev.restate.e2e.functions.counter.Number.newBuilder().setValue(1).build()))
+                        CounterAddRequest.newBuilder().setCounterName(KEY_A).setValue(1).build()))
                 .get())
       }
       for (i in 0 until 5) {
@@ -75,7 +75,7 @@ class KafkaInvocationTest {
                         CounterGrpc.SERVICE_NAME,
                         "Add",
                         KEY_B,
-                        dev.restate.e2e.functions.counter.Number.newBuilder().setValue(1).build()))
+                        CounterAddRequest.newBuilder().setCounterName(KEY_A).setValue(1).build()))
                 .get())
       }
 
@@ -83,14 +83,14 @@ class KafkaInvocationTest {
     }
     await untilCallTo
         {
-          counterClientA.get(Empty.getDefaultInstance())
+          counterClient.get(CounterRequest.newBuilder().setCounterName(KEY_A).build())
         } matches
         { num ->
           num!!.value == 3L
         }
     await untilCallTo
         {
-          counterClientB.get(Empty.getDefaultInstance())
+          counterClient.get(CounterRequest.newBuilder().setCounterName(KEY_B).build())
         } matches
         { num ->
           num!!.value == 5L

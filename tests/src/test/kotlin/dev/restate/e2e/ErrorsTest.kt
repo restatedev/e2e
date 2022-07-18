@@ -1,13 +1,14 @@
 package dev.restate.e2e
 
-import com.google.protobuf.Empty
 import dev.restate.e2e.functions.errors.ErrorMessage
+import dev.restate.e2e.functions.errors.FailRequest
 import dev.restate.e2e.functions.errors.FailingServiceGrpc.FailingServiceBlockingStub
 import dev.restate.e2e.utils.InjectBlockingStub
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
+import java.util.UUID
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.assertj.core.api.InstanceOfAssertFactories.type
@@ -32,7 +33,11 @@ class ErrorsTest {
     val errorMessage = "my error"
 
     assertThatThrownBy {
-          stub.fail(ErrorMessage.newBuilder().setErrorMessage(errorMessage).build())
+          stub.fail(
+              ErrorMessage.newBuilder()
+                  .setKey(UUID.randomUUID().toString())
+                  .setErrorMessage(errorMessage)
+                  .build())
         }
         .asInstanceOf(type(StatusRuntimeException::class.java))
         .extracting(StatusRuntimeException::getStatus)
@@ -44,14 +49,21 @@ class ErrorsTest {
   fun internalCallFailurePropagation(@InjectBlockingStub stub: FailingServiceBlockingStub) {
     val errorMessage = "propagated error"
 
-    assertThat(stub.failAndHandle(ErrorMessage.newBuilder().setErrorMessage(errorMessage).build()))
+    assertThat(
+            stub.failAndHandle(
+                ErrorMessage.newBuilder()
+                    .setKey(UUID.randomUUID().toString())
+                    .setErrorMessage(errorMessage)
+                    .build()))
         .extracting(ErrorMessage::getErrorMessage)
         .isEqualTo(errorMessage)
   }
 
   @Test
   fun externalCallFailurePropagation(@InjectBlockingStub stub: FailingServiceBlockingStub) {
-    assertThat(stub.invokeExternalAndHandleFailure(Empty.getDefaultInstance()))
+    assertThat(
+            stub.invokeExternalAndHandleFailure(
+                FailRequest.newBuilder().setKey(UUID.randomUUID().toString()).build()))
         .extracting(ErrorMessage::getErrorMessage)
         .isEqualTo("begin:external_call:internal_call")
   }

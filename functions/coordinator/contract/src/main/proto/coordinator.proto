@@ -5,9 +5,13 @@ option java_package = "dev.restate.e2e.functions.coordinator";
 option java_outer_classname = "CoordinatorProto";
 
 import "google/protobuf/empty.proto";
+import "dev/restate/ext.proto";
+
 package coordinator;
 
 service Coordinator {
+  option (dev.restate.ext.service_type) = UNKEYED;
+
   rpc Sleep (Duration) returns (google.protobuf.Empty);
   rpc Proxy (google.protobuf.Empty) returns (ProxyResponse);
   rpc Complex (ComplexRequest) returns (ComplexResponse);

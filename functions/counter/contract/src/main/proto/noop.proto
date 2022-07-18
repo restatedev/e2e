@@ -5,8 +5,12 @@ option java_package = "dev.restate.e2e.functions.counter";
 option java_outer_classname = "NoopProto";
 
 import "google/protobuf/empty.proto";
+import "dev/restate/ext.proto";
+
 package counter;
 
 service Noop {
+  option (dev.restate.ext.service_type) = UNKEYED;
+
   rpc DoAndReportInvocationCount(google.protobuf.Empty) returns (google.protobuf.Empty);
 }

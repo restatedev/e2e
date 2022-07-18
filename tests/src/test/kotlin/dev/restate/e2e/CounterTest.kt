@@ -1,7 +1,9 @@
 package dev.restate.e2e
 
 import com.google.protobuf.Empty
+import dev.restate.e2e.functions.counter.CounterAddRequest
 import dev.restate.e2e.functions.counter.CounterGrpc.CounterBlockingStub
+import dev.restate.e2e.functions.counter.CounterRequest
 import dev.restate.e2e.functions.counter.NoopGrpc.NoopBlockingStub
 import dev.restate.e2e.utils.InjectBlockingStub
 import dev.restate.e2e.utils.RestateDeployer
@@ -24,20 +26,21 @@ class CounterTest {
 
   @Test
   fun noReturnValue(@InjectBlockingStub counterClient: CounterBlockingStub) {
-    counterClient.add(dev.restate.e2e.functions.counter.Number.newBuilder().setValue(1).build())
+    counterClient.add(
+        CounterAddRequest.newBuilder().setCounterName("noReturnValue").setValue(1).build())
   }
 
   @Test
-  fun keyedState(@InjectBlockingStub("my-key") counterClient: CounterBlockingStub) {
+  fun keyedState(@InjectBlockingStub counterClient: CounterBlockingStub) {
     val res1 =
         counterClient.getAndAdd(
-            dev.restate.e2e.functions.counter.Number.newBuilder().setValue(1).build())
+            CounterAddRequest.newBuilder().setCounterName("my-key").setValue(1).build())
     assertThat(res1.oldValue).isEqualTo(0)
     assertThat(res1.newValue).isEqualTo(1)
 
     val res2 =
         counterClient.getAndAdd(
-            dev.restate.e2e.functions.counter.Number.newBuilder().setValue(2).build())
+            CounterAddRequest.newBuilder().setCounterName("my-key").setValue(2).build())
     assertThat(res2.oldValue).isEqualTo(1)
     assertThat(res2.newValue).isEqualTo(3)
   }
@@ -45,7 +48,7 @@ class CounterTest {
   @Test
   fun fireAndForget(
       @InjectBlockingStub noopClient: NoopBlockingStub,
-      @InjectBlockingStub("doAndReportInvocationCount") counterClient: CounterBlockingStub
+      @InjectBlockingStub counterClient: CounterBlockingStub
   ) {
     noopClient.doAndReportInvocationCount(Empty.getDefaultInstance())
     noopClient.doAndReportInvocationCount(Empty.getDefaultInstance())
@@ -53,7 +56,8 @@ class CounterTest {
 
     await untilCallTo
         {
-          counterClient.get(Empty.getDefaultInstance())
+          counterClient.get(
+              CounterRequest.newBuilder().setCounterName("doAndReportInvocationCount").build())
         } matches
         { num ->
           num!!.value == 3L
