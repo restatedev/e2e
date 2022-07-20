@@ -21,11 +21,13 @@ private constructor(
     runtimeDeployments: Int,
     functionSpecs: List<FunctionSpec>,
     private val additionalContainers: Map<String, GenericContainer<*>>,
-    private val additionalConfig: Map<String, Any>
+    private val additionalConfig: Map<String, Any>,
+    private val runtimeContainerName: String,
 ) {
 
   companion object {
-    private const val RUNTIME_CONTAINER = "ghcr.io/restatedev/runtime:main"
+    private const val RESTATE_RUNTIME_CONTAINER_ENV = "RESTATE_RUNTIME_CONTAINER"
+    private const val DEFAULT_RUNTIME_CONTAINER = "ghcr.io/restatedev/runtime:main"
     private const val RUNTIME_GRPC_ENDPOINT = 8090
 
     private const val IMAGE_PULL_POLICY = "E2E_IMAGE_PULL_POLICY"
@@ -52,7 +54,9 @@ private constructor(
       private var runtimeDeployments: Int = 1,
       private var functions: MutableList<FunctionSpec> = mutableListOf(),
       private var additionalContainers: MutableMap<String, GenericContainer<*>> = mutableMapOf(),
-      private var additionalConfig: MutableMap<String, Any> = mutableMapOf()
+      private var additionalConfig: MutableMap<String, Any> = mutableMapOf(),
+      private var runtimeContainer: String =
+          System.getenv(RESTATE_RUNTIME_CONTAINER_ENV) ?: DEFAULT_RUNTIME_CONTAINER,
   ) {
 
     fun withFunction(functionSpec: FunctionSpec) = apply { this.functions.add(functionSpec) }
@@ -74,6 +78,10 @@ private constructor(
       this.runtimeDeployments = runtimeDeployments
     }
 
+    fun runtimeContainer(runtimeContainer: String) = apply {
+      this.runtimeContainer = runtimeContainer
+    }
+
     /** Add a container that will be added within the same network of functions and runtime. */
     fun withContainer(hostName: String, container: GenericContainer<*>) = apply {
       this.additionalContainers[hostName] = container
@@ -86,7 +94,8 @@ private constructor(
     fun withConfigEntries(key: String, value: Any) = apply { this.additionalConfig[key] = value }
 
     fun build() =
-        RestateDeployer(runtimeDeployments, functions, additionalContainers, additionalConfig)
+        RestateDeployer(
+            runtimeDeployments, functions, additionalContainers, additionalConfig, runtimeContainer)
   }
 
   fun deploy(testClass: Class<*>) {
@@ -136,10 +145,11 @@ private constructor(
     mapper.writeValue(configFile, config)
 
     logger.debug("Written config to {}", configFile)
+    logger.debug("Starting runtime container '{}'", runtimeContainerName)
 
     // Generate runtime container
     runtimeContainer =
-        GenericContainer(DockerImageName.parse(RUNTIME_CONTAINER))
+        GenericContainer(DockerImageName.parse(runtimeContainerName))
             .dependsOn(functionContainers.values.map { it.second })
             .dependsOn(additionalContainers.values)
             .withEnv("RUST_LOG", "debug")
