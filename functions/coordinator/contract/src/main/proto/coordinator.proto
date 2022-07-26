@@ -16,6 +16,7 @@ service Coordinator {
   rpc Proxy (google.protobuf.Empty) returns (ProxyResponse);
   rpc Complex (ComplexRequest) returns (ComplexResponse);
   rpc Timeout (Duration) returns (TimeoutResponse);
+  rpc InvokeSequentially(InvokeSequentiallyRequest) returns (google.protobuf.Empty);
 }
 
 message Duration {
@@ -37,4 +38,8 @@ message ComplexResponse {
 
 message TimeoutResponse {
   bool timeout_occurred = 1;
+}
+
+message InvokeSequentiallyRequest {
+  repeated bool execute_as_background_call = 1;
 }

@@ -1,16 +1,22 @@
 package dev.restate.e2e.functions.coordinator;
 
 import com.google.protobuf.Empty;
+import dev.restate.e2e.functions.collections.list.AppendRequest;
+import dev.restate.e2e.functions.collections.list.ListServiceGrpc;
 import dev.restate.e2e.functions.receiver.GetValueRequest;
 import dev.restate.e2e.functions.receiver.PingRequest;
 import dev.restate.e2e.functions.receiver.ReceiverGrpc;
 import dev.restate.e2e.functions.receiver.SetValueRequest;
+import dev.restate.sdk.Awaitable;
 import dev.restate.sdk.RestateContext;
 import io.grpc.stub.StreamObserver;
-import java.util.UUID;
-import java.util.concurrent.TimeoutException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.TimeoutException;
 
 public class CoordinatorService extends CoordinatorGrpc.CoordinatorImplBase {
   private static final Logger LOG = LogManager.getLogger(CoordinatorService.class);
@@ -96,6 +102,38 @@ public class CoordinatorService extends CoordinatorGrpc.CoordinatorImplBase {
 
     responseObserver.onNext(
         TimeoutResponse.newBuilder().setTimeoutOccurred(timeoutOccurred).build());
+    responseObserver.onCompleted();
+  }
+
+  @Override
+  public void invokeSequentially(
+      InvokeSequentiallyRequest request, StreamObserver<Empty> responseObserver) {
+    RestateContext ctx = RestateContext.current();
+
+    List<Awaitable<?>> collectedAwaitables = new ArrayList<>();
+
+    for (int i = 0; i < request.getExecuteAsBackgroundCallCount(); i++) {
+      if (request.getExecuteAsBackgroundCall(i)) {
+        ctx.backgroundCall(
+            ListServiceGrpc.getAppendMethod(),
+            AppendRequest.newBuilder()
+                .setListName("invokeSequentially")
+                .setValue(String.valueOf(i))
+                .build());
+      } else {
+        collectedAwaitables.add(
+            ctx.call(
+                ListServiceGrpc.getAppendMethod(),
+                AppendRequest.newBuilder()
+                    .setListName("invokeSequentially")
+                    .setValue(String.valueOf(i))
+                    .build()));
+      }
+    }
+
+    Awaitable.all(collectedAwaitables).await();
+
+    responseObserver.onNext(Empty.getDefaultInstance());
     responseObserver.onCompleted();
   }
 }

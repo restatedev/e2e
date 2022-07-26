@@ -1,6 +1,8 @@
 rootProject.name = "restate-e2e"
 
 include(
+    "functions:collections:contract",
+    "functions:collections:impl",
     "functions:coordinator:contract",
     "functions:coordinator:impl",
     "functions:counter:contract",
