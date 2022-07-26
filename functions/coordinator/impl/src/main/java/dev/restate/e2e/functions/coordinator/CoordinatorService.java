@@ -60,8 +60,6 @@ public class CoordinatorService extends CoordinatorGrpc.CoordinatorImplBase {
     // fire-and-forget calls as well as coordinator calls have an absolute ordering that is defined
     // by their call order. In this concrete case, setValue is guaranteed to be executed before
     // getValue.
-    // TODO this only works atm because fire-and-forget messages are sent first.
-    //  See https://github.com/restatedev/java-sdk/issues/32 for more details
     ctx.backgroundCall(
         ReceiverGrpc.getSetValueMethod(),
         SetValueRequest.newBuilder()
