@@ -10,13 +10,12 @@ import dev.restate.e2e.functions.receiver.SetValueRequest;
 import dev.restate.sdk.Awaitable;
 import dev.restate.sdk.RestateContext;
 import io.grpc.stub.StreamObserver;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class CoordinatorService extends CoordinatorGrpc.CoordinatorImplBase {
   private static final Logger LOG = LogManager.getLogger(CoordinatorService.class);
@@ -63,7 +62,7 @@ public class CoordinatorService extends CoordinatorGrpc.CoordinatorImplBase {
 
     LOG.info("Send fire and forget call to {}", ReceiverGrpc.getServiceDescriptor().getName());
     // Functions should be invoked in the same order they were called. This means that
-    // fire-and-forget calls as well as coordinator calls have an absolute ordering that is defined
+    // background calls as well as request-response calls have an absolute ordering that is defined
     // by their call order. In this concrete case, setValue is guaranteed to be executed before
     // getValue.
     ctx.backgroundCall(
