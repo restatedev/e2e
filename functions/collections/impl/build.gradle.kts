@@ -5,8 +5,6 @@ plugins {
   java
   idea
   alias(libs.plugins.shadowJar)
-  alias(libs.plugins.spotless)
-  alias(libs.plugins.errorprone)
   alias(libs.plugins.jib)
 }
 
@@ -15,18 +13,19 @@ dependencies {
 
   implementation(project(":functions:utils"))
   implementation(project(":functions:collections:contract"))
-  implementation(project(":functions:coordinator:contract"))
 
   implementation(libs.log4j.api)
   implementation(libs.log4j.core)
 
   implementation(libs.grpc.netty.shaded)
 
-  errorprone(libs.errorprone)
+  implementation(platform(libs.jackson.bom))
+  implementation(libs.jackson.core)
+  implementation(libs.jackson.databind)
 }
 
 jib {
-  to.image = "restatedev/e2e-coordinator"
+  to.image = "restatedev/e2e-collections"
   from.image = testBaseImage()
 
   from {
@@ -40,4 +39,4 @@ jib {
 }
 
 // Use gradle shadowJar to build the fat jar
-tasks.jar { manifest { attributes["Main-Class"] = "dev.restate.e2e.functions.coordinator.Main" } }
+tasks.jar { manifest { attributes["Main-Class"] = "dev.restate.e2e.functions.collections.Main" } }

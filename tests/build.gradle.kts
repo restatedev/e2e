@@ -6,6 +6,7 @@ plugins {
 dependencies {
   testImplementation(kotlin("test"))
   testImplementation(project(":test-utils"))
+  testImplementation(project(":functions:collections:contract"))
   testImplementation(project(":functions:counter:contract"))
   testImplementation(project(":functions:coordinator:contract"))
   testImplementation(project(":functions:externalcall:contract"))
@@ -33,6 +34,7 @@ dependencies {
 }
 
 tasks.withType<Test> {
+  dependsOn(":functions:collections:impl:jibDockerBuild")
   dependsOn(":functions:counter:impl:jibDockerBuild")
   dependsOn(":functions:coordinator:impl:jibDockerBuild")
   dependsOn(":functions:externalcall:impl:jibDockerBuild")

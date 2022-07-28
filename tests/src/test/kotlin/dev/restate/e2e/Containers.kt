@@ -1,5 +1,6 @@
 package dev.restate.e2e
 
+import dev.restate.e2e.functions.collections.list.ListServiceGrpc
 import dev.restate.e2e.functions.coordinator.CoordinatorGrpc
 import dev.restate.e2e.functions.counter.CounterGrpc
 import dev.restate.e2e.functions.counter.NoopGrpc
@@ -12,6 +13,12 @@ import dev.restate.e2e.utils.FunctionSpec
 import org.testcontainers.containers.GenericContainer
 
 object Containers {
+  val COLLECTIONS_FUNCTION_SPEC =
+    FunctionSpec.builder(
+      "restatedev/e2e-collections",
+      ListServiceGrpc.getServiceDescriptor())
+      .build()
+
   val COUNTER_FUNCTION_SPEC =
       FunctionSpec.builder(
               "restatedev/e2e-counter",
