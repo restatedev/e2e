@@ -1,33 +1,20 @@
-name: Publish snapshot
+name: Publish release
 
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       deploymentTarget:
-        description: 'Deployment target'
+        description: 'Deployment target (JFrog or GitHub)'
         required: true
         default: 'GitHub'
-        type: choice
-        options:
-          - GitHub
-          - JFrog
-  push:
-    branches:
-      - main
+        type: string
 
 jobs:
   publish:
     if: github.repository == 'restatedev/e2e'
-    name: Publish snapshot (Java ${{ matrix.java }})
+    name: Publish
     runs-on: ubuntu-latest
-    env:
-      GH_PACKAGE_READ_ACCESS_USER: ${{ secrets.GH_PACKAGE_READ_ACCESS_USER }}
-      GH_PACKAGE_READ_ACCESS_TOKEN: ${{ secrets.GH_PACKAGE_READ_ACCESS_TOKEN }}
-    timeout-minutes: 15
-    strategy:
-      fail-fast: false
-      matrix:
-        java: [ 11 ]
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v3
         with:
@@ -36,18 +23,20 @@ jobs:
       - name: Set up JDK ${{ matrix.java }}
         uses: actions/setup-java@v3
         with:
-          java-version: ${{ matrix.java }}
+          java-version: 11
           distribution: 'adopt'
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v1
+
       # Ideally we delete old packages after releasing new ones but this does not work for snapshot releases
-      - name: Delete old e2e-utils artifacts from GitHub packages
-        if: ${{ inputs.deploymentTarget != 'JFrog' }}
+      - name: Delete old e2e-utils packages
+        if: ${{ inputs.deploymentTarget == 'GitHub' }}
         uses: actions/delete-package-versions@v3
         with:
           package-name: 'dev.restate.testing.e2e-utils'
           delete-only-pre-release-versions: "true"
           token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Build with Gradle & publish to JFrog repository
         if: ${{ inputs.deploymentTarget == 'JFrog' }}
         uses: gradle/gradle-build-action@v2
@@ -57,7 +46,7 @@ jobs:
         with:
           arguments: publishMavenPublicationToJFrogRepository
       - name: Build with Gradle & publish to GitHub packages repository
-        if: ${{ inputs.deploymentTarget != 'JFrog' }}
+        if: ${{ inputs.deploymentTarget == 'GitHub' }}
         uses: gradle/gradle-build-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
