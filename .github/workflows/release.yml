@@ -35,6 +35,7 @@ jobs:
         with:
           package-name: 'dev.restate.testing.e2e-utils'
           delete-only-pre-release-versions: "true"
+          min-versions-to-keep: 1
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build with Gradle & publish to JFrog repository
