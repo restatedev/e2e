@@ -8,7 +8,7 @@ plugins {
   alias(libs.plugins.spotless)
 }
 
-val restateVersion = libs.versions.restate
+val restateVersion = libs.versions.restate.get()
 
 val testReport =
     tasks.register<TestReport>("testReport") {

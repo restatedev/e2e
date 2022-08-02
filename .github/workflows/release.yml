@@ -34,8 +34,10 @@ jobs:
         uses: actions/delete-package-versions@v3
         with:
           package-name: 'dev.restate.testing.e2e-utils'
-          delete-only-pre-release-versions: "true"
-          min-versions-to-keep: 1
+          min-versions-to-keep: 0
+          # We want to remove all the versions containing SNAPSHOT in the name
+          # See https://github.com/actions/delete-package-versions/issues/61
+          ignore-versions: '^.*(?<!SNAPSHOT)$'
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build with Gradle & publish to JFrog repository
