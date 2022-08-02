@@ -30,9 +30,6 @@ dependencyResolutionManagement {
 
   versionCatalogs {
     create("libs") {
-      // Versions
-      version("java-sdk", "1.0-SNAPSHOT")
-
       version("guava", "30.1.1-jre")
       version("protobuf", "3.21.2")
       version("grpc", "1.47.0")
@@ -52,7 +49,7 @@ dependencyResolutionManagement {
       version("errorprone", "2.13.1")
 
       // Libraries
-      library("restate-sdk", "dev.restate.sdk", "java-sdk").versionRef("java-sdk")
+      library("restate-sdk", "dev.restate.sdk", "java-sdk").versionRef("restate")
 
       library("guava", "com.google.guava", "guava").versionRef("guava")
       library("protoc", "com.google.protobuf", "protoc").versionRef("protobuf")

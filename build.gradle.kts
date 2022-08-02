@@ -8,6 +8,8 @@ plugins {
   alias(libs.plugins.spotless)
 }
 
+val restateVersion = libs.versions.restate.get()
+
 val testReport =
     tasks.register<TestReport>("testReport") {
       destinationDirectory.set(file("$buildDir/reports/tests/test"))
@@ -19,7 +21,7 @@ allprojects {
   apply(plugin = "kotlin")
   apply(plugin = "com.diffplug.spotless")
 
-  version = "1.0-SNAPSHOT"
+  version = restateVersion
 
   configure<com.diffplug.gradle.spotless.SpotlessExtension> {
     kotlin { ktfmt() }
