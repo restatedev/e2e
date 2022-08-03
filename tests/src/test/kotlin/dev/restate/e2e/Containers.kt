@@ -14,10 +14,8 @@ import org.testcontainers.containers.GenericContainer
 
 object Containers {
   val COLLECTIONS_FUNCTION_SPEC =
-    FunctionSpec.builder(
-      "restatedev/e2e-collections",
-      ListServiceGrpc.getServiceDescriptor())
-      .build()
+      FunctionSpec.builder("restatedev/e2e-collections", ListServiceGrpc.getServiceDescriptor())
+          .build()
 
   val COUNTER_FUNCTION_SPEC =
       FunctionSpec.builder(
