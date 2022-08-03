@@ -1,7 +1,7 @@
 package dev.restate.e2e
 
-import com.google.protobuf.Empty
 import dev.restate.e2e.functions.coordinator.CoordinatorGrpc.CoordinatorBlockingStub
+import dev.restate.e2e.functions.coordinator.InvokeSideEffectsRequest
 import dev.restate.e2e.utils.InjectBlockingStub
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
@@ -19,7 +19,18 @@ class SideEffectTest {
 
   @Test
   fun sideEffectFlush(@InjectBlockingStub coordinatorClient: CoordinatorBlockingStub) {
-    assertThat(coordinatorClient.invokeSideEffects(Empty.getDefaultInstance()))
+    assertThat(
+            coordinatorClient.invokeSideEffects(
+                InvokeSideEffectsRequest.newBuilder().setLastIsCallback(false).build()))
+        .extracting { it.invokedTimes }
+        .isEqualTo(1)
+  }
+
+  @Test
+  fun sideEffectThenCallbackFlush(@InjectBlockingStub coordinatorClient: CoordinatorBlockingStub) {
+    assertThat(
+            coordinatorClient.invokeSideEffects(
+                InvokeSideEffectsRequest.newBuilder().setLastIsCallback(true).build()))
         .extracting { it.invokedTimes }
         .isEqualTo(1)
   }

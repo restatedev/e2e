@@ -139,17 +139,18 @@ public class CoordinatorService extends CoordinatorGrpc.CoordinatorImplBase {
 
   @Override
   public void invokeSideEffects(
-      Empty request, StreamObserver<InvokeSideEffectsResult> responseObserver) {
+      InvokeSideEffectsRequest request, StreamObserver<InvokeSideEffectsResult> responseObserver) {
     RestateContext ctx = RestateContext.current();
 
     AtomicInteger invokedSideEffects = new AtomicInteger(0);
 
-    ctx.sideEffect(
-        () -> invokedSideEffects.incrementAndGet());
-    ctx.sideEffect(
-        () -> invokedSideEffects.incrementAndGet());
-    ctx.sideEffect(
-        () -> invokedSideEffects.incrementAndGet());
+    ctx.sideEffect(() -> invokedSideEffects.incrementAndGet());
+    ctx.sideEffect(() -> invokedSideEffects.incrementAndGet());
+    if (request.getLastIsCallback()) {
+      ctx.callback(Void.TYPE, ignored -> invokedSideEffects.incrementAndGet());
+    } else {
+      ctx.sideEffect(() -> invokedSideEffects.incrementAndGet());
+    }
 
     responseObserver.onNext(
         InvokeSideEffectsResult.newBuilder()
