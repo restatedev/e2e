@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -133,6 +134,27 @@ public class CoordinatorService extends CoordinatorGrpc.CoordinatorImplBase {
     Awaitable.all(collectedAwaitables).await();
 
     responseObserver.onNext(Empty.getDefaultInstance());
+    responseObserver.onCompleted();
+  }
+
+  @Override
+  public void invokeSideEffects(
+      Empty request, StreamObserver<InvokeSideEffectsResult> responseObserver) {
+    RestateContext ctx = RestateContext.current();
+
+    AtomicInteger invokedSideEffects = new AtomicInteger(0);
+
+    ctx.sideEffect(
+        () -> invokedSideEffects.incrementAndGet());
+    ctx.sideEffect(
+        () -> invokedSideEffects.incrementAndGet());
+    ctx.sideEffect(
+        () -> invokedSideEffects.incrementAndGet());
+
+    responseObserver.onNext(
+        InvokeSideEffectsResult.newBuilder()
+            .setInvokedTimes(invokedSideEffects.intValue())
+            .build());
     responseObserver.onCompleted();
   }
 }
