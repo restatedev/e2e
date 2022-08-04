@@ -1,7 +1,6 @@
 package dev.restate.e2e.functions.collections;
 
 import dev.restate.e2e.functions.utils.ServiceRunner;
-
 import java.io.IOException;
 
 public class Main {
