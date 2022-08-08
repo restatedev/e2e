@@ -1,8 +1,10 @@
 package dev.restate.e2e.functions.errors;
 
 import com.google.protobuf.Empty;
+import com.google.rpc.Code;
 import dev.restate.e2e.functions.utils.NumberSortHttpServerUtils;
 import dev.restate.sdk.RestateContext;
+import io.grpc.MethodDescriptor;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
@@ -84,5 +86,25 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase {
 
     responseObserver.onNext(ErrorMessage.newBuilder().setErrorMessage(finalMessage).build());
     responseObserver.onCompleted();
+  }
+
+  @Override
+  public void handleNotFound(FailRequest request, StreamObserver<ErrorMessage> responseObserver) {
+    var methodDescriptor =
+        FailingServiceGrpc.getFailMethod().toBuilder()
+            .setFullMethodName(
+                MethodDescriptor.generateFullMethodName(
+                    FailingServiceGrpc.SERVICE_NAME, "UnknownFn"))
+            .build();
+    try {
+      RestateContext.current().call(methodDescriptor, ErrorMessage.getDefaultInstance()).await();
+    } catch (StatusRuntimeException e) {
+      if (e.getStatus().getCode().value() == Code.NOT_FOUND_VALUE) {
+        responseObserver.onNext(ErrorMessage.newBuilder().setErrorMessage("notfound").build());
+        responseObserver.onCompleted();
+      }
+    }
+
+    throw new IllegalStateException("This should be unreachable");
   }
 }
