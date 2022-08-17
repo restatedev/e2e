@@ -27,7 +27,8 @@ private constructor(
 
   companion object {
     private const val RESTATE_RUNTIME_CONTAINER_ENV = "RESTATE_RUNTIME_CONTAINER"
-    private const val DEFAULT_RUNTIME_CONTAINER = "ghcr.io/restatedev/runtime:main"
+    private const val DEFAULT_RUNTIME_CONTAINER =
+        "restatedev.jfrog.io/restatedev-docker-local/runtime"
     private const val RUNTIME_GRPC_ENDPOINT = 8090
 
     private const val IMAGE_PULL_POLICY = "E2E_IMAGE_PULL_POLICY"

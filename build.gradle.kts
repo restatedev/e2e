@@ -48,7 +48,10 @@ subprojects {
       exceptionFormat = TestExceptionFormat.FULL
     }
     environment =
-        environment + mapOf("CONTAINER_LOGS_DIR" to "$buildDir/test-results/container-logs")
+        environment +
+            mapOf(
+                "CONTAINER_LOGS_DIR" to "$buildDir/test-results/container-logs",
+                "RESTATE_RUNTIME_CONTAINER" to "ghcr.io/restatedev/runtime:main")
   }
 
   tasks.withType<JavaCompile>().configureEach {
