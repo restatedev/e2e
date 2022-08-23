@@ -44,3 +44,9 @@ This will populate your local image registry with the various function container
 
 In order to always pull the runtime image you can set the environment variable `E2E_IMAGE_PULL_POLICY=always`.
 If you want to test against a runtime image that is available locally, unset this environment variable to let testcontainers pick the local image. 
+
+### Use Restate CLI for local testing outside docker
+
+If you want to test the function containers outside docker, you can use the [Restate CLI](https://github.com/restatedev/cli).
+
+Running `gradle build` will add the compiled descriptor in `.restate/descriptors`, where `restate manifest create` will pick it up.

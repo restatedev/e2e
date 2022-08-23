@@ -6,11 +6,7 @@ plugins {
 dependencies {
   testImplementation(kotlin("test"))
   testImplementation(project(":test-utils"))
-  testImplementation(project(":functions:collections:contract"))
-  testImplementation(project(":functions:counter:contract"))
-  testImplementation(project(":functions:coordinator:contract"))
-  testImplementation(project(":functions:externalcall:contract"))
-  testImplementation(project(":functions:errors:contract"))
+  testImplementation(project(":contracts"))
 
   testImplementation(libs.junit.all)
   testImplementation(libs.assertj)
@@ -34,10 +30,17 @@ dependencies {
 }
 
 tasks.withType<Test> {
-  dependsOn(":functions:collections:impl:jibDockerBuild")
-  dependsOn(":functions:counter:impl:jibDockerBuild")
-  dependsOn(":functions:coordinator:impl:jibDockerBuild")
-  dependsOn(":functions:externalcall:impl:jibDockerBuild")
-  dependsOn(":functions:errors:impl:jibDockerBuild")
+  dependsOn(":functions:collections:jibDockerBuild")
+  dependsOn(":functions:counter:jibDockerBuild")
+  dependsOn(":functions:coordinator:jibDockerBuild")
+  dependsOn(":functions:externalcall:jibDockerBuild")
+  dependsOn(":functions:errors:jibDockerBuild")
   dependsOn(":functions:http-server:jibDockerBuild")
+
+  environment =
+      environment +
+          mapOf(
+              "CONTAINER_LOGS_DIR" to "$buildDir/test-results/container-logs",
+              "RESTATE_RUNTIME_CONTAINER" to "ghcr.io/restatedev/runtime:main",
+            )
 }

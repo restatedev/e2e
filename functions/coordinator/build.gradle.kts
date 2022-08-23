@@ -13,9 +13,8 @@ plugins {
 dependencies {
   implementation(libs.restate.sdk)
 
+  implementation(project(":contracts"))
   implementation(project(":functions:utils"))
-  implementation(project(":functions:collections:contract"))
-  implementation(project(":functions:coordinator:contract"))
 
   implementation(libs.log4j.api)
   implementation(libs.log4j.core)

@@ -10,8 +10,7 @@ plugins {
 }
 
 dependencies {
-  implementation(project(":functions:externalcall:contract"))
-
+  implementation(project(":contracts"))
   implementation(libs.grpc.netty.shaded)
 
   implementation(platform(libs.jackson.bom))
