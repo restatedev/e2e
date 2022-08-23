@@ -1,16 +1,12 @@
 rootProject.name = "restate-e2e"
 
 include(
-    "functions:collections:contract",
-    "functions:collections:impl",
-    "functions:coordinator:contract",
-    "functions:coordinator:impl",
-    "functions:counter:contract",
-    "functions:counter:impl",
-    "functions:externalcall:contract",
-    "functions:externalcall:impl",
-    "functions:errors:contract",
-    "functions:errors:impl",
+    "contracts",
+    "functions:collections",
+    "functions:coordinator",
+    "functions:counter",
+    "functions:externalcall",
+    "functions:errors",
     "functions:http-server",
     "functions:utils",
     "test-utils",

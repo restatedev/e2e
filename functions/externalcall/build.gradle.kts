@@ -13,11 +13,14 @@ plugins {
 dependencies {
   implementation(libs.restate.sdk)
 
+  implementation(project(":contracts"))
   implementation(project(":functions:utils"))
-  implementation(project(":functions:errors:contract"))
 
   implementation(libs.log4j.api)
   implementation(libs.log4j.core)
+
+  implementation(platform(libs.jackson.bom))
+  implementation(libs.jackson.core)
 
   implementation(libs.grpc.netty.shaded)
 
@@ -25,7 +28,7 @@ dependencies {
 }
 
 jib {
-  to.image = "restatedev/e2e-errors"
+  to.image = "restatedev/e2e-externalcall"
   from.image = testBaseImage()
 
   from {
@@ -39,4 +42,4 @@ jib {
 }
 
 // Use gradle shadowJar to build the fat jar
-tasks.jar { manifest { attributes["Main-Class"] = "dev.restate.e2e.functions.errors.Main" } }
+tasks.jar { manifest { attributes["Main-Class"] = "dev.restate.e2e.functions.externalcall.Main" } }

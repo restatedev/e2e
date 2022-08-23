@@ -5,30 +5,23 @@ plugins {
   java
   idea
   alias(libs.plugins.shadowJar)
-  alias(libs.plugins.spotless)
-  alias(libs.plugins.errorprone)
   alias(libs.plugins.jib)
 }
 
 dependencies {
   implementation(libs.restate.sdk)
 
+  implementation(project(":contracts"))
   implementation(project(":functions:utils"))
-  implementation(project(":functions:externalcall:contract"))
 
   implementation(libs.log4j.api)
   implementation(libs.log4j.core)
 
-  implementation(platform(libs.jackson.bom))
-  implementation(libs.jackson.core)
-
   implementation(libs.grpc.netty.shaded)
-
-  errorprone(libs.errorprone)
 }
 
 jib {
-  to.image = "restatedev/e2e-externalcall"
+  to.image = "restatedev/e2e-counter"
   from.image = testBaseImage()
 
   from {
@@ -42,4 +35,4 @@ jib {
 }
 
 // Use gradle shadowJar to build the fat jar
-tasks.jar { manifest { attributes["Main-Class"] = "dev.restate.e2e.functions.externalcall.Main" } }
+tasks.jar { manifest { attributes["Main-Class"] = "dev.restate.e2e.functions.counter.Main" } }

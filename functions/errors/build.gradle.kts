@@ -5,23 +5,27 @@ plugins {
   java
   idea
   alias(libs.plugins.shadowJar)
+  alias(libs.plugins.spotless)
+  alias(libs.plugins.errorprone)
   alias(libs.plugins.jib)
 }
 
 dependencies {
   implementation(libs.restate.sdk)
 
+  implementation(project(":contracts"))
   implementation(project(":functions:utils"))
-  implementation(project(":functions:counter:contract"))
 
   implementation(libs.log4j.api)
   implementation(libs.log4j.core)
 
   implementation(libs.grpc.netty.shaded)
+
+  errorprone(libs.errorprone)
 }
 
 jib {
-  to.image = "restatedev/e2e-counter"
+  to.image = "restatedev/e2e-errors"
   from.image = testBaseImage()
 
   from {
@@ -35,4 +39,4 @@ jib {
 }
 
 // Use gradle shadowJar to build the fat jar
-tasks.jar { manifest { attributes["Main-Class"] = "dev.restate.e2e.functions.counter.Main" } }
+tasks.jar { manifest { attributes["Main-Class"] = "dev.restate.e2e.functions.errors.Main" } }
