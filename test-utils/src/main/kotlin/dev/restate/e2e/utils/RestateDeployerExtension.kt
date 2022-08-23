@@ -5,6 +5,7 @@ import io.grpc.ManagedChannel
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder
 import io.grpc.stub.AbstractBlockingStub
 import io.grpc.stub.AbstractStub
+import java.net.URL
 import java.util.concurrent.TimeUnit
 import org.junit.jupiter.api.extension.*
 import org.junit.jupiter.api.extension.ExtensionContext.Namespace
@@ -15,7 +16,7 @@ class RestateDeployerExtension(private val deployer: RestateDeployer) :
 
   companion object {
     private val NAMESPACE = Namespace.create(RestateDeployerExtension::class.java)
-    private val MANAGED_CHANNEL_KEY = "ManagedChannelKey"
+    private const val MANAGED_CHANNEL_KEY = "ManagedChannelKey"
   }
 
   override fun beforeAll(context: ExtensionContext) {
@@ -45,7 +46,9 @@ class RestateDeployerExtension(private val deployer: RestateDeployer) :
     return (parameterContext.isAnnotated(InjectBlockingStub::class.java) &&
         AbstractBlockingStub::class.java.isAssignableFrom(parameterContext.parameter.type)) ||
         (parameterContext.isAnnotated(InjectContainerAddress::class.java) &&
-            String::class.java.isAssignableFrom(parameterContext.parameter.type))
+            String::class.java.isAssignableFrom(parameterContext.parameter.type)) ||
+        (parameterContext.isAnnotated(InjectHttpEndpointURL::class.java) &&
+            URL::class.java.isAssignableFrom(parameterContext.parameter.type))
   }
 
   override fun resolveParameter(
@@ -56,6 +59,8 @@ class RestateDeployerExtension(private val deployer: RestateDeployer) :
       resolveBlockingStub(parameterContext, extensionContext)
     } else if (parameterContext.isAnnotated(InjectContainerAddress::class.java)) {
       resolveContainerAddress(parameterContext)
+    } else if (parameterContext.isAnnotated(InjectHttpEndpointURL::class.java)) {
+      resolveHttpEndpointURL()
     } else {
       null
     }
@@ -75,15 +80,17 @@ class RestateDeployerExtension(private val deployer: RestateDeployer) :
             .getStore(NAMESPACE)
             .get(MANAGED_CHANNEL_KEY, ManagedChannelResource::class.java)
 
-    var stub: T = stubFactoryMethod.invoke(null, channelResource.channel) as T
-
-    return stub
+    return stubFactoryMethod.invoke(null, channelResource.channel) as T
   }
 
   private fun resolveContainerAddress(parameterContext: ParameterContext): Any {
     val annotation = parameterContext.findAnnotation(InjectContainerAddress::class.java).get()
 
     return deployer.getAdditionalContainerExposedPort(annotation.hostName, annotation.port)
+  }
+
+  private fun resolveHttpEndpointURL(): Any {
+    return deployer.getRuntimeHttpEndpointUrl()
   }
 
   private class ManagedChannelResource(val channel: ManagedChannel) : Store.CloseableResource {

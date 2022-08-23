@@ -29,7 +29,7 @@ protobuf {
       it.generateDescriptorSet = true
       it.descriptorSetOptions.includeImports = true
       it.descriptorSetOptions.path =
-          "${rootProject.projectDir}/.restate/descriptors/${it.sourceSet.name}.descriptor"
+          "${rootProject.projectDir}/.restate/descriptors/${project.name}.descriptor"
     }
   }
 }
