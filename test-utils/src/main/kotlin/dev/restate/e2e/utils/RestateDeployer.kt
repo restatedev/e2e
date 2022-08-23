@@ -23,16 +23,23 @@ private constructor(
     private val additionalContainers: Map<String, GenericContainer<*>>,
     private val additionalConfig: Map<String, Any>,
     private val runtimeContainerName: String,
+    private val descriptorFile: String?,
 ) {
 
   companion object {
     private const val RESTATE_RUNTIME_CONTAINER_ENV = "RESTATE_RUNTIME_CONTAINER"
     private const val DEFAULT_RUNTIME_CONTAINER =
         "restatedev.jfrog.io/restatedev-docker-local/runtime"
-    private const val RUNTIME_GRPC_ENDPOINT = 8090
 
-    private const val IMAGE_PULL_POLICY = "E2E_IMAGE_PULL_POLICY"
+    private const val CONTAINER_LOGS_DIR_ENV = "CONTAINER_LOGS_DIR"
+
+    private const val IMAGE_PULL_POLICY_ENV = "E2E_IMAGE_PULL_POLICY"
     private const val ALWAYS_PULL = "always"
+
+    private const val DESCRIPTORS_FILE_ENV = "DESCRIPTORS_FILE"
+
+    private const val RUNTIME_GRPC_ENDPOINT = 8090
+    private const val RUNTIME_HTTP_ENDPOINT = 8091
 
     private val logger = LogManager.getLogger(RestateDeployer::class.java)
 
@@ -58,6 +65,7 @@ private constructor(
       private var additionalConfig: MutableMap<String, Any> = mutableMapOf(),
       private var runtimeContainer: String =
           System.getenv(RESTATE_RUNTIME_CONTAINER_ENV) ?: DEFAULT_RUNTIME_CONTAINER,
+      private var descriptorDirectory: String? = System.getenv(DESCRIPTORS_FILE_ENV),
   ) {
 
     fun withFunction(functionSpec: FunctionSpec) = apply { this.functions.add(functionSpec) }
@@ -96,7 +104,12 @@ private constructor(
 
     fun build() =
         RestateDeployer(
-            runtimeDeployments, functions, additionalContainers, additionalConfig, runtimeContainer)
+            runtimeDeployments,
+            functions,
+            additionalContainers,
+            additionalConfig,
+            runtimeContainer,
+            descriptorDirectory)
   }
 
   fun deploy(testClass: Class<*>) {
@@ -141,6 +154,10 @@ private constructor(
     config["consensus"] = mapOf("storage_type" to "Memory")
     config["grpc_port"] = RUNTIME_GRPC_ENDPOINT
     config["services"] = functionContainers.values.flatMap { it.first.toManifests(mapper) }
+    if (descriptorFile != null) {
+      config["http_endpoint"] =
+          mapOf("port" to RUNTIME_HTTP_ENDPOINT, "descriptors_path" to "/contracts.descriptor")
+    }
     config.putAll(additionalConfig)
 
     mapper.writeValue(configFile, config)
@@ -163,8 +180,14 @@ private constructor(
                 MountableFile.forHostPath(configFile.toPath()), "/restate.yaml")
             .withCommand("--id 1 --configuration-file /restate.yaml")
 
-    if (System.getenv(IMAGE_PULL_POLICY) == ALWAYS_PULL) {
+    if (System.getenv(IMAGE_PULL_POLICY_ENV) == ALWAYS_PULL) {
       runtimeContainer!!.withImagePullPolicy(PullPolicy.alwaysPull())
+    }
+    if (descriptorFile != null) {
+      runtimeContainer!!
+          .withCopyFileToContainer(
+              MountableFile.forHostPath(descriptorFile), "/contracts.descriptor")
+          .addExposedPort(RUNTIME_HTTP_ENDPOINT)
     }
 
     runtimeContainer!!.start()
@@ -187,6 +210,18 @@ private constructor(
             "Runtime is not configured, as RestateDeployer::deploy has not been invoked")
   }
 
+  fun getRuntimeHttpEndpointUrl(): URL {
+    checkNotNull(descriptorFile) {
+      "No descriptor directory is configured to start the HTTP Endpoint. " +
+          "Make sure when running tests you have the $DESCRIPTORS_FILE_ENV environment variable correctly configured"
+    }
+    return runtimeContainer?.getMappedPort(RUNTIME_HTTP_ENDPOINT)?.let {
+      URL("http", "127.0.0.1", it, "/")
+    }
+        ?: throw java.lang.IllegalStateException(
+            "Runtime is not configured, as RestateDeployer::deploy has not been invoked")
+  }
+
   fun getAdditionalContainerExposedPort(hostName: String, port: Int): String {
     return additionalContainers[hostName]?.let { "${it.host}:${it.getMappedPort(port)}" }
         ?: throw java.lang.IllegalStateException(
@@ -196,7 +231,7 @@ private constructor(
   private fun computeContainerTestLogsDir(testClass: Class<*>): Path {
     val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")
     return Path.of(
-        System.getenv("CONTAINER_LOGS_DIR")!!,
+        System.getenv(CONTAINER_LOGS_DIR_ENV)!!,
         "${testClass.canonicalName}_${LocalDateTime.now().format(formatter)}")
   }
 }

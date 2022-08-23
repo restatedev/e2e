@@ -16,6 +16,7 @@ dependencies {
 
   testImplementation(platform(libs.jackson.bom))
   testImplementation(libs.jackson.core)
+  testImplementation(libs.jackson.databind)
   testImplementation(libs.jackson.yaml)
 
   testImplementation(platform(libs.cloudevents.bom))
@@ -42,5 +43,6 @@ tasks.withType<Test> {
           mapOf(
               "CONTAINER_LOGS_DIR" to "$buildDir/test-results/container-logs",
               "RESTATE_RUNTIME_CONTAINER" to "ghcr.io/restatedev/runtime:main",
-            )
+              "DESCRIPTORS_FILE" to
+                  "${rootProject.projectDir}/.restate/descriptors/contracts.descriptor")
 }
