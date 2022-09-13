@@ -41,8 +41,16 @@ tasks.withType<Test> {
   environment =
       environment +
           mapOf(
-              "CONTAINER_LOGS_DIR" to "$buildDir/test-results/container-logs",
+              "CONTAINER_LOGS_DIR" to "$buildDir/test-results/$name/container-logs",
               "RESTATE_RUNTIME_CONTAINER" to "ghcr.io/restatedev/runtime:main",
               "DESCRIPTORS_FILE" to
                   "${rootProject.projectDir}/.restate/descriptors/contracts.descriptor")
 }
+
+// Additional configurations
+tasks.register<Test>("rocksdb-integration-test") {
+  dependsOn("test")
+  environment = environment + mapOf("E2E_USE_ROCKSDB" to "true")
+}
+
+tasks.named("build") { dependsOn("rocksdb-integration-test") }

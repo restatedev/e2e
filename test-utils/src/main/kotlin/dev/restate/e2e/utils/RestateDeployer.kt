@@ -19,6 +19,7 @@ import org.testcontainers.utility.MountableFile
 class RestateDeployer
 private constructor(
     runtimeDeployments: Int,
+    private val useRocksDb: Boolean,
     functionSpecs: List<FunctionSpec>,
     private val additionalContainers: Map<String, GenericContainer<*>>,
     private val additionalConfig: Map<String, Any>,
@@ -41,6 +42,8 @@ private constructor(
     private const val RUNTIME_GRPC_ENDPOINT = 8090
     private const val RUNTIME_HTTP_ENDPOINT = 8091
 
+    private const val USE_ROCKSDB = "E2E_USE_ROCKSDB"
+
     private val logger = LogManager.getLogger(RestateDeployer::class.java)
 
     @JvmStatic
@@ -60,6 +63,7 @@ private constructor(
 
   data class Builder(
       private var runtimeDeployments: Int = 1,
+      private var useRocksDb: Boolean = System.getenv().contains(USE_ROCKSDB),
       private var functions: MutableList<FunctionSpec> = mutableListOf(),
       private var additionalContainers: MutableMap<String, GenericContainer<*>> = mutableMapOf(),
       private var additionalConfig: MutableMap<String, Any> = mutableMapOf(),
@@ -91,6 +95,8 @@ private constructor(
       this.runtimeContainer = runtimeContainer
     }
 
+    fun useRocksDB(useRocksDb: Boolean) = apply { this.useRocksDb = useRocksDb }
+
     /** Add a container that will be added within the same network of functions and runtime. */
     fun withContainer(hostName: String, container: GenericContainer<*>) = apply {
       this.additionalContainers[hostName] = container
@@ -105,6 +111,7 @@ private constructor(
     fun build() =
         RestateDeployer(
             runtimeDeployments,
+            useRocksDb,
             functions,
             additionalContainers,
             additionalConfig,
@@ -151,7 +158,12 @@ private constructor(
 
     val config = mutableMapOf<String, Any>()
     config["peers"] = listOf("127.0.0.1:9001")
-    config["consensus"] = mapOf("storage_type" to "Memory")
+    if (useRocksDb) {
+      config["consensus"] =
+          mapOf("storage_type" to mapOf("RocksDb" to mapOf("working_directory" to "/state")))
+    } else {
+      config["consensus"] = mapOf("storage_type" to "Memory")
+    }
     config["grpc_port"] = RUNTIME_GRPC_ENDPOINT
     config["services"] = functionContainers.values.flatMap { it.first.toManifests(mapper) }
     if (descriptorFile != null) {
@@ -192,7 +204,7 @@ private constructor(
 
     runtimeContainer!!.start()
 
-    logger.debug("Restate runtime started and available at {}", getRuntimeFunctionEndpointUrl())
+    logger.debug("Restate runtime started and available at {}", getRuntimeGrpcEndpointUrl())
   }
 
   fun teardown() {
@@ -202,7 +214,7 @@ private constructor(
     network!!.close()
   }
 
-  fun getRuntimeFunctionEndpointUrl(): URL {
+  fun getRuntimeGrpcEndpointUrl(): URL {
     return runtimeContainer?.getMappedPort(RUNTIME_GRPC_ENDPOINT)?.let {
       URL("http", "127.0.0.1", it, "/")
     }

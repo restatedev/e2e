@@ -35,7 +35,7 @@ The build will fail if Gradle cannot find the `java-sdk` project.
 To run tests, just execute:
 
 ```shell
-gradle test
+gradle build
 ```
 
 This will populate your local image registry with the various function containers, required for testing, and then execute the tests.
