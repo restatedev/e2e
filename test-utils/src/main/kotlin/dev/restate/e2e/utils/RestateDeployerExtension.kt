@@ -26,7 +26,7 @@ class RestateDeployerExtension(private val deployer: RestateDeployer) :
         .put(
             MANAGED_CHANNEL_KEY,
             ManagedChannelResource(
-                deployer.getRuntimeFunctionEndpointUrl().let { url ->
+                deployer.getRuntimeGrpcEndpointUrl().let { url ->
                   NettyChannelBuilder.forAddress(url.host, url.port).usePlaintext().build()
                 }))
   }
