@@ -45,11 +45,19 @@ tasks.withType<Test> {
               "RESTATE_RUNTIME_CONTAINER" to "ghcr.io/restatedev/runtime:main",
               "DESCRIPTORS_FILE" to
                   "${rootProject.projectDir}/.restate/descriptors/contracts.descriptor")
+
+  useJUnitPlatform {
+    includeTags("none()") // Run all the tests without tags
+  }
 }
 
-// Additional configurations
+// --- Additional configurations
+
 tasks.register<Test>("rocksdb-integration-test") {
   dependsOn("test")
+
+  useJUnitPlatform { includeTags("none() | requires-persistence-layer") }
+
   environment = environment + mapOf("E2E_USE_ROCKSDB" to "true")
 }
 
