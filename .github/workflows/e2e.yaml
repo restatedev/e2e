@@ -46,6 +46,6 @@ jobs:
         if: always() # Make sure this is run even when test fails
         with:
           name: container-logs
-          path: "tests/build/test-results/container-logs/**"
+          path: "tests/build/test-results/*/container-logs/**"
 
 

@@ -2,7 +2,6 @@ package dev.restate.e2e.utils
 
 import io.grpc.Channel
 import io.grpc.ManagedChannel
-import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder
 import io.grpc.stub.AbstractBlockingStub
 import io.grpc.stub.AbstractStub
 import java.net.URL
@@ -20,23 +19,11 @@ class RestateDeployerExtension(private val deployer: RestateDeployer) :
   }
 
   override fun beforeAll(context: ExtensionContext) {
-    deployer.deploy(context.requiredTestClass)
-    context
-        .getStore(NAMESPACE)
-        .put(
-            MANAGED_CHANNEL_KEY,
-            ManagedChannelResource(
-                deployer.getRuntimeGrpcEndpointUrl().let { url ->
-                  NettyChannelBuilder.forAddress(url.host, url.port).usePlaintext().build()
-                }))
+    deployer.deployAll(context.requiredTestClass)
   }
 
   override fun afterAll(context: ExtensionContext) {
-    context
-        .getStore(NAMESPACE)
-        .get(MANAGED_CHANNEL_KEY, ManagedChannelResource::class.java)
-        ?.close()
-    deployer.teardown()
+    deployer.teardownAll()
   }
 
   override fun supportsParameter(
@@ -78,7 +65,10 @@ class RestateDeployerExtension(private val deployer: RestateDeployer) :
     val channelResource =
         extensionContext
             .getStore(NAMESPACE)
-            .get(MANAGED_CHANNEL_KEY, ManagedChannelResource::class.java)
+            .getOrComputeIfAbsent(
+                MANAGED_CHANNEL_KEY,
+                { ManagedChannelResource(deployer.getRuntimeChannel()) },
+                ManagedChannelResource::class.java)
 
     return stubFactoryMethod.invoke(null, channelResource.channel) as T
   }

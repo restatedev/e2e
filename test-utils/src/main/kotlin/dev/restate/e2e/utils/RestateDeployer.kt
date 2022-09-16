@@ -2,7 +2,9 @@ package dev.restate.e2e.utils
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
+import io.grpc.ManagedChannel
 import io.grpc.ServiceDescriptor
+import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder
 import java.io.File
 import java.net.URL
 import java.nio.file.Files
@@ -10,8 +12,10 @@ import java.nio.file.Path
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import org.apache.logging.log4j.LogManager
+import org.testcontainers.containers.BindMode
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.Network
+import org.testcontainers.containers.SelinuxContext
 import org.testcontainers.images.PullPolicy
 import org.testcontainers.utility.DockerImageName
 import org.testcontainers.utility.MountableFile
@@ -54,8 +58,9 @@ private constructor(
 
   private val functionContainers =
       functionSpecs.associate { spec -> spec.hostName to (spec to spec.toFunctionContainer()) }
+  private val network = Network.newNetwork()
+  private val tmpDir = Files.createTempDirectory("restate-e2e").toFile()
   private var runtimeContainer: GenericContainer<*>? = null
-  private var network: Network? = null
 
   init {
     assert(runtimeDeployments == 1) { "At the moment only one runtime deployment is supported" }
@@ -119,13 +124,14 @@ private constructor(
             descriptorDirectory)
   }
 
-  fun deploy(testClass: Class<*>) {
-    // Generate test report directory
-    val testReportDir = computeContainerTestLogsDir(testClass).toAbsolutePath().toString()
-    check(File(testReportDir).mkdirs()) { "Cannot create test report directory $testReportDir" }
-    logger.debug("Writing container logs to {}", testReportDir)
+  fun deployAll(testClass: Class<*>) {
+    deployFunctions(testClass)
+    deployAdditionalContainers(testClass)
+    deployRuntime(testClass)
+  }
 
-    network = Network.newNetwork()
+  fun deployFunctions(testClass: Class<*>) {
+    val testReportDir = resolveContainerTestLogsDir(testClass)
 
     // Deploy functions
     functionContainers.forEach { (functionName, functionContainer) ->
@@ -140,6 +146,27 @@ private constructor(
           functionName,
           functionContainer.first.getFunctionEndpointUrl())
     }
+  }
+
+  fun deployAdditionalContainers(testClass: Class<*>) {
+    val testReportDir = resolveContainerTestLogsDir(testClass)
+
+    // Deploy additional containers
+    additionalContainers.forEach { (containerHost, container) ->
+      container.networkAliases = ArrayList()
+      container
+          .withNetwork(network)
+          .withNetworkAliases(containerHost)
+          .withLogConsumer(ContainerLogger(testReportDir, containerHost))
+          .start()
+      logger.debug("Started container {} with image {}", containerHost, container.dockerImageName)
+    }
+  }
+
+  fun deployRuntime(testClass: Class<*>) {
+    // Generate test report directory
+    val testReportDir = resolveContainerTestLogsDir(testClass)
+    logger.debug("Writing container logs to {}", testReportDir)
 
     // Deploy additional containers
     additionalContainers.forEach { (containerHost, container) ->
@@ -152,7 +179,7 @@ private constructor(
       logger.debug("Started container {} with image {}", containerHost, container.dockerImageName)
     }
 
-    val configFile = File(Files.createTempDirectory("restate-e2e").toFile(), "restate.yaml")
+    val configFile = File(tmpDir, "restate.yaml")
 
     val mapper = ObjectMapper(YAMLFactory())
 
@@ -201,25 +228,49 @@ private constructor(
               MountableFile.forHostPath(descriptorFile), "/contracts.descriptor")
           .addExposedPort(RUNTIME_HTTP_ENDPOINT)
     }
+    if (useRocksDb) {
+      val stateDir = File(tmpDir, "state")
+      stateDir.mkdirs()
+      runtimeContainer!!.addFileSystemBind(
+          stateDir.toString(), "/state", BindMode.READ_WRITE, SelinuxContext.SINGLE)
+    }
 
     runtimeContainer!!.start()
 
     logger.debug("Restate runtime started and available at {}", getRuntimeGrpcEndpointUrl())
   }
 
-  fun teardown() {
-    runtimeContainer!!.stop()
+  fun teardownAdditionalContainers() {
     additionalContainers.forEach { (_, container) -> container.stop() }
+  }
+
+  fun teardownFunctions() {
     functionContainers.forEach { (_, container) -> container.second.stop() }
+  }
+
+  fun teardownRuntime() {
+    runtimeContainer!!.stop()
+  }
+
+  fun teardownAll() {
+    teardownRuntime()
+    teardownAdditionalContainers()
+    teardownFunctions()
     network!!.close()
   }
 
-  fun getRuntimeGrpcEndpointUrl(): URL {
+  private fun getRuntimeGrpcEndpointUrl(): URL {
     return runtimeContainer?.getMappedPort(RUNTIME_GRPC_ENDPOINT)?.let {
       URL("http", "127.0.0.1", it, "/")
     }
         ?: throw java.lang.IllegalStateException(
             "Runtime is not configured, as RestateDeployer::deploy has not been invoked")
+  }
+
+  fun getRuntimeChannel(): ManagedChannel {
+    return getRuntimeGrpcEndpointUrl().let { url ->
+      NettyChannelBuilder.forAddress(url.host, url.port).usePlaintext().build()
+    }
   }
 
   fun getRuntimeHttpEndpointUrl(): URL {
@@ -240,10 +291,15 @@ private constructor(
             "Requested additional container with hostname $hostName is not registered")
   }
 
-  private fun computeContainerTestLogsDir(testClass: Class<*>): Path {
+  private fun resolveContainerTestLogsDir(testClass: Class<*>): String {
     val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")
-    return Path.of(
-        System.getenv(CONTAINER_LOGS_DIR_ENV)!!,
-        "${testClass.canonicalName}_${LocalDateTime.now().format(formatter)}")
+    val dir =
+        Path.of(
+                System.getenv(CONTAINER_LOGS_DIR_ENV)!!,
+                "${testClass.canonicalName}_${LocalDateTime.now().format(formatter)}")
+            .toAbsolutePath()
+            .toString()
+    File(dir).mkdirs()
+    return dir
   }
 }
