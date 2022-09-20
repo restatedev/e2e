@@ -19,7 +19,7 @@ class RestateDeployerExtension(private val deployer: RestateDeployer) :
   }
 
   override fun beforeAll(context: ExtensionContext) {
-    deployer.deployAll(context.requiredTestClass)
+    deployer.deployAll(RestateDeployer.generateReportDirFromEnv(context.requiredTestClass))
   }
 
   override fun afterAll(context: ExtensionContext) {
@@ -67,7 +67,7 @@ class RestateDeployerExtension(private val deployer: RestateDeployer) :
             .getStore(NAMESPACE)
             .getOrComputeIfAbsent(
                 MANAGED_CHANNEL_KEY,
-                { ManagedChannelResource(deployer.getRuntimeChannel()) },
+                { ManagedChannelResource(deployer.createRuntimeChannel()) },
                 ManagedChannelResource::class.java)
 
     return stubFactoryMethod.invoke(null, channelResource.channel) as T
