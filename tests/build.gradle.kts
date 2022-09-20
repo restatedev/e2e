@@ -54,8 +54,6 @@ tasks.withType<Test> {
 // --- Additional configurations
 
 tasks.register<Test>("rocksdb-integration-test") {
-  dependsOn("test")
-
   useJUnitPlatform { includeTags("none() | requires-persistence-layer") }
 
   environment = environment + mapOf("E2E_USE_ROCKSDB" to "true")

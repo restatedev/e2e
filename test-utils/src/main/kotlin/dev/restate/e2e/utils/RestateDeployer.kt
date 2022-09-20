@@ -59,11 +59,11 @@ private constructor(
     fun generateReportDirFromEnv(testClass: Class<*>): String {
       val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")
       val dir =
-        Path.of(
-          System.getenv(CONTAINER_LOGS_DIR_ENV)!!,
-          "${testClass.canonicalName}_${LocalDateTime.now().format(formatter)}")
-          .toAbsolutePath()
-          .toString()
+          Path.of(
+                  System.getenv(CONTAINER_LOGS_DIR_ENV)!!,
+                  "${testClass.canonicalName}_${LocalDateTime.now().format(formatter)}")
+              .toAbsolutePath()
+              .toString()
       File(dir).mkdirs()
       return dir
     }
@@ -172,7 +172,7 @@ private constructor(
     }
   }
 
-  fun deployRuntime(testReportDir: String) {
+  fun deployRuntime(testReportDir: String, additionalEnv: Map<String, String> = mapOf()) {
     // Generate test report directory
     logger.debug("Writing container logs to {}", testReportDir)
 
@@ -219,6 +219,7 @@ private constructor(
             .dependsOn(additionalContainers.values)
             .withEnv("RUST_LOG", "debug")
             .withEnv("RUST_BACKTRACE", "full")
+            .withEnv(additionalEnv)
             .withExposedPorts(RUNTIME_GRPC_ENDPOINT)
             .withNetwork(network)
             .withNetworkAliases("runtime")
@@ -272,6 +273,10 @@ private constructor(
     network!!.close()
   }
 
+  fun isRuntimeRunning(): Boolean {
+    return runtimeContainer!!.currentContainerInfo!!.state!!.exitCodeLong == null
+  }
+
   private fun getRuntimeGrpcEndpointUrl(): URL {
     return runtimeContainer?.getMappedPort(RUNTIME_GRPC_ENDPOINT)?.let {
       URL("http", "127.0.0.1", it, "/")
@@ -282,7 +287,7 @@ private constructor(
 
   fun createRuntimeChannel(): ManagedChannel {
     return getRuntimeGrpcEndpointUrl().let { url ->
-      NettyChannelBuilder.forAddress(url.host, url.port).usePlaintext().build()
+      NettyChannelBuilder.forAddress(url.host, url.port).disableRetry().usePlaintext().build()
     }
   }
 
