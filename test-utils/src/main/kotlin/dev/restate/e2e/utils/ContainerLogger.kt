@@ -34,10 +34,23 @@ internal class ContainerLogger(testReportDirectory: String, loggerName: String) 
       loggerName: String,
       type: String
   ): BufferedWriter {
-    return Files.newBufferedWriter(
-        Path.of(testReportDirectory, "${loggerName}_${type}.log"),
-        StandardOpenOption.CREATE,
-        StandardOpenOption.WRITE,
-        StandardOpenOption.APPEND)
+    val path = Path.of(testReportDirectory, "${loggerName}_${type}.log")
+    val fileExists = Files.exists(path)
+
+    val writer =
+        Files.newBufferedWriter(
+            Path.of(testReportDirectory, "${loggerName}_${type}.log"),
+            StandardOpenOption.CREATE,
+            StandardOpenOption.WRITE,
+            StandardOpenOption.APPEND)
+
+    if (fileExists) {
+      writer.newLine()
+      writer.newLine()
+    }
+
+    writer.write("========================= START LOG =========================\n")
+
+    return writer
   }
 }
