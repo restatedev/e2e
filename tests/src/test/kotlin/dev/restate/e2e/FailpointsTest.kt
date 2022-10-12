@@ -79,7 +79,7 @@ class FailpointsTest {
           res!!.value == 1L
         }
 
-    // Query again because in case of deduplication this becomes 2
+    // Query again because in case of missing deduplication this becomes 2
     val res =
         deployer!!.createRuntimeChannel().blockingUseAndTerminate(CounterGrpc::newBlockingStub) {
           it.get(CounterRequest.newBuilder().setCounterName("doAndReportInvocationCount").build())
