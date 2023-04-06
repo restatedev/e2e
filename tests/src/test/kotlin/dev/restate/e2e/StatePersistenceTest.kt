@@ -1,16 +1,14 @@
 package dev.restate.e2e
 
-import dev.restate.e2e.functions.counter.CounterAddRequest
 import dev.restate.e2e.functions.counter.CounterGrpc
+import dev.restate.e2e.functions.counter.CounterProto.CounterAddRequest
 import dev.restate.e2e.utils.RestateDeployer
 import io.grpc.ManagedChannel
 import java.util.concurrent.TimeUnit
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Tag
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.*
 
+@Disabled("Persistence is not supported yet")
 @Tag("requires-persistence-layer")
 class StatePersistenceTest {
 
@@ -19,7 +17,8 @@ class StatePersistenceTest {
 
   @BeforeEach
   fun before() {
-    this.deployer = RestateDeployer.Builder().withFunction(Containers.COUNTER_FUNCTION_SPEC).build()
+    this.deployer =
+        RestateDeployer.Builder().withServiceEndpoint(Containers.COUNTER_FUNCTION_SPEC).build()
     deployer!!.deployAll(StatePersistenceTest::class.java)
     this.channel = deployer!!.getRuntimeChannel()
   }

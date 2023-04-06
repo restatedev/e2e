@@ -17,7 +17,6 @@ dependencies {
   testImplementation(platform(libs.jackson.bom))
   testImplementation(libs.jackson.core)
   testImplementation(libs.jackson.databind)
-  testImplementation(libs.jackson.yaml)
 
   testImplementation(platform(libs.cloudevents.bom))
   testImplementation(libs.cloudevents.core)
@@ -42,9 +41,7 @@ tasks.withType<Test> {
       environment +
           mapOf(
               "CONTAINER_LOGS_DIR" to "$buildDir/test-results/$name/container-logs",
-              "RESTATE_RUNTIME_CONTAINER" to "ghcr.io/restatedev/runtime:main",
-              "DESCRIPTORS_FILE" to
-                  "${rootProject.projectDir}/.restate/descriptors/contracts.descriptor")
+              "RESTATE_RUNTIME_CONTAINER" to "ghcr.io/restatedev/restate:latest")
 
   useJUnitPlatform {
     includeTags("none()") // Run all the tests without tags

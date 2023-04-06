@@ -1,9 +1,9 @@
 package dev.restate.e2e
 
-import dev.restate.e2e.functions.counter.CounterAddRequest
 import dev.restate.e2e.functions.counter.CounterGrpc
 import dev.restate.e2e.functions.counter.CounterGrpc.CounterBlockingStub
-import dev.restate.e2e.functions.counter.CounterRequest
+import dev.restate.e2e.functions.counter.CounterProto.CounterAddRequest
+import dev.restate.e2e.functions.counter.CounterProto.CounterRequest
 import dev.restate.e2e.utils.*
 import io.cloudevents.CloudEvent
 import io.cloudevents.core.message.Encoding
@@ -16,9 +16,11 @@ import org.apache.logging.log4j.LogManager
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
+@Disabled("Kafka ingress is still not supported")
 class KafkaInvocationTest {
 
   companion object {
@@ -32,16 +34,16 @@ class KafkaInvocationTest {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .withFunction(Containers.COUNTER_FUNCTION_SPEC)
+                .withServiceEndpoint(Containers.COUNTER_FUNCTION_SPEC)
                 .withContainer("kafka", KafkaContainer(TEST_TOPIC))
-                .withConfigEntries(
-                    "kafka",
-                    mapOf(
-                        "topics" to listOf(TEST_TOPIC),
-                        "group.id" to "test-consumer",
-                        "bootstrap.servers" to "kafka:9092",
-                        "enable.partition.eof" to "false",
-                        "auto.offset.reset" to "earliest"))
+                //                .withEnv(
+                //                    "kafka",
+                //                    mapOf(
+                //                        "topics" to listOf(TEST_TOPIC),
+                //                        "group.id" to "test-consumer",
+                //                        "bootstrap.servers" to "kafka:9092",
+                //                        "enable.partition.eof" to "false",
+                //                        "auto.offset.reset" to "earliest"))
                 .build())
   }
 

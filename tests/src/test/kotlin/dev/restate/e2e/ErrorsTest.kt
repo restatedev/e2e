@@ -1,14 +1,14 @@
 package dev.restate.e2e
 
-import dev.restate.e2e.functions.errors.ErrorMessage
-import dev.restate.e2e.functions.errors.FailRequest
+import dev.restate.e2e.functions.errors.ErrorsProto.ErrorMessage
+import dev.restate.e2e.functions.errors.ErrorsProto.FailRequest
 import dev.restate.e2e.functions.errors.FailingServiceGrpc.FailingServiceBlockingStub
 import dev.restate.e2e.utils.InjectBlockingStub
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
-import java.util.UUID
+import java.util.*
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.assertj.core.api.InstanceOfAssertFactories.type
@@ -22,8 +22,8 @@ class ErrorsTest {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .withFunction(Containers.ERRORS_FUNCTION_SPEC)
-                .withFunction(Containers.EXTERNALCALL_FUNCTION_SPEC)
+                .withServiceEndpoint(Containers.ERRORS_FUNCTION_SPEC)
+                .withServiceEndpoint(Containers.EXTERNALCALL_FUNCTION_SPEC)
                 .withContainer(Containers.EXTERNALCALL_HTTP_SERVER_CONTAINER_SPEC)
                 .build())
   }

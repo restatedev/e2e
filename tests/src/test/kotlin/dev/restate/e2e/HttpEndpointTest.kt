@@ -3,7 +3,7 @@ package dev.restate.e2e
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import dev.restate.e2e.functions.counter.CounterGrpc
-import dev.restate.e2e.utils.InjectHttpEndpointURL
+import dev.restate.e2e.utils.InjectGrpcIngressURL
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
 import java.net.URI
@@ -22,7 +22,7 @@ class HttpEndpointTest {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
-            RestateDeployer.Builder().withFunction(Containers.COUNTER_FUNCTION_SPEC).build())
+            RestateDeployer.Builder().withServiceEndpoint(Containers.COUNTER_FUNCTION_SPEC).build())
 
     private val objMapper = ObjectMapper()
 
@@ -39,7 +39,7 @@ class HttpEndpointTest {
   }
 
   @Test
-  fun getAndAdd(@InjectHttpEndpointURL httpEndpointURL: URL) {
+  fun getAndAdd(@InjectGrpcIngressURL httpEndpointURL: URL) {
     val client = HttpClient.newHttpClient()
 
     val req =
