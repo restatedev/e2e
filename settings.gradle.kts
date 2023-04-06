@@ -26,11 +26,10 @@ dependencyResolutionManagement {
 
   versionCatalogs {
     create("libs") {
-      version("guava", "30.1.1-jre")
-      version("protobuf", "3.21.2")
-      version("grpc", "1.47.0")
+      version("protobuf", "3.21.9")
+      version("grpc", "1.50.2")
 
-      version("log4j", "2.17.2")
+      version("log4j", "2.19.0")
       version("javax-annotation", "1.3.2")
 
       version("jackson", "2.13.3")
@@ -50,7 +49,6 @@ dependencyResolutionManagement {
       library("restate-sdk-jackson", "dev.restate.sdk", "sdk-serde-jackson").versionRef("restate")
       library("restate-sdk-vertx", "dev.restate.sdk", "sdk-vertx").versionRef("restate")
 
-      library("guava", "com.google.guava", "guava").versionRef("guava")
       library("protoc", "com.google.protobuf", "protoc").versionRef("protobuf")
       library("grpc-stub", "io.grpc", "grpc-stub").versionRef("grpc")
       library("grpc-protobuf", "io.grpc", "grpc-protobuf").versionRef("grpc")
@@ -67,8 +65,6 @@ dependencyResolutionManagement {
       library("jackson-bom", "com.fasterxml.jackson", "jackson-bom").versionRef("jackson")
       library("jackson-core", "com.fasterxml.jackson.core", "jackson-core").withoutVersion()
       library("jackson-databind", "com.fasterxml.jackson.core", "jackson-databind").withoutVersion()
-      library("jackson-yaml", "com.fasterxml.jackson.dataformat", "jackson-dataformat-yaml")
-          .withoutVersion()
 
       library("cloudevents-bom", "io.cloudevents", "cloudevents-bom").versionRef("cloudevents")
       library("cloudevents-core", "io.cloudevents", "cloudevents-core").withoutVersion()

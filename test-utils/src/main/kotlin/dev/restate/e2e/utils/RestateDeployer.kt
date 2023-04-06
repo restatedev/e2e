@@ -3,11 +3,18 @@ package dev.restate.e2e.utils
 import io.grpc.ManagedChannel
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder
 import java.io.File
+import java.net.URI
 import java.net.URL
+import java.net.http.HttpClient
+import java.net.http.HttpRequest
+import java.net.http.HttpRequest.BodyPublishers
+import java.net.http.HttpResponse.BodyHandlers
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import kotlinx.serialization.*
+import kotlinx.serialization.json.*
 import org.apache.logging.log4j.LogManager
 import org.junit.jupiter.api.fail
 import org.testcontainers.containers.BindMode
@@ -16,7 +23,6 @@ import org.testcontainers.containers.Network
 import org.testcontainers.containers.SelinuxContext
 import org.testcontainers.images.PullPolicy
 import org.testcontainers.utility.DockerImageName
-import org.testcontainers.utility.MountableFile
 
 class RestateDeployer
 private constructor(
@@ -52,7 +58,7 @@ private constructor(
   }
 
   private val functionContainers =
-      functionSpecs.associate { spec -> spec.hostName to (spec to spec.toFunctionContainer()) }
+      functionSpecs.associate { spec -> spec.hostName to (spec to spec.toContainer()) }
   private val network = Network.newNetwork()
   private val tmpDir = Files.createTempDirectory("restate-e2e").toFile()
   private var runtimeContainer: GenericContainer<*>? = null
@@ -183,12 +189,11 @@ private constructor(
             .dependsOn(additionalContainers.values)
             .withEnv("RUST_LOG", "debug")
             .withEnv("RUST_BACKTRACE", "full")
-            .withExposedPorts(RUNTIME_GRPC_INGRESS_ENDPOINT, RUNTIME_META_ENDPOINT)
+            .withExposedPorts(RUNTIME_META_ENDPOINT, RUNTIME_GRPC_INGRESS_ENDPOINT)
             .withEnv(additionalEnv)
             .withNetwork(network)
             .withNetworkAliases("runtime")
             .withLogConsumer(ContainerLogger(testReportDir, "restate-runtime"))
-            .withCommand("--id 1 --configuration-file /restate.yaml")
 
     if (System.getenv(IMAGE_PULL_POLICY_ENV) == ALWAYS_PULL) {
       runtimeContainer!!.withImagePullPolicy(PullPolicy.alwaysPull())
@@ -203,6 +208,34 @@ private constructor(
     runtimeContainer!!.start()
 
     logger.debug("Restate runtime started and available at {}", getRuntimeGrpcIngressUrl())
+
+    // Let's execute service discovery to register the services
+    functionContainers.values.forEach { (spec, _) -> discoverServiceEndpoint(spec) }
+  }
+
+  fun discoverServiceEndpoint(spec: FunctionSpec) {
+    val url = spec.getFunctionEndpointUrl()
+
+    val body = Json.encodeToString(mapOf("uri" to url.toString()))
+
+    val client = HttpClient.newHttpClient()
+
+    val req =
+        HttpRequest.newBuilder(URI.create("${getRuntimeMetaUrl()}endpoint/discover"))
+            .POST(BodyPublishers.ofString(body))
+            .headers("Content-Type", "application/json")
+            .build()
+
+    val response = client.send(req, BodyHandlers.ofString())
+
+    if (response.statusCode() != 200) {
+      fail(
+          "Error when discovering endpoint $url, " +
+              "got status code ${response.statusCode()} with body: ${response.body()}")
+    }
+
+    logger.debug(
+        "Successfully executed discovery for endpoint {}. Result: {}", url, response.body())
   }
 
   fun teardownAdditionalContainers() {

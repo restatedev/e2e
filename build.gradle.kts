@@ -3,7 +3,7 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-  kotlin("jvm") version "1.6.20"
+  kotlin("jvm") version "1.8.10"
   java
   alias(libs.plugins.spotless)
   id("com.github.jk1.dependency-license-report") version "2.0"
