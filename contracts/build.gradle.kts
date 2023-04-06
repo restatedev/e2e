@@ -1,4 +1,5 @@
-import com.google.protobuf.gradle.*
+import com.google.protobuf.gradle.id
+import com.google.protobuf.gradle.protobuf
 
 plugins {
   java
@@ -11,7 +12,7 @@ dependencies {
   api(libs.grpc.stub)
   api(libs.grpc.protobuf)
 
-  protobuf(libs.restate.sdk)
+  protobuf(libs.restate.sdk.core)
 }
 
 protobuf {

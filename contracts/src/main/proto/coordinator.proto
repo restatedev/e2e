@@ -1,6 +1,5 @@
 syntax = "proto3";
 
-option java_multiple_files = true;
 option java_package = "dev.restate.e2e.functions.coordinator";
 option java_outer_classname = "CoordinatorProto";
 
@@ -45,9 +44,7 @@ message InvokeSequentiallyRequest {
   repeated bool execute_as_background_call = 1;
 }
 
-message InvokeSideEffectsRequest {
-  bool last_is_callback = 1;
-}
+message InvokeSideEffectsRequest {}
 
 message InvokeSideEffectsResult {
   int32 invoked_times = 1;
