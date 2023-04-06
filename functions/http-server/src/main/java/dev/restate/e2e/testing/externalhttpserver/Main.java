@@ -8,12 +8,14 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import dev.restate.e2e.functions.externalcall.ReplierGrpc;
-import dev.restate.e2e.functions.externalcall.Reply;
+import dev.restate.e2e.functions.externalcall.ReplierProto.Reply;
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -52,19 +54,19 @@ public class Main implements HttpHandler {
           new ArrayList<>(
               objectMapper.readValue(httpExchange.getRequestBody(), new TypeReference<>() {}));
       inputIntegers.sort(Integer::compareTo);
-      byte[] outputBody = objectMapper.writeValueAsBytes(inputIntegers);
+      String outputBody = objectMapper.writeValueAsString(inputIntegers);
 
-      logger.info("Output list of numbers is: " + new String(outputBody, StandardCharsets.UTF_8));
+      logger.info("Output list of numbers is: " + outputBody);
 
       ReplierGrpc.ReplierBlockingStub replierStub =
           ReplierGrpc.newBlockingStub(
-              NettyChannelBuilder.forAddress("runtime", 8090).usePlaintext().build());
+              NettyChannelBuilder.forAddress("runtime", 9090).usePlaintext().build());
 
       Empty ignored =
           replierStub.replyToRandomNumberListGenerator(
               Reply.newBuilder()
                   .setReplyIdentifier(ByteString.copyFrom(replyId))
-                  .setPayload(ByteString.copyFrom(outputBody))
+                  .setPayload(ByteString.copyFromUtf8(outputBody))
                   .build());
 
       logger.info("Replier stub invoked and response received");
