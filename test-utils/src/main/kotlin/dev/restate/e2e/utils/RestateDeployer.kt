@@ -55,6 +55,19 @@ private constructor(
     fun builder(): Builder {
       return Builder()
     }
+
+    @JvmStatic
+    fun generateReportDirFromEnv(testClass: Class<*>): String {
+      val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")
+      val dir =
+          Path.of(
+                  System.getenv(CONTAINER_LOGS_DIR_ENV)!!,
+                  "${testClass.canonicalName}_${LocalDateTime.now().format(formatter)}")
+              .toAbsolutePath()
+              .toString()
+      File(dir).mkdirs()
+      return dir
+    }
   }
 
   private val functionContainers =
@@ -121,15 +134,13 @@ private constructor(
             runtimeContainer)
   }
 
-  fun deployAll(testClass: Class<*>) {
-    deployFunctions(testClass)
-    deployAdditionalContainers(testClass)
-    deployRuntime(testClass)
+  fun deployAll(testReportDir: String) {
+    deployFunctions(testReportDir)
+    deployAdditionalContainers(testReportDir)
+    deployRuntime(testReportDir)
   }
 
-  fun deployFunctions(testClass: Class<*>) {
-    val testReportDir = resolveContainerTestLogsDir(testClass)
-
+  fun deployFunctions(testReportDir: String) {
     // Deploy functions
     functionContainers.forEach { (functionName, functionContainer) ->
       functionContainer.second.networkAliases = ArrayList()
@@ -145,9 +156,7 @@ private constructor(
     }
   }
 
-  fun deployAdditionalContainers(testClass: Class<*>) {
-    val testReportDir = resolveContainerTestLogsDir(testClass)
-
+  fun deployAdditionalContainers(testReportDir: String) {
     // Deploy additional containers
     additionalContainers.forEach { (containerHost, container) ->
       container.networkAliases = ArrayList()
@@ -160,9 +169,8 @@ private constructor(
     }
   }
 
-  fun deployRuntime(testClass: Class<*>) {
+  fun deployRuntime(testReportDir: String) {
     // Generate test report directory
-    val testReportDir = resolveContainerTestLogsDir(testClass)
     logger.debug("Writing container logs to {}", testReportDir)
 
     // Deploy additional containers
@@ -250,6 +258,11 @@ private constructor(
     runtimeContainer!!.stop()
   }
 
+  fun killRuntime() {
+    runtimeContainer!!.dockerClient.killContainerCmd(runtimeContainer!!.containerId)
+    runtimeContainer!!.stop()
+  }
+
   fun teardownAll() {
     teardownRuntime()
     teardownAdditionalContainers()
@@ -257,9 +270,13 @@ private constructor(
     network!!.close()
   }
 
-  fun getRuntimeChannel(): ManagedChannel {
+  fun isRuntimeRunning(): Boolean {
+    return runtimeContainer!!.currentContainerInfo!!.state!!.exitCodeLong == null
+  }
+
+  fun createRuntimeChannel(): ManagedChannel {
     return getRuntimeGrpcIngressUrl().let { url ->
-      NettyChannelBuilder.forAddress(url.host, url.port).usePlaintext().build()
+      NettyChannelBuilder.forAddress(url.host, url.port).disableRetry().usePlaintext().build()
     }
   }
 
@@ -283,17 +300,5 @@ private constructor(
     return additionalContainers[hostName]?.let { "${it.host}:${it.getMappedPort(port)}" }
         ?: throw java.lang.IllegalStateException(
             "Requested additional container with hostname $hostName is not registered")
-  }
-
-  private fun resolveContainerTestLogsDir(testClass: Class<*>): String {
-    val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")
-    val dir =
-        Path.of(
-                System.getenv(CONTAINER_LOGS_DIR_ENV)!!,
-                "${testClass.canonicalName}_${LocalDateTime.now().format(formatter)}")
-            .toAbsolutePath()
-            .toString()
-    File(dir).mkdirs()
-    return dir
   }
 }
