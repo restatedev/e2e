@@ -1,15 +1,16 @@
 package dev.restate.e2e.functions.counter;
 
 import com.google.protobuf.Empty;
-import dev.restate.e2e.functions.singletoncounter.CounterNumber;
 import dev.restate.e2e.functions.singletoncounter.SingletonCounterGrpc;
-import dev.restate.sdk.RestateContext;
-import dev.restate.sdk.StateKey;
+import dev.restate.e2e.functions.singletoncounter.SingletonCounterProto.CounterNumber;
+import dev.restate.sdk.blocking.RestateBlockingService;
+import dev.restate.sdk.core.StateKey;
 import io.grpc.stub.StreamObserver;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class SingletonCounterService extends SingletonCounterGrpc.SingletonCounterImplBase {
+public class SingletonCounterService extends SingletonCounterGrpc.SingletonCounterImplBase
+    implements RestateBlockingService {
 
   private static final Logger logger = LogManager.getLogger(SingletonCounterService.class);
 
@@ -17,7 +18,7 @@ public class SingletonCounterService extends SingletonCounterGrpc.SingletonCount
 
   @Override
   public void reset(Empty request, StreamObserver<Empty> responseObserver) {
-    RestateContext ctx = RestateContext.current();
+    var ctx = restateContext();
 
     logger.info("Counter cleaned up");
 
@@ -29,7 +30,7 @@ public class SingletonCounterService extends SingletonCounterGrpc.SingletonCount
 
   @Override
   public void add(CounterNumber request, StreamObserver<Empty> responseObserver) {
-    RestateContext ctx = RestateContext.current();
+    var ctx = restateContext();
 
     long counter = ctx.get(COUNTER_KEY).orElse(0L);
     logger.info("Old counter value: {}", counter);
@@ -45,7 +46,7 @@ public class SingletonCounterService extends SingletonCounterGrpc.SingletonCount
 
   @Override
   public void get(Empty request, StreamObserver<CounterNumber> responseObserver) {
-    RestateContext ctx = RestateContext.current();
+    var ctx = restateContext();
 
     CounterNumber result =
         CounterNumber.newBuilder().setValue(ctx.get(COUNTER_KEY).orElse(0L)).build();
