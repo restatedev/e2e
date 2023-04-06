@@ -45,7 +45,10 @@ dependencyResolutionManagement {
       version("errorprone", "2.13.1")
 
       // Libraries
-      library("restate-sdk", "dev.restate.sdk", "java-sdk").versionRef("restate")
+      library("restate-sdk-core", "dev.restate.sdk", "sdk-core").versionRef("restate")
+      library("restate-sdk-blocking", "dev.restate.sdk", "sdk-blocking").versionRef("restate")
+      library("restate-sdk-jackson", "dev.restate.sdk", "sdk-serde-jackson").versionRef("restate")
+      library("restate-sdk-vertx", "dev.restate.sdk", "sdk-vertx").versionRef("restate")
 
       library("guava", "com.google.guava", "guava").versionRef("guava")
       library("protoc", "com.google.protobuf", "protoc").versionRef("protobuf")
@@ -57,6 +60,9 @@ dependencyResolutionManagement {
       library("log4j-core", "org.apache.logging.log4j", "log4j-core").versionRef("log4j")
       library("javax-annotation-api", "javax.annotation", "javax.annotation-api")
           .versionRef("javax-annotation")
+
+      library("vertx-bom", "io.vertx:vertx-stack-depchain:4.4.0")
+      library("vertx-core", "io.vertx", "vertx-core").withoutVersion()
 
       library("jackson-bom", "com.fasterxml.jackson", "jackson-bom").versionRef("jackson")
       library("jackson-core", "com.fasterxml.jackson.core", "jackson-core").withoutVersion()
@@ -83,7 +89,7 @@ dependencyResolutionManagement {
       // Plugins
       plugin("spotless", "com.diffplug.spotless").version("6.6.1")
       plugin("errorprone", "net.ltgt.errorprone").version("2.0.2")
-      plugin("protobuf", "com.google.protobuf").version("0.8.18")
+      plugin("protobuf", "com.google.protobuf").version("0.9.2")
       plugin("test-logger", "com.adarshr.test-logger").version("3.2.0")
       plugin("shadowJar", "com.github.johnrengelman.shadow").version("7.1.2")
       plugin("jib", "com.google.cloud.tools.jib").version("3.2.1")
@@ -93,7 +99,12 @@ dependencyResolutionManagement {
 
 // Include composite build for easier local testing
 if (!System.getenv("E2E_LOCAL_BUILD").isNullOrEmpty()) {
-  includeBuild("../java-sdk") {
-    dependencySubstitution { substitute(module("dev.restate.sdk:java-sdk")).using(project(":sdk")) }
+  includeBuild("../sdk-java") {
+    dependencySubstitution {
+      substitute(module("dev.restate.sdk:sdk-core")).using(project(":sdk-core"))
+      substitute(module("dev.restate.sdk:sdk-blocking")).using(project(":sdk-blocking"))
+      substitute(module("dev.restate.sdk:sdk-vertx")).using(project(":sdk-vertx"))
+      substitute(module("dev.restate.sdk:sdk-serde-jackson")).using(project(":sdk-jackson"))
+    }
   }
 }
