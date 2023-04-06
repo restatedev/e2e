@@ -11,7 +11,10 @@ plugins {
 }
 
 dependencies {
-  implementation(libs.restate.sdk)
+  implementation(libs.restate.sdk.core)
+  implementation(libs.restate.sdk.blocking)
+  implementation(libs.restate.sdk.jackson)
+  implementation(libs.restate.sdk.vertx)
 
   implementation(project(":contracts"))
   implementation(project(":functions:utils"))
@@ -21,8 +24,12 @@ dependencies {
 
   implementation(platform(libs.jackson.bom))
   implementation(libs.jackson.core)
+  implementation(libs.jackson.databind)
 
   implementation(libs.grpc.netty.shaded)
+
+  implementation(platform(libs.vertx.bom))
+  implementation(libs.vertx.core)
 
   errorprone(libs.errorprone)
 }
