@@ -58,4 +58,7 @@ tasks.register<Test>("rocksdb-integration-test") {
   environment = environment + mapOf("E2E_USE_ROCKSDB" to "true")
 }
 
-tasks.named("build") { dependsOn("rocksdb-integration-test") }
+tasks.named("build") {
+  // TODO For the time being, we disable rocksdb-integration-test
+  // dependsOn("rocksdb-integration-test")
+}

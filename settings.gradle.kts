@@ -30,7 +30,6 @@ dependencyResolutionManagement {
       version("grpc", "1.50.2")
 
       version("log4j", "2.19.0")
-      version("javax-annotation", "1.3.2")
 
       version("jackson", "2.13.3")
 
@@ -56,8 +55,9 @@ dependencyResolutionManagement {
 
       library("log4j-api", "org.apache.logging.log4j", "log4j-api").versionRef("log4j")
       library("log4j-core", "org.apache.logging.log4j", "log4j-core").versionRef("log4j")
-      library("javax-annotation-api", "javax.annotation", "javax.annotation-api")
-          .versionRef("javax-annotation")
+
+      // Replace javax.annotations-api with tomcat annotations
+      library("javax-annotation-api", "org.apache.tomcat", "annotations-api").version("6.0.53")
 
       library("vertx-bom", "io.vertx:vertx-stack-depchain:4.4.0")
       library("vertx-core", "io.vertx", "vertx-core").withoutVersion()

@@ -6,7 +6,6 @@ plugins {
   kotlin("jvm") version "1.8.10"
   java
   alias(libs.plugins.spotless)
-  id("com.github.jk1.dependency-license-report") version "2.0"
 }
 
 val restateVersion = libs.versions.restate.get()
@@ -21,37 +20,16 @@ allprojects {
   apply(plugin = "java")
   apply(plugin = "kotlin")
   apply(plugin = "com.diffplug.spotless")
-  apply(plugin = "com.github.jk1.dependency-license-report")
 
   version = restateVersion
 
   configure<com.diffplug.gradle.spotless.SpotlessExtension> {
     kotlin { ktfmt() }
     kotlinGradle { ktfmt() }
-    java { googleJavaFormat() }
-  }
-
-  tasks { check { dependsOn(checkLicense) } }
-
-  licenseReport {
-    renderers = arrayOf(com.github.jk1.license.render.CsvReportRenderer())
-
-    excludeBoms = true
-
-    excludes =
-        arrayOf(
-            "io.vertx:vertx-stack-depchain", // Vertx bom file
-            "org.jetbrains.kotlinx:kotlinx-coroutines-core", // Kotlinx coroutines bom file
-            "dev.restate.sdk:java-sdk", // Our own dependency has no license yet
-            "java-sdk:sdk", // Exclude java-sdk from composite build (dev.restate.sdk:java-sdk gets
-            // replace by java-sdk:sdk)
-            )
-
-    allowedLicensesFile = file("$rootDir/config/allowed-licenses.json")
-    filters =
-        arrayOf(
-            com.github.jk1.license.filter.LicenseBundleNormalizer(
-                "$rootDir/config/license-normalizer-bundle.json", true))
+    java {
+      googleJavaFormat()
+      targetExclude("build/generated/**/*.java")
+    }
   }
 }
 

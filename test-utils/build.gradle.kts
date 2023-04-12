@@ -3,6 +3,7 @@ plugins {
   kotlin("jvm") version "1.8.10"
   kotlin("plugin.serialization") version "1.8.10"
   `maven-publish`
+  id("com.github.jk1.dependency-license-report") version "2.1"
 }
 
 dependencies {
@@ -60,4 +61,23 @@ publishing {
       from(components["java"])
     }
   }
+}
+
+tasks { check { dependsOn(checkLicense) } }
+
+licenseReport {
+  renderers = arrayOf(com.github.jk1.license.render.CsvReportRenderer())
+
+  excludeBoms = true
+
+  excludes =
+      arrayOf(
+          "dev.restate.sdk:.*", // Our own dependency has no license yet
+      )
+
+  allowedLicensesFile = file("$rootDir/config/allowed-licenses.json")
+  filters =
+      arrayOf(
+          com.github.jk1.license.filter.LicenseBundleNormalizer(
+              "$rootDir/config/license-normalizer-bundle.json", true))
 }

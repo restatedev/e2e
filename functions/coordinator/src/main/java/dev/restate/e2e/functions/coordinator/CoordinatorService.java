@@ -92,9 +92,8 @@ public class CoordinatorService extends CoordinatorGrpc.CoordinatorImplBase
 
     var timeoutOccurred = false;
 
-    var awakeable = ctx.awakeable(TypeTag.VOID);
-
     // TODO missing this feature in the sdk
+    //    var awakeable = ctx.awakeable(TypeTag.VOID);
     //    try {
     //      awakeable.await(java.time.Duration.ofMillis(request.getMillis()));
     //    } catch (TimeoutException te) {
