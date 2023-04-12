@@ -16,7 +16,6 @@ service Coordinator {
   rpc Complex (ComplexRequest) returns (ComplexResponse);
   rpc Timeout (Duration) returns (TimeoutResponse);
   rpc InvokeSequentially(InvokeSequentiallyRequest) returns (google.protobuf.Empty);
-  rpc InvokeSideEffects(InvokeSideEffectsRequest) returns (InvokeSideEffectsResult);
 }
 
 message Duration {
@@ -42,10 +41,4 @@ message TimeoutResponse {
 
 message InvokeSequentiallyRequest {
   repeated bool execute_as_background_call = 1;
-}
-
-message InvokeSideEffectsRequest {}
-
-message InvokeSideEffectsResult {
-  int32 invoked_times = 1;
 }
