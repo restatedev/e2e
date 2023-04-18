@@ -33,9 +33,7 @@ dependencyResolutionManagement {
 
       version("jackson", "2.13.3")
 
-      version("cloudevents", "2.3.0")
-
-      version("junit-jupiter", "5.8.2")
+      version("junit-jupiter", "5.9.2")
       version("assertj", "3.22.0")
       version("testcontainers", "1.17.2")
       version("awaitility", "4.2.0")
@@ -66,18 +64,12 @@ dependencyResolutionManagement {
       library("jackson-core", "com.fasterxml.jackson.core", "jackson-core").withoutVersion()
       library("jackson-databind", "com.fasterxml.jackson.core", "jackson-databind").withoutVersion()
 
-      library("cloudevents-bom", "io.cloudevents", "cloudevents-bom").versionRef("cloudevents")
-      library("cloudevents-core", "io.cloudevents", "cloudevents-core").withoutVersion()
-      library("cloudevents-kafka", "io.cloudevents", "cloudevents-kafka").withoutVersion()
-      library("cloudevents-json", "io.cloudevents", "cloudevents-json-jackson").withoutVersion()
-
       library("junit-all", "org.junit.jupiter", "junit-jupiter").versionRef("junit-jupiter")
       library("junit-api", "org.junit.jupiter", "junit-jupiter-api").versionRef("junit-jupiter")
       library("assertj", "org.assertj", "assertj-core").versionRef("assertj")
-      library("testcontainers-bom", "org.testcontainers", "testcontainers-bom")
+      library("testcontainers-core", "org.testcontainers", "testcontainers")
           .versionRef("testcontainers")
-      library("testcontainers-core", "org.testcontainers", "testcontainers").withoutVersion()
-      library("testcontainers-kafka", "org.testcontainers", "kafka").withoutVersion()
+      library("testcontainers-kafka", "org.testcontainers", "kafka").versionRef("testcontainers")
       library("awaitility", "org.awaitility", "awaitility-kotlin").versionRef("awaitility")
 
       library("errorprone", "com.google.errorprone", "error_prone_core").versionRef("errorprone")

@@ -8,7 +8,6 @@ plugins {
 
 dependencies {
   api(libs.junit.api)
-  api(platform(libs.testcontainers.bom))
   api(libs.testcontainers.core)
   api(libs.testcontainers.kafka)
 

@@ -18,14 +18,6 @@ dependencies {
   testImplementation(libs.jackson.core)
   testImplementation(libs.jackson.databind)
 
-  testImplementation(platform(libs.cloudevents.bom))
-  testImplementation(libs.cloudevents.core)
-  testImplementation(libs.cloudevents.kafka)
-  testImplementation(libs.cloudevents.json)
-
-  testImplementation(platform(libs.testcontainers.bom))
-  testImplementation(libs.testcontainers.core)
-  testImplementation(libs.testcontainers.kafka)
   testImplementation(libs.awaitility)
 }
 
