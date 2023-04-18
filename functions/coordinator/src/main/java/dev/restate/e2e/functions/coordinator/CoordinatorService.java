@@ -17,6 +17,7 @@ import io.grpc.stub.StreamObserver;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeoutException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -87,17 +88,14 @@ public class CoordinatorService extends CoordinatorGrpc.CoordinatorImplBase
 
   @Override
   public void timeout(Duration request, StreamObserver<TimeoutResponse> responseObserver) {
-    // RestateContext ctx = restateContext();
-
     var timeoutOccurred = false;
 
-    // TODO missing this feature in the sdk
-    //    var awakeable = ctx.awakeable(TypeTag.VOID);
-    //    try {
-    //      awakeable.await(java.time.Duration.ofMillis(request.getMillis()));
-    //    } catch (TimeoutException te) {
-    //      timeoutOccurred = true;
-    //    }
+    var awakeable = restateContext().awakeable(TypeTag.VOID);
+    try {
+      awakeable.await(java.time.Duration.ofMillis(request.getMillis()));
+    } catch (TimeoutException te) {
+      timeoutOccurred = true;
+    }
 
     responseObserver.onNext(
         TimeoutResponse.newBuilder().setTimeoutOccurred(timeoutOccurred).build());

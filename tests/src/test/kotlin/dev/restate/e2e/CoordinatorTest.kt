@@ -9,7 +9,6 @@ import dev.restate.e2e.utils.RestateDeployerExtension
 import java.time.Duration
 import kotlin.system.measureNanoTime
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
@@ -59,7 +58,6 @@ class CoordinatorTest {
   }
 
   @Test
-  @Disabled("Needs https://github.com/restatedev/sdk-java/issues/80")
   fun timeout(@InjectBlockingStub coordinatorClient: CoordinatorBlockingStub) {
     val timeout = Duration.ofMillis(10L)
     val response =
