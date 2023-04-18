@@ -7,8 +7,7 @@ import dev.restate.e2e.utils.RestateDeployer
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*
 
-@Disabled("Persistence is not supported yet")
-@Tag("requires-persistence-layer")
+@Disabled("https://github.com/restatedev/e2e/issues/79")
 class StatePersistenceTest {
 
   private val reportDir: String =

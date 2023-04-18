@@ -100,7 +100,7 @@ if (!System.getenv("E2E_LOCAL_BUILD").isNullOrEmpty()) {
       substitute(module("dev.restate.sdk:sdk-core")).using(project(":sdk-core"))
       substitute(module("dev.restate.sdk:sdk-blocking")).using(project(":sdk-blocking"))
       substitute(module("dev.restate.sdk:sdk-vertx")).using(project(":sdk-vertx"))
-      substitute(module("dev.restate.sdk:sdk-serde-jackson")).using(project(":sdk-jackson"))
+      substitute(module("dev.restate.sdk:sdk-serde-jackson")).using(project(":sdk-serde-jackson"))
     }
   }
 }

@@ -87,7 +87,7 @@ public class CoordinatorService extends CoordinatorGrpc.CoordinatorImplBase
 
   @Override
   public void timeout(Duration request, StreamObserver<TimeoutResponse> responseObserver) {
-    RestateContext ctx = restateContext();
+    // RestateContext ctx = restateContext();
 
     var timeoutOccurred = false;
 

@@ -27,7 +27,6 @@ import org.testcontainers.utility.DockerImageName
 class RestateDeployer
 private constructor(
     runtimeDeployments: Int,
-    private val useRocksDb: Boolean,
     functionSpecs: List<FunctionSpec>,
     private val additionalContainers: Map<String, GenericContainer<*>>,
     private val additionalEnv: Map<String, String>,
@@ -46,8 +45,6 @@ private constructor(
 
     private const val RUNTIME_GRPC_INGRESS_ENDPOINT = 9090
     private const val RUNTIME_META_ENDPOINT = 8081
-
-    private const val USE_ROCKSDB = "E2E_USE_ROCKSDB"
 
     private val logger = LogManager.getLogger(RestateDeployer::class.java)
 
@@ -82,7 +79,6 @@ private constructor(
 
   data class Builder(
       private var runtimeDeployments: Int = 1,
-      private var useRocksDb: Boolean = System.getenv().contains(USE_ROCKSDB),
       private var serviceEndpoints: MutableList<FunctionSpec> = mutableListOf(),
       private var additionalContainers: MutableMap<String, GenericContainer<*>> = mutableMapOf(),
       private var additionalEnv: MutableMap<String, String> = mutableMapOf(),
@@ -111,8 +107,6 @@ private constructor(
       this.runtimeContainer = runtimeContainer
     }
 
-    fun useRocksDB(useRocksDb: Boolean) = apply { this.useRocksDb = useRocksDb }
-
     /** Add a container that will be added within the same network of functions and runtime. */
     fun withContainer(hostName: String, container: GenericContainer<*>) = apply {
       this.additionalContainers[hostName] = container
@@ -127,7 +121,6 @@ private constructor(
     fun build() =
         RestateDeployer(
             runtimeDeployments,
-            useRocksDb,
             serviceEndpoints,
             additionalContainers,
             additionalEnv,
@@ -184,9 +177,9 @@ private constructor(
       logger.debug("Started container {} with image {}", containerHost, container.dockerImageName)
     }
 
-    if (useRocksDb) {
-      fail("Persistence test not yet supported")
-    }
+    // Prepare state directory to mount
+    val stateDir = File(tmpDir, "state")
+    stateDir.mkdirs()
 
     logger.debug("Starting runtime container '{}'", runtimeContainerName)
 
@@ -199,18 +192,19 @@ private constructor(
             .withEnv("RUST_BACKTRACE", "full")
             .withExposedPorts(RUNTIME_META_ENDPOINT, RUNTIME_GRPC_INGRESS_ENDPOINT)
             .withEnv(additionalEnv)
+            // These envs should not be overriden by additionalEnv
+            .withEnv("RESTATE_META__STORAGE_PATH", "/state/meta")
+            .withEnv("RESTATE_WORKER__STORAGE_ROCKSDB__PATH", "/state/worker")
             .withNetwork(network)
             .withNetworkAliases("runtime")
             .withLogConsumer(ContainerLogger(testReportDir, "restate-runtime"))
 
+    // Mount state directory
+    runtimeContainer!!.addFileSystemBind(
+        stateDir.toString(), "/state", BindMode.READ_WRITE, SelinuxContext.SINGLE)
+
     if (System.getenv(IMAGE_PULL_POLICY_ENV) == ALWAYS_PULL) {
       runtimeContainer!!.withImagePullPolicy(PullPolicy.alwaysPull())
-    }
-    if (useRocksDb) {
-      val stateDir = File(tmpDir, "state")
-      stateDir.mkdirs()
-      runtimeContainer!!.addFileSystemBind(
-          stateDir.toString(), "/state", BindMode.READ_WRITE, SelinuxContext.SINGLE)
     }
 
     runtimeContainer!!.start()

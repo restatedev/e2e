@@ -1,6 +1,5 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
   kotlin("jvm") version "1.8.10"
@@ -31,6 +30,9 @@ allprojects {
       targetExclude("build/generated/**/*.java")
     }
   }
+
+  java.targetCompatibility = JavaVersion.VERSION_11
+  java.sourceCompatibility = JavaVersion.VERSION_11
 }
 
 subprojects {
@@ -51,13 +53,6 @@ subprojects {
       exceptionFormat = TestExceptionFormat.FULL
     }
   }
-
-  tasks.withType<JavaCompile>().configureEach {
-    targetCompatibility = JavaVersion.VERSION_11.toString()
-    sourceCompatibility = JavaVersion.VERSION_11.toString()
-  }
-
-  tasks.withType<KotlinCompile> { kotlinOptions.jvmTarget = JavaVersion.VERSION_11.toString() }
 
   configurations.all {
     // This disables caching for -SNAPSHOT dependencies

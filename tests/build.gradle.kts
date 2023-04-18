@@ -42,23 +42,4 @@ tasks.withType<Test> {
           mapOf(
               "CONTAINER_LOGS_DIR" to "$buildDir/test-results/$name/container-logs",
               "RESTATE_RUNTIME_CONTAINER" to "ghcr.io/restatedev/restate:latest")
-
-  useJUnitPlatform {
-    includeTags("none()") // Run all the tests without tags
-  }
-}
-
-// --- Additional configurations
-
-tasks.register<Test>("rocksdb-integration-test") {
-  dependsOn("test")
-
-  useJUnitPlatform { includeTags("none() | requires-persistence-layer") }
-
-  environment = environment + mapOf("E2E_USE_ROCKSDB" to "true")
-}
-
-tasks.named("build") {
-  // TODO For the time being, we disable rocksdb-integration-test
-  // dependsOn("rocksdb-integration-test")
 }
