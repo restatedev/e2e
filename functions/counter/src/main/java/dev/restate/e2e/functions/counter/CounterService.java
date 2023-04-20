@@ -19,7 +19,7 @@ public class CounterService extends CounterGrpc.CounterImplBase implements Resta
   public void reset(CounterRequest request, StreamObserver<Empty> responseObserver) {
     var ctx = restateContext();
 
-    logger.info("Counter cleaned up");
+    logger.info("Counter '{}' cleaned up", request.getCounterName());
 
     ctx.clear(COUNTER_KEY);
 
@@ -32,12 +32,12 @@ public class CounterService extends CounterGrpc.CounterImplBase implements Resta
     var ctx = restateContext();
 
     long counter = ctx.get(COUNTER_KEY).orElse(0L);
-    logger.info("Old counter value: {}", counter);
+    logger.info("Old counter '{}' value: {}", request.getCounterName(), counter);
 
     counter += request.getValue();
     ctx.set(COUNTER_KEY, counter);
 
-    logger.info("New counter value: {}", counter);
+    logger.info("New counter '{}' value: {}", request.getCounterName(), counter);
 
     responseObserver.onNext(Empty.getDefaultInstance());
     responseObserver.onCompleted();
@@ -77,8 +77,8 @@ public class CounterService extends CounterGrpc.CounterImplBase implements Resta
     long newCount = oldCount + request.getValue();
     ctx.set(COUNTER_KEY, newCount);
 
-    logger.info("Old counter value: {}", oldCount);
-    logger.info("New counter value: {}", newCount);
+    logger.info("Old counter '{}' value: {}", request.getCounterName(), oldCount);
+    logger.info("New counter '{}' value: {}", request.getCounterName(), newCount);
 
     responseObserver.onNext(
         CounterUpdateResult.newBuilder().setOldValue(oldCount).setNewValue(newCount).build());

@@ -23,8 +23,8 @@ internal class ContainerLogger(testReportDirectory: String, loggerName: String) 
         stderrStream.write(frame.utf8String)
       }
       else -> {
-        stdoutStream.flush()
-        stderrStream.flush()
+        stdoutStream.close()
+        stderrStream.close()
       }
     }
   }

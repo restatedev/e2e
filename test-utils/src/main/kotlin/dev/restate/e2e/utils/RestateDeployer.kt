@@ -118,6 +118,8 @@ private constructor(
 
     fun withEnv(key: String, value: String) = apply { this.additionalEnv[key] = value }
 
+    fun withEnv(map: Map<String, String>) = apply { this.additionalEnv.putAll(map) }
+
     fun build() =
         RestateDeployer(
             runtimeDeployments,
@@ -188,8 +190,6 @@ private constructor(
         GenericContainer(DockerImageName.parse(runtimeContainerName))
             .dependsOn(functionContainers.values.map { it.second })
             .dependsOn(additionalContainers.values)
-            .withEnv("RUST_LOG", "debug")
-            .withEnv("RUST_BACKTRACE", "full")
             .withExposedPorts(RUNTIME_META_ENDPOINT, RUNTIME_GRPC_INGRESS_ENDPOINT)
             .withEnv(additionalEnv)
             // These envs should not be overriden by additionalEnv
@@ -210,6 +210,7 @@ private constructor(
     runtimeContainer!!.start()
 
     logger.debug("Restate runtime started and available at {}", getRuntimeGrpcIngressUrl())
+    logger.debug("Runtime container id {}", runtimeContainer!!.containerId)
 
     // Let's execute service discovery to register the services
     functionContainers.values.forEach { (spec, _) -> discoverServiceEndpoint(spec) }
@@ -249,11 +250,19 @@ private constructor(
   }
 
   fun teardownRuntime() {
+    if (!isRuntimeRunning()) {
+      logger.warn("Trying to shutdown, but the Restate container is not running")
+    }
+    runtimeContainer!!
+        .dockerClient
+        .killContainerCmd(runtimeContainer!!.containerId)
+        .withSignal("SIGINT")
+        .exec()
     runtimeContainer!!.stop()
   }
 
   fun killRuntime() {
-    runtimeContainer!!.dockerClient.killContainerCmd(runtimeContainer!!.containerId)
+    runtimeContainer!!.dockerClient.killContainerCmd(runtimeContainer!!.containerId).exec()
     runtimeContainer!!.stop()
   }
 

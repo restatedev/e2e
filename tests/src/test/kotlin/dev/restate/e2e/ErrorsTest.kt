@@ -14,9 +14,11 @@ import java.util.*
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.assertj.core.api.InstanceOfAssertFactories.type
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
+@Tag("always-suspending")
 class ErrorsTest {
 
   companion object {
@@ -24,6 +26,7 @@ class ErrorsTest {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
+                .withEnv(Containers.getRestateEnvironment())
                 .withServiceEndpoint(Containers.ERRORS_FUNCTION_SPEC)
                 .withServiceEndpoint(Containers.EXTERNALCALL_FUNCTION_SPEC)
                 .withServiceEndpoint(Containers.COUNTER_FUNCTION_SPEC)
