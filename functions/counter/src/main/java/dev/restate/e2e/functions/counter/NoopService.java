@@ -1,12 +1,14 @@
 package dev.restate.e2e.functions.counter;
 
+import static dev.restate.e2e.functions.counter.CounterProto.CounterAddRequest;
+
 import com.google.protobuf.Empty;
-import dev.restate.sdk.RestateContext;
+import dev.restate.sdk.blocking.RestateBlockingService;
 import io.grpc.stub.StreamObserver;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class NoopService extends NoopGrpc.NoopImplBase {
+public class NoopService extends NoopGrpc.NoopImplBase implements RestateBlockingService {
 
   private static final Logger logger = LogManager.getLogger(NoopService.class);
 
@@ -14,7 +16,7 @@ public class NoopService extends NoopGrpc.NoopImplBase {
   public void doAndReportInvocationCount(Empty request, StreamObserver<Empty> responseObserver) {
     logger.info("doAndReportInvocationCount invoked");
 
-    RestateContext ctx = RestateContext.current();
+    var ctx = restateContext();
 
     // Increment the counter
     ctx.backgroundCall(

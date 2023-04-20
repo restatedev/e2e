@@ -1,7 +1,7 @@
 package dev.restate.e2e
 
-import dev.restate.e2e.functions.externalcall.GenerateNumbersRequest
 import dev.restate.e2e.functions.externalcall.RandomNumberListGeneratorGrpc.RandomNumberListGeneratorBlockingStub
+import dev.restate.e2e.functions.externalcall.RandomNumberListGeneratorProto.GenerateNumbersRequest
 import dev.restate.e2e.utils.InjectBlockingStub
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
@@ -16,7 +16,7 @@ class ExternalCallTest {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .withFunction(Containers.EXTERNALCALL_FUNCTION_SPEC)
+                .withServiceEndpoint(Containers.EXTERNALCALL_FUNCTION_SPEC)
                 .withContainer(Containers.EXTERNALCALL_HTTP_SERVER_CONTAINER_SPEC)
                 .build())
   }

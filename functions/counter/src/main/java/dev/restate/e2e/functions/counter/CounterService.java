@@ -1,13 +1,15 @@
 package dev.restate.e2e.functions.counter;
 
+import static dev.restate.e2e.functions.counter.CounterProto.*;
+
 import com.google.protobuf.Empty;
-import dev.restate.sdk.RestateContext;
-import dev.restate.sdk.StateKey;
+import dev.restate.sdk.blocking.RestateBlockingService;
+import dev.restate.sdk.core.StateKey;
 import io.grpc.stub.StreamObserver;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class CounterService extends CounterGrpc.CounterImplBase {
+public class CounterService extends CounterGrpc.CounterImplBase implements RestateBlockingService {
 
   private static final Logger logger = LogManager.getLogger(CounterService.class);
 
@@ -15,7 +17,7 @@ public class CounterService extends CounterGrpc.CounterImplBase {
 
   @Override
   public void reset(CounterRequest request, StreamObserver<Empty> responseObserver) {
-    RestateContext ctx = RestateContext.current();
+    var ctx = restateContext();
 
     logger.info("Counter cleaned up");
 
@@ -27,7 +29,7 @@ public class CounterService extends CounterGrpc.CounterImplBase {
 
   @Override
   public void add(CounterAddRequest request, StreamObserver<Empty> responseObserver) {
-    RestateContext ctx = RestateContext.current();
+    var ctx = restateContext();
 
     long counter = ctx.get(COUNTER_KEY).orElse(0L);
     logger.info("Old counter value: {}", counter);
@@ -43,7 +45,7 @@ public class CounterService extends CounterGrpc.CounterImplBase {
 
   @Override
   public void get(CounterRequest request, StreamObserver<GetResponse> responseObserver) {
-    RestateContext ctx = RestateContext.current();
+    var ctx = restateContext();
 
     GetResponse result = GetResponse.newBuilder().setValue(ctx.get(COUNTER_KEY).orElse(0L)).build();
 
@@ -54,7 +56,7 @@ public class CounterService extends CounterGrpc.CounterImplBase {
   @Override
   public void getAndAdd(
       CounterAddRequest request, StreamObserver<CounterUpdateResult> responseObserver) {
-    RestateContext ctx = RestateContext.current();
+    var ctx = restateContext();
 
     long oldCount = ctx.get(COUNTER_KEY).orElse(0L);
     long newCount = oldCount + request.getValue();

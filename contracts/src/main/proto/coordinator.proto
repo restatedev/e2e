@@ -1,6 +1,5 @@
 syntax = "proto3";
 
-option java_multiple_files = true;
 option java_package = "dev.restate.e2e.functions.coordinator";
 option java_outer_classname = "CoordinatorProto";
 
@@ -17,7 +16,6 @@ service Coordinator {
   rpc Complex (ComplexRequest) returns (ComplexResponse);
   rpc Timeout (Duration) returns (TimeoutResponse);
   rpc InvokeSequentially(InvokeSequentiallyRequest) returns (google.protobuf.Empty);
-  rpc InvokeSideEffects(InvokeSideEffectsRequest) returns (InvokeSideEffectsResult);
 }
 
 message Duration {
@@ -43,12 +41,4 @@ message TimeoutResponse {
 
 message InvokeSequentiallyRequest {
   repeated bool execute_as_background_call = 1;
-}
-
-message InvokeSideEffectsRequest {
-  bool last_is_callback = 1;
-}
-
-message InvokeSideEffectsResult {
-  int32 invoked_times = 1;
 }

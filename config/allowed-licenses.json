@@ -7,42 +7,22 @@
       "moduleLicense": "The MIT License (MIT)"
     },
     {
+      "moduleLicense": "The 3-Clause BSD License"
+    },
+    {
       "moduleLicense": "The 2-Clause BSD License"
     },
     {
-      "moduleLicense": "The 3-Clause BSD License"
-    },
-    # EPLv1 is ok, because we only include the binary
-    {
-      "moduleLicense": "Eclipse Public License - v 1.0",
-      "moduleName": "junit:junit",
-      "moduleVersion": "4.13.2"
-    },
-    # EPLv2 is ok, because we only include the binary
-    {
-      "moduleLicense": "Eclipse Public License - v 2.0",
-      "moduleName": "org.junit.jupiter:junit-jupiter-api",
-      "moduleVersion": "5.8.2"
-    },
-    # EPLv2 is ok, because we only include the binary
-    {
-      "moduleLicense": "Eclipse Public License - v 2.0",
-      "moduleName": "org.junit.platform:junit-platform-commons",
-      "moduleVersion": "1.8.2"
-    },
-    # Our own dependencies have no license yet
-    {
-      "moduleLicense": null,
-      "moduleName": "dev.restate.sdk:java-sdk"
-    },
-    # This module results from local composite builds where dev.restate.sdk:java-sdk gets substituted via java-sdk:sdk
-    {
-      "moduleLicense": null,
-      "moduleName": "java-sdk:sdk"
+      "moduleLicense": "Eclipse Public License - v 2.0"
     },
     {
-      "moduleLicense": null,
-      "moduleName": "restate-e2e:contracts"
+      "moduleLicense": "Eclipse Public License - v 1.0"
+    },
+    {
+      "moduleName": "org.jetbrains.kotlinx:kotlinx-serialization-json"
+    },
+    {
+      "moduleName": "org.jetbrains.kotlinx:kotlinx-serialization-core"
     }
   ]
 }

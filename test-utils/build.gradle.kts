@@ -1,26 +1,23 @@
 plugins {
   java
-  kotlin("jvm") version "1.6.20"
+  kotlin("jvm") version "1.8.10"
+  kotlin("plugin.serialization") version "1.8.10"
   `maven-publish`
+  id("com.github.jk1.dependency-license-report") version "2.1"
 }
 
 dependencies {
   api(libs.junit.api)
-  api(platform(libs.testcontainers.bom))
   api(libs.testcontainers.core)
   api(libs.testcontainers.kafka)
 
   api(libs.grpc.stub)
 
-  implementation(platform(libs.jackson.bom))
-  implementation(libs.jackson.core)
-  implementation(libs.jackson.yaml)
-
   implementation(libs.log4j.api)
   implementation(libs.grpc.netty.shaded)
   implementation(libs.grpc.protobuf)
 
-  implementation(libs.restate.sdk)
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
 
   testImplementation(libs.junit.all)
   testImplementation(libs.assertj)
@@ -63,4 +60,23 @@ publishing {
       from(components["java"])
     }
   }
+}
+
+tasks { check { dependsOn(checkLicense) } }
+
+licenseReport {
+  renderers = arrayOf(com.github.jk1.license.render.CsvReportRenderer())
+
+  excludeBoms = true
+
+  excludes =
+      arrayOf(
+          "dev.restate.sdk:.*", // Our own dependency has no license yet
+      )
+
+  allowedLicensesFile = file("$rootDir/config/allowed-licenses.json")
+  filters =
+      arrayOf(
+          com.github.jk1.license.filter.LicenseBundleNormalizer(
+              "$rootDir/config/license-normalizer-bundle.json", true))
 }

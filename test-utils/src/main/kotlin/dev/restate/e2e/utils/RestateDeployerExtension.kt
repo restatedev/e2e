@@ -19,7 +19,7 @@ class RestateDeployerExtension(private val deployer: RestateDeployer) :
   }
 
   override fun beforeAll(context: ExtensionContext) {
-    deployer.deployAll(context.requiredTestClass)
+    deployer.deployAll(RestateDeployer.generateReportDirFromEnv(context.requiredTestClass))
   }
 
   override fun afterAll(context: ExtensionContext) {
@@ -34,7 +34,9 @@ class RestateDeployerExtension(private val deployer: RestateDeployer) :
         AbstractBlockingStub::class.java.isAssignableFrom(parameterContext.parameter.type)) ||
         (parameterContext.isAnnotated(InjectContainerAddress::class.java) &&
             String::class.java.isAssignableFrom(parameterContext.parameter.type)) ||
-        (parameterContext.isAnnotated(InjectHttpEndpointURL::class.java) &&
+        (parameterContext.isAnnotated(InjectGrpcIngressURL::class.java) &&
+            URL::class.java.isAssignableFrom(parameterContext.parameter.type)) ||
+        (parameterContext.isAnnotated(InjectMetaURL::class.java) &&
             URL::class.java.isAssignableFrom(parameterContext.parameter.type))
   }
 
@@ -46,8 +48,10 @@ class RestateDeployerExtension(private val deployer: RestateDeployer) :
       resolveBlockingStub(parameterContext, extensionContext)
     } else if (parameterContext.isAnnotated(InjectContainerAddress::class.java)) {
       resolveContainerAddress(parameterContext)
-    } else if (parameterContext.isAnnotated(InjectHttpEndpointURL::class.java)) {
-      resolveHttpEndpointURL()
+    } else if (parameterContext.isAnnotated(InjectGrpcIngressURL::class.java)) {
+      resolveGrpcIngressURL()
+    } else if (parameterContext.isAnnotated(InjectMetaURL::class.java)) {
+      resolveMetaURL()
     } else {
       null
     }
@@ -67,7 +71,7 @@ class RestateDeployerExtension(private val deployer: RestateDeployer) :
             .getStore(NAMESPACE)
             .getOrComputeIfAbsent(
                 MANAGED_CHANNEL_KEY,
-                { ManagedChannelResource(deployer.getRuntimeChannel()) },
+                { ManagedChannelResource(deployer.createRuntimeChannel()) },
                 ManagedChannelResource::class.java)
 
     return stubFactoryMethod.invoke(null, channelResource.channel) as T
@@ -79,8 +83,12 @@ class RestateDeployerExtension(private val deployer: RestateDeployer) :
     return deployer.getAdditionalContainerExposedPort(annotation.hostName, annotation.port)
   }
 
-  private fun resolveHttpEndpointURL(): Any {
-    return deployer.getRuntimeHttpEndpointUrl()
+  private fun resolveGrpcIngressURL(): Any {
+    return deployer.getRuntimeGrpcIngressUrl()
+  }
+
+  private fun resolveMetaURL(): Any {
+    return deployer.getRuntimeMetaUrl()
   }
 
   private class ManagedChannelResource(val channel: ManagedChannel) : Store.CloseableResource {

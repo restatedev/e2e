@@ -1,11 +1,14 @@
 package dev.restate.e2e.functions.externalcall;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.restate.e2e.functions.externalcall.RandomNumberListGeneratorProto.GenerateNumbersRequest;
+import dev.restate.e2e.functions.externalcall.RandomNumberListGeneratorProto.GenerateNumbersResponse;
 import dev.restate.e2e.functions.utils.NumberSortHttpServerUtils;
-import dev.restate.sdk.RestateContext;
+import dev.restate.sdk.blocking.Awakeable;
+import dev.restate.sdk.blocking.RestateBlockingService;
+import dev.restate.sdk.core.TypeTag;
+import dev.restate.sdk.core.serde.jackson.JacksonSerde;
 import io.grpc.stub.StreamObserver;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -13,11 +16,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class RandomNumberListGeneratorService
-    extends RandomNumberListGeneratorGrpc.RandomNumberListGeneratorImplBase {
+    extends RandomNumberListGeneratorGrpc.RandomNumberListGeneratorImplBase
+    implements RestateBlockingService {
 
   private static final Logger LOG = LogManager.getLogger(RandomNumberListGeneratorService.class);
 
-  private final ObjectMapper objectMapper = new ObjectMapper();
+  private static final TypeTag<List<Integer>> INT_LIST_TYPE_TAG =
+      JacksonSerde.typeRef(new TypeReference<>() {});
 
   @Override
   public void generateNumbers(
@@ -31,27 +36,21 @@ public class RandomNumberListGeneratorService
       numbers.add(random.nextInt());
     }
 
-    byte[] sortedNumbersJson =
-        RestateContext.current()
-            .callback(
-                byte[].class,
-                replyId -> {
-                  try {
-                    NumberSortHttpServerUtils.sendSortNumbersRequest(replyId, numbers);
-                  } catch (Exception e) {
-                    throw new RuntimeException(
-                        "Something went wrong while trying to invoking the external http server",
-                        e);
-                  }
-                })
-            .await();
+    var ctx = restateContext();
 
-    List<Integer> sortedNumbers = null;
-    try {
-      sortedNumbers = objectMapper.readValue(sortedNumbersJson, new TypeReference<>() {});
-    } catch (IOException e) {
-      throw new RuntimeException("Cannot deserialize output of async call", e);
-    }
+    Awakeable<List<Integer>> awakeable = ctx.awakeable(INT_LIST_TYPE_TAG);
+
+    ctx.sideEffect(
+        () -> {
+          try {
+            NumberSortHttpServerUtils.sendSortNumbersRequest(awakeable.id(), numbers);
+          } catch (Exception e) {
+            throw new RuntimeException(
+                "Something went wrong while trying to invoking the external http server", e);
+          }
+        });
+
+    List<Integer> sortedNumbers = awakeable.await();
 
     responseObserver.onNext(
         GenerateNumbersResponse.newBuilder().addAllNumbers(sortedNumbers).build());

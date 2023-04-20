@@ -1,12 +1,12 @@
 package dev.restate.e2e
 
 import com.google.protobuf.Empty
-import dev.restate.e2e.functions.counter.CounterAddRequest
 import dev.restate.e2e.functions.counter.CounterGrpc.CounterBlockingStub
-import dev.restate.e2e.functions.counter.CounterRequest
+import dev.restate.e2e.functions.counter.CounterProto.CounterAddRequest
+import dev.restate.e2e.functions.counter.CounterProto.CounterRequest
 import dev.restate.e2e.functions.counter.NoopGrpc.NoopBlockingStub
-import dev.restate.e2e.functions.singletoncounter.CounterNumber
 import dev.restate.e2e.functions.singletoncounter.SingletonCounterGrpc.SingletonCounterBlockingStub
+import dev.restate.e2e.functions.singletoncounter.SingletonCounterProto.CounterNumber
 import dev.restate.e2e.utils.InjectBlockingStub
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
@@ -23,7 +23,7 @@ class CounterTest {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
-            RestateDeployer.Builder().withFunction(Containers.COUNTER_FUNCTION_SPEC).build())
+            RestateDeployer.Builder().withServiceEndpoint(Containers.COUNTER_FUNCTION_SPEC).build())
   }
 
   @Test

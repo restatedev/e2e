@@ -2,7 +2,7 @@ package dev.restate.e2e.functions.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.restate.sdk.CallbackIdentifier;
+import dev.restate.generated.core.AwakeableIdentifier;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
@@ -17,16 +17,16 @@ public class NumberSortHttpServerUtils {
   private static final ObjectMapper objectMapper = new ObjectMapper();
 
   public static HttpResponse<Void> sendSortNumbersRequest(
-      CallbackIdentifier replyId, List<Integer> numbers) throws Exception {
+      AwakeableIdentifier replyId, List<Integer> numbers) throws Exception {
     return HttpClient.newHttpClient()
         .send(prepareRequest(replyId, numbers), BodyHandlers.discarding());
   }
 
-  private static HttpRequest prepareRequest(CallbackIdentifier replyId, List<Integer> numbers)
+  private static HttpRequest prepareRequest(AwakeableIdentifier replyId, List<Integer> numbers)
       throws URISyntaxException, JsonProcessingException {
     return HttpRequest.newBuilder()
         .uri(new URI(System.getenv("HTTP_SERVER_ADDRESS")))
-        .header("x-reply-id", Base64.getUrlEncoder().encodeToString(replyId.toBytes()))
+        .header("x-reply-id", Base64.getUrlEncoder().encodeToString(replyId.toByteArray()))
         .PUT(HttpRequest.BodyPublishers.ofByteArray(objectMapper.writeValueAsBytes(numbers)))
         .build();
   }

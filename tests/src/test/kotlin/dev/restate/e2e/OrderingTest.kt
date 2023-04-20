@@ -1,9 +1,9 @@
 package dev.restate.e2e
 
+import dev.restate.e2e.functions.collections.list.ListProto.Request
 import dev.restate.e2e.functions.collections.list.ListServiceGrpc.ListServiceBlockingStub
-import dev.restate.e2e.functions.collections.list.Request
 import dev.restate.e2e.functions.coordinator.CoordinatorGrpc.CoordinatorBlockingStub
-import dev.restate.e2e.functions.coordinator.InvokeSequentiallyRequest
+import dev.restate.e2e.functions.coordinator.CoordinatorProto.InvokeSequentiallyRequest
 import dev.restate.e2e.utils.InjectBlockingStub
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
@@ -20,8 +20,8 @@ class OrderingTest {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .withFunction(Containers.COORDINATOR_FUNCTION_SPEC)
-                .withFunction(Containers.COLLECTIONS_FUNCTION_SPEC)
+                .withServiceEndpoint(Containers.COORDINATOR_FUNCTION_SPEC)
+                .withServiceEndpoint(Containers.COLLECTIONS_FUNCTION_SPEC)
                 .build())
 
     @JvmStatic

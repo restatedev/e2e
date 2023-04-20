@@ -1,6 +1,6 @@
 plugins {
   java
-  kotlin("jvm") version "1.6.20"
+  kotlin("jvm") version "1.8.10"
 }
 
 dependencies {
@@ -17,16 +17,7 @@ dependencies {
   testImplementation(platform(libs.jackson.bom))
   testImplementation(libs.jackson.core)
   testImplementation(libs.jackson.databind)
-  testImplementation(libs.jackson.yaml)
 
-  testImplementation(platform(libs.cloudevents.bom))
-  testImplementation(libs.cloudevents.core)
-  testImplementation(libs.cloudevents.kafka)
-  testImplementation(libs.cloudevents.json)
-
-  testImplementation(platform(libs.testcontainers.bom))
-  testImplementation(libs.testcontainers.core)
-  testImplementation(libs.testcontainers.kafka)
   testImplementation(libs.awaitility)
 }
 
@@ -42,23 +33,5 @@ tasks.withType<Test> {
       environment +
           mapOf(
               "CONTAINER_LOGS_DIR" to "$buildDir/test-results/$name/container-logs",
-              "RESTATE_RUNTIME_CONTAINER" to "ghcr.io/restatedev/runtime:main",
-              "DESCRIPTORS_FILE" to
-                  "${rootProject.projectDir}/.restate/descriptors/contracts.descriptor")
-
-  useJUnitPlatform {
-    includeTags("none()") // Run all the tests without tags
-  }
+              "RESTATE_RUNTIME_CONTAINER" to "ghcr.io/restatedev/restate:latest")
 }
-
-// --- Additional configurations
-
-tasks.register<Test>("rocksdb-integration-test") {
-  dependsOn("test")
-
-  useJUnitPlatform { includeTags("none() | requires-persistence-layer") }
-
-  environment = environment + mapOf("E2E_USE_ROCKSDB" to "true")
-}
-
-tasks.named("build") { dependsOn("rocksdb-integration-test") }

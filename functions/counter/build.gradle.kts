@@ -9,7 +9,10 @@ plugins {
 }
 
 dependencies {
-  implementation(libs.restate.sdk)
+  implementation(libs.restate.sdk.core)
+  implementation(libs.restate.sdk.blocking)
+  implementation(libs.restate.sdk.vertx)
+  implementation(libs.restate.sdk.jackson)
 
   implementation(project(":contracts"))
   implementation(project(":functions:utils"))
@@ -18,6 +21,9 @@ dependencies {
   implementation(libs.log4j.core)
 
   implementation(libs.grpc.netty.shaded)
+
+  implementation(platform(libs.vertx.bom))
+  implementation(libs.vertx.core)
 }
 
 jib {

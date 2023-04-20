@@ -1,34 +1,36 @@
 package dev.restate.e2e.functions.collections;
 
 import com.google.protobuf.Empty;
-import dev.restate.e2e.functions.collections.list.AppendRequest;
-import dev.restate.e2e.functions.collections.list.List;
+import dev.restate.e2e.functions.collections.list.ListProto;
 import dev.restate.e2e.functions.collections.list.ListServiceGrpc;
-import dev.restate.e2e.functions.collections.list.Request;
-import dev.restate.sdk.StateKey;
+import dev.restate.sdk.blocking.RestateBlockingService;
+import dev.restate.sdk.core.StateKey;
 import io.grpc.stub.StreamObserver;
 
-public class ListService extends ListServiceGrpc.ListServiceImplBase {
+public class ListService extends ListServiceGrpc.ListServiceImplBase
+    implements RestateBlockingService {
 
-  private static final StateKey<List> LIST_KEY = StateKey.of("list", List.class);
+  private static final StateKey<ListProto.List> LIST_KEY =
+      StateKey.of("list", ListProto.List.class);
 
   @Override
-  public void append(AppendRequest request, StreamObserver<Empty> responseObserver) {
-    LIST_KEY.update(
-        l -> l.orElse(List.getDefaultInstance()).toBuilder().addValues(request.getValue()).build());
+  public void append(ListProto.AppendRequest request, StreamObserver<Empty> responseObserver) {
+    ListProto.List list =
+        restateContext().get(LIST_KEY).orElse(ListProto.List.getDefaultInstance());
+    list = list.toBuilder().addValues(request.getValue()).build();
+    restateContext().set(LIST_KEY, list);
 
     responseObserver.onNext(Empty.getDefaultInstance());
     responseObserver.onCompleted();
   }
 
   @Override
-  public void clear(
-      Request request,
-      StreamObserver<dev.restate.e2e.functions.collections.list.List> responseObserver) {
-    var l = LIST_KEY.get().orElse(List.getDefaultInstance());
-    LIST_KEY.clear();
+  public void clear(ListProto.Request request, StreamObserver<ListProto.List> responseObserver) {
+    ListProto.List list =
+        restateContext().get(LIST_KEY).orElse(ListProto.List.getDefaultInstance());
+    restateContext().clear(LIST_KEY);
 
-    responseObserver.onNext(l);
+    responseObserver.onNext(list);
     responseObserver.onCompleted();
   }
 }
