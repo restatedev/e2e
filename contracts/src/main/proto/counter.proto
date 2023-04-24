@@ -13,6 +13,7 @@ service Counter {
 
   rpc Reset (CounterRequest) returns (google.protobuf.Empty);
   rpc Add (CounterAddRequest) returns (google.protobuf.Empty);
+  rpc AddThenFail (CounterAddRequest) returns (google.protobuf.Empty);
   rpc Get (CounterRequest) returns (GetResponse);
   rpc GetAndAdd (CounterAddRequest) returns (CounterUpdateResult);
 }

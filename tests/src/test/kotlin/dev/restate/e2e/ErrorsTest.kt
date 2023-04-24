@@ -1,5 +1,7 @@
 package dev.restate.e2e
 
+import dev.restate.e2e.functions.counter.CounterGrpc
+import dev.restate.e2e.functions.counter.CounterProto
 import dev.restate.e2e.functions.errors.ErrorsProto.ErrorMessage
 import dev.restate.e2e.functions.errors.ErrorsProto.FailRequest
 import dev.restate.e2e.functions.errors.FailingServiceGrpc.FailingServiceBlockingStub
@@ -24,6 +26,7 @@ class ErrorsTest {
             RestateDeployer.Builder()
                 .withServiceEndpoint(Containers.ERRORS_FUNCTION_SPEC)
                 .withServiceEndpoint(Containers.EXTERNALCALL_FUNCTION_SPEC)
+                .withServiceEndpoint(Containers.COUNTER_FUNCTION_SPEC)
                 .withContainer(Containers.EXTERNALCALL_HTTP_SERVER_CONTAINER_SPEC)
                 .build())
   }
@@ -75,5 +78,27 @@ class ErrorsTest {
                 FailRequest.newBuilder().setKey(UUID.randomUUID().toString()).build()))
         .extracting(ErrorMessage::getErrorMessage)
         .isEqualTo("notfound")
+  }
+
+  @Test
+  fun addThenFail(@InjectBlockingStub counterClient: CounterGrpc.CounterBlockingStub) {
+    val counterName = "my-failure-counter"
+
+    assertThatThrownBy {
+          counterClient.addThenFail(
+              CounterProto.CounterAddRequest.newBuilder()
+                  .setCounterName(counterName)
+                  .setValue(1)
+                  .build())
+        }
+        .asInstanceOf(type(StatusRuntimeException::class.java))
+        .extracting(StatusRuntimeException::getStatus)
+        .extracting(Status::getDescription)
+        .isEqualTo(counterName)
+
+    val response =
+        counterClient.get(
+            CounterProto.CounterRequest.newBuilder().setCounterName(counterName).build())
+    assertThat(response.value).isEqualTo(1)
   }
 }
