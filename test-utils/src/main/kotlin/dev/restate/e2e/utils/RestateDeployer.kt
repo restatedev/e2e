@@ -35,8 +35,7 @@ private constructor(
 
   companion object {
     private const val RESTATE_RUNTIME_CONTAINER_ENV = "RESTATE_RUNTIME_CONTAINER"
-    private const val DEFAULT_RUNTIME_CONTAINER =
-        "restatedev.jfrog.io/restatedev-docker-local/runtime"
+    private const val DEFAULT_RUNTIME_CONTAINER = "ghcr.io/restatedev/restate"
 
     private const val CONTAINER_LOGS_DIR_ENV = "CONTAINER_LOGS_DIR"
 
