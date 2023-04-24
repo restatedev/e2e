@@ -44,6 +44,21 @@ public class CounterService extends CounterGrpc.CounterImplBase implements Resta
   }
 
   @Override
+  public void addThenFail(CounterAddRequest request, StreamObserver<Empty> responseObserver) {
+    var ctx = restateContext();
+
+    long counter = ctx.get(COUNTER_KEY).orElse(0L);
+    logger.info("Old counter value: {}", counter);
+
+    counter += request.getValue();
+    ctx.set(COUNTER_KEY, counter);
+
+    logger.info("New counter value: {}", counter);
+
+    throw new IllegalStateException(request.getCounterName());
+  }
+
+  @Override
   public void get(CounterRequest request, StreamObserver<GetResponse> responseObserver) {
     var ctx = restateContext();
 
