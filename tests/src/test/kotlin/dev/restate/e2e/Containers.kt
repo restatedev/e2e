@@ -27,4 +27,10 @@ object Containers {
           .withEnv(
               "HTTP_SERVER_ADDRESS", "http://${EXTERNALCALL_HTTP_SERVER_CONTAINER_SPEC.first}:8080")
           .build()
+
+  fun getRestateEnvironment(): Map<String, String> {
+    return System.getenv().filterKeys {
+      (it.startsWith("RESTATE_") && it != "RESTATE_RUNTIME_CONTAINER") || it.startsWith("RUST_")
+    }
+  }
 }

@@ -6,9 +6,11 @@ import dev.restate.e2e.utils.InjectBlockingStub
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
+@Tag("always-suspending")
 class ExternalCallTest {
 
   companion object {
@@ -16,6 +18,7 @@ class ExternalCallTest {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
+                .withEnv(Containers.getRestateEnvironment())
                 .withServiceEndpoint(Containers.EXTERNALCALL_FUNCTION_SPEC)
                 .withContainer(Containers.EXTERNALCALL_HTTP_SERVER_CONTAINER_SPEC)
                 .build())

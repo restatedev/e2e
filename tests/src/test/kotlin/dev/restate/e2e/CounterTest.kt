@@ -14,16 +14,21 @@ import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
+@Tag("always-suspending")
 class CounterTest {
 
   companion object {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
-            RestateDeployer.Builder().withServiceEndpoint(Containers.COUNTER_FUNCTION_SPEC).build())
+            RestateDeployer.Builder()
+                .withEnv(Containers.getRestateEnvironment())
+                .withServiceEndpoint(Containers.COUNTER_FUNCTION_SPEC)
+                .build())
   }
 
   @Test

@@ -33,5 +33,26 @@ tasks.withType<Test> {
       environment +
           mapOf(
               "CONTAINER_LOGS_DIR" to "$buildDir/test-results/$name/container-logs",
-              "RESTATE_RUNTIME_CONTAINER" to "ghcr.io/restatedev/restate:latest")
+              "RESTATE_RUNTIME_CONTAINER" to "ghcr.io/restatedev/restate:latest",
+              "RUST_LOG" to "info,hyper=trace,restate_invoker=trace,restate=debug",
+              "RUST_BACKTRACE" to "full")
+
+  useJUnitPlatform {
+    // Run all the tests with either no tags, or always-suspending tag
+    includeTags("none() | always-suspending")
+  }
 }
+
+// --- Additional configurations
+
+tasks.register<Test>("test-always-suspending") {
+  dependsOn("test")
+
+  useJUnitPlatform {
+    includeTags("always-suspending") // Run all the tests with always-suspending tag
+  }
+
+  environment = environment + mapOf("RESTATE_WORKER__INVOKER__SUSPENSION_TIMEOUT" to "0s")
+}
+
+tasks.named("build") { dependsOn("test-always-suspending") }
