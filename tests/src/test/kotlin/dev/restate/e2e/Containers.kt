@@ -13,11 +13,22 @@ import dev.restate.e2e.utils.FunctionSpec
 import org.testcontainers.containers.GenericContainer
 
 object Containers {
+
+  // -- Generic containers and utils
+
   val EXTERNALCALL_HTTP_SERVER_CONTAINER_SPEC =
       "e2e-http-server" to
           GenericContainer("restatedev/e2e-http-server")
               .withEnv("PORT", "8080")
               .withExposedPorts(8080)
+
+  fun getRestateEnvironment(): Map<String, String> {
+    return System.getenv().filterKeys {
+      (it.startsWith("RESTATE_") && it != "RESTATE_RUNTIME_CONTAINER") || it.startsWith("RUST_")
+    }
+  }
+
+  // -- Java containers
 
   val JAVA_COLLECTIONS_FUNCTION_SPEC =
       FunctionSpec.builder("restatedev/e2e-java-services")
@@ -64,9 +75,11 @@ object Containers {
           .withHostName("java-errors")
           .build()
 
-  fun getRestateEnvironment(): Map<String, String> {
-    return System.getenv().filterKeys {
-      (it.startsWith("RESTATE_") && it != "RESTATE_RUNTIME_CONTAINER") || it.startsWith("RUST_")
-    }
-  }
+  // -- Node containers
+
+  val NODE_COUNTER_FUNCTION_SPEC =
+      FunctionSpec.builder("restatedev/e2e-node-services")
+          .withEnv("SERVICES", listOf(CounterGrpc.SERVICE_NAME).joinToString(","))
+          .withHostName("node-counter")
+          .build()
 }

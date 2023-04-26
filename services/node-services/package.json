@@ -1,7 +1,7 @@
 {
-  "name": "restate-ts-template",
+  "name": "e2e-node-services",
   "version": "0.0.1",
-  "description": "Template for JavaScript/TypeScript services running with Restate (https://github.com/restatedev/) ",
+  "description": "E2E services",
   "main": "app.js",
   "type": "commonjs",
   "scripts": {
