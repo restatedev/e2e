@@ -1,6 +1,12 @@
 rootProject.name = "restate-e2e"
 
-include("contracts", "services:java-services", "services:http-server", "test-utils", "tests")
+include(
+    "contracts",
+    "services:java-services",
+    "services:node-services",
+    "services:http-server",
+    "test-utils",
+    "tests")
 
 dependencyResolutionManagement {
   repositories {

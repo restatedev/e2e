@@ -40,6 +40,7 @@ tasks {
 
   withType<Test>().configureEach {
     dependsOn(":services:java-services:jibDockerBuild")
+    dependsOn(":services:node-services:docker")
 
     environment =
         environment +
