@@ -36,7 +36,7 @@ data class FunctionSpec(
   ) {
     fun withContainerImage(containerImage: String) = apply { this.containerImage = containerImage }
 
-    fun withHostName(containerImage: String) = apply { this.containerImage = containerImage }
+    fun withHostName(hostName: String) = apply { this.hostName = hostName }
 
     fun withEnv(key: String, value: String) = apply { this.envs[key] = value }
 

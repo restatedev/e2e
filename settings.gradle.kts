@@ -1,16 +1,6 @@
 rootProject.name = "restate-e2e"
 
-include(
-    "contracts",
-    "functions:collections",
-    "functions:coordinator",
-    "functions:counter",
-    "functions:externalcall",
-    "functions:errors",
-    "functions:http-server",
-    "functions:utils",
-    "test-utils",
-    "tests")
+include("contracts", "services:java-services", "services:http-server", "test-utils", "tests")
 
 dependencyResolutionManagement {
   repositories {

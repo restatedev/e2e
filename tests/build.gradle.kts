@@ -22,12 +22,7 @@ dependencies {
 }
 
 tasks.withType<Test> {
-  dependsOn(":functions:collections:jibDockerBuild")
-  dependsOn(":functions:counter:jibDockerBuild")
-  dependsOn(":functions:coordinator:jibDockerBuild")
-  dependsOn(":functions:externalcall:jibDockerBuild")
-  dependsOn(":functions:errors:jibDockerBuild")
-  dependsOn(":functions:http-server:jibDockerBuild")
+  dependsOn(":services:java-services:jibDockerBuild")
 
   environment =
       environment +

@@ -1,31 +1,67 @@
 package dev.restate.e2e
 
+import dev.restate.e2e.functions.collections.list.ListServiceGrpc
+import dev.restate.e2e.functions.coordinator.CoordinatorGrpc
+import dev.restate.e2e.functions.counter.CounterGrpc
+import dev.restate.e2e.functions.counter.NoopGrpc
+import dev.restate.e2e.functions.errors.FailingServiceGrpc
+import dev.restate.e2e.functions.externalcall.RandomNumberListGeneratorGrpc
+import dev.restate.e2e.functions.externalcall.ReplierGrpc
+import dev.restate.e2e.functions.receiver.ReceiverGrpc
+import dev.restate.e2e.functions.singletoncounter.SingletonCounterGrpc
 import dev.restate.e2e.utils.FunctionSpec
 import org.testcontainers.containers.GenericContainer
 
 object Containers {
-  val COLLECTIONS_FUNCTION_SPEC = FunctionSpec.builder("restatedev/e2e-collections").build()
-
-  val COUNTER_FUNCTION_SPEC = FunctionSpec.builder("restatedev/e2e-counter").build()
-
-  val COORDINATOR_FUNCTION_SPEC = FunctionSpec.builder("restatedev/e2e-coordinator").build()
-
   val EXTERNALCALL_HTTP_SERVER_CONTAINER_SPEC =
       "e2e-http-server" to
           GenericContainer("restatedev/e2e-http-server")
               .withEnv("PORT", "8080")
               .withExposedPorts(8080)
 
-  val EXTERNALCALL_FUNCTION_SPEC =
-      FunctionSpec.builder("restatedev/e2e-externalcall")
-          .withEnv(
-              "HTTP_SERVER_ADDRESS", "http://${EXTERNALCALL_HTTP_SERVER_CONTAINER_SPEC.first}:8080")
+  val JAVA_COLLECTIONS_FUNCTION_SPEC =
+      FunctionSpec.builder("restatedev/e2e-java-services")
+          .withEnv("SERVICES", listOf(ListServiceGrpc.SERVICE_NAME).joinToString(","))
+          .withHostName("java-collections")
           .build()
 
-  val ERRORS_FUNCTION_SPEC =
-      FunctionSpec.builder("restatedev/e2e-errors")
+  val JAVA_COUNTER_FUNCTION_SPEC =
+      FunctionSpec.builder("restatedev/e2e-java-services")
+          .withEnv(
+              "SERVICES",
+              listOf(
+                      CounterGrpc.SERVICE_NAME,
+                      NoopGrpc.SERVICE_NAME,
+                      SingletonCounterGrpc.SERVICE_NAME)
+                  .joinToString(","))
+          .withHostName("java-counter")
+          .build()
+
+  val JAVA_COORDINATOR_FUNCTION_SPEC =
+      FunctionSpec.builder("restatedev/e2e-java-services")
+          .withEnv(
+              "SERVICES",
+              listOf(CoordinatorGrpc.SERVICE_NAME, ReceiverGrpc.SERVICE_NAME).joinToString(","))
+          .withHostName("java-coordinator")
+          .build()
+
+  val JAVA_EXTERNALCALL_FUNCTION_SPEC =
+      FunctionSpec.builder("restatedev/e2e-java-services")
           .withEnv(
               "HTTP_SERVER_ADDRESS", "http://${EXTERNALCALL_HTTP_SERVER_CONTAINER_SPEC.first}:8080")
+          .withEnv(
+              "SERVICES",
+              listOf(ReplierGrpc.SERVICE_NAME, RandomNumberListGeneratorGrpc.SERVICE_NAME)
+                  .joinToString(","))
+          .withHostName("java-externalcall")
+          .build()
+
+  val JAVA_ERRORS_FUNCTION_SPEC =
+      FunctionSpec.builder("restatedev/e2e-java-services")
+          .withEnv(
+              "HTTP_SERVER_ADDRESS", "http://${EXTERNALCALL_HTTP_SERVER_CONTAINER_SPEC.first}:8080")
+          .withEnv("SERVICES", listOf(FailingServiceGrpc.SERVICE_NAME).joinToString(","))
+          .withHostName("java-errors")
           .build()
 
   fun getRestateEnvironment(): Map<String, String> {
