@@ -1,22 +1,43 @@
-# restate-ts-template
+# node-services
 
-# Steps
+## Setting up npm to download the Restate Typescript npm package
 
-First, get all dependencies and build tools:
-```
-npm install
+The Typescript SDK package is currently a private package in Restate's GitHub repository.
+You will only be able to run this example if you have access to the Typescript SDK repository.
+
+To process, you need to make a GitHub token (classic) that can read (and write) packages.
+Go to GitHub -> click on your profile -> settings -> developer settings (last option in the bar on the left)
+-> generate new token -> select read and write packages -> generate the token -> don't close it!
+
+Then do
+
+    npm login --scope @restatedev --registry=https://npm.pkg.github.com
+
+Fill in your git username and the GitHub token.
+
+Now you should have something like this in ~/.npmrc:
+
+    //npm.pkg.github.com/:_authToken=ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxx
+    @restatedev:registry=https://npm.pkg.github.com
+
+## Install and build
+
+To get all the dependencies required to develop the node services:
+
+```shell
+$ npm install
 ```
 
-Next, adjust the 'proto' definitions. Then run:
-```
-npm run proto
+To build:
+
+```shell
+$ npm run build
 ```
 
-Finally, implement your code.
-Use `npm run app-dev` to start in dev mode (watch for changes and reload automatically).
+## Run proto code generation
 
-To properly build/run the code, do
-```
-npm run build
-npm run app
+To re-gen the `generated` directory:
+
+```shell
+$ npm run proto
 ```

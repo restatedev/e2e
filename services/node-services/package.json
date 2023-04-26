@@ -5,7 +5,7 @@
   "main": "app.js",
   "type": "commonjs",
   "scripts": {
-    "proto": "cd proto && npx buf mod update && npx buf generate .",
+    "proto": "npx buf mod update proto && npx buf generate proto",
     "build": "tsc --noEmitOnError",
     "app": "node ./dist/app.js",
     "app-dev": "ts-node-dev --watch ./src --respawn --transpile-only ./src/app.ts"
