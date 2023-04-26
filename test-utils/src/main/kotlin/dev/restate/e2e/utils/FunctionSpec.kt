@@ -49,6 +49,15 @@ data class FunctionSpec(
     fun build() = FunctionSpec(containerImage, hostName, envs, port, dependencies)
   }
 
+  fun toBuilder(): Builder {
+    return Builder(
+        containerImage,
+        hostName,
+        envs = envs.toMutableMap(),
+        port,
+        dependencies = dependencies.toMutableList())
+  }
+
   internal fun toContainer(): GenericContainer<*> {
     return GenericContainer(DockerImageName.parse(containerImage))
         .withEnv("PORT", port.toString())

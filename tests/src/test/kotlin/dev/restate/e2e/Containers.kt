@@ -30,56 +30,57 @@ object Containers {
 
   // -- Java containers
 
+  fun javaServicesContainer(hostName: String, vararg services: String): FunctionSpec.Builder {
+    assert(services.isNotEmpty())
+    return FunctionSpec.builder("restatedev/e2e-java-services")
+        .withEnv("SERVICES", services.joinToString(","))
+        .withHostName(hostName)
+  }
+
   val JAVA_COLLECTIONS_FUNCTION_SPEC =
-      FunctionSpec.builder("restatedev/e2e-java-services")
-          .withEnv("SERVICES", listOf(ListServiceGrpc.SERVICE_NAME).joinToString(","))
-          .withHostName("java-collections")
-          .build()
+      javaServicesContainer("java-collections", ListServiceGrpc.SERVICE_NAME).build()
 
   val JAVA_COUNTER_FUNCTION_SPEC =
-      FunctionSpec.builder("restatedev/e2e-java-services")
-          .withEnv(
-              "SERVICES",
-              listOf(
-                      CounterGrpc.SERVICE_NAME,
-                      NoopGrpc.SERVICE_NAME,
-                      SingletonCounterGrpc.SERVICE_NAME)
-                  .joinToString(","))
-          .withHostName("java-counter")
+      javaServicesContainer(
+              "java-counter",
+              CounterGrpc.SERVICE_NAME,
+              NoopGrpc.SERVICE_NAME,
+              SingletonCounterGrpc.SERVICE_NAME)
           .build()
 
   val JAVA_COORDINATOR_FUNCTION_SPEC =
-      FunctionSpec.builder("restatedev/e2e-java-services")
-          .withEnv(
-              "SERVICES",
-              listOf(CoordinatorGrpc.SERVICE_NAME, ReceiverGrpc.SERVICE_NAME).joinToString(","))
-          .withHostName("java-coordinator")
+      javaServicesContainer(
+              "java-coordinator", CoordinatorGrpc.SERVICE_NAME, ReceiverGrpc.SERVICE_NAME)
           .build()
 
   val JAVA_EXTERNALCALL_FUNCTION_SPEC =
-      FunctionSpec.builder("restatedev/e2e-java-services")
+      javaServicesContainer(
+              "java-externalcall",
+              ReplierGrpc.SERVICE_NAME,
+              RandomNumberListGeneratorGrpc.SERVICE_NAME)
           .withEnv(
               "HTTP_SERVER_ADDRESS", "http://${EXTERNALCALL_HTTP_SERVER_CONTAINER_SPEC.first}:8080")
-          .withEnv(
-              "SERVICES",
-              listOf(ReplierGrpc.SERVICE_NAME, RandomNumberListGeneratorGrpc.SERVICE_NAME)
-                  .joinToString(","))
-          .withHostName("java-externalcall")
           .build()
 
   val JAVA_ERRORS_FUNCTION_SPEC =
-      FunctionSpec.builder("restatedev/e2e-java-services")
+      javaServicesContainer("java-errors", FailingServiceGrpc.SERVICE_NAME)
           .withEnv(
               "HTTP_SERVER_ADDRESS", "http://${EXTERNALCALL_HTTP_SERVER_CONTAINER_SPEC.first}:8080")
-          .withEnv("SERVICES", listOf(FailingServiceGrpc.SERVICE_NAME).joinToString(","))
-          .withHostName("java-errors")
           .build()
 
   // -- Node containers
 
+  fun nodeServicesContainer(hostName: String, vararg services: String): FunctionSpec.Builder {
+    assert(services.isNotEmpty())
+    return FunctionSpec.builder("restatedev/e2e-node-services")
+        .withEnv("SERVICES", services.joinToString(","))
+        .withHostName(hostName)
+  }
+
   val NODE_COUNTER_FUNCTION_SPEC =
-      FunctionSpec.builder("restatedev/e2e-node-services")
-          .withEnv("SERVICES", listOf(CounterGrpc.SERVICE_NAME).joinToString(","))
-          .withHostName("node-counter")
-          .build()
+      nodeServicesContainer("node-counter", CounterGrpc.SERVICE_NAME, NoopGrpc.SERVICE_NAME).build()
+
+  val NODE_COORDINATOR_FUNCTION_SPEC =
+      nodeServicesContainer(
+          "node-coordinator", CoordinatorGrpc.SERVICE_NAME, ReceiverGrpc.SERVICE_NAME)
 }

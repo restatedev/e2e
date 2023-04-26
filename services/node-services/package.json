@@ -15,11 +15,13 @@
   "dependencies": {
     "@restatedev/restate-sdk": "^1.0.11",
     "protobufjs": "^7.2.2",
-    "ts-proto": "^1.140.0"
+    "ts-proto": "^1.140.0",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
+    "@bufbuild/buf": "1.15.0",
+    "@types/uuid": "^9.0.1",
     "ts-node-dev": "^1.1.1",
-    "typescript": "^5.0.2",
-    "@bufbuild/buf": "1.15.0"
+    "typescript": "^5.0.2"
   }
 }
