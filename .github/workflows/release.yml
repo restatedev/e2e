@@ -15,16 +15,26 @@ jobs:
     name: Publish
     runs-on: ubuntu-latest
     timeout-minutes: 10
+
     env:
       GH_PACKAGE_READ_ACCESS_USER: ${{ secrets.GH_PACKAGE_READ_ACCESS_USER }}
       GH_PACKAGE_READ_ACCESS_TOKEN: ${{ secrets.GH_PACKAGE_READ_ACCESS_TOKEN }}
+      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     steps:
       - uses: actions/checkout@v3
+
       - name: Set up JDK ${{ matrix.java }}
         uses: actions/setup-java@v3
         with:
           java-version: 11
           distribution: 'adopt'
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "18.x"
+          registry-url: "https://npm.pkg.github.com"
+
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v1
 
