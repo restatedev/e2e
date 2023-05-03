@@ -19,7 +19,7 @@ jobs:
     env:
       GH_PACKAGE_READ_ACCESS_USER: ${{ secrets.GH_PACKAGE_READ_ACCESS_USER }}
       GH_PACKAGE_READ_ACCESS_TOKEN: ${{ secrets.GH_PACKAGE_READ_ACCESS_TOKEN }}
-      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGE_READ_ACCESS_TOKEN }}
 
     steps:
       - uses: actions/checkout@v3
