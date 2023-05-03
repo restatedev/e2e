@@ -7,35 +7,35 @@ import {
   Pong,
   Receiver,
   SetValueRequest,
-  protobufPackage
+  protobufPackage,
 } from "./generated/receiver";
-import {
-  Empty
-} from "./generated/google/protobuf/empty"
+import { Empty } from "./generated/google/protobuf/empty";
 
-export const ReceiverServiceFQN = protobufPackage + ".Receiver"
+export const ReceiverServiceFQN = protobufPackage + ".Receiver";
 
 const STATE_KEY = "my-state";
 
 export class ReceiverService implements Receiver {
   async ping(request: PingRequest): Promise<Pong> {
-    console.log("ping");
-    return {message: "pong"}
+    console.log(`ping: ${request}`);
+    return { message: "pong" };
   }
+
   async setValue(request: SetValueRequest): Promise<Empty> {
     console.log("setValue: " + request);
     const ctx = restate.useContext(this);
 
     ctx.set(STATE_KEY, request.value);
 
-    return {}
+    return {};
   }
+
   async getValue(request: GetValueRequest): Promise<GetValueResponse> {
-    console.log("getValue: " + request);
+    console.log(`getValue: ${request}`);
     const ctx = restate.useContext(this);
 
-    let value = await ctx.get<string>(STATE_KEY) || "";
+    const value = (await ctx.get<string>(STATE_KEY)) || "";
 
-    return { value }
+    return { value };
   }
 }

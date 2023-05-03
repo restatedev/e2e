@@ -6,15 +6,13 @@ import {
   CounterAddRequest,
   CounterUpdateResult,
   GetResponse,
-  protobufPackage
+  protobufPackage,
 } from "./generated/counter";
-import {
-  Empty
-} from "./generated/google/protobuf/empty"
+import { Empty } from "./generated/google/protobuf/empty";
 
-const COUNTER_KEY = "counter"
+const COUNTER_KEY = "counter";
 
-export const CounterServiceFQN = protobufPackage + ".Counter"
+export const CounterServiceFQN = protobufPackage + ".Counter";
 
 export class CounterService implements Counter {
   async reset(request: CounterRequest): Promise<Empty> {
@@ -25,32 +23,36 @@ export class CounterService implements Counter {
 
     return Empty.create({});
   }
+
   async add(request: CounterAddRequest): Promise<Empty> {
     console.log("add: " + JSON.stringify(request));
     const ctx = restate.useContext(this);
 
-    let value = (await ctx.get<number>(COUNTER_KEY)) || 0;
+    const value = (await ctx.get<number>(COUNTER_KEY)) || 0;
     ctx.set(COUNTER_KEY, value + request.value);
 
     return Empty.create({});
   }
-  addThenFail(request: CounterAddRequest): Promise<Empty> {
+
+  addThenFail(): Promise<Empty> {
     throw new Error("Method not implemented.");
   }
+
   async get(request: CounterRequest): Promise<GetResponse> {
     console.log("get: " + JSON.stringify(request));
     const ctx = restate.useContext(this);
 
-    let value = (await ctx.get<number>(COUNTER_KEY)) || 0;
+    const value = (await ctx.get<number>(COUNTER_KEY)) || 0;
 
     return GetResponse.create({ value });
   }
+
   async getAndAdd(request: CounterAddRequest): Promise<CounterUpdateResult> {
     console.log("getAndAdd: " + JSON.stringify(request));
     const ctx = restate.useContext(this);
 
-    let oldValue = (await ctx.get<number>(COUNTER_KEY)) || 0;
-    let newValue = oldValue + request.value;
+    const oldValue = (await ctx.get<number>(COUNTER_KEY)) || 0;
+    const newValue = oldValue + request.value;
     ctx.set(COUNTER_KEY, newValue);
 
     return CounterUpdateResult.create({ oldValue, newValue });

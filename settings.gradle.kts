@@ -34,7 +34,7 @@ dependencyResolutionManagement {
       version("testcontainers", "1.18.0")
       version("awaitility", "4.2.0")
 
-      version("errorprone", "2.13.1")
+      version("errorprone", "2.18.0")
 
       // Libraries
       library("restate-sdk-core", "dev.restate.sdk", "sdk-core").versionRef("restate")
@@ -72,7 +72,7 @@ dependencyResolutionManagement {
 
       // Plugins
       plugin("spotless", "com.diffplug.spotless").version("6.6.1")
-      plugin("errorprone", "net.ltgt.errorprone").version("2.0.2")
+      plugin("errorprone", "net.ltgt.errorprone").version("3.1.0")
       plugin("protobuf", "com.google.protobuf").version("0.9.2")
       plugin("test-logger", "com.adarshr.test-logger").version("3.2.0")
       plugin("shadowJar", "com.github.johnrengelman.shadow").version("7.1.2")
