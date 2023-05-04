@@ -50,7 +50,7 @@ class ContainerHandle internal constructor(private val container: GenericContain
         dockerClient.startContainerCmd(containerId).exec()
       }
 
-      // We need to start follow again, as stopping also stops following logs
+      // We need to start following again, as stopping also stops following logs
       container.logConsumers.forEach {
         LogUtils.followOutput(container.dockerClient, container.containerId, it)
       }

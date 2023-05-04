@@ -13,27 +13,27 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
 @Tag("always-suspending")
-class JavaSleepTest: BaseSleepTest() {
+class JavaSleepTest : BaseSleepTest() {
   companion object {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension =
-      RestateDeployerExtension(
-        RestateDeployer.Builder()
-          .withEnv(Containers.getRestateEnvironment())
-          .withServiceEndpoint(Containers.JAVA_COORDINATOR_FUNCTION_SPEC)
-          .build())
+        RestateDeployerExtension(
+            RestateDeployer.Builder()
+                .withEnv(Containers.getRestateEnvironment())
+                .withServiceEndpoint(Containers.JAVA_COORDINATOR_FUNCTION_SPEC)
+                .build())
   }
 }
 
-class NodeSleepTest: BaseSleepTest() {
+class NodeSleepTest : BaseSleepTest() {
   companion object {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension =
-      RestateDeployerExtension(
-        RestateDeployer.Builder()
-          .withEnv(Containers.getRestateEnvironment())
-          .withServiceEndpoint(Containers.NODE_COORDINATOR_FUNCTION_SPEC)
-          .build())
+        RestateDeployerExtension(
+            RestateDeployer.Builder()
+                .withEnv(Containers.getRestateEnvironment())
+                .withServiceEndpoint(Containers.NODE_COORDINATOR_FUNCTION_SPEC)
+                .build())
   }
 }
 

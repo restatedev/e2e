@@ -20,19 +20,19 @@ class JavaCoordinatorTest : BaseCoordinatorTest() {
   companion object {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension =
-      RestateDeployerExtension(
-        RestateDeployer.Builder()
-          .withEnv(Containers.getRestateEnvironment())
-          .withServiceEndpoint(Containers.JAVA_COORDINATOR_FUNCTION_SPEC)
-          .build())
+        RestateDeployerExtension(
+            RestateDeployer.Builder()
+                .withEnv(Containers.getRestateEnvironment())
+                .withServiceEndpoint(Containers.JAVA_COORDINATOR_FUNCTION_SPEC)
+                .build())
   }
 
   @Test
   fun timeout(@InjectBlockingStub coordinatorClient: CoordinatorGrpc.CoordinatorBlockingStub) {
     val timeout = Duration.ofMillis(100L)
     val response =
-      coordinatorClient.timeout(
-        CoordinatorProto.Duration.newBuilder().setMillis(timeout.toMillis()).build())
+        coordinatorClient.timeout(
+            CoordinatorProto.Duration.newBuilder().setMillis(timeout.toMillis()).build())
 
     assertThat(response.timeoutOccurred).isTrue
   }
@@ -42,11 +42,11 @@ class NodeCoordinatorTest : BaseCoordinatorTest() {
   companion object {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension =
-      RestateDeployerExtension(
-        RestateDeployer.Builder()
-          .withEnv(Containers.getRestateEnvironment())
-          .withServiceEndpoint(Containers.NODE_COORDINATOR_FUNCTION_SPEC)
-          .build())
+        RestateDeployerExtension(
+            RestateDeployer.Builder()
+                .withEnv(Containers.getRestateEnvironment())
+                .withServiceEndpoint(Containers.NODE_COORDINATOR_FUNCTION_SPEC)
+                .build())
   }
 }
 
@@ -54,15 +54,15 @@ class JavaCoordinatorWithNodeReceiverTest : BaseCoordinatorTest() {
   companion object {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension =
-      RestateDeployerExtension(
-        RestateDeployer.Builder()
-          .withEnv(Containers.getRestateEnvironment())
-          .withServiceEndpoint(
-            Containers.javaServicesContainer(
-              "java-coordinator", CoordinatorGrpc.SERVICE_NAME))
-          .withServiceEndpoint(
-            Containers.nodeServicesContainer("node-coordinator", ReceiverGrpc.SERVICE_NAME))
-          .build())
+        RestateDeployerExtension(
+            RestateDeployer.Builder()
+                .withEnv(Containers.getRestateEnvironment())
+                .withServiceEndpoint(
+                    Containers.javaServicesContainer(
+                        "java-coordinator", CoordinatorGrpc.SERVICE_NAME))
+                .withServiceEndpoint(
+                    Containers.nodeServicesContainer("node-coordinator", ReceiverGrpc.SERVICE_NAME))
+                .build())
   }
 }
 
@@ -70,15 +70,15 @@ class NodeCoordinatorWithJavaReceiverTest : BaseCoordinatorTest() {
   companion object {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension =
-      RestateDeployerExtension(
-        RestateDeployer.Builder()
-          .withEnv(Containers.getRestateEnvironment())
-          .withServiceEndpoint(
-            Containers.nodeServicesContainer(
-              "node-coordinator", CoordinatorGrpc.SERVICE_NAME))
-          .withServiceEndpoint(
-            Containers.javaServicesContainer("java-coordinator", ReceiverGrpc.SERVICE_NAME))
-          .build())
+        RestateDeployerExtension(
+            RestateDeployer.Builder()
+                .withEnv(Containers.getRestateEnvironment())
+                .withServiceEndpoint(
+                    Containers.nodeServicesContainer(
+                        "node-coordinator", CoordinatorGrpc.SERVICE_NAME))
+                .withServiceEndpoint(
+                    Containers.javaServicesContainer("java-coordinator", ReceiverGrpc.SERVICE_NAME))
+                .build())
   }
 }
 

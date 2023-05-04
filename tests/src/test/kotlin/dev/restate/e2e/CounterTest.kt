@@ -1,7 +1,6 @@
 package dev.restate.e2e
 
 import com.google.protobuf.Empty
-import dev.restate.e2e.Containers
 import dev.restate.e2e.functions.counter.CounterGrpc.CounterBlockingStub
 import dev.restate.e2e.functions.counter.CounterProto
 import dev.restate.e2e.functions.counter.CounterProto.CounterAddRequest
@@ -25,14 +24,16 @@ class JavaCounterTest : BaseCounterTest() {
   companion object {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension =
-      RestateDeployerExtension(
-        RestateDeployer.Builder()
-          .withEnv(Containers.getRestateEnvironment())
-          .withServiceEndpoint(Containers.JAVA_COUNTER_FUNCTION_SPEC)
-          .build())
+        RestateDeployerExtension(
+            RestateDeployer.Builder()
+                .withEnv(Containers.getRestateEnvironment())
+                .withServiceEndpoint(Containers.JAVA_COUNTER_FUNCTION_SPEC)
+                .build())
   }
   @Test
-  fun singleton(@InjectBlockingStub counterClient: SingletonCounterGrpc.SingletonCounterBlockingStub) {
+  fun singleton(
+      @InjectBlockingStub counterClient: SingletonCounterGrpc.SingletonCounterBlockingStub
+  ) {
     for (i in 1..10) {
       counterClient.add(SingletonCounterProto.CounterNumber.newBuilder().setValue(1).build())
     }
@@ -48,11 +49,11 @@ class NodeCounterTest : BaseCounterTest() {
   companion object {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension =
-      RestateDeployerExtension(
-        RestateDeployer.Builder()
-          .withEnv(Containers.getRestateEnvironment())
-          .withServiceEndpoint(Containers.NODE_COUNTER_FUNCTION_SPEC)
-          .build())
+        RestateDeployerExtension(
+            RestateDeployer.Builder()
+                .withEnv(Containers.getRestateEnvironment())
+                .withServiceEndpoint(Containers.NODE_COUNTER_FUNCTION_SPEC)
+                .build())
   }
 }
 

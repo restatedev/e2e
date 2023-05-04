@@ -296,7 +296,7 @@ private constructor(
   fun getContainerHandle(hostName: String): ContainerHandle {
     return ContainerHandle(
         deployedContainers[hostName]
-            ?: throw java.lang.IllegalStateException("Cannot find container $hostName"))
+            ?: throw java.lang.IllegalArgumentException("Cannot find container $hostName"))
   }
 
   override fun close() {
