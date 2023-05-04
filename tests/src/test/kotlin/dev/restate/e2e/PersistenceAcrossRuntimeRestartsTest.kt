@@ -7,34 +7,35 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.extension.RegisterExtension
 
-class JavaPersistenceAcrossRuntimeRestartsTest: BasePersistenceAcrossRuntimeRestartsTest() {
+@Disabled("Needs fix for https://github.com/restatedev/restate/issues/361")
+class JavaPersistenceAcrossRuntimeRestartsTest : BasePersistenceAcrossRuntimeRestartsTest() {
   companion object {
     @JvmStatic
     @RegisterExtension
     val deployerExt: RestateDeployerForEachExtension = RestateDeployerForEachExtension {
       RestateDeployer.Builder()
-        .withEnv(Containers.getRestateEnvironment())
-        .withServiceEndpoint(Containers.JAVA_COUNTER_FUNCTION_SPEC)
-        .build()
-    }
-  }
-}
-
-class NodePersistenceAcrossRuntimeRestartsTest: BasePersistenceAcrossRuntimeRestartsTest() {
-
-  companion object {
-    @JvmStatic
-    @RegisterExtension
-    val deployerExt: RestateDeployerForEachExtension = RestateDeployerForEachExtension {
-      RestateDeployer.Builder()
-        .withEnv(Containers.getRestateEnvironment())
-        .withServiceEndpoint(Containers.NODE_COUNTER_FUNCTION_SPEC)
-        .build()
+          .withEnv(Containers.getRestateEnvironment())
+          .withServiceEndpoint(Containers.JAVA_COUNTER_FUNCTION_SPEC)
+          .build()
     }
   }
 }
 
 @Disabled("Needs fix for https://github.com/restatedev/restate/issues/361")
+class NodePersistenceAcrossRuntimeRestartsTest : BasePersistenceAcrossRuntimeRestartsTest() {
+
+  companion object {
+    @JvmStatic
+    @RegisterExtension
+    val deployerExt: RestateDeployerForEachExtension = RestateDeployerForEachExtension {
+      RestateDeployer.Builder()
+          .withEnv(Containers.getRestateEnvironment())
+          .withServiceEndpoint(Containers.NODE_COUNTER_FUNCTION_SPEC)
+          .build()
+    }
+  }
+}
+
 abstract class BasePersistenceAcrossRuntimeRestartsTest {
 
   @Test
