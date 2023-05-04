@@ -40,6 +40,9 @@ To build the docker image:
 $ gradle :services:node-services:dockerBuild
 ```
 
+> **Note**
+> The `GH_PACKAGE_READ_ACCESS_TOKEN` will be used as `NPM_TOKEN` when building the docker image through gradle
+
 ## Run proto code generation
 
 To re-gen the `generated` directory:
