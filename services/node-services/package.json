@@ -1,0 +1,30 @@
+{
+  "name": "e2e-node-services",
+  "version": "0.0.1",
+  "description": "E2E services",
+  "main": "app.js",
+  "type": "commonjs",
+  "scripts": {
+    "proto": "npx buf mod update proto && npx buf generate proto",
+    "build": "tsc --noEmitOnError",
+    "lint": "eslint --ignore-path .eslintignore --ext .ts src",
+    "format": "prettier --ignore-path .eslintignore --write \"src/**/*.+(js|ts|json)\"",
+    "app": "node ./dist/app.js"
+  },
+  "author": "Restate developers",
+  "dependencies": {
+    "@restatedev/restate-sdk": "^1.0.12",
+    "protobufjs": "^7.2.2",
+    "ts-proto": "^1.140.0",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@bufbuild/buf": "1.15.0",
+    "@types/uuid": "^9.0.1",
+    "typescript": "^5.0.2",
+    "@typescript-eslint/eslint-plugin": "^5.53.0",
+    "@typescript-eslint/parser": "^5.53.0",
+    "eslint": "^8.35.0",
+    "prettier": "^2.8.4"
+  }
+}

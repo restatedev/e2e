@@ -21,38 +21,36 @@ dependencies {
   testImplementation(libs.awaitility)
 }
 
-tasks.withType<Test> {
-  dependsOn(":functions:collections:jibDockerBuild")
-  dependsOn(":functions:counter:jibDockerBuild")
-  dependsOn(":functions:coordinator:jibDockerBuild")
-  dependsOn(":functions:externalcall:jibDockerBuild")
-  dependsOn(":functions:errors:jibDockerBuild")
-  dependsOn(":functions:http-server:jibDockerBuild")
-
-  environment =
-      environment +
-          mapOf(
-              "CONTAINER_LOGS_DIR" to "$buildDir/test-results/$name/container-logs",
-              "RESTATE_RUNTIME_CONTAINER" to "ghcr.io/restatedev/restate:latest",
-              "RUST_LOG" to "info,hyper=trace,restate_invoker=trace,restate=debug",
-              "RUST_BACKTRACE" to "full")
-
-  useJUnitPlatform {
-    // Run all the tests with either no tags, or always-suspending tag
-    includeTags("none() | always-suspending")
-  }
-}
-
-// --- Additional configurations
-
-tasks.register<Test>("test-always-suspending") {
-  dependsOn("test")
-
-  useJUnitPlatform {
-    includeTags("always-suspending") // Run all the tests with always-suspending tag
+tasks {
+  test {
+    useJUnitPlatform {
+      // Run all the tests with either no tags, or always-suspending tag
+      includeTags("none() | always-suspending")
+    }
   }
 
-  environment = environment + mapOf("RESTATE_WORKER__INVOKER__SUSPENSION_TIMEOUT" to "0s")
+  register<Test>("test-always-suspending") {
+    environment = environment + mapOf("RESTATE_WORKER__INVOKER__SUSPENSION_TIMEOUT" to "0s")
+
+    useJUnitPlatform {
+      // Run all the tests with always-suspending tag
+      includeTags("always-suspending")
+    }
+  }
+
+  withType<Test>().configureEach {
+    dependsOn(":services:http-server:jibDockerBuild")
+    dependsOn(":services:java-services:jibDockerBuild")
+    dependsOn(":services:node-services:dockerBuild")
+
+    environment =
+        environment +
+            mapOf(
+                "CONTAINER_LOGS_DIR" to "$buildDir/test-results/$name/container-logs",
+                "RESTATE_RUNTIME_CONTAINER" to "ghcr.io/restatedev/restate:latest",
+                "RUST_LOG" to "info,hyper=trace,restate_invoker=trace,restate=debug",
+                "RUST_BACKTRACE" to "full")
+  }
 }
 
 tasks.named("build") { dependsOn("test-always-suspending") }

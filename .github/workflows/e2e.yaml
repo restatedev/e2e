@@ -18,11 +18,17 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      # Setup Java and Rust
+      # Setup Java
       - uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '11'
+
+      # Setup node
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "18.x"
+          registry-url: "https://npm.pkg.github.com"
 
       - name: Log in to the Container registry
         uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
@@ -38,6 +44,7 @@ jobs:
           GH_PACKAGE_READ_ACCESS_USER: ${{ secrets.GH_PACKAGE_READ_ACCESS_USER }}
           GH_PACKAGE_READ_ACCESS_TOKEN: ${{ secrets.GH_PACKAGE_READ_ACCESS_TOKEN }}
           E2E_IMAGE_PULL_POLICY: always
+          NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGE_READ_ACCESS_TOKEN }}
         with:
           arguments: -Djib.console=plain build
 

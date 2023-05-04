@@ -36,7 +36,7 @@ data class FunctionSpec(
   ) {
     fun withContainerImage(containerImage: String) = apply { this.containerImage = containerImage }
 
-    fun withHostName(containerImage: String) = apply { this.containerImage = containerImage }
+    fun withHostName(hostName: String) = apply { this.hostName = hostName }
 
     fun withEnv(key: String, value: String) = apply { this.envs[key] = value }
 
@@ -47,6 +47,15 @@ data class FunctionSpec(
     fun dependsOn(container: Startable) = apply { this.dependencies.add(container) }
 
     fun build() = FunctionSpec(containerImage, hostName, envs, port, dependencies)
+  }
+
+  fun toBuilder(): Builder {
+    return Builder(
+        containerImage,
+        hostName,
+        envs = envs.toMutableMap(),
+        port,
+        dependencies = dependencies.toMutableList())
   }
 
   internal fun toContainer(): GenericContainer<*> {
