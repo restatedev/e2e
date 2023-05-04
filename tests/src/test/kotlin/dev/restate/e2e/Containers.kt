@@ -10,6 +10,8 @@ import dev.restate.e2e.functions.externalcall.ReplierGrpc
 import dev.restate.e2e.functions.receiver.ReceiverGrpc
 import dev.restate.e2e.functions.singletoncounter.SingletonCounterGrpc
 import dev.restate.e2e.utils.FunctionSpec
+import dev.restate.e2e.utils.FunctionSpec.RegistrationOptions
+import dev.restate.e2e.utils.FunctionSpec.RetryPolicy
 import org.testcontainers.containers.GenericContainer
 
 object Containers {
@@ -21,6 +23,8 @@ object Containers {
           GenericContainer("restatedev/e2e-http-server")
               .withEnv("PORT", "8080")
               .withExposedPorts(8080)
+
+  val FIXED_DELAY_RETRY_POLICY = RetryPolicy.FixedDelay("1s", 20)
 
   fun getRestateEnvironment(): Map<String, String> {
     return System.getenv().filterKeys {
@@ -83,4 +87,14 @@ object Containers {
   val NODE_COORDINATOR_FUNCTION_SPEC =
       nodeServicesContainer(
           "node-coordinator", CoordinatorGrpc.SERVICE_NAME, ReceiverGrpc.SERVICE_NAME)
+
+  // -- Verification test container (source https://github.com/restatedev/restate-verification)
+
+  const val VERIFICATION_FUNCTION_HOSTNAME = "restate-verification"
+
+  val VERIFICATION_FUNCTION_SPEC =
+      FunctionSpec.builder("ghcr.io/restatedev/restate-verification:latest")
+          .withHostName(VERIFICATION_FUNCTION_HOSTNAME)
+          .withPort(8000)
+          .withRegistrationOptions(RegistrationOptions(retryPolicy = FIXED_DELAY_RETRY_POLICY))
 }

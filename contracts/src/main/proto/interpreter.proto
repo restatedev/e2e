@@ -1,0 +1,110 @@
+syntax = "proto3";
+
+option java_package = "dev.restate.e2e.functions.verification.interpreter";
+option java_outer_classname = "InterpreterProto";
+
+import "dev/restate/ext.proto";
+
+package interpreter;
+
+service CommandInterpreter {
+
+  option (dev.restate.ext.service_type) = KEYED;
+
+  rpc Call(CallRequest) returns (Empty) {}
+
+  rpc BackgroundCall(BackgroundCallRequest) returns (Empty) {}
+
+  rpc Verify(VerificationRequest) returns (VerificationResult) {};
+
+  rpc Clear(ClearRequest) returns (Empty) {};
+}
+
+message Empty {}
+
+message TestParams {
+  string seed = 1;
+  int32 width = 2;
+  int32 depth = 3;
+}
+
+message Key {
+  TestParams params = 1;
+  int32 target = 2;
+}
+
+message CallRequest {
+  Key key = 1 [(dev.restate.ext.field) = KEY];
+  Commands commands = 3;
+}
+
+message BackgroundCallRequest {
+  Key key = 1 [(dev.restate.ext.field) = KEY];
+  Commands commands = 2;
+}
+
+message VerificationRequest {
+  Key key = 2 [(dev.restate.ext.field) = KEY];
+  int64 expected = 3;
+}
+
+message VerificationResult {
+  int64 expected = 2;
+  int64 actual = 3;
+}
+
+message ClearRequest {
+  Key key = 1 [(dev.restate.ext.field) = KEY];
+}
+
+// Commands - a sequence of commands for the service to interpret. Each command corresponds to a
+// user facing API method. For example, making a call, modifying state, etc'.
+// Please note that this is a partial list of commands for now. 
+message Commands {
+  repeated Command command = 1;
+}
+
+message Command {
+
+  // increment the state by 1.
+  message IncrementState {
+  }
+
+  // make a call and immediately await on the response
+  message SyncCall {
+    int32 target = 1;
+    Commands commands = 2;
+  }
+
+  // the following message needs to be interpreted as a call that is not 
+  // yet awaited its result.
+  // there *might* be (at most one) corresponding AsyncCallAwait message with the same call_id.
+  message AsyncCall {
+    int32 target = 1;
+    int32 call_id = 2;
+    Commands commands = 3;
+  }
+
+  // a corresponding await point from a previously present call
+  message AsyncCallAwait {
+    int32 call_id = 1;
+  }
+ 
+  message BackgroundCall {
+    int32 target = 1;
+    Commands commands = 2;
+  }
+
+  message Sleep {
+   int32 milliseconds = 1;
+  }
+
+  oneof command {
+    IncrementState increment = 1;
+    SyncCall sync_call = 2;
+    AsyncCall async_call = 3;
+    AsyncCallAwait async_call_await = 4;
+    BackgroundCall background_call = 5;
+    Sleep sleep = 6;
+  }
+}
