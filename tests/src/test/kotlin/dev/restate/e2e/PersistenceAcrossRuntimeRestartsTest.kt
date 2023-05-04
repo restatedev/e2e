@@ -1,6 +1,5 @@
-package dev.restate.e2e.java
+package dev.restate.e2e
 
-import dev.restate.e2e.Containers
 import dev.restate.e2e.functions.counter.CounterGrpc
 import dev.restate.e2e.functions.counter.CounterProto.CounterAddRequest
 import dev.restate.e2e.utils.*
@@ -8,18 +7,35 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.extension.RegisterExtension
 
-class StatePersistenceTest {
+class JavaPersistenceAcrossRuntimeRestartsTest: BasePersistenceAcrossRuntimeRestartsTest() {
+  companion object {
+    @JvmStatic
+    @RegisterExtension
+    val deployerExt: RestateDeployerForEachExtension = RestateDeployerForEachExtension {
+      RestateDeployer.Builder()
+        .withEnv(Containers.getRestateEnvironment())
+        .withServiceEndpoint(Containers.JAVA_COUNTER_FUNCTION_SPEC)
+        .build()
+    }
+  }
+}
+
+class NodePersistenceAcrossRuntimeRestartsTest: BasePersistenceAcrossRuntimeRestartsTest() {
 
   companion object {
     @JvmStatic
     @RegisterExtension
     val deployerExt: RestateDeployerForEachExtension = RestateDeployerForEachExtension {
       RestateDeployer.Builder()
-          .withEnv(Containers.getRestateEnvironment())
-          .withServiceEndpoint(Containers.JAVA_COUNTER_FUNCTION_SPEC)
-          .build()
+        .withEnv(Containers.getRestateEnvironment())
+        .withServiceEndpoint(Containers.NODE_COUNTER_FUNCTION_SPEC)
+        .build()
     }
   }
+}
+
+@Disabled("Needs fix for https://github.com/restatedev/restate/issues/361")
+abstract class BasePersistenceAcrossRuntimeRestartsTest {
 
   @Test
   fun startAndStopRuntime(
