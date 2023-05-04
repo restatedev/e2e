@@ -227,18 +227,35 @@ private constructor(
     runtimeContainer.start()
 
     logger.debug(
-        "Restate runtime started, grpc ingress available at {}",
-        getContainerPort(RESTATE_RUNTIME, RUNTIME_GRPC_INGRESS_ENDPOINT_PORT))
+        "Restate runtime started. gRPC ingress port: {}. Meta REST API port: {}",
+        getContainerPort(RESTATE_RUNTIME, RUNTIME_GRPC_INGRESS_ENDPOINT_PORT),
+        getContainerPort(RESTATE_RUNTIME, RUNTIME_META_ENDPOINT_PORT))
     logger.debug("Runtime container id {}", runtimeContainer.containerId)
 
     // Let's execute service discovery to register the services
     functionContainers.values.forEach { (spec, _) -> discoverServiceEndpoint(spec) }
   }
 
+  @Serializable
+  private data class RegisterServiceEndpointRequest(
+      val uri: String,
+      val additionalHeaders: Map<String, String>? = null,
+      val retryPolicy: FunctionSpec.RetryPolicy? = null
+  )
+
+  @OptIn(ExperimentalSerializationApi::class)
   fun discoverServiceEndpoint(spec: FunctionSpec) {
     val url = spec.getFunctionEndpointUrl()
 
-    val body = Json.encodeToString(mapOf("uri" to url.toString()))
+    // Can replace with code generated from the openapi contract
+    val jsonEncoder = Json { namingStrategy = JsonNamingStrategy.SnakeCase }
+    val body =
+        jsonEncoder.encodeToString(
+            RegisterServiceEndpointRequest(
+                uri = url.toString(),
+                additionalHeaders = spec.registrationOptions.additionalHeaders,
+                retryPolicy = spec.registrationOptions.retryPolicy))
+    logger.debug("Going to request discovery of endpoint: {}", body)
 
     val client = HttpClient.newHttpClient()
 
