@@ -8,25 +8,45 @@ import java.util.function.Consumer
 import org.testcontainers.containers.output.OutputFrame
 
 /** Logger to dump to specific files the stdout and stderr of the containers */
-internal class ContainerLogger(testReportDirectory: String, loggerName: String) :
-    Consumer<OutputFrame> {
+internal class ContainerLogger(
+    private val testReportDirectory: String,
+    private val loggerName: String
+) : Consumer<OutputFrame> {
 
-  private val stdoutStream = newStream(testReportDirectory, loggerName, "stdout")
-  private val stderrStream = newStream(testReportDirectory, loggerName, "stderr")
+  private var startCount = 0
+  private var stdoutStream: BufferedWriter? = null
+  private var stderrStream: BufferedWriter? = null
 
   override fun accept(frame: OutputFrame) {
     when (frame.type) {
       OutputFrame.OutputType.STDOUT -> {
-        stdoutStream.write(frame.utf8String)
+        resolveStdoutStream().write(frame.utf8String)
       }
       OutputFrame.OutputType.STDERR -> {
-        stderrStream.write(frame.utf8String)
+        resolveStderrStream().write(frame.utf8String)
       }
       else -> {
-        stdoutStream.close()
-        stderrStream.close()
+        stdoutStream?.close()
+        stderrStream?.close()
+        stdoutStream = null
+        stderrStream = null
+        startCount++
       }
     }
+  }
+
+  private fun resolveStdoutStream(): BufferedWriter {
+    if (stdoutStream == null) {
+      stdoutStream = newStream(testReportDirectory, loggerName, "stdout")
+    }
+    return stdoutStream!!
+  }
+
+  private fun resolveStderrStream(): BufferedWriter {
+    if (stderrStream == null) {
+      stderrStream = newStream(testReportDirectory, loggerName, "stderr")
+    }
+    return stderrStream!!
   }
 
   private fun newStream(
@@ -34,15 +54,12 @@ internal class ContainerLogger(testReportDirectory: String, loggerName: String) 
       loggerName: String,
       type: String
   ): BufferedWriter {
-    val path = Path.of(testReportDirectory, "${loggerName}_${type}.log")
+    val path = Path.of(testReportDirectory, "${loggerName}_${startCount}_${type}.log")
     val fileExists = Files.exists(path)
 
     val writer =
         Files.newBufferedWriter(
-            Path.of(testReportDirectory, "${loggerName}_${type}.log"),
-            StandardOpenOption.CREATE,
-            StandardOpenOption.WRITE,
-            StandardOpenOption.APPEND)
+            path, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.APPEND)
 
     if (fileExists) {
       writer.newLine()

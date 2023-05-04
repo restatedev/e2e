@@ -3,8 +3,8 @@ package dev.restate.e2e.utils
 import io.grpc.ManagedChannel
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder
 import java.io.File
+import java.lang.reflect.Method
 import java.net.URI
-import java.net.URL
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpRequest.BodyPublishers
@@ -16,6 +16,7 @@ import java.time.format.DateTimeFormatter
 import kotlinx.serialization.*
 import kotlinx.serialization.json.*
 import org.apache.logging.log4j.LogManager
+import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.api.fail
 import org.testcontainers.containers.BindMode
 import org.testcontainers.containers.GenericContainer
@@ -31,7 +32,7 @@ private constructor(
     private val additionalContainers: Map<String, GenericContainer<*>>,
     private val additionalEnv: Map<String, String>,
     private val runtimeContainerName: String,
-) {
+) : AutoCloseable, ExtensionContext.Store.CloseableResource {
 
   companion object {
     private const val RESTATE_RUNTIME_CONTAINER_ENV = "RESTATE_RUNTIME_CONTAINER"
@@ -42,9 +43,6 @@ private constructor(
     private const val IMAGE_PULL_POLICY_ENV = "E2E_IMAGE_PULL_POLICY"
     private const val ALWAYS_PULL = "always"
 
-    private const val RUNTIME_GRPC_INGRESS_ENDPOINT = 9090
-    private const val RUNTIME_META_ENDPOINT = 8081
-
     private val logger = LogManager.getLogger(RestateDeployer::class.java)
 
     @JvmStatic
@@ -53,12 +51,25 @@ private constructor(
     }
 
     @JvmStatic
-    fun generateReportDirFromEnv(testClass: Class<*>): String {
+    fun reportDirectory(testClass: Class<*>): String {
       val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")
       val dir =
           Path.of(
                   System.getenv(CONTAINER_LOGS_DIR_ENV)!!,
                   "${testClass.canonicalName}_${LocalDateTime.now().format(formatter)}")
+              .toAbsolutePath()
+              .toString()
+      File(dir).mkdirs()
+      return dir
+    }
+
+    @JvmStatic
+    fun reportDirectory(testClass: Class<*>, testMethod: Method): String {
+      val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")
+      val dir =
+          Path.of(
+                  System.getenv(CONTAINER_LOGS_DIR_ENV)!!,
+                  "${testClass.canonicalName}_${testMethod.name}_${LocalDateTime.now().format(formatter)}")
               .toAbsolutePath()
               .toString()
       File(dir).mkdirs()
@@ -70,7 +81,11 @@ private constructor(
       functionSpecs.associate { spec -> spec.hostName to (spec to spec.toContainer()) }
   private val network = Network.newNetwork()
   private val tmpDir = Files.createTempDirectory("restate-e2e").toFile()
-  private var runtimeContainer: GenericContainer<*>? = null
+  private val runtimeContainer = GenericContainer(DockerImageName.parse(runtimeContainerName))
+  private val deployedContainers =
+      mapOf(RESTATE_RUNTIME to runtimeContainer) +
+          functionContainers.map { it.key to it.value.second } +
+          additionalContainers
 
   init {
     assert(runtimeDeployments == 1) { "At the moment only one runtime deployment is supported" }
@@ -134,7 +149,7 @@ private constructor(
     deployRuntime(testReportDir)
   }
 
-  fun deployFunctions(testReportDir: String) {
+  private fun deployFunctions(testReportDir: String) {
     // Deploy functions
     functionContainers.forEach { (functionName, functionContainer) ->
       functionContainer.second.networkAliases = ArrayList()
@@ -150,7 +165,7 @@ private constructor(
     }
   }
 
-  fun deployAdditionalContainers(testReportDir: String) {
+  private fun deployAdditionalContainers(testReportDir: String) {
     // Deploy additional containers
     additionalContainers.forEach { (containerHost, container) ->
       container.networkAliases = ArrayList()
@@ -163,7 +178,7 @@ private constructor(
     }
   }
 
-  fun deployRuntime(testReportDir: String) {
+  private fun deployRuntime(testReportDir: String) {
     // Generate test report directory
     logger.debug("Writing container logs to {}", testReportDir)
 
@@ -184,32 +199,37 @@ private constructor(
 
     logger.debug("Starting runtime container '{}'", runtimeContainerName)
 
-    // Generate runtime container
-    runtimeContainer =
-        GenericContainer(DockerImageName.parse(runtimeContainerName))
-            .dependsOn(functionContainers.values.map { it.second })
-            .dependsOn(additionalContainers.values)
-            .withExposedPorts(RUNTIME_META_ENDPOINT, RUNTIME_GRPC_INGRESS_ENDPOINT)
-            .withEnv(additionalEnv)
-            // These envs should not be overriden by additionalEnv
-            .withEnv("RESTATE_META__STORAGE_PATH", "/state/meta")
-            .withEnv("RESTATE_WORKER__STORAGE_ROCKSDB__PATH", "/state/worker")
-            .withNetwork(network)
-            .withNetworkAliases("runtime")
-            .withLogConsumer(ContainerLogger(testReportDir, "restate-runtime"))
+    // Configure runtime container
+    runtimeContainer
+        .dependsOn(functionContainers.values.map { it.second })
+        .dependsOn(additionalContainers.values)
+        .withExposedPorts(RUNTIME_META_ENDPOINT_PORT, RUNTIME_GRPC_INGRESS_ENDPOINT_PORT)
+        .withEnv(additionalEnv)
+        // These envs should not be overriden by additionalEnv
+        .withEnv("RESTATE_META__STORAGE_PATH", "/state/meta")
+        .withEnv("RESTATE_WORKER__STORAGE_ROCKSDB__PATH", "/state/worker")
+        .withEnv("RESTATE_META__REST_ADDRESS", "0.0.0.0:${RUNTIME_META_ENDPOINT_PORT}")
+        .withEnv(
+            "RESTATE_WORKER__INGRESS_GRPC__BIND_ADDRESS",
+            "0.0.0.0:${RUNTIME_GRPC_INGRESS_ENDPOINT_PORT}")
+        .withNetwork(network)
+        .withNetworkAliases(RESTATE_RUNTIME)
+        .withLogConsumer(ContainerLogger(testReportDir, "restate-runtime"))
 
     // Mount state directory
-    runtimeContainer!!.addFileSystemBind(
+    runtimeContainer.addFileSystemBind(
         stateDir.toString(), "/state", BindMode.READ_WRITE, SelinuxContext.SINGLE)
 
     if (System.getenv(IMAGE_PULL_POLICY_ENV) == ALWAYS_PULL) {
-      runtimeContainer!!.withImagePullPolicy(PullPolicy.alwaysPull())
+      runtimeContainer.withImagePullPolicy(PullPolicy.alwaysPull())
     }
 
-    runtimeContainer!!.start()
+    runtimeContainer.start()
 
-    logger.debug("Restate runtime started and available at {}", getRuntimeGrpcIngressUrl())
-    logger.debug("Runtime container id {}", runtimeContainer!!.containerId)
+    logger.debug(
+        "Restate runtime started, grpc ingress available at {}",
+        getContainerPort(RESTATE_RUNTIME, RUNTIME_GRPC_INGRESS_ENDPOINT_PORT))
+    logger.debug("Runtime container id {}", runtimeContainer.containerId)
 
     // Let's execute service discovery to register the services
     functionContainers.values.forEach { (spec, _) -> discoverServiceEndpoint(spec) }
@@ -223,7 +243,9 @@ private constructor(
     val client = HttpClient.newHttpClient()
 
     val req =
-        HttpRequest.newBuilder(URI.create("${getRuntimeMetaUrl()}endpoint/discover"))
+        HttpRequest.newBuilder(
+                URI.create(
+                    "http://localhost:${getContainerPort(RESTATE_RUNTIME, RUNTIME_META_ENDPOINT_PORT)}/endpoint/discover"))
             .POST(BodyPublishers.ofString(body))
             .headers("Content-Type", "application/json")
             .build()
@@ -240,67 +262,44 @@ private constructor(
         "Successfully executed discovery for endpoint {}. Result: {}", url, response.body())
   }
 
-  fun teardownAdditionalContainers() {
+  private fun teardownAdditionalContainers() {
     additionalContainers.forEach { (_, container) -> container.stop() }
   }
 
-  fun teardownFunctions() {
+  private fun teardownFunctions() {
     functionContainers.forEach { (_, container) -> container.second.stop() }
   }
 
-  fun teardownRuntime() {
-    if (!isRuntimeRunning()) {
-      logger.warn("Trying to shutdown, but the Restate container is not running")
-    }
-    runtimeContainer!!
-        .dockerClient
-        .killContainerCmd(runtimeContainer!!.containerId)
-        .withSignal("SIGINT")
-        .exec()
-    runtimeContainer!!.stop()
+  private fun teardownRuntime() {
+    runtimeContainer.stop()
   }
 
-  fun killRuntime() {
-    runtimeContainer!!.dockerClient.killContainerCmd(runtimeContainer!!.containerId).exec()
-    runtimeContainer!!.stop()
-  }
-
-  fun teardownAll() {
+  internal fun teardownAll() {
     teardownRuntime()
     teardownAdditionalContainers()
     teardownFunctions()
     network!!.close()
   }
 
-  fun isRuntimeRunning(): Boolean {
-    return runtimeContainer!!.currentContainerInfo!!.state!!.exitCodeLong == null
-  }
-
-  fun createRuntimeChannel(): ManagedChannel {
-    return getRuntimeGrpcIngressUrl().let { url ->
-      NettyChannelBuilder.forAddress(url.host, url.port).disableRetry().usePlaintext().build()
+  internal fun createRuntimeChannel(): ManagedChannel {
+    return getContainerPort(RESTATE_RUNTIME, RUNTIME_GRPC_INGRESS_ENDPOINT_PORT).let { port ->
+      NettyChannelBuilder.forAddress("127.0.0.1", port).disableRetry().usePlaintext().build()
     }
   }
 
-  fun getRuntimeGrpcIngressUrl(): URL {
-    return runtimeContainer?.getMappedPort(RUNTIME_GRPC_INGRESS_ENDPOINT)?.let {
-      URL("http", "127.0.0.1", it, "/")
-    }
+  internal fun getContainerPort(hostName: String, port: Int): Int {
+    return deployedContainers[hostName]?.getMappedPort(port)
         ?: throw java.lang.IllegalStateException(
-            "Runtime is not configured, as RestateDeployer::deploy has not been invoked")
+            "Requested port for container $hostName, but the container or the port was not found")
   }
 
-  fun getRuntimeMetaUrl(): URL {
-    return runtimeContainer?.getMappedPort(RUNTIME_META_ENDPOINT)?.let {
-      URL("http", "127.0.0.1", it, "/")
-    }
-        ?: throw java.lang.IllegalStateException(
-            "Runtime is not configured, as RestateDeployer::deploy has not been invoked")
+  fun getContainerHandle(hostName: String): ContainerHandle {
+    return ContainerHandle(
+        deployedContainers[hostName]
+            ?: throw java.lang.IllegalArgumentException("Cannot find container $hostName"))
   }
 
-  fun getAdditionalContainerExposedPort(hostName: String, port: Int): String {
-    return additionalContainers[hostName]?.let { "${it.host}:${it.getMappedPort(port)}" }
-        ?: throw java.lang.IllegalStateException(
-            "Requested additional container with hostname $hostName is not registered")
+  override fun close() {
+    teardownAll()
   }
 }
