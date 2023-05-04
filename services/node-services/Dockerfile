@@ -23,5 +23,9 @@ RUN echo "//npm.pkg.github.com/:_authToken=$NPM_TOKEN\n" >> .npmrc && \
 
 COPY --from=build /usr/src/app/dist /usr/src/app/dist
 
+# Install Tini
+RUN apt-get update && apt-get -y install tini
+
 EXPOSE 8080
-CMD npm run app
+ENTRYPOINT ["tini", "--"]
+CMD ["node", "/usr/src/app/dist/app.js"]
