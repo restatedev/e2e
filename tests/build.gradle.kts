@@ -47,8 +47,11 @@ tasks {
         environment +
             mapOf(
                 "CONTAINER_LOGS_DIR" to "$buildDir/test-results/$name/container-logs",
-                "RESTATE_RUNTIME_CONTAINER" to "ghcr.io/restatedev/restate:latest",
-                "RUST_LOG" to "info,restate_invoker=trace,restate=debug",
+                "RESTATE_RUNTIME_CONTAINER" to
+                    (System.getenv("RESTATE_RUNTIME_CONTAINER")
+                        ?: "ghcr.io/restatedev/restate:latest"),
+                "RUST_LOG" to
+                    (System.getenv("RUST_LOG") ?: "info,restate_invoker=trace,restate=debug"),
                 "RUST_BACKTRACE" to "full")
   }
 }
