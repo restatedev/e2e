@@ -88,6 +88,9 @@ object Containers {
       nodeServicesContainer(
           "node-coordinator", CoordinatorGrpc.SERVICE_NAME, ReceiverGrpc.SERVICE_NAME)
 
+  val NODE_COLLECTIONS_FUNCTION_SPEC =
+      nodeServicesContainer("node-collections", ListServiceGrpc.SERVICE_NAME)
+
   // -- Verification test container (source https://github.com/restatedev/restate-verification)
 
   const val VERIFICATION_FUNCTION_HOSTNAME = "restate-verification"
