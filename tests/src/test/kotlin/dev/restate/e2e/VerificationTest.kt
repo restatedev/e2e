@@ -113,7 +113,6 @@ class VerificationTest {
     verifier.clear(VerifierProto.ClearRequest.newBuilder().setParams(testParams).build())
   }
 
-  @Disabled("Needs fix for https://github.com/restatedev/restate/issues/361")
   @Timeout(value = 10, unit = TimeUnit.MINUTES)
   @Test
   fun killingTheRuntime(
@@ -139,7 +138,6 @@ class VerificationTest {
     verifier.clear(VerifierProto.ClearRequest.newBuilder().setParams(testParams).build())
   }
 
-  @Disabled("Needs fix for https://github.com/restatedev/restate/issues/361")
   @Timeout(value = 10, unit = TimeUnit.MINUTES)
   @Test
   fun stoppingTheRuntime(
