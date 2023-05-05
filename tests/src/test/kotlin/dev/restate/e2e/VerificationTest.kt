@@ -1,7 +1,7 @@
 package dev.restate.e2e
 
-import dev.restate.e2e.functions.verification.interpreter.InterpreterProto
-import dev.restate.e2e.functions.verification.verifier.CommandVerifierGrpc
+import dev.restate.e2e.functions.verification.interpreter.InterpreterProto.TestParams
+import dev.restate.e2e.functions.verification.verifier.CommandVerifierGrpc.CommandVerifierBlockingStub
 import dev.restate.e2e.functions.verification.verifier.VerifierProto
 import dev.restate.e2e.functions.verification.verifier.VerifierProto.ExecuteRequest
 import dev.restate.e2e.functions.verification.verifier.VerifierProto.VerificationRequest
@@ -43,22 +43,27 @@ class VerificationTest {
           .map { ALPHANUMERIC_ALPHABET[it] }
           .joinToString(separator = "")
     }
+
+    private val POLL_INTERVAL = 1.seconds.toJavaDuration()
+    private val MAX_POLL_TIME = 10.minutes.toJavaDuration()
+
+    fun CommandVerifierBlockingStub.awaitVerify(testParams: TestParams): Unit =
+        await
+            .pollInterval(POLL_INTERVAL)
+            .atMost(MAX_POLL_TIME)
+            .ignoreException(StatusRuntimeException::class)
+            .untilAsserted {
+              this.verify(VerificationRequest.newBuilder().setParams(testParams).build())
+            }
   }
 
   @Timeout(value = 10, unit = TimeUnit.MINUTES)
   @Test
-  fun simple(@InjectBlockingStub verifier: CommandVerifierGrpc.CommandVerifierBlockingStub) {
+  fun simple(@InjectBlockingStub verifier: CommandVerifierBlockingStub) {
     val testParams = testParams(16, 10, 4)
 
     verifier.execute(ExecuteRequest.newBuilder().setParams(testParams).build())
-
-    await withPollInterval
-        1.seconds.toJavaDuration() atMost
-        10.minutes.toJavaDuration() ignoreException
-        StatusRuntimeException::class untilAsserted
-        {
-          verifier.verify(VerificationRequest.newBuilder().setParams(testParams).build())
-        }
+    verifier.awaitVerify(testParams)
 
     verifier.clear(VerifierProto.ClearRequest.newBuilder().setParams(testParams).build())
   }
@@ -66,7 +71,7 @@ class VerificationTest {
   @Timeout(value = 10, unit = TimeUnit.MINUTES)
   @Test
   fun killingTheServiceEndpoint(
-      @InjectBlockingStub verifier: CommandVerifierGrpc.CommandVerifierBlockingStub,
+      @InjectBlockingStub verifier: CommandVerifierBlockingStub,
       @InjectContainerHandle(Containers.VERIFICATION_FUNCTION_HOSTNAME)
       verificationContainer: ContainerHandle
   ) {
@@ -78,13 +83,7 @@ class VerificationTest {
 
     verificationContainer.killAndRestart()
 
-    await withPollInterval
-        1.seconds.toJavaDuration() atMost
-        10.minutes.toJavaDuration() ignoreException
-        StatusRuntimeException::class untilAsserted
-        {
-          verifier.verify(VerificationRequest.newBuilder().setParams(testParams).build())
-        }
+    verifier.awaitVerify(testParams)
 
     verifier.clear(VerifierProto.ClearRequest.newBuilder().setParams(testParams).build())
   }
@@ -92,7 +91,7 @@ class VerificationTest {
   @Timeout(value = 10, unit = TimeUnit.MINUTES)
   @Test
   fun stoppingTheServiceEndpoint(
-      @InjectBlockingStub verifier: CommandVerifierGrpc.CommandVerifierBlockingStub,
+      @InjectBlockingStub verifier: CommandVerifierBlockingStub,
       @InjectContainerHandle(Containers.VERIFICATION_FUNCTION_HOSTNAME)
       verificationContainer: ContainerHandle
   ) {
@@ -104,13 +103,7 @@ class VerificationTest {
 
     verificationContainer.terminateAndRestart()
 
-    await withPollInterval
-        1.seconds.toJavaDuration() atMost
-        10.minutes.toJavaDuration() ignoreException
-        StatusRuntimeException::class untilAsserted
-        {
-          verifier.verify(VerificationRequest.newBuilder().setParams(testParams).build())
-        }
+    verifier.awaitVerify(testParams)
 
     verifier.clear(VerifierProto.ClearRequest.newBuilder().setParams(testParams).build())
   }
@@ -118,7 +111,7 @@ class VerificationTest {
   @Timeout(value = 10, unit = TimeUnit.MINUTES)
   @Test
   fun killingTheRuntime(
-      @InjectBlockingStub verifier: CommandVerifierGrpc.CommandVerifierBlockingStub,
+      @InjectBlockingStub verifier: CommandVerifierBlockingStub,
       @InjectContainerHandle(RESTATE_RUNTIME) runtimeContainer: ContainerHandle
   ) {
     val testParams = testParams(16, 10, 4)
@@ -129,13 +122,7 @@ class VerificationTest {
 
     runtimeContainer.killAndRestart()
 
-    await withPollInterval
-        1.seconds.toJavaDuration() atMost
-        10.minutes.toJavaDuration() ignoreException
-        StatusRuntimeException::class untilAsserted
-        {
-          verifier.verify(VerificationRequest.newBuilder().setParams(testParams).build())
-        }
+    verifier.awaitVerify(testParams)
 
     verifier.clear(VerifierProto.ClearRequest.newBuilder().setParams(testParams).build())
   }
@@ -143,7 +130,7 @@ class VerificationTest {
   @Timeout(value = 10, unit = TimeUnit.MINUTES)
   @Test
   fun stoppingTheRuntime(
-      @InjectBlockingStub verifier: CommandVerifierGrpc.CommandVerifierBlockingStub,
+      @InjectBlockingStub verifier: CommandVerifierBlockingStub,
       @InjectContainerHandle(RESTATE_RUNTIME) runtimeContainer: ContainerHandle
   ) {
     val testParams = testParams(16, 10, 4)
@@ -154,19 +141,13 @@ class VerificationTest {
 
     runtimeContainer.terminateAndRestart()
 
-    await withPollInterval
-        1.seconds.toJavaDuration() atMost
-        10.minutes.toJavaDuration() ignoreException
-        StatusRuntimeException::class untilAsserted
-        {
-          verifier.verify(VerificationRequest.newBuilder().setParams(testParams).build())
-        }
+    verifier.awaitVerify(testParams)
 
     verifier.clear(VerifierProto.ClearRequest.newBuilder().setParams(testParams).build())
   }
 
-  private fun testParams(seedLength: Int, width: Int, depth: Int): InterpreterProto.TestParams {
-    return InterpreterProto.TestParams.newBuilder()
+  private fun testParams(seedLength: Int, width: Int, depth: Int): TestParams {
+    return TestParams.newBuilder()
         .setSeed(generateAlphanumericString(seedLength))
         .setWidth(width)
         .setDepth(depth)
