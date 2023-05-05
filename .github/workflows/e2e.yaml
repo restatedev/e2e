@@ -56,5 +56,6 @@ jobs:
           path: |
             tests/build/test-results/*/container-logs/**
             tests/build/reports/tests/**
+            tests/build/test-results/*/*.xml
 
 
