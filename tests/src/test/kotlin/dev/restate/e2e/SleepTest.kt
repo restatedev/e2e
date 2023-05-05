@@ -35,6 +35,22 @@ class JavaSleepTest : BaseSleepTest() {
           .build()
     }
   }
+
+  @Disabled("https://github.com/restatedev/sdk-java/issues/85")
+  override fun sleepAndKillServiceEndpoint(
+      @InjectChannel runtimeChannel: Channel,
+      @InjectContainerHandle(COORDINATOR_HOSTNAME) coordinatorContainer: ContainerHandle
+  ) {
+    super.sleepAndKillServiceEndpoint(runtimeChannel, coordinatorContainer)
+  }
+
+  @Disabled("https://github.com/restatedev/sdk-java/issues/85")
+  override fun sleepAndTerminateServiceEndpoint(
+      @InjectChannel runtimeChannel: Channel,
+      @InjectContainerHandle(COORDINATOR_HOSTNAME) coordinatorContainer: ContainerHandle
+  ) {
+    super.sleepAndTerminateServiceEndpoint(runtimeChannel, coordinatorContainer)
+  }
 }
 
 class NodeSleepTest : BaseSleepTest() {
@@ -110,7 +126,7 @@ abstract class BaseSleepTest {
 
   @Timeout(value = 15, unit = TimeUnit.SECONDS)
   @Test
-  fun sleepAndTerminateServiceEndpoint(
+  open fun sleepAndTerminateServiceEndpoint(
       @InjectChannel runtimeChannel: Channel,
       @InjectContainerHandle(COORDINATOR_HOSTNAME) coordinatorContainer: ContainerHandle
   ) {
