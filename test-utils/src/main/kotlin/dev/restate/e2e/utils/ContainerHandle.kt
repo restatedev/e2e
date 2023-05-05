@@ -5,6 +5,7 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import org.apache.logging.log4j.LogManager
 import org.testcontainers.containers.GenericContainer
+import org.testcontainers.containers.startupcheck.IsRunningStartupCheckStrategy
 import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.utility.LogUtils
 
@@ -62,6 +63,9 @@ class ContainerHandle internal constructor(private val container: GenericContain
         LogUtils.followOutput(container.dockerClient, container.containerId, it)
       }
 
+      // Wait for running start, and wait on ports available
+      IsRunningStartupCheckStrategy()
+          .waitUntilStartupSuccessful(container.dockerClient, container.containerId)
       Wait.forListeningPort().waitUntilReady(container)
     }
   }
