@@ -75,6 +75,14 @@ class NodeSleepTest : BaseSleepTest() {
   ) {
     super.sleepAndKillServiceEndpoint(runtimeChannel, coordinatorContainer)
   }
+
+  @Disabled("https://github.com/restatedev/sdk-typescript/issues/27")
+  override fun sleepAndTerminateServiceEndpoint(
+      @InjectChannel runtimeChannel: Channel,
+      @InjectContainerHandle(COORDINATOR_HOSTNAME) coordinatorContainer: ContainerHandle
+  ) {
+    super.sleepAndTerminateServiceEndpoint(runtimeChannel, coordinatorContainer)
+  }
 }
 
 abstract class BaseSleepTest {
