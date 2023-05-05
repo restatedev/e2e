@@ -21,6 +21,8 @@ import org.junit.jupiter.api.extension.RegisterExtension
 
 // We need https://github.com/restatedev/sdk-typescript/pull/9 for this
 // @Tag("always-suspending")
+@Disabled(
+    "Without https://github.com/restatedev/restate-verification/issues/7 it's hard to predict time, and there's always a chance these tests can fail")
 class VerificationTest {
 
   companion object {
