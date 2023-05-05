@@ -5,6 +5,7 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import org.apache.logging.log4j.LogManager
 import org.testcontainers.containers.GenericContainer
+import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.utility.LogUtils
 
 /** Handle to interact with deployed containers */
@@ -60,6 +61,8 @@ class ContainerHandle internal constructor(private val container: GenericContain
       container.logConsumers.forEach {
         LogUtils.followOutput(container.dockerClient, container.containerId, it)
       }
+
+      Wait.forListeningPort().waitUntilReady(container)
     }
   }
 

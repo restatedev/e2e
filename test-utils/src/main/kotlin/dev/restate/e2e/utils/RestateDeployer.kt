@@ -84,10 +84,10 @@ private constructor(
   private val network = Network.newNetwork()
   private val tmpDir = Files.createTempDirectory("restate-e2e").toFile()
   private val runtimeContainer = GenericContainer(DockerImageName.parse(runtimeContainerName))
-  private val deployedContainers =
-      mapOf(RESTATE_RUNTIME to runtimeContainer) +
-          functionContainers.map { it.key to it.value.second } +
-          additionalContainers
+  private val deployedContainers: Map<String, ContainerHandle> =
+      mapOf(RESTATE_RUNTIME to ContainerHandle(runtimeContainer)) +
+          functionContainers.map { it.key to ContainerHandle(it.value.second) } +
+          additionalContainers.map { it.key to ContainerHandle(it.value) }
 
   init {
     assert(runtimeDeployments == 1) { "At the moment only one runtime deployment is supported" }
@@ -333,9 +333,8 @@ private constructor(
   }
 
   fun getContainerHandle(hostName: String): ContainerHandle {
-    return ContainerHandle(
-        deployedContainers[hostName]
-            ?: throw java.lang.IllegalArgumentException("Cannot find container $hostName"))
+    return deployedContainers[hostName]
+        ?: throw java.lang.IllegalArgumentException("Cannot find container $hostName")
   }
 
   override fun close() {
