@@ -34,8 +34,10 @@ export class CounterService implements Counter {
     return Empty.create({});
   }
 
-  addThenFail(): Promise<Empty> {
-    throw new Error("Method not implemented.");
+  async addThenFail(request: CounterAddRequest): Promise<Empty> {
+    await this.add(request);
+
+    throw new Error(request.counterName);
   }
 
   async get(request: CounterRequest): Promise<GetResponse> {

@@ -5,9 +5,11 @@ import { protoMetadata as noopProtoMetadata } from "./generated/noop";
 import { protoMetadata as coordinatorProtoMetadata } from "./generated/coordinator";
 import { protoMetadata as receiverProtoMetadata } from "./generated/receiver";
 import { protoMetadata as listProtoMetadata } from "./generated/list";
+import { protoMetadata as errorsProtoMetadata } from "./generated/errors";
 import { protoMetadata as nonDeterminismProtoMetadata } from "./generated/non_determinism";
 import { CounterService, CounterServiceFQN } from "./counter";
 import { ListService, ListServiceFQN } from "./collections";
+import { FailingService, FailingServiceFQN } from "./errors";
 import { NoopService, NoopServiceFQN } from "./noop";
 import { CoordinatorService, CoordinatorServiceFQN } from "./coordinator";
 import { ReceiverService, ReceiverServiceFQN } from "./receiver";
@@ -65,6 +67,14 @@ const services = new Map<string, restate.ServiceOpts>([
       descriptor: nonDeterminismProtoMetadata,
       service: "NonDeterministicService",
       instance: new NonDeterministicService(),
+    },
+  ],
+  [
+    FailingServiceFQN,
+    {
+      descriptor: errorsProtoMetadata,
+      service: "FailingService",
+      instance: new FailingService(),
     },
   ],
 ]);
