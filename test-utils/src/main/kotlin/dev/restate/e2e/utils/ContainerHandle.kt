@@ -1,6 +1,8 @@
 package dev.restate.e2e.utils
 
 import com.github.dockerjava.api.DockerClient
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 import org.apache.logging.log4j.LogManager
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.utility.LogUtils
@@ -21,12 +23,16 @@ class ContainerHandle internal constructor(private val container: GenericContain
   }
 
   fun terminate() {
+    terminate(10.seconds)
+  }
+
+  fun terminate(timeout: Duration) {
     logger.info(
         "Going to terminate the container {} with hostnames {}.",
         container.containerName,
         container.networkAliases.joinToString())
     retryDockerClientCommand { dockerClient, containerId ->
-      dockerClient.stopContainerCmd(containerId).exec()
+      dockerClient.stopContainerCmd(containerId).withTimeout(timeout.inWholeSeconds.toInt()).exec()
     }
   }
 

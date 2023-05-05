@@ -13,6 +13,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.serialization.*
 import kotlinx.serialization.json.*
 import org.apache.logging.log4j.LogManager
@@ -32,6 +33,7 @@ private constructor(
     private val additionalContainers: Map<String, GenericContainer<*>>,
     private val additionalEnv: Map<String, String>,
     private val runtimeContainerName: String,
+    private val enableTracesExport: Boolean
 ) : AutoCloseable, ExtensionContext.Store.CloseableResource {
 
   companion object {
@@ -98,6 +100,7 @@ private constructor(
       private var additionalEnv: MutableMap<String, String> = mutableMapOf(),
       private var runtimeContainer: String =
           System.getenv(RESTATE_RUNTIME_CONTAINER_ENV) ?: DEFAULT_RUNTIME_CONTAINER,
+      private var enableTracesExport: Boolean = true
   ) {
 
     fun withServiceEndpoint(functionSpec: FunctionSpec) = apply {
@@ -134,13 +137,16 @@ private constructor(
 
     fun withEnv(map: Map<String, String>) = apply { this.additionalEnv.putAll(map) }
 
+    fun disableTracesExport() = apply { this.enableTracesExport = false }
+
     fun build() =
         RestateDeployer(
             runtimeDeployments,
             serviceEndpoints,
             additionalContainers,
             additionalEnv,
-            runtimeContainer)
+            runtimeContainer,
+            enableTracesExport)
   }
 
   fun deployAll(testReportDir: String) {
@@ -206,8 +212,6 @@ private constructor(
         .withExposedPorts(RUNTIME_META_ENDPOINT_PORT, RUNTIME_GRPC_INGRESS_ENDPOINT_PORT)
         .withEnv(additionalEnv)
         // These envs should not be overriden by additionalEnv
-        .withEnv("RESTATE_META__STORAGE_PATH", "/state/meta")
-        .withEnv("RESTATE_WORKER__STORAGE_ROCKSDB__PATH", "/state/worker")
         .withEnv("RESTATE_META__REST_ADDRESS", "0.0.0.0:${RUNTIME_META_ENDPOINT_PORT}")
         .withEnv(
             "RESTATE_WORKER__INGRESS_GRPC__BIND_ADDRESS",
@@ -219,6 +223,18 @@ private constructor(
     // Mount state directory
     runtimeContainer.addFileSystemBind(
         stateDir.toString(), "/state", BindMode.READ_WRITE, SelinuxContext.SINGLE)
+    runtimeContainer
+        .withEnv("RESTATE_META__STORAGE_PATH", "/state/meta")
+        .withEnv("RESTATE_WORKER__STORAGE_ROCKSDB__PATH", "/state/worker")
+
+    if (this.enableTracesExport) {
+      // Create and mount traces directory
+      val tracesDir = File(testReportDir, "traces")
+      tracesDir.mkdirs()
+      runtimeContainer.addFileSystemBind(
+          tracesDir.toString(), "/traces", BindMode.READ_WRITE, SelinuxContext.SINGLE)
+      runtimeContainer.withEnv("RESTATE_TRACING__JAEGER_FILE_EXPORTER_PATH", "/traces")
+    }
 
     if (System.getenv(IMAGE_PULL_POLICY_ENV) == ALWAYS_PULL) {
       runtimeContainer.withImagePullPolicy(PullPolicy.alwaysPull())
@@ -288,10 +304,16 @@ private constructor(
   }
 
   private fun teardownRuntime() {
+    // The reason to terminate it with the container handle is to try to perform a graceful
+    // shutdown,
+    // to let flush the logs and spans exported as files.
+    // We keep a short timeout though as we don't want to influence too much the teardown time of
+    // the tests.
+    getContainerHandle(RESTATE_RUNTIME).terminate(1.seconds)
     runtimeContainer.stop()
   }
 
-  internal fun teardownAll() {
+  private fun teardownAll() {
     teardownRuntime()
     teardownAdditionalContainers()
     teardownFunctions()
