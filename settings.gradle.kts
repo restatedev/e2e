@@ -67,6 +67,8 @@ dependencyResolutionManagement {
       library("testcontainers-core", "org.testcontainers", "testcontainers")
           .versionRef("testcontainers")
       library("testcontainers-kafka", "org.testcontainers", "kafka").versionRef("testcontainers")
+      library("testcontainers-toxiproxy", "org.testcontainers", "toxiproxy")
+          .versionRef("testcontainers")
       library("awaitility", "org.awaitility", "awaitility-kotlin").versionRef("awaitility")
 
       library("errorprone", "com.google.errorprone", "error_prone_core").versionRef("errorprone")

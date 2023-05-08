@@ -19,10 +19,7 @@ import kotlinx.serialization.json.*
 import org.apache.logging.log4j.LogManager
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.api.fail
-import org.testcontainers.containers.BindMode
-import org.testcontainers.containers.GenericContainer
-import org.testcontainers.containers.Network
-import org.testcontainers.containers.SelinuxContext
+import org.testcontainers.containers.*
 import org.testcontainers.images.PullPolicy
 import org.testcontainers.utility.DockerImageName
 
@@ -83,9 +80,21 @@ private constructor(
       functionSpecs.associate { spec -> spec.hostName to (spec to spec.toContainer()) }
   private val network = Network.newNetwork()
   private val tmpDir = Files.createTempDirectory("restate-e2e").toFile()
+
+  private val proxyContainer = ProxyContainer(ToxiproxyContainer("ghcr.io/shopify/toxiproxy:2.5.0"))
   private val runtimeContainer = GenericContainer(DockerImageName.parse(runtimeContainerName))
   private val deployedContainers: Map<String, ContainerHandle> =
-      mapOf(RESTATE_RUNTIME to ContainerHandle(runtimeContainer)) +
+      mapOf(
+          RESTATE_RUNTIME to
+              ContainerHandle(
+                  runtimeContainer,
+                  { _, port -> proxyContainer.getMappedPort(RESTATE_RUNTIME, port) },
+                  {
+                    proxyContainer.waitPorts(
+                        RESTATE_RUNTIME,
+                        RUNTIME_META_ENDPOINT_PORT,
+                        RUNTIME_GRPC_INGRESS_ENDPOINT_PORT)
+                  })) +
           functionContainers.map { it.key to ContainerHandle(it.value.second) } +
           additionalContainers.map { it.key to ContainerHandle(it.value) }
 
@@ -153,6 +162,10 @@ private constructor(
     deployFunctions(testReportDir)
     deployAdditionalContainers(testReportDir)
     deployRuntime(testReportDir)
+    deployProxy(testReportDir)
+
+    // Let's execute service discovery to register the services
+    functionContainers.values.forEach { (spec, _) -> discoverServiceEndpoint(spec) }
   }
 
   private fun deployFunctions(testReportDir: String) {
@@ -209,7 +222,6 @@ private constructor(
     runtimeContainer
         .dependsOn(functionContainers.values.map { it.second })
         .dependsOn(additionalContainers.values)
-        .withExposedPorts(RUNTIME_META_ENDPOINT_PORT, RUNTIME_GRPC_INGRESS_ENDPOINT_PORT)
         .withEnv(additionalEnv)
         // These envs should not be overriden by additionalEnv
         .withEnv("RESTATE_META__REST_ADDRESS", "0.0.0.0:${RUNTIME_META_ENDPOINT_PORT}")
@@ -241,15 +253,25 @@ private constructor(
     }
 
     runtimeContainer.start()
+    logger.debug("Restate runtime started. Container id {}", runtimeContainer.containerId)
+  }
+
+  private fun deployProxy(testReportDir: String) {
+    // We use an external proxy to access from the test code to the restate container in order to
+    // retain
+    // the tcp port binding across restarts
+
+    // Configure toxiproxy and start
+    proxyContainer.start(network, testReportDir)
+
+    // Proxy runtime ports
+    proxyContainer.mapPort(RESTATE_RUNTIME, RUNTIME_META_ENDPOINT_PORT)
+    proxyContainer.mapPort(RESTATE_RUNTIME, RUNTIME_GRPC_INGRESS_ENDPOINT_PORT)
 
     logger.debug(
-        "Restate runtime started. gRPC ingress port: {}. Meta REST API port: {}",
+        "Toxiproxy started. gRPC ingress port: {}. Meta REST API port: {}",
         getContainerPort(RESTATE_RUNTIME, RUNTIME_GRPC_INGRESS_ENDPOINT_PORT),
         getContainerPort(RESTATE_RUNTIME, RUNTIME_META_ENDPOINT_PORT))
-    logger.debug("Runtime container id {}", runtimeContainer.containerId)
-
-    // Let's execute service discovery to register the services
-    functionContainers.values.forEach { (spec, _) -> discoverServiceEndpoint(spec) }
   }
 
   @Serializable
@@ -313,16 +335,24 @@ private constructor(
     runtimeContainer.stop()
   }
 
+  private fun teardownProxy() {
+    proxyContainer.stop()
+  }
+
   private fun teardownAll() {
     teardownRuntime()
     teardownAdditionalContainers()
     teardownFunctions()
+    teardownProxy()
     network!!.close()
   }
 
   internal fun createRuntimeChannel(): ManagedChannel {
     return getContainerPort(RESTATE_RUNTIME, RUNTIME_GRPC_INGRESS_ENDPOINT_PORT).let { port ->
-      NettyChannelBuilder.forAddress("127.0.0.1", port).disableRetry().usePlaintext().build()
+      NettyChannelBuilder.forAddress("127.0.0.1", port)
+          .disableServiceConfigLookUp()
+          .usePlaintext()
+          .build()
     }
   }
 

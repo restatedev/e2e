@@ -6,11 +6,15 @@ import kotlin.time.Duration.Companion.seconds
 import org.apache.logging.log4j.LogManager
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.startupcheck.IsRunningStartupCheckStrategy
-import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.utility.LogUtils
 
 /** Handle to interact with deployed containers */
-class ContainerHandle internal constructor(private val container: GenericContainer<*>) {
+class ContainerHandle
+internal constructor(
+    private val container: GenericContainer<*>,
+    private val getMappedPort: (GenericContainer<*>, Int) -> Int? = { c, p -> c.getMappedPort(p) },
+    private val waitStrategy: () -> Unit = {},
+) {
 
   private val logger = LogManager.getLogger(ContainerHandle::class.java)
 
@@ -87,7 +91,7 @@ class ContainerHandle internal constructor(private val container: GenericContain
   }
 
   fun getMappedPort(port: Int): Int? {
-    return container.getMappedPort(port)
+    return this.getMappedPort.invoke(this.container, port)
   }
 
   private fun postStart() {
@@ -99,7 +103,7 @@ class ContainerHandle internal constructor(private val container: GenericContain
     // Wait for running start, and wait on ports available
     IsRunningStartupCheckStrategy()
         .waitUntilStartupSuccessful(container.dockerClient, container.containerId)
-    Wait.forListeningPort().waitUntilReady(container)
+    waitStrategy()
   }
 
   private fun <T> retryDockerClientCommand(fn: (DockerClient, String) -> T): T {

@@ -17,6 +17,8 @@ dependencies {
   implementation(libs.grpc.netty.shaded)
   implementation(libs.grpc.protobuf)
 
+  implementation(libs.testcontainers.toxiproxy)
+
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
 
   testImplementation(libs.junit.all)
