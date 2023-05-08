@@ -11,14 +11,13 @@ import java.net.URI
 import java.net.URL
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
+import java.net.http.HttpRequest.BodyPublishers
 import java.net.http.HttpResponse
 import java.nio.charset.StandardCharsets
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
-@Tag("always-suspending")
 class HttpEndpointTest {
 
   companion object {
@@ -39,7 +38,7 @@ class HttpEndpointTest {
         HttpResponse.BodyHandler { jacksonBodySubscriber }
 
     private fun jacksonBodyPublisher(value: Any): HttpRequest.BodyPublisher {
-      return HttpRequest.BodyPublishers.ofString(objMapper.writeValueAsString(value))
+      return BodyPublishers.ofString(objMapper.writeValueAsString(value))
     }
   }
 
@@ -62,5 +61,37 @@ class HttpEndpointTest {
         .asString()
         .contains("application/json")
     assertThat(response.body().get("newValue").asInt()).isEqualTo(1)
+  }
+
+  @Test
+  fun badContentType(@InjectGrpcIngressURL httpEndpointURL: URL) {
+    val client = HttpClient.newHttpClient()
+
+    val req =
+        HttpRequest.newBuilder(
+                URI.create("$httpEndpointURL${CounterGrpc.getGetAndAddMethod().fullMethodName}"))
+            .POST(jacksonBodyPublisher(mapOf("counter_name" to "my-counter", "value" to 1)))
+            .headers("Content-Type", "application/whatever")
+            .build()
+
+    val response = client.send(req, jacksonBodyHandler)
+
+    assertThat(response.statusCode()).isEqualTo(415)
+  }
+
+  @Test
+  fun malformedJson(@InjectGrpcIngressURL httpEndpointURL: URL) {
+    val client = HttpClient.newHttpClient()
+
+    val req =
+        HttpRequest.newBuilder(
+                URI.create("$httpEndpointURL${CounterGrpc.getGetAndAddMethod().fullMethodName}"))
+            .POST(BodyPublishers.ofString("{"))
+            .headers("Content-Type", "application/json")
+            .build()
+
+    val response = client.send(req, jacksonBodyHandler)
+
+    assertThat(response.statusCode()).isEqualTo(400)
   }
 }
