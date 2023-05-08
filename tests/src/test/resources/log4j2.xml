@@ -9,6 +9,9 @@
         <Logger name="dev.restate.e2e" level="DEBUG" additivity="false">
             <AppenderRef ref="STDERR"/>
         </Logger>
+        <Logger name="org.testcontainers" level="INFO" additivity="false">
+            <AppenderRef ref="STDERR"/>
+        </Logger>
         <Root level="Info">
             <AppenderRef ref="STDERR"/>
         </Root>
