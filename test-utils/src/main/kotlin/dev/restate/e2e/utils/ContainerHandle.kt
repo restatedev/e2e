@@ -15,13 +15,29 @@ class ContainerHandle internal constructor(private val container: GenericContain
   private val logger = LogManager.getLogger(ContainerHandle::class.java)
 
   fun terminateAndRestart() {
-    terminate()
-    start()
+    logger.info(
+        "Going to kill and restart the container {} with hostnames {}.",
+        container.containerName,
+        container.networkAliases.joinToString())
+    retryDockerClientCommand { dockerClient, containerId ->
+      dockerClient.restartContainerCmd(containerId).exec()
+    }
+
+    postStart()
   }
 
   fun killAndRestart() {
-    kill()
-    start()
+    logger.info(
+        "Going to kill and restart the container {} with hostnames {}.",
+        container.containerName,
+        container.networkAliases.joinToString())
+    retryDockerClientCommand { dockerClient, containerId ->
+      // Using timeout 0 because I'm missing a signal argument
+      // https://github.com/docker-java/docker-java/issues/2123
+      dockerClient.restartContainerCmd(containerId).withTimeout(0).exec()
+    }
+
+    postStart()
   }
 
   fun terminate() {
@@ -58,15 +74,7 @@ class ContainerHandle internal constructor(private val container: GenericContain
         dockerClient.startContainerCmd(containerId).exec()
       }
 
-      // We need to start following again, as stopping also stops following logs
-      container.logConsumers.forEach {
-        LogUtils.followOutput(container.dockerClient, container.containerId, it)
-      }
-
-      // Wait for running start, and wait on ports available
-      IsRunningStartupCheckStrategy()
-          .waitUntilStartupSuccessful(container.dockerClient, container.containerId)
-      Wait.forListeningPort().waitUntilReady(container)
+      postStart()
     }
   }
 
@@ -80,6 +88,18 @@ class ContainerHandle internal constructor(private val container: GenericContain
 
   fun getMappedPort(port: Int): Int? {
     return container.getMappedPort(port)
+  }
+
+  private fun postStart() {
+    // We need to start following again, as stopping also stops following logs
+    container.logConsumers.forEach {
+      LogUtils.followOutput(container.dockerClient, container.containerId, it)
+    }
+
+    // Wait for running start, and wait on ports available
+    IsRunningStartupCheckStrategy()
+        .waitUntilStartupSuccessful(container.dockerClient, container.containerId)
+    Wait.forListeningPort().waitUntilReady(container)
   }
 
   private fun <T> retryDockerClientCommand(fn: (DockerClient, String) -> T): T {
