@@ -37,6 +37,23 @@ class JavaNonDeterminismTest : NonDeterminismTest() {
   }
 }
 
+@Tag("only-always-suspending")
+class NodeNonDeterminismTest : NonDeterminismTest() {
+  companion object {
+    @RegisterExtension
+    val deployerExt: RestateDeployerExtension =
+        RestateDeployerExtension(
+            RestateDeployer.Builder()
+                .withEnv(Containers.getRestateEnvironment())
+                .withServiceEndpoint(
+                    Containers.nodeServicesContainer(
+                        "node-non-determinism",
+                        NonDeterministicServiceGrpc.SERVICE_NAME,
+                        CounterGrpc.SERVICE_NAME))
+                .build())
+  }
+}
+
 abstract class NonDeterminismTest {
   companion object {
     @JvmStatic
