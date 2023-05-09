@@ -9,12 +9,11 @@ import { CounterService, CounterServiceFQN } from "./counter";
 import { ListService, ListServiceFQN } from "./collections";
 import { NoopService, NoopServiceFQN } from "./noop";
 import { CoordinatorService, CoordinatorServiceFQN } from "./coordinator";
-import { ServiceOpts } from "@restatedev/restate-sdk/dist/restate";
 import { ReceiverService, ReceiverServiceFQN } from "./receiver";
 
 let serverBuilder = restate.createServer();
 
-const services = new Map<string, ServiceOpts>([
+const services = new Map<string, restate.ServiceOpts>([
   [
     CounterServiceFQN,
     {
@@ -75,4 +74,4 @@ for (let service of servicesEnv) {
   }
 }
 
-serverBuilder.listen(parseInt(process.env.PORT ?? "8080"));
+serverBuilder.listen();
