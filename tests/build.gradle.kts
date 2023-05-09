@@ -39,6 +39,21 @@ tasks {
     }
   }
 
+  register<Test>("test-single-thread-single-partition") {
+    environment =
+        environment +
+            mapOf(
+                "RESTATE_WORKER__PARTITIONS" to "1",
+                "RESTATE_TOKIO_RUNTIME__WORKER_THREADS" to "1",
+                "RESTATE_TOKIO_RUNTIME__MAX_BLOCKING_THREADS" to "1",
+            )
+
+    useJUnitPlatform {
+      // Run all the tests with either no tags, or always-suspending tag
+      includeTags("none() | always-suspending")
+    }
+  }
+
   withType<Test>().configureEach {
     dependsOn(":services:http-server:jibDockerBuild")
     dependsOn(":services:java-services:jibDockerBuild")
@@ -57,4 +72,7 @@ tasks {
   }
 }
 
-tasks.named("build") { dependsOn("test-always-suspending") }
+tasks.named("build") {
+  dependsOn("test-always-suspending")
+  dependsOn("test-single-thread-single-partition")
+}
