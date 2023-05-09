@@ -7,6 +7,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.extension.RegisterExtension
 
+@Tag("always-suspending")
 class JavaPersistenceAcrossRuntimeRestartsTest : BasePersistenceAcrossRuntimeRestartsTest() {
   companion object {
     @JvmStatic
@@ -20,6 +21,7 @@ class JavaPersistenceAcrossRuntimeRestartsTest : BasePersistenceAcrossRuntimeRes
   }
 }
 
+@Tag("always-suspending")
 class NodePersistenceAcrossRuntimeRestartsTest : BasePersistenceAcrossRuntimeRestartsTest() {
 
   companion object {
