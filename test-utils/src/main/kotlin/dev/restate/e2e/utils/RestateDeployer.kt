@@ -88,7 +88,7 @@ private constructor(
           RESTATE_RUNTIME to
               ContainerHandle(
                   runtimeContainer,
-                  { _, port -> proxyContainer.getMappedPort(RESTATE_RUNTIME, port) },
+                  { proxyContainer.getMappedPort(RESTATE_RUNTIME, it) },
                   {
                     proxyContainer.waitPorts(
                         RESTATE_RUNTIME,

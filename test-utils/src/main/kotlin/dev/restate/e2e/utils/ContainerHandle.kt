@@ -12,7 +12,7 @@ import org.testcontainers.utility.LogUtils
 class ContainerHandle
 internal constructor(
     private val container: GenericContainer<*>,
-    private val getMappedPort: (GenericContainer<*>, Int) -> Int? = { c, p -> c.getMappedPort(p) },
+    private val getMappedPort: (Int) -> Int? = { container.getMappedPort(it) },
     private val waitStrategy: () -> Unit = {},
 ) {
 
@@ -91,7 +91,7 @@ internal constructor(
   }
 
   fun getMappedPort(port: Int): Int? {
-    return this.getMappedPort.invoke(this.container, port)
+    return this.getMappedPort.invoke(port)
   }
 
   private fun postStart() {
