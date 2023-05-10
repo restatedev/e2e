@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+option java_package = "dev.restate.e2e.functions.verification.verifier";
+option java_outer_classname = "VerifierProto";
+
+import "dev/restate/ext.proto";
+import "interpreter.proto";
+
+package verifier;
+
+service CommandVerifier {
+  option (dev.restate.ext.service_type) = KEYED;
+
+  rpc Execute(ExecuteRequest) returns (Empty) {};
+
+  rpc Verify(VerificationRequest) returns (VerificationResponse) {};
+
+  rpc Clear(ClearRequest) returns (ClearResponse) {};
+
+  rpc Inspect(InspectRequest) returns (InspectResponse) {};
+}
+
+message ExecuteRequest {
+  interpreter.TestParams params = 1 [(dev.restate.ext.field) = KEY];
+}
+
+message Empty {}
+
+message VerificationRequest {
+  interpreter.TestParams params = 1 [(dev.restate.ext.field) = KEY];
+}
+
+message VerificationResponse {
+  map<int32,int32> counters = 1;
+}
+
+message ClearRequest {
+  interpreter.TestParams params = 1 [(dev.restate.ext.field) = KEY];
+}
+
+message ClearResponse {
+  repeated int32 targets = 1;
+}
+
+message InspectRequest {
+  interpreter.TestParams params = 1 [(dev.restate.ext.field) = KEY];
+}
+
+message InspectResponse {
+  interpreter.CallRequest call = 1;
+}

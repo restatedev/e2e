@@ -4,7 +4,9 @@ import { protoMetadata as counterProtoMetadata } from "./generated/counter";
 import { protoMetadata as noopProtoMetadata } from "./generated/noop";
 import { protoMetadata as coordinatorProtoMetadata } from "./generated/coordinator";
 import { protoMetadata as receiverProtoMetadata } from "./generated/receiver";
+import { protoMetadata as listProtoMetadata } from "./generated/list";
 import { CounterService, CounterServiceFQN } from "./counter";
+import { ListService, ListServiceFQN } from "./collections";
 import { NoopService, NoopServiceFQN } from "./noop";
 import { CoordinatorService, CoordinatorServiceFQN } from "./coordinator";
 import { ServiceOpts } from "@restatedev/restate-sdk/dist/restate";
@@ -43,6 +45,14 @@ const services = new Map<string, ServiceOpts>([
       descriptor: receiverProtoMetadata,
       service: "Receiver",
       instance: new ReceiverService(),
+    },
+  ],
+  [
+    ListServiceFQN,
+    {
+      descriptor: listProtoMetadata,
+      service: "ListService",
+      instance: new ListService(),
     },
   ],
 ]);

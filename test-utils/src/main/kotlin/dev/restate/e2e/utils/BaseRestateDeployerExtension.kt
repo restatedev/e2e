@@ -24,6 +24,8 @@ abstract class BaseRestateDeployerExtension : ParameterResolver {
   ): Boolean {
     return (parameterContext.isAnnotated(InjectBlockingStub::class.java) &&
         AbstractBlockingStub::class.java.isAssignableFrom(parameterContext.parameter.type)) ||
+        (parameterContext.isAnnotated(InjectChannel::class.java) &&
+            Channel::class.java.isAssignableFrom(parameterContext.parameter.type)) ||
         (parameterContext.isAnnotated(InjectContainerPort::class.java) &&
             Int::class.java.isAssignableFrom(parameterContext.parameter.type)) ||
         (parameterContext.isAnnotated(InjectGrpcIngressURL::class.java) &&
@@ -40,6 +42,8 @@ abstract class BaseRestateDeployerExtension : ParameterResolver {
   ): Any? {
     return if (parameterContext.isAnnotated(InjectBlockingStub::class.java)) {
       resolveBlockingStub(parameterContext, extensionContext)
+    } else if (parameterContext.isAnnotated(InjectChannel::class.java)) {
+      resolveChannel(extensionContext)
     } else if (parameterContext.isAnnotated(InjectContainerPort::class.java)) {
       resolveContainerAddress(parameterContext, extensionContext)
     } else if (parameterContext.isAnnotated(InjectGrpcIngressURL::class.java)) {
@@ -62,15 +66,17 @@ abstract class BaseRestateDeployerExtension : ParameterResolver {
     val stubFactoryMethod =
         stubType.enclosingClass.getDeclaredMethod("newBlockingStub", Channel::class.java)
 
-    val channelResource =
-        extensionContext
-            .getStore(NAMESPACE)
-            .getOrComputeIfAbsent(
-                MANAGED_CHANNEL_KEY,
-                { ManagedChannelResource(getDeployer(extensionContext).createRuntimeChannel()) },
-                ManagedChannelResource::class.java)
+    return stubFactoryMethod.invoke(null, resolveChannel(extensionContext)) as T
+  }
 
-    return stubFactoryMethod.invoke(null, channelResource.channel) as T
+  private fun resolveChannel(extensionContext: ExtensionContext): ManagedChannel {
+    return extensionContext
+        .getStore(NAMESPACE)
+        .getOrComputeIfAbsent(
+            MANAGED_CHANNEL_KEY,
+            { ManagedChannelResource(getDeployer(extensionContext).createRuntimeChannel()) },
+            ManagedChannelResource::class.java)
+        .channel
   }
 
   private fun resolveContainerAddress(

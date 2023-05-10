@@ -13,6 +13,7 @@ dependencies {
 
   testImplementation(libs.log4j.api)
   testRuntimeOnly(libs.log4j.core)
+  testRuntimeOnly(libs.log4j.slf4j)
 
   testImplementation(platform(libs.jackson.bom))
   testImplementation(libs.jackson.core)
@@ -47,8 +48,11 @@ tasks {
         environment +
             mapOf(
                 "CONTAINER_LOGS_DIR" to "$buildDir/test-results/$name/container-logs",
-                "RESTATE_RUNTIME_CONTAINER" to "ghcr.io/restatedev/restate:latest",
-                "RUST_LOG" to "info,hyper=trace,restate_invoker=trace,restate=debug",
+                "RESTATE_RUNTIME_CONTAINER" to
+                    (System.getenv("RESTATE_RUNTIME_CONTAINER")
+                        ?: "ghcr.io/restatedev/restate:latest"),
+                "RUST_LOG" to
+                    (System.getenv("RUST_LOG") ?: "info,restate_invoker=trace,restate=debug"),
                 "RUST_BACKTRACE" to "full")
   }
 }

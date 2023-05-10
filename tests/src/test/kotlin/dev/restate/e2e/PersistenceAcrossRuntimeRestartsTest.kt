@@ -7,7 +7,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.extension.RegisterExtension
 
-@Disabled("Needs fix for https://github.com/restatedev/restate/issues/361")
 class JavaPersistenceAcrossRuntimeRestartsTest : BasePersistenceAcrossRuntimeRestartsTest() {
   companion object {
     @JvmStatic
@@ -21,7 +20,6 @@ class JavaPersistenceAcrossRuntimeRestartsTest : BasePersistenceAcrossRuntimeRes
   }
 }
 
-@Disabled("Needs fix for https://github.com/restatedev/restate/issues/361")
 class NodePersistenceAcrossRuntimeRestartsTest : BasePersistenceAcrossRuntimeRestartsTest() {
 
   companion object {

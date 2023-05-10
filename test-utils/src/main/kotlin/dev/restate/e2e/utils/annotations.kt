@@ -6,6 +6,8 @@ internal const val RUNTIME_META_ENDPOINT_PORT = 8081
 
 @Target(AnnotationTarget.VALUE_PARAMETER) annotation class InjectBlockingStub
 
+@Target(AnnotationTarget.VALUE_PARAMETER) annotation class InjectChannel
+
 @Target(AnnotationTarget.VALUE_PARAMETER)
 annotation class InjectContainerHandle(val hostName: String)
 

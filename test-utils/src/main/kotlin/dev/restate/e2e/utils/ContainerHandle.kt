@@ -1,32 +1,60 @@
 package dev.restate.e2e.utils
 
 import com.github.dockerjava.api.DockerClient
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 import org.apache.logging.log4j.LogManager
 import org.testcontainers.containers.GenericContainer
+import org.testcontainers.containers.startupcheck.IsRunningStartupCheckStrategy
 import org.testcontainers.utility.LogUtils
 
 /** Handle to interact with deployed containers */
-class ContainerHandle internal constructor(private val container: GenericContainer<*>) {
+class ContainerHandle
+internal constructor(
+    private val container: GenericContainer<*>,
+    private val getMappedPort: (Int) -> Int? = { container.getMappedPort(it) },
+    private val waitStrategy: () -> Unit = {},
+) {
 
   private val logger = LogManager.getLogger(ContainerHandle::class.java)
 
   fun terminateAndRestart() {
-    terminate()
-    start()
+    logger.info(
+        "Going to kill and restart the container {} with hostnames {}.",
+        container.containerName,
+        container.networkAliases.joinToString())
+    retryDockerClientCommand { dockerClient, containerId ->
+      dockerClient.restartContainerCmd(containerId).exec()
+    }
+
+    postStart()
   }
 
   fun killAndRestart() {
-    kill()
-    start()
+    logger.info(
+        "Going to kill and restart the container {} with hostnames {}.",
+        container.containerName,
+        container.networkAliases.joinToString())
+    retryDockerClientCommand { dockerClient, containerId ->
+      // Using timeout 0 because I'm missing a signal argument
+      // https://github.com/docker-java/docker-java/issues/2123
+      dockerClient.restartContainerCmd(containerId).withTimeout(0).exec()
+    }
+
+    postStart()
   }
 
   fun terminate() {
+    terminate(10.seconds)
+  }
+
+  fun terminate(timeout: Duration) {
     logger.info(
         "Going to terminate the container {} with hostnames {}.",
         container.containerName,
         container.networkAliases.joinToString())
     retryDockerClientCommand { dockerClient, containerId ->
-      dockerClient.stopContainerCmd(containerId).exec()
+      dockerClient.stopContainerCmd(containerId).withTimeout(timeout.inWholeSeconds.toInt()).exec()
     }
   }
 
@@ -50,10 +78,7 @@ class ContainerHandle internal constructor(private val container: GenericContain
         dockerClient.startContainerCmd(containerId).exec()
       }
 
-      // We need to start following again, as stopping also stops following logs
-      container.logConsumers.forEach {
-        LogUtils.followOutput(container.dockerClient, container.containerId, it)
-      }
+      postStart()
     }
   }
 
@@ -66,7 +91,23 @@ class ContainerHandle internal constructor(private val container: GenericContain
   }
 
   fun getMappedPort(port: Int): Int? {
-    return container.getMappedPort(port)
+    return this.getMappedPort.invoke(port)
+  }
+
+  private fun postStart() {
+    // Wait for running start
+    IsRunningStartupCheckStrategy()
+        .waitUntilStartupSuccessful(container.dockerClient, container.containerId)
+
+    // We need to start following again, as stopping also stops following logs
+    container.logConsumers.forEach {
+      LogUtils.followOutput(container.dockerClient, container.containerId, it)
+    }
+
+    // Additional wait strategy for ports
+    waitStrategy()
+
+    logger.info("Container {} started and passed all the checks.", container.containerName)
   }
 
   private fun <T> retryDockerClientCommand(fn: (DockerClient, String) -> T): T {
