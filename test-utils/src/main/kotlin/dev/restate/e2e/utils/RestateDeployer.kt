@@ -91,7 +91,7 @@ private constructor(
                   runtimeContainer,
                   { proxyContainer.getMappedPort(RESTATE_RUNTIME, it) },
                   {
-                    Wait.forListeningPort().waitUntilReady(runtimeContainer)
+                    Wait.forListeningPort().waitUntilReady(NotCachedContainerInfo(runtimeContainer))
                     // Technically we don't need to wait on the proxy container ports to be
                     // ready as they should be anyway because the proxy is never restarted.
                     // But for robustness we do this check anyway.

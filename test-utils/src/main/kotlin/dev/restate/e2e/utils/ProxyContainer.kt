@@ -1,11 +1,9 @@
 package dev.restate.e2e.utils
 
-import com.github.dockerjava.api.command.InspectContainerResponse
 import eu.rekawek.toxiproxy.ToxiproxyClient
 import org.testcontainers.containers.Network
 import org.testcontainers.containers.ToxiproxyContainer
 import org.testcontainers.containers.wait.strategy.Wait
-import org.testcontainers.containers.wait.strategy.WaitStrategyTarget
 
 internal class ProxyContainer(private val container: ToxiproxyContainer) {
 
@@ -64,18 +62,5 @@ internal class ProxyContainer(private val container: ToxiproxyContainer) {
 
   private fun address(hostName: String, port: Int): String {
     return "${hostName}:${port}"
-  }
-
-  private class WaitOnSpecificPortsTarget(
-      val ports: List<Int>,
-      val proxyContainer: ToxiproxyContainer
-  ) : WaitStrategyTarget {
-    override fun getExposedPorts(): MutableList<Int> {
-      return ports.toMutableList()
-    }
-
-    override fun getContainerInfo(): InspectContainerResponse {
-      return proxyContainer.containerInfo
-    }
   }
 }
