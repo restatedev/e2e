@@ -20,6 +20,7 @@ import org.apache.logging.log4j.LogManager
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.api.fail
 import org.testcontainers.containers.*
+import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.images.PullPolicy
 import org.testcontainers.utility.DockerImageName
 
@@ -90,6 +91,10 @@ private constructor(
                   runtimeContainer,
                   { proxyContainer.getMappedPort(RESTATE_RUNTIME, it) },
                   {
+                    Wait.forListeningPort().waitUntilReady(runtimeContainer)
+                    // Technically we don't need to wait on the proxy container ports to be
+                    // ready as they should be anyway because the proxy is never restarted.
+                    // But for robustness we do this check anyway.
                     proxyContainer.waitPorts(
                         RESTATE_RUNTIME,
                         RUNTIME_META_ENDPOINT_PORT,
@@ -220,6 +225,8 @@ private constructor(
 
     // Configure runtime container
     runtimeContainer
+        // We expose these ports only to enable port checks
+        .withExposedPorts(RUNTIME_GRPC_INGRESS_ENDPOINT_PORT, RUNTIME_META_ENDPOINT_PORT)
         .dependsOn(functionContainers.values.map { it.second })
         .dependsOn(additionalContainers.values)
         .withEnv(additionalEnv)
