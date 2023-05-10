@@ -54,12 +54,12 @@ internal class ProxyContainer(private val container: ToxiproxyContainer) {
   }
 
   internal fun waitPorts(hostName: String, vararg ports: Int) {
-    val ports =
+    val mappedPorts =
         ports.map {
           portMappings[address(hostName, it)]
               ?: throw IllegalArgumentException("Cannot wait on non existing port")
         }
-    Wait.forListeningPort().waitUntilReady(WaitOnSpecificPortsTarget(ports, container))
+    Wait.forListeningPort().waitUntilReady(WaitOnSpecificPortsTarget(mappedPorts, container))
   }
 
   private fun address(hostName: String, port: Int): String {
