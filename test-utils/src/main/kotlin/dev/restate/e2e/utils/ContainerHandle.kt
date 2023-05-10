@@ -104,6 +104,8 @@ internal constructor(
     IsRunningStartupCheckStrategy()
         .waitUntilStartupSuccessful(container.dockerClient, container.containerId)
     waitStrategy()
+
+    logger.info("Container {} started and passed all the checks.", container.containerName)
   }
 
   private fun <T> retryDockerClientCommand(fn: (DockerClient, String) -> T): T {
