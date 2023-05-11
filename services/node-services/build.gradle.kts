@@ -16,6 +16,10 @@ tasks.register<Copy>("prepareDockerBuild") {
     include("src/**")
     into("src")
   }
+  from(".") {
+    include("*.tgz")
+    into(".")
+  }
   from(
           ".dockerignore",
           ".eslintignore",
@@ -36,4 +40,45 @@ tasks.create<DockerBuildImage>("dockerBuild") {
 tasks.named("check") {
   mustRunAfter("npmInstall", "generateProto")
   dependsOn("npm_run_lint")
+}
+
+tasks.register("installLocalTypescriptSdk") {
+  val typescriptSdkDirectory = file("${rootDir}/../sdk-typescript")
+  check(typescriptSdkDirectory.exists()) {
+    "Cannot find the typescript directory. We assume it's in ${typescriptSdkDirectory.toPath()}"
+  }
+
+  doLast {
+    exec {
+          workingDir = typescriptSdkDirectory
+          commandLine("npm", "run", "proto")
+        }
+        .assertNormalExitValue()
+    exec {
+          workingDir = typescriptSdkDirectory
+          commandLine("npm", "run", "build")
+        }
+        .assertNormalExitValue()
+    exec {
+          workingDir = typescriptSdkDirectory
+          commandLine("npm", "pack")
+        }
+        .assertNormalExitValue()
+
+    copy {
+      from("${rootDir}/../sdk-typescript")
+      include("*.tgz")
+      into(".")
+    }
+
+    val packageToInstall =
+        fileTree(projectDir).matching { include("*.tgz") }.maxByOrNull { it.lastModified() }!!
+    println("Going to install $packageToInstall")
+
+    exec {
+          workingDir = projectDir
+          commandLine("npm", "install", "--save", packageToInstall)
+        }
+        .assertNormalExitValue()
+  }
 }

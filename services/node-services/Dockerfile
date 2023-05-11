@@ -15,7 +15,7 @@ ARG NPM_TOKEN
 WORKDIR /usr/src/app
 
 # Install app dependencies
-COPY package*.json ./
+COPY package*.json *.tgz ./
 RUN echo "//npm.pkg.github.com/:_authToken=$NPM_TOKEN\n" >> .npmrc && \
     echo "@restatedev:registry=https://npm.pkg.github.com/" >> .npmrc && \
  npm ci --production && \
