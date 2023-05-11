@@ -16,6 +16,10 @@ tasks.register<Copy>("prepareDockerBuild") {
     include("src/**")
     into("src")
   }
+  from(".") {
+    include("*.tgz")
+    into(".")
+  }
   from(
           ".dockerignore",
           ".eslintignore",
