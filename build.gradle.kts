@@ -2,7 +2,7 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
-  kotlin("jvm") version "1.8.10"
+  kotlin("jvm") version "1.8.20"
   java
   alias(libs.plugins.spotless)
 }
@@ -23,7 +23,10 @@ allprojects {
   version = restateVersion
 
   configure<com.diffplug.gradle.spotless.SpotlessExtension> {
-    kotlin { ktfmt() }
+    kotlin {
+      ktfmt()
+      targetExclude("build/generated/**/*.kt")
+    }
     kotlinGradle { ktfmt() }
     java {
       googleJavaFormat()
