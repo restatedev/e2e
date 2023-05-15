@@ -68,6 +68,9 @@ tasks {
                         ?: "ghcr.io/restatedev/restate:latest"),
                 "RUST_LOG" to
                     (System.getenv("RUST_LOG") ?: "info,restate_invoker=trace,restate=debug"),
+                "RESTATE_OBSERVABILITY__JAEGER_FILE__FILTER" to
+                    (System.getenv("RESTATE_OBSERVABILITY__JAEGER_FILE__FILTER")
+                        ?: "info,restate_invoker=trace,restate=debug"),
                 "RUST_BACKTRACE" to "full")
   }
 }
