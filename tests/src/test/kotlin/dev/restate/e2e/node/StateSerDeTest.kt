@@ -19,6 +19,7 @@ class StateSerDeTest {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
+                .withEnv(Containers.getRestateEnvironment())
                 .withServiceEndpoint(Containers.NODE_COLLECTIONS_SERVICE_SPEC)
                 .build())
   }

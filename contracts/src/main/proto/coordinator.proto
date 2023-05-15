@@ -12,10 +12,15 @@ service Coordinator {
   option (dev.restate.ext.service_type) = UNKEYED;
 
   rpc Sleep (Duration) returns (google.protobuf.Empty);
+  rpc ManyTimers (ManyTimersRequest) returns (google.protobuf.Empty);
   rpc Proxy (google.protobuf.Empty) returns (ProxyResponse);
   rpc Complex (ComplexRequest) returns (ComplexResponse);
   rpc Timeout (Duration) returns (TimeoutResponse);
   rpc InvokeSequentially(InvokeSequentiallyRequest) returns (google.protobuf.Empty);
+}
+
+message ManyTimersRequest {
+  repeated Duration timer = 1;
 }
 
 message Duration {
