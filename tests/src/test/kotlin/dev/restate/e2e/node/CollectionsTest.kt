@@ -16,6 +16,7 @@ class CollectionsTest {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
+                .withEnv(Containers.getRestateEnvironment())
                 .withServiceEndpoint(Containers.NODE_COLLECTIONS_FUNCTION_SPEC)
                 .build())
   }

@@ -28,7 +28,8 @@ object Containers {
 
   fun getRestateEnvironment(): Map<String, String> {
     return System.getenv().filterKeys {
-      (it.uppercase().startsWith("RESTATE_") && it.uppercase() != "RESTATE_RUNTIME_CONTAINER") || it.uppercase().startsWith("RUST_")
+      (it.uppercase().startsWith("RESTATE_") && it.uppercase() != "RESTATE_RUNTIME_CONTAINER") ||
+          it.uppercase().startsWith("RUST_")
     }
   }
 

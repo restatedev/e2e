@@ -25,6 +25,7 @@ class HttpEndpointTest {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
+                .withEnv(Containers.getRestateEnvironment())
                 .withServiceEndpoint(Containers.JAVA_COUNTER_FUNCTION_SPEC)
                 .build())
 

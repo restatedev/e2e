@@ -5,11 +5,11 @@ import java.io.BufferedWriter
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
+import java.util.concurrent.CountDownLatch
 import java.util.function.Consumer
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.output.FrameConsumerResultCallback
 import org.testcontainers.containers.output.OutputFrame
-import org.testcontainers.containers.output.WaitingConsumer
 
 /** Logger to dump to specific files the stdout and stderr of the containers */
 internal class ContainerLogger(
@@ -19,12 +19,10 @@ internal class ContainerLogger(
 
   companion object {
     internal fun ContainerLogger.collectAllNow(genericContainer: GenericContainer<*>) {
-      val wait = WaitingConsumer()
-      getLogs(genericContainer.dockerClient, genericContainer.containerId, this.andThen(wait)).use {
-        wait.waitUntilEnd()
-        it.completionLatch.await()
+      getLogs(genericContainer.dockerClient, genericContainer.containerId, this).use {
+        it.awaitCompletion()
       }
-      this.accept(OutputFrame.END)
+      this.reachedEnd.await()
     }
 
     private fun getLogs(
@@ -44,6 +42,7 @@ internal class ContainerLogger(
   private var logCount = 0
   private var stdoutStream: BufferedWriter? = null
   private var stderrStream: BufferedWriter? = null
+  private val reachedEnd = CountDownLatch(1)
 
   override fun accept(frame: OutputFrame) {
     when (frame.type) {
@@ -59,6 +58,7 @@ internal class ContainerLogger(
         stdoutStream = null
         stderrStream = null
         logCount++
+        reachedEnd.countDown()
       }
     }
   }
