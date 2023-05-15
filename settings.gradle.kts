@@ -31,7 +31,7 @@ dependencyResolutionManagement {
 
       version("junit-jupiter", "5.9.2")
       version("assertj", "3.22.0")
-      version("testcontainers", "1.18.0")
+      version("testcontainers", "1.18.1")
       version("awaitility", "4.2.0")
 
       version("errorprone", "2.18.0")

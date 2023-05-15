@@ -23,7 +23,22 @@ dependencies {
 }
 
 tasks {
+  fun baseRestateEnvironment(name: String) =
+      mapOf(
+          "CONTAINER_LOGS_DIR" to "$buildDir/test-results/$name/container-logs",
+          // We don't need many partitions, fewer partitions will occupy less test resources
+          "RESTATE_WORKER__PARTITIONS" to "10",
+          "RESTATE_RUNTIME_CONTAINER" to
+              (System.getenv("RESTATE_RUNTIME_CONTAINER") ?: "ghcr.io/restatedev/restate:latest"),
+          "RUST_LOG" to (System.getenv("RUST_LOG") ?: "info,restate_invoker=trace,restate=debug"),
+          "RESTATE_OBSERVABILITY__JAEGER_FILE__FILTER" to
+              (System.getenv("RESTATE_OBSERVABILITY__JAEGER_FILE__FILTER")
+                  ?: "info,restate_invoker=trace,restate=debug"),
+          "RUST_BACKTRACE" to "full")
+
   test {
+    environment = environment + baseRestateEnvironment(name)
+
     useJUnitPlatform {
       // Run all the tests with either no tags, or always-suspending tag
       includeTags("none() | always-suspending")
@@ -31,17 +46,23 @@ tasks {
   }
 
   register<Test>("test-always-suspending") {
-    environment = environment + mapOf("RESTATE_WORKER__INVOKER__SUSPENSION_TIMEOUT" to "0s")
+    environment =
+        environment +
+            baseRestateEnvironment(name) +
+            mapOf("RESTATE_WORKER__INVOKER__SUSPENSION_TIMEOUT" to "0s")
 
     useJUnitPlatform {
       // Run all the tests with always-suspending or only-always-suspending tag
       includeTags("always-suspending | only-always-suspending")
     }
+    // Increase a bit the default timeout
+    systemProperties["junit.jupiter.execution.timeout.testable.method.default"] = "30 s"
   }
 
   register<Test>("test-single-thread-single-partition") {
     environment =
         environment +
+            baseRestateEnvironment(name) +
             mapOf(
                 "RESTATE_WORKER__PARTITIONS" to "1",
                 "RESTATE_TOKIO_RUNTIME__WORKER_THREADS" to "1",
@@ -58,20 +79,6 @@ tasks {
     dependsOn(":services:http-server:jibDockerBuild")
     dependsOn(":services:java-services:jibDockerBuild")
     dependsOn(":services:node-services:dockerBuild")
-
-    environment =
-        environment +
-            mapOf(
-                "CONTAINER_LOGS_DIR" to "$buildDir/test-results/$name/container-logs",
-                "RESTATE_RUNTIME_CONTAINER" to
-                    (System.getenv("RESTATE_RUNTIME_CONTAINER")
-                        ?: "ghcr.io/restatedev/restate:latest"),
-                "RUST_LOG" to
-                    (System.getenv("RUST_LOG") ?: "info,restate_invoker=trace,restate=debug"),
-                "RESTATE_OBSERVABILITY__JAEGER_FILE__FILTER" to
-                    (System.getenv("RESTATE_OBSERVABILITY__JAEGER_FILE__FILTER")
-                        ?: "info,restate_invoker=trace,restate=debug"),
-                "RUST_BACKTRACE" to "full")
   }
 }
 
