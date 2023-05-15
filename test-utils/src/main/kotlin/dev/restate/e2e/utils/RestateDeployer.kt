@@ -14,8 +14,11 @@ import java.nio.file.Path
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.time.Duration.Companion.seconds
-import kotlinx.serialization.*
-import kotlinx.serialization.json.*
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonNamingStrategy
 import org.apache.logging.log4j.LogManager
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.api.fail
@@ -102,6 +105,7 @@ private constructor(
                   })) +
           functionContainers.map { it.key to ContainerHandle(it.value.second) } +
           additionalContainers.map { it.key to ContainerHandle(it.value) }
+  private var testReportDir: String = "restate-deployer-logs"
 
   init {
     assert(runtimeDeployments == 1) { "At the moment only one runtime deployment is supported" }
@@ -164,24 +168,31 @@ private constructor(
   }
 
   fun deployAll(testReportDir: String) {
-    deployFunctions(testReportDir)
-    deployAdditionalContainers(testReportDir)
-    deployRuntime(testReportDir)
-    deployProxy(testReportDir)
+    prepareTestReportsDir(testReportDir)
+    deployFunctions()
+    deployAdditionalContainers()
+    deployRuntime()
+    deployProxy()
 
     // Let's execute service discovery to register the services
     functionContainers.values.forEach { (spec, _) -> discoverServiceEndpoint(spec) }
   }
 
-  private fun deployFunctions(testReportDir: String) {
+  private fun prepareTestReportsDir(testReportDir: String) {
+    logger.debug("Writing container logs to {}", testReportDir)
+    this.testReportDir = testReportDir
+
+    // Generate test report directory
+    val f = File(this.testReportDir)
+    f.mkdirs()
+    assert(f.isDirectory) { "Cannot create the test reports directory ${this.testReportDir}" }
+  }
+
+  private fun deployFunctions() {
     // Deploy functions
     functionContainers.forEach { (functionName, functionContainer) ->
       functionContainer.second.networkAliases = ArrayList()
-      functionContainer.second
-          .withNetwork(network)
-          .withNetworkAliases(functionName)
-          .withLogConsumer(ContainerLogger(testReportDir, functionName))
-          .start()
+      functionContainer.second.withNetwork(network).withNetworkAliases(functionName).start()
       logger.debug(
           "Started function container {} with endpoint {}",
           functionName,
@@ -189,39 +200,21 @@ private constructor(
     }
   }
 
-  private fun deployAdditionalContainers(testReportDir: String) {
+  private fun deployAdditionalContainers() {
     // Deploy additional containers
     additionalContainers.forEach { (containerHost, container) ->
       container.networkAliases = ArrayList()
-      container
-          .withNetwork(network)
-          .withNetworkAliases(containerHost)
-          .withLogConsumer(ContainerLogger(testReportDir, containerHost))
-          .start()
+      container.withNetwork(network).withNetworkAliases(containerHost).start()
       logger.debug("Started container {} with image {}", containerHost, container.dockerImageName)
     }
   }
 
-  private fun deployRuntime(testReportDir: String) {
-    // Generate test report directory
-    logger.debug("Writing container logs to {}", testReportDir)
-
-    // Deploy additional containers
-    additionalContainers.forEach { (containerHost, container) ->
-      container.networkAliases = ArrayList()
-      container
-          .withNetwork(network)
-          .withNetworkAliases(containerHost)
-          .withLogConsumer(ContainerLogger(testReportDir, containerHost))
-          .start()
-      logger.debug("Started container {} with image {}", containerHost, container.dockerImageName)
-    }
-
+  private fun deployRuntime() {
     // Prepare state directory to mount
     val stateDir = File(tmpDir, "state")
     stateDir.mkdirs()
 
-    logger.debug("Starting runtime container '{}'", runtimeContainerName)
+    logger.debug("Starting runtime container '{}', envs: {}", runtimeContainerName, additionalEnv)
 
     // Configure runtime container
     runtimeContainer
@@ -237,7 +230,6 @@ private constructor(
             "0.0.0.0:${RUNTIME_GRPC_INGRESS_ENDPOINT_PORT}")
         .withNetwork(network)
         .withNetworkAliases(RESTATE_RUNTIME)
-        .withLogConsumer(ContainerLogger(testReportDir, "restate-runtime"))
 
     // Mount state directory
     runtimeContainer.addFileSystemBind(
@@ -263,13 +255,13 @@ private constructor(
     logger.debug("Restate runtime started. Container id {}", runtimeContainer.containerId)
   }
 
-  private fun deployProxy(testReportDir: String) {
+  private fun deployProxy() {
     // We use an external proxy to access from the test code to the restate container in order to
     // retain
     // the tcp port binding across restarts
 
     // Configure toxiproxy and start
-    proxyContainer.start(network, testReportDir)
+    proxyContainer.start(network)
 
     // Proxy runtime ports
     proxyContainer.mapPort(RESTATE_RUNTIME, RUNTIME_META_ENDPOINT_PORT)
@@ -324,15 +316,30 @@ private constructor(
         "Successfully executed discovery for endpoint {}. Result: {}", url, response.body())
   }
 
+  private fun collectLogs() {
+    logger.debug("Writing out logs")
+    runtimeContainer.writeLogsTo(testReportDir, "restate-runtime")
+    proxyContainer.container.writeLogsTo(testReportDir, "toxiproxy")
+    functionContainers.forEach { (functionName, functionContainer) ->
+      functionContainer.second.writeLogsTo(testReportDir, functionName)
+    }
+    additionalContainers.forEach { (containerHost, container) ->
+      container.writeLogsTo(testReportDir, containerHost)
+    }
+  }
+
   private fun teardownAdditionalContainers() {
+    logger.debug("Tearing down additional containers")
     additionalContainers.forEach { (_, container) -> container.stop() }
   }
 
   private fun teardownFunctions() {
+    logger.debug("Tearing down service endpoints")
     functionContainers.forEach { (_, container) -> container.second.stop() }
   }
 
   private fun teardownRuntime() {
+    logger.debug("Tearing down runtime")
     // The reason to terminate it with the container handle is to try to perform a graceful
     // shutdown,
     // to let flush the logs and spans exported as files.
@@ -347,6 +354,7 @@ private constructor(
   }
 
   private fun teardownAll() {
+    collectLogs()
     teardownRuntime()
     teardownAdditionalContainers()
     teardownFunctions()

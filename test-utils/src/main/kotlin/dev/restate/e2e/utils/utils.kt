@@ -1,6 +1,8 @@
 package dev.restate.e2e.utils
 
 import com.github.dockerjava.api.command.InspectContainerResponse
+import dev.restate.e2e.utils.ContainerLogger.Companion.collectAllNow
+import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.wait.strategy.WaitStrategyTarget
 
 internal open class NotCachedContainerInfo(private val delegate: WaitStrategyTarget) :
@@ -19,4 +21,8 @@ internal class WaitOnSpecificPortsTarget(
   override fun getExposedPorts(): MutableList<Int> {
     return ports.toMutableList()
   }
+}
+
+internal fun GenericContainer<*>.writeLogsTo(testReportDirectory: String, loggerName: String) {
+  ContainerLogger(testReportDirectory, loggerName).collectAllNow(this)
 }

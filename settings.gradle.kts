@@ -24,6 +24,7 @@ dependencyResolutionManagement {
     create("libs") {
       version("protobuf", "3.21.9")
       version("grpc", "1.50.2")
+      version("grpckt", "1.3.0")
 
       version("log4j", "2.19.0")
 
@@ -43,9 +44,12 @@ dependencyResolutionManagement {
       library("restate-sdk-vertx", "dev.restate.sdk", "sdk-vertx").versionRef("restate")
 
       library("protoc", "com.google.protobuf", "protoc").versionRef("protobuf")
+      library("protobuf-java", "com.google.protobuf", "protobuf-java").versionRef("protobuf")
+      library("protobuf-kotlin", "com.google.protobuf", "protobuf-kotlin").versionRef("protobuf")
       library("grpc-stub", "io.grpc", "grpc-stub").versionRef("grpc")
       library("grpc-protobuf", "io.grpc", "grpc-protobuf").versionRef("grpc")
       library("grpc-netty-shaded", "io.grpc", "grpc-netty-shaded").versionRef("grpc")
+      library("grpc-kotlin-stub", "io.grpc", "grpc-kotlin-stub").versionRef("grpckt")
 
       library("log4j-api", "org.apache.logging.log4j", "log4j-api").versionRef("log4j")
       library("log4j-core", "org.apache.logging.log4j", "log4j-core").versionRef("log4j")

@@ -6,7 +6,6 @@ import kotlin.time.Duration.Companion.seconds
 import org.apache.logging.log4j.LogManager
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.startupcheck.IsRunningStartupCheckStrategy
-import org.testcontainers.utility.LogUtils
 
 /** Handle to interact with deployed containers */
 class ContainerHandle
@@ -98,11 +97,6 @@ internal constructor(
     // Wait for running start
     IsRunningStartupCheckStrategy()
         .waitUntilStartupSuccessful(container.dockerClient, container.containerId)
-
-    // We need to start following again, as stopping also stops following logs
-    container.logConsumers.forEach {
-      LogUtils.followOutput(container.dockerClient, container.containerId, it)
-    }
 
     // Additional wait strategy for ports
     waitStrategy()

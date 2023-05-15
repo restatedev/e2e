@@ -5,7 +5,7 @@ import org.testcontainers.containers.Network
 import org.testcontainers.containers.ToxiproxyContainer
 import org.testcontainers.containers.wait.strategy.Wait
 
-internal class ProxyContainer(private val container: ToxiproxyContainer) {
+internal class ProxyContainer(internal val container: ToxiproxyContainer) {
 
   companion object {
     // From https://www.testcontainers.org/modules/toxiproxy/
@@ -20,11 +20,8 @@ internal class ProxyContainer(private val container: ToxiproxyContainer) {
 
   // -- Lifecycle
 
-  internal fun start(network: Network, testReportDir: String) {
-    container
-        .withNetwork(network)
-        .withLogConsumer(ContainerLogger(testReportDir, "toxiproxy"))
-        .start()
+  internal fun start(network: Network) {
+    container.withNetwork(network).start()
   }
 
   internal fun stop() {

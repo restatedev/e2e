@@ -1,6 +1,6 @@
 plugins {
   java
-  kotlin("jvm") version "1.8.10"
+  kotlin("jvm") version "1.8.20"
 }
 
 dependencies {
@@ -10,6 +10,7 @@ dependencies {
 
   testImplementation(libs.junit.all)
   testImplementation(libs.assertj)
+  testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.1")
 
   testImplementation(libs.log4j.api)
   testRuntimeOnly(libs.log4j.core)
