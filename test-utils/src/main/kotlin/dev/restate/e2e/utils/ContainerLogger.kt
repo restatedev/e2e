@@ -1,37 +1,53 @@
 package dev.restate.e2e.utils
 
 import com.github.dockerjava.api.DockerClient
+import dev.restate.e2e.utils.ContainerLogger.Companion.collectAllNow
+import org.testcontainers.DockerClientFactory
 import java.io.BufferedWriter
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
-import java.util.concurrent.CountDownLatch
 import java.util.function.Consumer
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.output.FrameConsumerResultCallback
 import org.testcontainers.containers.output.OutputFrame
+import java.time.Instant
 
 /** Logger to dump to specific files the stdout and stderr of the containers */
 internal class ContainerLogger(
     private val testReportDirectory: String,
-    private val loggerName: String
+    private val loggerName: String,
+  private   val logCount: Int = 0
 ) : Consumer<OutputFrame> {
 
   companion object {
     internal fun ContainerLogger.collectAllNow(genericContainer: GenericContainer<*>) {
-      getLogs(genericContainer.dockerClient, genericContainer.containerId, this).use {
+      attachConsumer(genericContainer.dockerClient, genericContainer.containerId, this).use {
         it.awaitCompletion()
+        it.close()
       }
-      this.reachedEnd.await()
     }
 
-    private fun getLogs(
+    internal fun ContainerLogger.reFollow(genericContainer: GenericContainer<*>, since: Instant): ContainerLogger {
+      val newLogger = ContainerLogger(this.testReportDirectory, this.loggerName, this.logCount + 1)
+      attachConsumer(genericContainer.dockerClient, genericContainer.containerId, newLogger,
+        since.toEpochMilli().toInt()
+      )
+      return newLogger
+    }
+
+    private fun attachConsumer(
         dockerClient: DockerClient,
         containerId: String,
-        consumer: Consumer<OutputFrame>
+        consumer: Consumer<OutputFrame>,
+        since: Int = 0
     ): FrameConsumerResultCallback {
       val cmd =
-          dockerClient.logContainerCmd(containerId).withSince(0).withStdOut(true).withStdErr(true)
+          dockerClient.logContainerCmd(containerId)
+            .withFollowStream(true)
+            .withSince(since)
+            .withStdOut(true)
+            .withStdErr(true)
       val callback = FrameConsumerResultCallback()
       callback.addConsumer(OutputFrame.OutputType.STDOUT, consumer)
       callback.addConsumer(OutputFrame.OutputType.STDERR, consumer)
@@ -39,10 +55,8 @@ internal class ContainerLogger(
     }
   }
 
-  private var logCount = 0
   private var stdoutStream: BufferedWriter? = null
   private var stderrStream: BufferedWriter? = null
-  private val reachedEnd = CountDownLatch(1)
 
   override fun accept(frame: OutputFrame) {
     when (frame.type) {
@@ -55,31 +69,25 @@ internal class ContainerLogger(
       else -> {
         stdoutStream?.close()
         stderrStream?.close()
-        stdoutStream = null
-        stderrStream = null
-        logCount++
-        reachedEnd.countDown()
       }
     }
   }
 
   private fun resolveStdoutStream(): BufferedWriter {
     if (stdoutStream == null) {
-      stdoutStream = newStream(testReportDirectory, loggerName, "stdout")
+      stdoutStream = newStream("stdout")
     }
     return stdoutStream!!
   }
 
   private fun resolveStderrStream(): BufferedWriter {
     if (stderrStream == null) {
-      stderrStream = newStream(testReportDirectory, loggerName, "stderr")
+      stderrStream = newStream("stderr")
     }
     return stderrStream!!
   }
 
   private fun newStream(
-      testReportDirectory: String,
-      loggerName: String,
       type: String
   ): BufferedWriter {
     val path = Path.of(testReportDirectory, "${loggerName}_${logCount}_${type}.log")
@@ -93,7 +101,7 @@ internal class ContainerLogger(
       writer.newLine()
       writer.newLine()
     }
-    writer.write("========================= START LOG =========================\n")
+    writer.write("========================= START LOG =========================\n\n")
 
     return writer
   }

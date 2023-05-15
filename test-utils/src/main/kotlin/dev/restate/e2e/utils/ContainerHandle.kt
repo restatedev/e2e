@@ -1,11 +1,14 @@
 package dev.restate.e2e.utils
 
 import com.github.dockerjava.api.DockerClient
+import dev.restate.e2e.utils.ContainerLogger.Companion.reFollow
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import org.apache.logging.log4j.LogManager
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.startupcheck.IsRunningStartupCheckStrategy
+import org.testcontainers.utility.LogUtils
+import java.time.Instant
 
 /** Handle to interact with deployed containers */
 class ContainerHandle
@@ -18,6 +21,7 @@ internal constructor(
   private val logger = LogManager.getLogger(ContainerHandle::class.java)
 
   fun terminateAndRestart() {
+    val now = Instant.now()
     logger.info(
         "Going to kill and restart the container {} with hostnames {}.",
         container.containerName,
@@ -26,10 +30,11 @@ internal constructor(
       dockerClient.restartContainerCmd(containerId).exec()
     }
 
-    postStart()
+    postStart(now)
   }
 
   fun killAndRestart() {
+    val now = Instant.now()
     logger.info(
         "Going to kill and restart the container {} with hostnames {}.",
         container.containerName,
@@ -40,7 +45,7 @@ internal constructor(
       dockerClient.restartContainerCmd(containerId).withTimeout(0).exec()
     }
 
-    postStart()
+    postStart(now)
   }
 
   fun terminate() {
@@ -69,6 +74,7 @@ internal constructor(
 
   fun start() {
     if (!isRunning()) {
+      val now = Instant.now()
       logger.info(
           "Going to start the container {} with hostnames {}.",
           container.containerName,
@@ -77,7 +83,7 @@ internal constructor(
         dockerClient.startContainerCmd(containerId).exec()
       }
 
-      postStart()
+      postStart(now)
     }
   }
 
@@ -93,10 +99,17 @@ internal constructor(
     return this.getMappedPort.invoke(port)
   }
 
-  private fun postStart() {
+  private fun postStart(now: Instant) {
     // Wait for running start
     IsRunningStartupCheckStrategy()
         .waitUntilStartupSuccessful(container.dockerClient, container.containerId)
+
+    // We need to start following again, as stopping also stops following logs
+    container.logConsumers.forEach {
+      if (it is ContainerLogger) {
+        it.reFollow(container, now)
+      }
+    }
 
     // Additional wait strategy for ports
     waitStrategy()

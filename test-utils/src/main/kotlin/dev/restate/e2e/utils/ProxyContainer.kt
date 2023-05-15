@@ -20,8 +20,11 @@ internal class ProxyContainer(internal val container: ToxiproxyContainer) {
 
   // -- Lifecycle
 
-  internal fun start(network: Network) {
-    container.withNetwork(network).start()
+  internal fun start(network: Network, testReportDir: String) {
+    container
+      .withNetwork(network)
+      .withLogConsumer(ContainerLogger(testReportDir, "toxiproxy"))
+      .start()
   }
 
   internal fun stop() {
