@@ -53,6 +53,7 @@ class JavaSleepTest : BaseSleepTest() {
   }
 }
 
+@Tag("always-suspending")
 class NodeSleepTest : BaseSleepTest() {
   companion object {
     @RegisterExtension

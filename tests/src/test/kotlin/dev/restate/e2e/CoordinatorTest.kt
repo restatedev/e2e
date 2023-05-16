@@ -38,6 +38,7 @@ class JavaCoordinatorTest : BaseCoordinatorTest() {
   }
 }
 
+@Tag("always-suspending")
 class NodeCoordinatorTest : BaseCoordinatorTest() {
   companion object {
     @RegisterExtension

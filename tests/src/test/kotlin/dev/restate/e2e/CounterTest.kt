@@ -42,8 +42,7 @@ class JavaCounterTest : BaseCounterTest() {
   }
 }
 
-// We need https://github.com/restatedev/sdk-typescript/pull/9 for this
-// @Tag("always-suspending")
+@Tag("always-suspending")
 class NodeCounterTest : BaseCounterTest() {
 
   companion object {
