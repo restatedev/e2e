@@ -13,7 +13,7 @@
   },
   "author": "Restate developers",
   "dependencies": {
-    "@restatedev/restate-sdk": "^1.0.17",
+    "@restatedev/restate-sdk": "^1.0.19",
     "protobufjs": "^7.2.2",
     "ts-proto": "^1.140.0",
     "uuid": "^9.0.0"
