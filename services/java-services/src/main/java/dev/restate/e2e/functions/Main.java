@@ -12,6 +12,8 @@ import dev.restate.e2e.functions.externalcall.RandomNumberListGeneratorGrpc;
 import dev.restate.e2e.functions.externalcall.RandomNumberListGeneratorService;
 import dev.restate.e2e.functions.externalcall.ReplierGrpc;
 import dev.restate.e2e.functions.externalcall.ReplierService;
+import dev.restate.e2e.functions.nondeterminism.NonDeterministicService;
+import dev.restate.e2e.functions.nondeterminism.NonDeterministicServiceGrpc;
 import dev.restate.e2e.functions.receiver.ReceiverGrpc;
 import dev.restate.e2e.functions.singletoncounter.SingletonCounterGrpc;
 import dev.restate.sdk.vertx.RestateHttpEndpointBuilder;
@@ -53,6 +55,9 @@ public class Main {
           break;
         case ReplierGrpc.SERVICE_NAME:
           restateHttpEndpointBuilder.withService(new ReplierService());
+          break;
+        case NonDeterministicServiceGrpc.SERVICE_NAME:
+          restateHttpEndpointBuilder.withService(new NonDeterministicService());
           break;
       }
     }

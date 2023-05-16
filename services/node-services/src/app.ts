@@ -5,11 +5,16 @@ import { protoMetadata as noopProtoMetadata } from "./generated/noop";
 import { protoMetadata as coordinatorProtoMetadata } from "./generated/coordinator";
 import { protoMetadata as receiverProtoMetadata } from "./generated/receiver";
 import { protoMetadata as listProtoMetadata } from "./generated/list";
+import { protoMetadata as nonDeterminismProtoMetadata } from "./generated/non_determinism";
 import { CounterService, CounterServiceFQN } from "./counter";
 import { ListService, ListServiceFQN } from "./collections";
 import { NoopService, NoopServiceFQN } from "./noop";
 import { CoordinatorService, CoordinatorServiceFQN } from "./coordinator";
 import { ReceiverService, ReceiverServiceFQN } from "./receiver";
+import {
+  NonDeterministicService,
+  NonDeterministicServiceFQN,
+} from "./non_determinism";
 
 let serverBuilder = restate.createServer();
 
@@ -52,6 +57,14 @@ const services = new Map<string, restate.ServiceOpts>([
       descriptor: listProtoMetadata,
       service: "ListService",
       instance: new ListService(),
+    },
+  ],
+  [
+    NonDeterministicServiceFQN,
+    {
+      descriptor: nonDeterminismProtoMetadata,
+      service: "NonDeterministicService",
+      instance: new NonDeterministicService(),
     },
   ],
 ]);

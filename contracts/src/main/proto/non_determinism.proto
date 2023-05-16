@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+option java_package = "dev.restate.e2e.functions.nondeterminism";
+option java_outer_classname = "NonDeterminismProto";
+
+import "google/protobuf/empty.proto";
+import "dev/restate/ext.proto";
+package nondeterminism;
+
+service NonDeterministicService {
+  option (dev.restate.ext.service_type) = KEYED;
+
+  rpc LeftSleepRightCall(NonDeterministicRequest) returns (google.protobuf.Empty);
+  rpc CallDifferentMethod(NonDeterministicRequest) returns (google.protobuf.Empty);
+  rpc BackgroundInvokeWithDifferentTargets(NonDeterministicRequest) returns (google.protobuf.Empty);
+  rpc SetDifferentKey(NonDeterministicRequest) returns (google.protobuf.Empty);
+  rpc SetDifferentValue(NonDeterministicRequest) returns (google.protobuf.Empty);
+}
+
+message NonDeterministicRequest {
+  string key = 1 [(dev.restate.ext.field) = KEY];
+}

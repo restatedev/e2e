@@ -34,8 +34,8 @@ tasks {
     environment = environment + mapOf("RESTATE_WORKER__INVOKER__SUSPENSION_TIMEOUT" to "0s")
 
     useJUnitPlatform {
-      // Run all the tests with always-suspending tag
-      includeTags("always-suspending")
+      // Run all the tests with always-suspending or only-always-suspending tag
+      includeTags("always-suspending | only-always-suspending")
     }
   }
 
