@@ -69,32 +69,36 @@ abstract class BaseSimpleSleepTest {
   }
 
   @Test
-  fun manySleeps(@InjectChannel runtimeChannel: Channel) = runTest {
-    val minSleepDuration = 100.milliseconds
-    val maxSleepDuration = 150.milliseconds
-    val sleepsPerInvocation = 10
-    val concurrentSleepInvocations = 50
+  fun manySleeps(@InjectChannel runtimeChannel: Channel) =
+      runTest(timeout = 60.seconds) {
+        val minSleepDuration = 100.milliseconds
+        val maxSleepDuration = 500.milliseconds
+        val sleepsPerInvocation = 20
+        val concurrentSleepInvocations = 50
 
-    val coordinatorClient = CoordinatorGrpcKt.CoordinatorCoroutineStub(runtimeChannel)
+        val coordinatorClient = CoordinatorGrpcKt.CoordinatorCoroutineStub(runtimeChannel)
 
-    (0..concurrentSleepInvocations)
-        .map {
-          launch {
-            coordinatorClient.manyTimers(
-                CoordinatorProto.ManyTimersRequest.newBuilder()
-                    .addAllTimer(
-                        (1..sleepsPerInvocation)
-                            .map {
-                              Random.nextLong(
-                                  minSleepDuration.inWholeMilliseconds..maxSleepDuration
-                                          .inWholeMilliseconds)
-                            }
-                            .map { CoordinatorProto.Duration.newBuilder().setMillis(it).build() })
-                    .build())
-          }
-        }
-        .joinAll()
-  }
+        // Range is inclusive
+        (1..concurrentSleepInvocations)
+            .map {
+              launch {
+                coordinatorClient.manyTimers(
+                    CoordinatorProto.ManyTimersRequest.newBuilder()
+                        .addAllTimer(
+                            (1..sleepsPerInvocation)
+                                .map {
+                                  Random.nextLong(
+                                      minSleepDuration.inWholeMilliseconds..maxSleepDuration
+                                              .inWholeMilliseconds)
+                                }
+                                .map {
+                                  CoordinatorProto.Duration.newBuilder().setMillis(it).build()
+                                })
+                        .build())
+              }
+            }
+            .joinAll()
+      }
 }
 
 // -- Sleep tests with terminations/killings of runtime/service endpoint
