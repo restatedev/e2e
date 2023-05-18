@@ -7,6 +7,7 @@ import dev.restate.e2e.functions.counter.CounterProto
 import dev.restate.e2e.functions.nondeterminism.NonDeterminismProto.NonDeterministicRequest
 import dev.restate.e2e.functions.nondeterminism.NonDeterministicServiceGrpc
 import dev.restate.e2e.utils.*
+import dev.restate.e2e.utils.FunctionSpec.*
 import io.grpc.*
 import io.grpc.stub.ClientCalls
 import java.util.*
@@ -30,9 +31,11 @@ class JavaNonDeterminismTest : NonDeterminismTest() {
                 .withEnv(Containers.getRestateEnvironment())
                 .withServiceEndpoint(
                     Containers.javaServicesContainer(
-                        "java-non-determinism",
-                        NonDeterministicServiceGrpc.SERVICE_NAME,
-                        CounterGrpc.SERVICE_NAME))
+                            "java-non-determinism",
+                            NonDeterministicServiceGrpc.SERVICE_NAME,
+                            CounterGrpc.SERVICE_NAME)
+                        .withRegistrationOptions(
+                            RegistrationOptions(retryPolicy = RetryPolicy.None)))
                 .build())
   }
 }
@@ -47,9 +50,11 @@ class NodeNonDeterminismTest : NonDeterminismTest() {
                 .withEnv(Containers.getRestateEnvironment())
                 .withServiceEndpoint(
                     Containers.nodeServicesContainer(
-                        "node-non-determinism",
-                        NonDeterministicServiceGrpc.SERVICE_NAME,
-                        CounterGrpc.SERVICE_NAME))
+                            "node-non-determinism",
+                            NonDeterministicServiceGrpc.SERVICE_NAME,
+                            CounterGrpc.SERVICE_NAME)
+                        .withRegistrationOptions(
+                            RegistrationOptions(retryPolicy = RetryPolicy.None)))
                 .build())
   }
 }
