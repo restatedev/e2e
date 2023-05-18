@@ -70,6 +70,7 @@ object Containers {
       javaServicesContainer("java-errors", FailingServiceGrpc.SERVICE_NAME)
           .withEnv(
               "HTTP_SERVER_ADDRESS", "http://${EXTERNALCALL_HTTP_SERVER_CONTAINER_SPEC.first}:8080")
+          .withRegistrationOptions(RegistrationOptions(retryPolicy = RetryPolicy.None))
           .build()
 
   // -- Node containers
@@ -93,6 +94,7 @@ object Containers {
 
   val NODE_ERRORS_FUNCTION_SPEC =
       nodeServicesContainer("node-errors", FailingServiceGrpc.SERVICE_NAME)
+          .withRegistrationOptions(RegistrationOptions(retryPolicy = RetryPolicy.None))
 
   // -- Verification test container (source https://github.com/restatedev/restate-verification)
 
