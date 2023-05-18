@@ -79,6 +79,7 @@ object Containers {
     assert(services.isNotEmpty())
     return FunctionSpec.builder("restatedev/e2e-node-services")
         .withEnv("SERVICES", services.joinToString(","))
+        .withEnv("RESTATE_DEBUG_LOG", "MESSAGES")
         .withHostName(hostName)
   }
 
