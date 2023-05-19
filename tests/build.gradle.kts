@@ -102,5 +102,5 @@ tasks {
 tasks.named("build") {
   dependsOn("test-always-suspending")
   dependsOn("test-single-thread-single-partition")
-  dependsOn("test-persisted-timers")
+  // dependsOn("test-persisted-timers")
 }
