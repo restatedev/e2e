@@ -27,6 +27,7 @@ import org.junit.jupiter.api.extension.RegisterExtension
 // -- Simple sleep tests
 
 @Tag("always-suspending")
+@Tag("timers")
 class JavaSimpleSleepTest : BaseSimpleSleepTest() {
   companion object {
     @RegisterExtension
@@ -40,6 +41,7 @@ class JavaSimpleSleepTest : BaseSimpleSleepTest() {
 }
 
 @Tag("always-suspending")
+@Tag("timers")
 class NodeSimpleSleepTest : BaseSimpleSleepTest() {
   companion object {
     @RegisterExtension

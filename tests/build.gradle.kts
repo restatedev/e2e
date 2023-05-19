@@ -78,6 +78,20 @@ tasks {
     }
   }
 
+  register<Test>("test-persisted-timers") {
+    environment =
+        environment +
+            baseRestateEnvironment(name) +
+            mapOf("RESTATE_WORKER__TIMERS__NUM_TIMERS_IN_MEMORY_LIMIT" to "1")
+
+    useJUnitPlatform {
+      // Run all the tests with always-suspending or only-always-suspending tag
+      includeTags("timers")
+    }
+    // Increase a bit the default timeout
+    systemProperties["junit.jupiter.execution.timeout.testable.method.default"] = "20 s"
+  }
+
   withType<Test>().configureEach {
     dependsOn(":services:http-server:jibDockerBuild")
     dependsOn(":services:java-services:jibDockerBuild")
@@ -88,4 +102,5 @@ tasks {
 tasks.named("build") {
   dependsOn("test-always-suspending")
   dependsOn("test-single-thread-single-partition")
+  dependsOn("test-persisted-timers")
 }
