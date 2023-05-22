@@ -1,5 +1,6 @@
-package dev.restate.e2e
+package dev.restate.e2e.node
 
+import dev.restate.e2e.Containers
 import dev.restate.e2e.services.verification.interpreter.InterpreterProto.TestParams
 import dev.restate.e2e.services.verification.verifier.CommandVerifierGrpc.CommandVerifierBlockingStub
 import dev.restate.e2e.services.verification.verifier.VerifierProto
@@ -14,15 +15,13 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 import org.awaitility.kotlin.*
-import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.extension.RegisterExtension
+import kotlin.time.Duration.Companion.milliseconds
 
-// We need https://github.com/restatedev/sdk-typescript/pull/9 for this
-// @Tag("always-suspending")
-@Disabled(
-    "Without https://github.com/restatedev/restate-verification/issues/7 it's hard to predict time, and there's always a chance these tests can fail")
+@Tag("always-suspending")
 class VerificationTest {
 
   companion object {
@@ -44,8 +43,8 @@ class VerificationTest {
           .joinToString(separator = "")
     }
 
-    private val POLL_INTERVAL = 1.seconds.toJavaDuration()
-    private val MAX_POLL_TIME = 10.minutes.toJavaDuration()
+    private val POLL_INTERVAL = 500.milliseconds.toJavaDuration()
+    private val MAX_POLL_TIME = 1.minutes.toJavaDuration()
 
     fun CommandVerifierBlockingStub.awaitVerify(testParams: TestParams): Unit =
         await
@@ -57,10 +56,10 @@ class VerificationTest {
             }
   }
 
-  @Timeout(value = 10, unit = TimeUnit.MINUTES)
+  @Timeout(value = 1, unit = TimeUnit.MINUTES)
   @Test
   fun simple(@InjectBlockingStub verifier: CommandVerifierBlockingStub) {
-    val testParams = testParams(16, 10, 4)
+    val testParams = testParams()
 
     verifier.execute(ExecuteRequest.newBuilder().setParams(testParams).build())
     verifier.awaitVerify(testParams)
@@ -68,14 +67,14 @@ class VerificationTest {
     verifier.clear(VerifierProto.ClearRequest.newBuilder().setParams(testParams).build())
   }
 
-  @Timeout(value = 10, unit = TimeUnit.MINUTES)
+  @Timeout(value = 1, unit = TimeUnit.MINUTES)
   @Test
   fun killingTheServiceEndpoint(
       @InjectBlockingStub verifier: CommandVerifierBlockingStub,
       @InjectContainerHandle(Containers.VERIFICATION_FUNCTION_HOSTNAME)
       verificationContainer: ContainerHandle
   ) {
-    val testParams = testParams(16, 10, 4)
+    val testParams = testParams()
 
     verifier.execute(ExecuteRequest.newBuilder().setParams(testParams).build())
 
@@ -88,14 +87,14 @@ class VerificationTest {
     verifier.clear(VerifierProto.ClearRequest.newBuilder().setParams(testParams).build())
   }
 
-  @Timeout(value = 10, unit = TimeUnit.MINUTES)
+  @Timeout(value = 1, unit = TimeUnit.MINUTES)
   @Test
   fun stoppingTheServiceEndpoint(
       @InjectBlockingStub verifier: CommandVerifierBlockingStub,
       @InjectContainerHandle(Containers.VERIFICATION_FUNCTION_HOSTNAME)
       verificationContainer: ContainerHandle
   ) {
-    val testParams = testParams(16, 10, 4)
+    val testParams = testParams()
 
     verifier.execute(ExecuteRequest.newBuilder().setParams(testParams).build())
 
@@ -108,13 +107,13 @@ class VerificationTest {
     verifier.clear(VerifierProto.ClearRequest.newBuilder().setParams(testParams).build())
   }
 
-  @Timeout(value = 10, unit = TimeUnit.MINUTES)
+  @Timeout(value = 1, unit = TimeUnit.MINUTES)
   @Test
   fun killingTheRuntime(
       @InjectBlockingStub verifier: CommandVerifierBlockingStub,
       @InjectContainerHandle(RESTATE_RUNTIME) runtimeContainer: ContainerHandle
   ) {
-    val testParams = testParams(16, 10, 4)
+    val testParams = testParams()
 
     verifier.execute(ExecuteRequest.newBuilder().setParams(testParams).build())
 
@@ -127,13 +126,13 @@ class VerificationTest {
     verifier.clear(VerifierProto.ClearRequest.newBuilder().setParams(testParams).build())
   }
 
-  @Timeout(value = 10, unit = TimeUnit.MINUTES)
+  @Timeout(value = 1, unit = TimeUnit.MINUTES)
   @Test
   fun stoppingTheRuntime(
       @InjectBlockingStub verifier: CommandVerifierBlockingStub,
       @InjectContainerHandle(RESTATE_RUNTIME) runtimeContainer: ContainerHandle
   ) {
-    val testParams = testParams(16, 10, 4)
+    val testParams = testParams()
 
     verifier.execute(ExecuteRequest.newBuilder().setParams(testParams).build())
 
@@ -146,11 +145,12 @@ class VerificationTest {
     verifier.clear(VerifierProto.ClearRequest.newBuilder().setParams(testParams).build())
   }
 
-  private fun testParams(seedLength: Int, width: Int, depth: Int): TestParams {
+  private fun testParams(): TestParams {
     return TestParams.newBuilder()
-        .setSeed(generateAlphanumericString(seedLength))
-        .setWidth(width)
-        .setDepth(depth)
+        .setSeed(generateAlphanumericString(16))
+        .setWidth(4)
+        .setDepth(4)
+        .setMaxSleepMillis(10.seconds.inWholeMilliseconds.toInt())
         .build()
   }
 }
