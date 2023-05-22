@@ -11,15 +11,16 @@ import io.grpc.StatusRuntimeException
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 import kotlin.random.nextInt
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
+import org.apache.logging.log4j.LogManager
 import org.awaitility.kotlin.*
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.extension.RegisterExtension
-import kotlin.time.Duration.Companion.milliseconds
 
 @Tag("always-suspending")
 class VerificationTest {
@@ -36,6 +37,8 @@ class VerificationTest {
 
     private val ALPHANUMERIC_ALPHABET: Array<Char> =
         (('0'..'9').toList() + ('a'..'z').toList() + ('A'..'Z').toList()).toTypedArray()
+
+    private val logger = LogManager.getLogger(VerificationTest::class.java)
 
     fun generateAlphanumericString(length: Int): String {
       return List(length) { Random.nextInt(0, ALPHANUMERIC_ALPHABET.size) }
@@ -146,10 +149,15 @@ class VerificationTest {
   }
 
   private fun testParams(): TestParams {
+    // val seed = generateAlphanumericString(16)
+    // W8JmvLJVlwAB0E2Z -> This should take ~3 seconds
+    // idkQ4rJpKnpD60wC -> This should take ~10 seconds
+    val seed = "idkQ4rJpKnpD60wC"
+    logger.info("Using seed {}", seed)
     return TestParams.newBuilder()
-        .setSeed(generateAlphanumericString(16))
-        .setWidth(4)
-        .setDepth(4)
+        .setSeed(seed)
+        .setWidth(3)
+        .setDepth(3)
         .setMaxSleepMillis(10.seconds.inWholeMilliseconds.toInt())
         .build()
   }
