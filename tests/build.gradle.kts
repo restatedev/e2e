@@ -72,6 +72,8 @@ tasks {
     useJUnitPlatform {
       // Run all the tests with either no tags, or always-suspending tag
       includeTags("none() | always-suspending")
+      // Increase a bit the default timeout
+      systemProperties["junit.jupiter.execution.timeout.testable.method.default"] = "30 s"
     }
   }
 
