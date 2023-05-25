@@ -56,11 +56,11 @@ export class NonDeterministicService implements INonDeterministicService {
     const counterClient = new CounterClientImpl(ctx);
 
     if (doLeftAction(request)) {
-      await ctx.inBackground(() =>
+      await ctx.oneWayCall(() =>
         counterClient.get(CounterRequest.create({ counterName: "abc" }))
       );
     } else {
-      await ctx.inBackground(() =>
+      await ctx.oneWayCall(() =>
         counterClient.reset(CounterRequest.create({ counterName: "abc" }))
       );
     }
@@ -93,7 +93,7 @@ export class NonDeterministicService implements INonDeterministicService {
     const ctx = restate.useContext(this);
     const counterClient = new CounterClientImpl(ctx);
 
-    await ctx.inBackground(() =>
+    await ctx.oneWayCall(() =>
       counterClient.add(
         CounterAddRequest.create({ counterName: request.key, value: 1 })
       )

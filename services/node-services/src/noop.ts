@@ -12,7 +12,7 @@ export class NoopService implements Noop {
     const ctx = restate.useContext(this);
 
     const productServiceClient = new CounterClientImpl(ctx);
-    await ctx.inBackground(() =>
+    await ctx.oneWayCall(() =>
       productServiceClient.add({
         counterName: "doAndReportInvocationCount",
         value: 1,
