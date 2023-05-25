@@ -149,10 +149,10 @@ class VerificationTest {
   }
 
   private fun testParams(): TestParams {
-    // val seed = generateAlphanumericString(16)
+    val seed = generateAlphanumericString(16)
+    // Some sample seeds helpful for debugging
     // W8JmvLJVlwAB0E2Z -> This should take ~3 seconds
     // idkQ4rJpKnpD60wC -> This should take ~10 seconds
-    val seed = "idkQ4rJpKnpD60wC"
     logger.info("Using seed {}", seed)
     return TestParams.newBuilder()
         .setSeed(seed)
