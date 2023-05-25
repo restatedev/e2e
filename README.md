@@ -40,7 +40,8 @@ This will populate your local image registry with the various function container
 ### How to test Java SDK changes
 
 In order to test local changes to the `sdk-java`, you need to check it out under `../sdk-java`.
-When building the `e2e` project you have to set the environment variable `E2E_LOCAL_BUILD=true` to include `sdk-java` as a composite build and substitute the `dev.restate.sdk:sdk-java` dependency with it.
+When building the `e2e` project you have to set the environment variable `JAVA_SDK_LOCAL_BUILD=true` 
+to include `sdk-java` as a composite build and substitute the `dev.restate.sdk:sdk-java` dependency with it.
 The build will fail if Gradle cannot find the `sdk-java` project.
 
 ### How to test Typescript SDK changes
@@ -53,6 +54,8 @@ gradle :services:node-services:installLocalTypescriptSdk
 ```
 
 This will build the Typescript SDK, pack it with `npm pack`, and copy it over to the node-services directory and install it.
+
+You can include `gradle :services:node-services:installLocalTypescriptSdk` in the build process by setting `TYPESCRIPT_SDK_LOCAL_BUILD=true`.
 
 ### How to test Restate runtime changes
 

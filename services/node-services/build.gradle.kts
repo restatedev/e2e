@@ -12,6 +12,11 @@ tasks.register("generateProto") {
 
 tasks.register<Copy>("prepareDockerBuild") {
   dependsOn("generateProto")
+
+  if (!System.getenv("TYPESCRIPT_SDK_LOCAL_BUILD").isNullOrEmpty()) {
+    dependsOn("installLocalTypescriptSdk")
+  }
+
   from(".") {
     include("src/**")
     into("src")

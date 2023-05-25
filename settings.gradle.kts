@@ -85,7 +85,7 @@ dependencyResolutionManagement {
 }
 
 // Include composite build for easier local testing
-if (!System.getenv("E2E_LOCAL_BUILD").isNullOrEmpty()) {
+if (!System.getenv("JAVA_SDK_LOCAL_BUILD").isNullOrEmpty()) {
   includeBuild("../sdk-java") {
     dependencySubstitution {
       substitute(module("dev.restate.sdk:sdk-core")).using(project(":sdk-core"))
