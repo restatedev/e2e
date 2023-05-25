@@ -54,7 +54,7 @@ export class CoordinatorService implements Coordinator {
     // background calls as well as request-response calls have an absolute ordering that is defined
     // by their call order. In this concrete case, setValue is guaranteed to be executed before
     // getValue.
-    await ctx.inBackground(() =>
+    await ctx.oneWayCall(() =>
       receiverClient.setValue({ key, value: request.requestValue })
     );
     const response = await receiverClient.getValue({ key });
