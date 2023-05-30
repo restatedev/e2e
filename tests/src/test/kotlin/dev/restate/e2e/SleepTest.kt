@@ -14,7 +14,6 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
@@ -34,22 +33,6 @@ class JavaSleepTest : BaseSleepTest() {
                       RegistrationOptions(retryPolicy = FIXED_DELAY_RETRY_POLICY)))
           .build()
     }
-  }
-
-  @Disabled("https://github.com/restatedev/sdk-java/issues/85")
-  override fun sleepAndKillServiceEndpoint(
-      @InjectChannel runtimeChannel: Channel,
-      @InjectContainerHandle(COORDINATOR_HOSTNAME) coordinatorContainer: ContainerHandle
-  ) {
-    super.sleepAndKillServiceEndpoint(runtimeChannel, coordinatorContainer)
-  }
-
-  @Disabled("https://github.com/restatedev/sdk-java/issues/85")
-  override fun sleepAndTerminateServiceEndpoint(
-      @InjectChannel runtimeChannel: Channel,
-      @InjectContainerHandle(COORDINATOR_HOSTNAME) coordinatorContainer: ContainerHandle
-  ) {
-    super.sleepAndTerminateServiceEndpoint(runtimeChannel, coordinatorContainer)
   }
 }
 
@@ -92,7 +75,7 @@ abstract class BaseSleepTest {
 
   @Timeout(value = 15, unit = TimeUnit.SECONDS)
   @Test
-  open fun sleepAndKillServiceEndpoint(
+  fun sleepAndKillServiceEndpoint(
       @InjectChannel runtimeChannel: Channel,
       @InjectContainerHandle(COORDINATOR_HOSTNAME) coordinatorContainer: ContainerHandle
   ) {
@@ -119,7 +102,7 @@ abstract class BaseSleepTest {
 
   @Timeout(value = 15, unit = TimeUnit.SECONDS)
   @Test
-  open fun sleepAndTerminateServiceEndpoint(
+  fun sleepAndTerminateServiceEndpoint(
       @InjectChannel runtimeChannel: Channel,
       @InjectContainerHandle(COORDINATOR_HOSTNAME) coordinatorContainer: ContainerHandle
   ) {
