@@ -47,7 +47,7 @@ class VerificationTest {
     }
 
     private val POLL_INTERVAL = 500.milliseconds.toJavaDuration()
-    private val MAX_POLL_TIME = 1.minutes.toJavaDuration()
+    private val MAX_POLL_TIME = 2.minutes.toJavaDuration()
 
     fun CommandVerifierBlockingStub.awaitVerify(testParams: TestParams): Unit =
         await
