@@ -31,7 +31,7 @@ tasks {
           "RESTATE_WORKER__PARTITIONS" to "10",
           "RESTATE_RUNTIME_CONTAINER" to
               (System.getenv("RESTATE_RUNTIME_CONTAINER") ?: "ghcr.io/restatedev/restate:latest"),
-          "RUST_LOG" to (System.getenv("RUST_LOG") ?: "info,restate_invoker=trace,restate=debug"),
+          "RUST_LOG" to (System.getenv("RUST_LOG") ?: "info,restate=debug,restate_timer=trace"),
           "RESTATE_OBSERVABILITY__JAEGER_FILE__FILTER" to
               (System.getenv("RESTATE_OBSERVABILITY__JAEGER_FILE__FILTER")
                   ?: "info,restate_invoker=trace,restate=debug"),
@@ -103,7 +103,7 @@ tasks {
 }
 
 tasks.named("build") {
-//  dependsOn("test-always-suspending")
-//  dependsOn("test-single-thread-single-partition")
+  //  dependsOn("test-always-suspending")
+  //  dependsOn("test-single-thread-single-partition")
   // dependsOn("test-persisted-timers")
 }
