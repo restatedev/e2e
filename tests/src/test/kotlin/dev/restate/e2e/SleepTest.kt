@@ -18,7 +18,9 @@ import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
+import org.apache.logging.log4j.LogManager
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
@@ -56,6 +58,8 @@ class NodeSimpleSleepTest : BaseSimpleSleepTest() {
 
 abstract class BaseSimpleSleepTest {
 
+  private val logger = LogManager.getLogger(BaseSimpleSleepTest::class.java)
+
   @Test
   fun sleep(@InjectBlockingStub coordinatorClient: CoordinatorGrpc.CoordinatorBlockingStub) {
     val sleepDuration = 100.milliseconds
@@ -70,9 +74,9 @@ abstract class BaseSimpleSleepTest {
     assertThat(elapsed.nanoseconds).isGreaterThanOrEqualTo(sleepDuration)
   }
 
-  @Test
+  @RepeatedTest(10)
   fun manySleeps(@InjectChannel runtimeChannel: Channel) =
-      runTest(timeout = 60.seconds) {
+      runTest(timeout = 20.seconds) {
         val minSleepDuration = 100.milliseconds
         val maxSleepDuration = 500.milliseconds
         val sleepsPerInvocation = 20
@@ -97,6 +101,7 @@ abstract class BaseSimpleSleepTest {
                                   CoordinatorProto.Duration.newBuilder().setMillis(it).build()
                                 })
                         .build())
+                logger.info("Completed many sleep call #{}", it)
               }
             }
             .joinAll()
