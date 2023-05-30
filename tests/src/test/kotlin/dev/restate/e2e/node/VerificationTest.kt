@@ -157,7 +157,7 @@ class VerificationTest {
     return TestParams.newBuilder()
         .setSeed(seed)
         .setWidth(3)
-        .setDepth(3)
+        .setDepth(14)
         .setMaxSleepMillis(10.seconds.inWholeMilliseconds.toInt())
         .build()
   }
