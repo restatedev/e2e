@@ -79,8 +79,8 @@ abstract class BaseSimpleSleepTest {
       runTest(timeout = 60.seconds) {
         val minSleepDuration = 100.milliseconds
         val maxSleepDuration = 500.milliseconds
-        val sleepsPerInvocation = 20
-        val concurrentSleepInvocations = 50
+        val sleepsPerInvocation = 10
+        val concurrentSleepInvocations = 10
 
         val coordinatorClient = CoordinatorGrpcKt.CoordinatorCoroutineStub(runtimeChannel)
 

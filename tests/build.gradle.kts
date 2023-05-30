@@ -28,7 +28,7 @@ tasks {
       mapOf(
           "CONTAINER_LOGS_DIR" to "$buildDir/test-results/$name/container-logs",
           // We don't need many partitions, fewer partitions will occupy less test resources
-          "RESTATE_WORKER__PARTITIONS" to "10",
+          "RESTATE_WORKER__PARTITIONS" to "1",
           "RESTATE_RUNTIME_CONTAINER" to
               (System.getenv("RESTATE_RUNTIME_CONTAINER") ?: "ghcr.io/restatedev/restate:latest"),
           "RUST_LOG" to (System.getenv("RUST_LOG") ?: "info,restate=debug,restate_timer=trace"),
