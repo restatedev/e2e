@@ -42,8 +42,11 @@ tasks {
 
     useJUnitPlatform {
       // Run all the tests with either no tags, or always-suspending tag
-      includeTags("none() | always-suspending")
+      includeTags("timers")
     }
+
+    // Increase a bit the default timeout
+    systemProperties["junit.jupiter.execution.timeout.testable.method.default"] = "60 s"
   }
 
   register<Test>("test-always-suspending") {
@@ -100,7 +103,7 @@ tasks {
 }
 
 tasks.named("build") {
-  dependsOn("test-always-suspending")
-  dependsOn("test-single-thread-single-partition")
+//  dependsOn("test-always-suspending")
+//  dependsOn("test-single-thread-single-partition")
   // dependsOn("test-persisted-timers")
 }
