@@ -4,7 +4,7 @@ import dev.restate.e2e.Containers.FIXED_DELAY_RETRY_POLICY
 import dev.restate.e2e.functions.coordinator.CoordinatorGrpc
 import dev.restate.e2e.functions.coordinator.CoordinatorProto
 import dev.restate.e2e.utils.*
-import dev.restate.e2e.utils.FunctionSpec.RegistrationOptions
+import dev.restate.e2e.utils.ServiceSpec.RegistrationOptions
 import io.grpc.Channel
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random

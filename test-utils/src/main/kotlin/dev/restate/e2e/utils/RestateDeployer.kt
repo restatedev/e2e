@@ -30,7 +30,7 @@ import org.testcontainers.utility.DockerImageName
 class RestateDeployer
 private constructor(
     runtimeDeployments: Int,
-    functionSpecs: List<FunctionSpec>,
+    serviceSpecs: List<ServiceSpec>,
     private val additionalContainers: Map<String, GenericContainer<*>>,
     private val additionalEnv: Map<String, String>,
     private val runtimeContainerName: String,
@@ -81,7 +81,7 @@ private constructor(
   }
 
   private val functionContainers =
-      functionSpecs.associate { spec -> spec.hostName to (spec to spec.toContainer()) }
+      serviceSpecs.associate { spec -> spec.hostName to (spec to spec.toContainer()) }
   private val network = Network.newNetwork()
   private val tmpDir = Files.createTempDirectory("restate-e2e").toFile()
 
@@ -112,7 +112,7 @@ private constructor(
 
   data class Builder(
       private var runtimeDeployments: Int = 1,
-      private var serviceEndpoints: MutableList<FunctionSpec> = mutableListOf(),
+      private var serviceEndpoints: MutableList<ServiceSpec> = mutableListOf(),
       private var additionalContainers: MutableMap<String, GenericContainer<*>> = mutableMapOf(),
       private var additionalEnv: MutableMap<String, String> = mutableMapOf(),
       private var runtimeContainer: String =
@@ -120,17 +120,17 @@ private constructor(
       private var enableTracesExport: Boolean = true
   ) {
 
-    fun withServiceEndpoint(functionSpec: FunctionSpec) = apply {
-      this.serviceEndpoints.add(functionSpec)
+    fun withServiceEndpoint(serviceSpec: ServiceSpec) = apply {
+      this.serviceEndpoints.add(serviceSpec)
     }
 
-    fun withServiceEndpoint(functionSpecBuilder: FunctionSpec.Builder) = apply {
-      this.serviceEndpoints.add(functionSpecBuilder.build())
+    fun withServiceEndpoint(serviceSpecBuilder: ServiceSpec.Builder) = apply {
+      this.serviceEndpoints.add(serviceSpecBuilder.build())
     }
 
     /** Add a function with default configuration. */
     fun withServiceEndpoint(containerImageName: String) = apply {
-      this.withServiceEndpoint(FunctionSpec.builder(containerImageName))
+      this.withServiceEndpoint(ServiceSpec.builder(containerImageName))
     }
 
     fun runtimeDeployments(runtimeDeployments: Int) = apply {
@@ -291,11 +291,11 @@ private constructor(
   private data class RegisterServiceEndpointRequest(
       val uri: String,
       val additionalHeaders: Map<String, String>? = null,
-      val retryPolicy: FunctionSpec.RetryPolicy? = null
+      val retryPolicy: ServiceSpec.RetryPolicy? = null
   )
 
   @OptIn(ExperimentalSerializationApi::class)
-  fun discoverServiceEndpoint(spec: FunctionSpec) {
+  fun discoverServiceEndpoint(spec: ServiceSpec) {
     val url = spec.getFunctionEndpointUrl()
 
     // Can replace with code generated from the openapi contract

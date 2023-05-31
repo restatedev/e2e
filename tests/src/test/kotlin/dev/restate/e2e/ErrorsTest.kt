@@ -5,10 +5,10 @@ import dev.restate.e2e.functions.counter.CounterProto
 import dev.restate.e2e.functions.errors.ErrorsProto.ErrorMessage
 import dev.restate.e2e.functions.errors.ErrorsProto.FailRequest
 import dev.restate.e2e.functions.errors.FailingServiceGrpc.FailingServiceBlockingStub
-import dev.restate.e2e.utils.FunctionSpec
 import dev.restate.e2e.utils.InjectBlockingStub
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
+import dev.restate.e2e.utils.ServiceSpec
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import java.util.*
@@ -33,8 +33,8 @@ class JavaErrorsTest : BaseErrorsTest() {
                 .withServiceEndpoint(
                     Containers.JAVA_COUNTER_FUNCTION_SPEC.copy(
                         registrationOptions =
-                            FunctionSpec.RegistrationOptions(
-                                retryPolicy = FunctionSpec.RetryPolicy.None)))
+                            ServiceSpec.RegistrationOptions(
+                                retryPolicy = ServiceSpec.RetryPolicy.None)))
                 .withContainer(Containers.EXTERNALCALL_HTTP_SERVER_CONTAINER_SPEC)
                 .build())
   }
@@ -69,8 +69,8 @@ class NodeErrorsTest : BaseErrorsTest() {
                 .withServiceEndpoint(
                     Containers.NODE_COUNTER_FUNCTION_SPEC.copy(
                         registrationOptions =
-                            FunctionSpec.RegistrationOptions(
-                                retryPolicy = FunctionSpec.RetryPolicy.None)))
+                            ServiceSpec.RegistrationOptions(
+                                retryPolicy = ServiceSpec.RetryPolicy.None)))
                 .build())
   }
 }
