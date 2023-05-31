@@ -29,6 +29,7 @@ tasks.register<Copy>("prepareDockerBuild") {
           ".dockerignore",
           ".eslintignore",
           ".eslintrc.json",
+          ".npmrc",
           "package.json",
           "package-lock.json",
           "tsconfig.json",
@@ -39,7 +40,7 @@ tasks.register<Copy>("prepareDockerBuild") {
 tasks.create<DockerBuildImage>("dockerBuild") {
   dependsOn("prepareDockerBuild")
   images.add("restatedev/e2e-node-services")
-  buildArgs.put("NPM_TOKEN", System.getenv("GH_PACKAGE_READ_ACCESS_TOKEN"))
+  buildArgs.put("GH_PACKAGE_READ_ACCESS_TOKEN", System.getenv("GH_PACKAGE_READ_ACCESS_TOKEN"))
 }
 
 tasks.named("check") {

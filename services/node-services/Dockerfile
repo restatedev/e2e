@@ -1,27 +1,26 @@
 FROM node:18 AS build
-ARG NPM_TOKEN
+ARG GH_PACKAGE_READ_ACCESS_TOKEN
 
 WORKDIR /usr/src/app
 COPY . .
 
-RUN echo "//npm.pkg.github.com/:_authToken=$NPM_TOKEN\n" >> .npmrc && \
-    echo "@restatedev:registry=https://npm.pkg.github.com/" >> .npmrc && \
- npm ci && \
- npm run build && \
- rm -f .npmrc
+RUN npm ci
+RUN npm run build
 
 FROM node:18 as prod
-ARG NPM_TOKEN
+ARG GH_PACKAGE_READ_ACCESS_TOKEN
 WORKDIR /usr/src/app
 
 # Install app dependencies
-COPY package*.json *.tgz ./
-RUN echo "//npm.pkg.github.com/:_authToken=$NPM_TOKEN\n" >> .npmrc && \
-    echo "@restatedev:registry=https://npm.pkg.github.com/" >> .npmrc && \
- npm ci --production && \
- rm -f .npmrc
+COPY package*.json *.tgz .npmrc ./
+RUN npm ci --production
 
 COPY --from=build /usr/src/app/dist /usr/src/app/dist
+
+FROM node:18
+
+# Use a new stage so that the build-arg GH_PACKAGE_READ_ACCESS_TOKEN isn't leaked into the final image history
+COPY --from=prod /usr/src/app/ /usr/src/app/
 
 # Install Tini
 RUN apt-get update && apt-get -y install tini
