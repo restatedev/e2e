@@ -3,9 +3,10 @@ E2E tests for Restate
 
 ## Modules
 
-* `functions` contains a collection of functions for e2e testing
+* `services` contains a collection of services for e2e testing
 * `test-utils` contains utilities to develop e2e tests
 * `tests` contains the test code
+* `contracts` contains the different protobuf definitions, used by services and tests
 
 ## Setup local env
 
@@ -21,7 +22,7 @@ To create a PAT check https://docs.github.com/en/authentication/keeping-your-acc
 You also need to login to the container registry using podman/docker (the command is the same for both):
 
 ```shell
-podman login ghcr.io --username $GH_PACKAGE_READ_ACCESS_USER --password $GH_PACKAGE_READ_ACCESS_TOKEN
+docker login ghcr.io --username $GH_PACKAGE_READ_ACCESS_USER --password $GH_PACKAGE_READ_ACCESS_TOKEN
 ```
 
 > *Note*
@@ -36,6 +37,10 @@ gradle build
 ```
 
 This will populate your local image registry with the various function containers, required for testing, and then execute the tests.
+
+### Test report and container logs
+
+For each deployment of `RestateDeployer`, the `stdout` and `stderr` of the containers and the inspect info are written in `tests/build/test-results/[test-configuration]/container-logs/[test-name]`.
 
 ### How to test Java SDK changes
 
