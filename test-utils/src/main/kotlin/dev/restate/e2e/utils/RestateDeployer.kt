@@ -80,7 +80,7 @@ private constructor(
     }
   }
 
-  private val functionContainers =
+  private val serviceContainers =
       serviceSpecs.associate { spec -> spec.hostName to (spec to spec.toContainer()) }
   private val network = Network.newNetwork()
   private val tmpDir = Files.createTempDirectory("restate-e2e").toFile()
@@ -103,7 +103,7 @@ private constructor(
                         RUNTIME_META_ENDPOINT_PORT,
                         RUNTIME_GRPC_INGRESS_ENDPOINT_PORT)
                   })) +
-          functionContainers.map { it.key to ContainerHandle(it.value.second) } +
+          serviceContainers.map { it.key to ContainerHandle(it.value.second) } +
           additionalContainers.map { it.key to ContainerHandle(it.value) }
 
   init {
@@ -128,7 +128,7 @@ private constructor(
       this.serviceEndpoints.add(serviceSpecBuilder.build())
     }
 
-    /** Add a function with default configuration. */
+    /** Add a service with default configuration. */
     fun withServiceEndpoint(containerImageName: String) = apply {
       this.withServiceEndpoint(ServiceSpec.builder(containerImageName))
     }
@@ -167,31 +167,31 @@ private constructor(
   }
 
   fun deployAll(testReportDir: String) {
-    deployFunctions(testReportDir)
+    deployServices(testReportDir)
     deployAdditionalContainers(testReportDir)
     deployRuntime(testReportDir)
     deployProxy(testReportDir)
 
     // Let's execute service discovery to register the services
-    functionContainers.values.forEach { (spec, _) -> discoverServiceEndpoint(spec) }
+    serviceContainers.values.forEach { (spec, _) -> discoverServiceEndpoint(spec) }
 
     // Log environment
     writeEnvironmentReport(testReportDir)
   }
 
-  private fun deployFunctions(testReportDir: String) {
-    // Deploy functions
-    functionContainers.forEach { (functionName, functionContainer) ->
-      functionContainer.second.networkAliases = ArrayList()
-      functionContainer.second
+  private fun deployServices(testReportDir: String) {
+    // Deploy services
+    serviceContainers.forEach { (serviceName, serviceContainer) ->
+      serviceContainer.second.networkAliases = ArrayList()
+      serviceContainer.second
           .withNetwork(network)
-          .withNetworkAliases(functionName)
-          .withLogConsumer(ContainerLogger(testReportDir, functionName))
+          .withNetworkAliases(serviceName)
+          .withLogConsumer(ContainerLogger(testReportDir, serviceName))
           .start()
       logger.debug(
-          "Started function container {} with endpoint {}",
-          functionName,
-          functionContainer.first.getFunctionEndpointUrl())
+          "Started service container {} with endpoint {}",
+          serviceName,
+          serviceContainer.first.getEndpointUrl())
     }
   }
 
@@ -233,7 +233,7 @@ private constructor(
     runtimeContainer
         // We expose these ports only to enable port checks
         .withExposedPorts(RUNTIME_GRPC_INGRESS_ENDPOINT_PORT, RUNTIME_META_ENDPOINT_PORT)
-        .dependsOn(functionContainers.values.map { it.second })
+        .dependsOn(serviceContainers.values.map { it.second })
         .dependsOn(additionalContainers.values)
         .withEnv(additionalEnv)
         // These envs should not be overriden by additionalEnv
@@ -296,7 +296,7 @@ private constructor(
 
   @OptIn(ExperimentalSerializationApi::class)
   fun discoverServiceEndpoint(spec: ServiceSpec) {
-    val url = spec.getFunctionEndpointUrl()
+    val url = spec.getEndpointUrl()
 
     // Can replace with code generated from the openapi contract
     val jsonEncoder = Json { namingStrategy = JsonNamingStrategy.SnakeCase }
@@ -349,8 +349,8 @@ private constructor(
     additionalContainers.forEach { (_, container) -> container.stop() }
   }
 
-  private fun teardownFunctions() {
-    functionContainers.forEach { (_, container) -> container.second.stop() }
+  private fun teardownServices() {
+    serviceContainers.forEach { (_, container) -> container.second.stop() }
   }
 
   private fun teardownRuntime() {
@@ -370,7 +370,7 @@ private constructor(
   private fun teardownAll() {
     teardownRuntime()
     teardownAdditionalContainers()
-    teardownFunctions()
+    teardownServices()
     teardownProxy()
     network!!.close()
   }

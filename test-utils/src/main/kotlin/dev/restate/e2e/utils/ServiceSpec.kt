@@ -90,7 +90,7 @@ data class ServiceSpec(
         .withExposedPorts(port)
   }
 
-  internal fun getFunctionEndpointUrl(): URL {
+  internal fun getEndpointUrl(): URL {
     return URL("http", this.hostName, this.port, "/")
   }
 }
