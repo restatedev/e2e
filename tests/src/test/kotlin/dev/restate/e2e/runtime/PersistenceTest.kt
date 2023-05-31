@@ -1,5 +1,6 @@
-package dev.restate.e2e
+package dev.restate.e2e.runtime
 
+import dev.restate.e2e.Containers
 import dev.restate.e2e.functions.counter.CounterGrpc
 import dev.restate.e2e.functions.counter.CounterProto.CounterAddRequest
 import dev.restate.e2e.utils.*
@@ -8,7 +9,8 @@ import org.junit.jupiter.api.*
 import org.junit.jupiter.api.extension.RegisterExtension
 
 @Tag("always-suspending")
-class JavaPersistenceAcrossRuntimeRestartsTest : BasePersistenceAcrossRuntimeRestartsTest() {
+class PersistenceTest {
+
   companion object {
     @JvmStatic
     @RegisterExtension
@@ -19,27 +21,9 @@ class JavaPersistenceAcrossRuntimeRestartsTest : BasePersistenceAcrossRuntimeRes
           .build()
     }
   }
-}
-
-@Tag("always-suspending")
-class NodePersistenceAcrossRuntimeRestartsTest : BasePersistenceAcrossRuntimeRestartsTest() {
-
-  companion object {
-    @JvmStatic
-    @RegisterExtension
-    val deployerExt: RestateDeployerForEachExtension = RestateDeployerForEachExtension {
-      RestateDeployer.Builder()
-          .withEnv(Containers.getRestateEnvironment())
-          .withServiceEndpoint(Containers.NODE_COUNTER_FUNCTION_SPEC)
-          .build()
-    }
-  }
-}
-
-abstract class BasePersistenceAcrossRuntimeRestartsTest {
 
   @Test
-  fun startAndStopRuntime(
+  fun startAndStopRuntimeRetainsTheState(
       @InjectBlockingStub counterClient: CounterGrpc.CounterBlockingStub,
       @InjectContainerHandle(RESTATE_RUNTIME) runtimeHandle: ContainerHandle
   ) {
@@ -60,7 +44,7 @@ abstract class BasePersistenceAcrossRuntimeRestartsTest {
   }
 
   @Test
-  fun startAndKillRuntime(
+  fun startAndKillRuntimeRetainsTheState(
       @InjectBlockingStub counterClient: CounterGrpc.CounterBlockingStub,
       @InjectContainerHandle(RESTATE_RUNTIME) runtimeHandle: ContainerHandle
   ) {

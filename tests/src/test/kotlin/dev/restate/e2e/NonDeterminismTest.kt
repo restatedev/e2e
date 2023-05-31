@@ -59,6 +59,7 @@ class NodeNonDeterminismTest : NonDeterminismTest() {
   }
 }
 
+/** Test non-determinism/journal mismatch checks in the SDKs. */
 abstract class NonDeterminismTest {
   companion object {
     @JvmStatic

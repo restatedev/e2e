@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
 @Tag("always-suspending")
-class ExternalCallTest {
+class AwakeableTest {
 
   companion object {
     @RegisterExtension

@@ -1,4 +1,4 @@
-package dev.restate.e2e.java
+package dev.restate.e2e.runtime
 
 import dev.restate.e2e.Containers
 import dev.restate.e2e.functions.collections.list.ListProto.Request
@@ -15,7 +15,8 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 
-class OrderingTest {
+/** Test the ordering is respected between invoke and background invoke */
+class InvokeOrderingTest {
   companion object {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension =

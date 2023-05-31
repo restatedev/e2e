@@ -28,7 +28,7 @@ class JavaCoordinatorTest : BaseCoordinatorTest() {
   }
 
   @Test
-  fun timeout(@InjectBlockingStub coordinatorClient: CoordinatorGrpc.CoordinatorBlockingStub) {
+  fun timeout(@InjectBlockingStub coordinatorClient: CoordinatorBlockingStub) {
     val timeout = Duration.ofMillis(100L)
     val response =
         coordinatorClient.timeout(
