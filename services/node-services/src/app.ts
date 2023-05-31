@@ -7,6 +7,8 @@ import { protoMetadata as receiverProtoMetadata } from "./generated/receiver";
 import { protoMetadata as listProtoMetadata } from "./generated/list";
 import { protoMetadata as errorsProtoMetadata } from "./generated/errors";
 import { protoMetadata as nonDeterminismProtoMetadata } from "./generated/non_determinism";
+import { protoMetadata as verifierProtoMetadata } from "./generated/verifier";
+import { protoMetadata as interpreterProtoMetadata } from "./generated/interpreter";
 import { CounterService, CounterServiceFQN } from "./counter";
 import { ListService, ListServiceFQN } from "./collections";
 import { FailingService, FailingServiceFQN } from "./errors";
@@ -17,6 +19,11 @@ import {
   NonDeterministicService,
   NonDeterministicServiceFQN,
 } from "./non_determinism";
+import { CommandVerifierService, CommandVerifierServiceFQN } from "./verifier";
+import {
+  CommandInterpreterService,
+  CommandInterpreterServiceFQN,
+} from "./interpreter";
 
 let serverBuilder = restate.createServer();
 
@@ -75,6 +82,22 @@ const services = new Map<string, restate.ServiceOpts>([
       descriptor: errorsProtoMetadata,
       service: "FailingService",
       instance: new FailingService(),
+    },
+  ],
+  [
+    CommandVerifierServiceFQN,
+    {
+      descriptor: verifierProtoMetadata,
+      service: "CommandVerifier",
+      instance: new CommandVerifierService(),
+    },
+  ],
+  [
+    CommandInterpreterServiceFQN,
+    {
+      descriptor: interpreterProtoMetadata,
+      service: "CommandInterpreter",
+      instance: new CommandInterpreterService(),
     },
   ],
 ]);

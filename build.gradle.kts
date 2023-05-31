@@ -39,6 +39,11 @@ allprojects {
   }
 }
 
+buildscript {
+  // required for m1 mac
+  configurations { classpath { resolutionStrategy { force("net.java.dev.jna:jna:5.7.0") } } }
+}
+
 subprojects {
   apply(plugin = "java")
   apply(plugin = "kotlin")

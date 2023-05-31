@@ -9,6 +9,8 @@ import dev.restate.e2e.functions.externalcall.RandomNumberListGeneratorGrpc
 import dev.restate.e2e.functions.externalcall.ReplierGrpc
 import dev.restate.e2e.functions.receiver.ReceiverGrpc
 import dev.restate.e2e.functions.singletoncounter.SingletonCounterGrpc
+import dev.restate.e2e.functions.verification.interpreter.CommandInterpreterGrpc
+import dev.restate.e2e.functions.verification.verifier.CommandVerifierGrpc
 import dev.restate.e2e.utils.FunctionSpec
 import dev.restate.e2e.utils.FunctionSpec.RegistrationOptions
 import dev.restate.e2e.utils.FunctionSpec.RetryPolicy
@@ -97,13 +99,14 @@ object Containers {
       nodeServicesContainer("node-errors", FailingServiceGrpc.SERVICE_NAME)
           .withRegistrationOptions(RegistrationOptions(retryPolicy = RetryPolicy.None))
 
-  // -- Verification test container (source https://github.com/restatedev/restate-verification)
+  // -- Verification test container
 
   const val VERIFICATION_FUNCTION_HOSTNAME = "restate-verification"
 
   val VERIFICATION_FUNCTION_SPEC =
-      FunctionSpec.builder("ghcr.io/restatedev/restate-verification:latest")
-          .withHostName(VERIFICATION_FUNCTION_HOSTNAME)
-          .withPort(8000)
+      nodeServicesContainer(
+              VERIFICATION_FUNCTION_HOSTNAME,
+              CommandVerifierGrpc.SERVICE_NAME,
+              CommandInterpreterGrpc.SERVICE_NAME)
           .withRegistrationOptions(RegistrationOptions(retryPolicy = FIXED_DELAY_RETRY_POLICY))
 }

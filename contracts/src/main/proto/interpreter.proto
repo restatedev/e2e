@@ -26,6 +26,7 @@ message TestParams {
   string seed = 1;
   int32 width = 2;
   int32 depth = 3;
+  optional int32 max_sleep_millis = 4;
 }
 
 message Key {
