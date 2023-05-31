@@ -84,7 +84,7 @@ tasks {
   }
 }
 
-tasks.named("build") {
+tasks.named("check") {
   dependsOn("test-always-suspending")
   dependsOn("test-single-thread-single-partition")
 }
