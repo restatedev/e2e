@@ -11,7 +11,7 @@ import org.testcontainers.utility.LogUtils
 /** Handle to interact with deployed containers */
 class ContainerHandle
 internal constructor(
-    private val container: GenericContainer<*>,
+    internal val container: GenericContainer<*>,
     private val getMappedPort: (Int) -> Int? = { container.getMappedPort(it) },
     private val waitStrategy: () -> Unit = {},
 ) {

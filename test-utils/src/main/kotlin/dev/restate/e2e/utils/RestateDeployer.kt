@@ -22,6 +22,9 @@ import org.junit.jupiter.api.fail
 import org.testcontainers.containers.*
 import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.images.PullPolicy
+import org.testcontainers.shaded.com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter
+import org.testcontainers.shaded.com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider
+import org.testcontainers.shaded.com.github.dockerjava.core.DockerClientConfig
 import org.testcontainers.utility.DockerImageName
 
 class RestateDeployer
@@ -171,6 +174,9 @@ private constructor(
 
     // Let's execute service discovery to register the services
     functionContainers.values.forEach { (spec, _) -> discoverServiceEndpoint(spec) }
+
+    // Log environment
+    writeEnvironmentReport(testReportDir)
   }
 
   private fun deployFunctions(testReportDir: String) {
@@ -322,6 +328,21 @@ private constructor(
 
     logger.debug(
         "Successfully executed discovery for endpoint {}. Result: {}", url, response.body())
+  }
+
+  private fun writeEnvironmentReport(testReportDir: String) {
+    val outFile = File(testReportDir, "deployer_environment.json")
+
+    // A bit of Jackson magic to get the object mapper well configured from docker client.
+    // We also need to exclude rawValues otherwise we get all the entries serialized twice.
+    DockerClientConfig.getDefaultObjectMapper()
+        .writer(
+            SimpleFilterProvider()
+                .addFilter("rawValues", SimpleBeanPropertyFilter.serializeAllExcept("rawValues")))
+        .withDefaultPrettyPrinter()
+        .writeValue(
+            outFile,
+            deployedContainers.map { it.key to it.value.container.containerInfo.rawValues }.toMap())
   }
 
   private fun teardownAdditionalContainers() {
