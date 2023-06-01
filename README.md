@@ -59,9 +59,28 @@ Currently, we run tests in the following configurations:
 * `gradle :tests:testPersistedTimers`: Runtime setup with timers in memory = 1, to trigger timer queue spilling to disk
 * `gradle :tests:testLazyState`: Runtime setup disabling eager state when invoking the service endpoint
 
+## Developing tests
+
+### Parallel test execution
+
+The test setup uses Gradle's `maxParallelForks` to distribute the test classes among different JVMs, providing parallelism per class.
+
+Within the test classes, it is possible to tag individual test methods to be executed in parallel.
+Usually a test method is considered safe to execute in parallel when:
+
+* Doesn't invoke directly or transitively singleton services
+* When invoking directly or transitively keyed services, it uses a key with a random component, e.g. like a UUID
+* Doesn't use additional stateful containers
+* The containing test class uses `RestateDeployerExtension`
+
+To tag a test method to be executed in parallel, use the annotation `@Execution(ExecutionMode.CONCURRENT)`.
+
+## Debugging
+
 ### `VerificationTest` seed
 
-`VerificationTest` is using a random seed to generate the execution tree. You can fix the seed to use setting the environment variable `E2E_VERIFICATION_SEED`. 
+`VerificationTest` is using a random seed to generate the execution tree, logged at the beginning of the test. 
+You can fix the seed to use setting the environment variable `E2E_VERIFICATION_SEED`.
 
 ### Test report and container logs
 
