@@ -3,7 +3,9 @@ E2E tests for Restate
 
 ## Modules
 
-* `services` contains a collection of services for e2e testing
+* `services` contains a collection of services for e2e testing:
+  * [`node-services`](services/node-services) contains the Node SDK services
+  * [`java-services`](services/java-services) contains the Java SDK services
 * `test-utils` contains utilities to develop e2e tests
 * `tests` contains the test code
 * `contracts` contains the different protobuf definitions, used by services and tests
@@ -37,6 +39,23 @@ gradle build
 ```
 
 This will populate your local image registry with the various service containers, required for testing, and then execute the tests.
+
+### Tests
+
+Source code of test runners is located in the [Tests project](tests), in particular:
+
+* [`dev.restate.e2e`](tests/src/test/kotlin/dev/restate/e2e) contains common tests to all SDKs, testing the various SDK features
+* [`dev.restate.e2e.runtime`](tests/src/test/kotlin/dev/restate/e2e/runtime) contains tests for some specific runtime behavior
+* [`dev.restate.e2e.java`](tests/src/test/kotlin/dev/restate/e2e/java) contains tests for Java SDK specific features
+* [`dev.restate.e2e.node`](tests/src/test/kotlin/dev/restate/e2e/node) contains tests for Node SDK specific features
+
+### Test configurations
+
+Currently, we run tests in the following configurations:
+
+* `gradle :tests:test`: Default runtime configuration
+* `gradle :tests:testAlwaysSuspending`: Runtime setup to always suspend after replay, to mimic the behavior of RequestResponse stream type
+* `gradle :tests:testSingleThreadSinglePartition`: Runtime setup with a single thread and single partition
 
 ### Test report and container logs
 
