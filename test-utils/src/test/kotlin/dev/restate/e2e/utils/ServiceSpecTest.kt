@@ -4,7 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 
-internal class FunctionSpecTest {
+internal class ServiceSpecTest {
 
   @ParameterizedTest
   @ValueSource(
@@ -16,6 +16,6 @@ internal class FunctionSpecTest {
               "restatedev/runtime:main",
               "ghcr.io/restatedev/runtime:main"])
   fun correctHostNameInference(containerImageName: String) {
-    assertThat(FunctionSpec.builder(containerImageName).build().hostName).isEqualTo("runtime")
+    assertThat(ServiceSpec.builder(containerImageName).build().hostName).isEqualTo("runtime")
   }
 }

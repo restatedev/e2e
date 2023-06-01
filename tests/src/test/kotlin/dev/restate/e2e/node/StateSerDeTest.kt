@@ -1,8 +1,8 @@
 package dev.restate.e2e.node
 
 import dev.restate.e2e.Containers
-import dev.restate.e2e.functions.collections.list.ListProto.*
-import dev.restate.e2e.functions.collections.list.ListServiceGrpc.ListServiceBlockingStub
+import dev.restate.e2e.services.collections.list.ListProto.*
+import dev.restate.e2e.services.collections.list.ListServiceGrpc.ListServiceBlockingStub
 import dev.restate.e2e.utils.InjectBlockingStub
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
@@ -11,8 +11,9 @@ import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
+/** Test that we can ser/de proto generated objects (check the source of ListService.append) */
 @Tag("always-suspending")
-class CollectionsTest {
+class StateSerDeTest {
   companion object {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension =

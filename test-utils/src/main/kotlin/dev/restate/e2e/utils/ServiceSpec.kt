@@ -7,8 +7,8 @@ import org.testcontainers.containers.GenericContainer
 import org.testcontainers.lifecycle.Startable
 import org.testcontainers.utility.DockerImageName
 
-/** Definition of a function to deploy. */
-data class FunctionSpec(
+/** Definition of a service to deploy. */
+data class ServiceSpec(
     internal val containerImage: String,
     internal val hostName: String,
     internal val envs: Map<String, String>,
@@ -70,7 +70,7 @@ data class FunctionSpec(
     fun dependsOn(container: Startable) = apply { this.dependencies.add(container) }
 
     fun build() =
-        FunctionSpec(containerImage, hostName, envs, port, registrationOptions, dependencies)
+        ServiceSpec(containerImage, hostName, envs, port, registrationOptions, dependencies)
   }
 
   fun toBuilder(): Builder {
@@ -90,7 +90,7 @@ data class FunctionSpec(
         .withExposedPorts(port)
   }
 
-  internal fun getFunctionEndpointUrl(): URL {
+  internal fun getEndpointUrl(): URL {
     return URL("http", this.hostName, this.port, "/")
   }
 }

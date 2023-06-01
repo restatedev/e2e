@@ -1,12 +1,9 @@
 package dev.restate.e2e
 
-import com.google.protobuf.Empty
-import dev.restate.e2e.functions.counter.CounterGrpc.CounterBlockingStub
-import dev.restate.e2e.functions.counter.CounterProto
-import dev.restate.e2e.functions.counter.CounterProto.CounterAddRequest
-import dev.restate.e2e.functions.counter.NoopGrpc
-import dev.restate.e2e.functions.singletoncounter.SingletonCounterGrpc
-import dev.restate.e2e.functions.singletoncounter.SingletonCounterProto
+import dev.restate.e2e.services.counter.CounterGrpc.CounterBlockingStub
+import dev.restate.e2e.services.counter.CounterProto
+import dev.restate.e2e.services.counter.CounterProto.CounterAddRequest
+import dev.restate.e2e.services.counter.ProxyCounterGrpc
 import dev.restate.e2e.utils.InjectBlockingStub
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
@@ -19,7 +16,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
 @Tag("always-suspending")
-class JavaCounterTest : BaseCounterTest() {
+class JavaStateTest : BaseStateTest() {
 
   companion object {
     @RegisterExtension
@@ -30,20 +27,10 @@ class JavaCounterTest : BaseCounterTest() {
                 .withServiceEndpoint(Containers.JAVA_COUNTER_FUNCTION_SPEC)
                 .build())
   }
-  @Test
-  fun singleton(
-      @InjectBlockingStub counterClient: SingletonCounterGrpc.SingletonCounterBlockingStub
-  ) {
-    for (i in 1..10) {
-      counterClient.add(SingletonCounterProto.CounterNumber.newBuilder().setValue(1).build())
-    }
-
-    assertThat(counterClient.get(Empty.getDefaultInstance()).value).isEqualTo(10)
-  }
 }
 
 @Tag("always-suspending")
-class NodeCounterTest : BaseCounterTest() {
+class NodeStateTest : BaseStateTest() {
 
   companion object {
     @RegisterExtension
@@ -56,16 +43,16 @@ class NodeCounterTest : BaseCounterTest() {
   }
 }
 
-abstract class BaseCounterTest {
+abstract class BaseStateTest {
 
   @Test
-  fun noReturnValue(@InjectBlockingStub counterClient: CounterBlockingStub) {
+  fun add(@InjectBlockingStub counterClient: CounterBlockingStub) {
     counterClient.add(
         CounterAddRequest.newBuilder().setCounterName("noReturnValue").setValue(1).build())
   }
 
   @Test
-  fun keyedState(@InjectBlockingStub counterClient: CounterBlockingStub) {
+  fun getAndSet(@InjectBlockingStub counterClient: CounterBlockingStub) {
     val res1 =
         counterClient.getAndAdd(
             CounterAddRequest.newBuilder().setCounterName("my-key").setValue(1).build())
@@ -80,20 +67,22 @@ abstract class BaseCounterTest {
   }
 
   @Test
-  fun fireAndForget(
-      @InjectBlockingStub noopClient: NoopGrpc.NoopBlockingStub,
+  fun setStateViaOneWayCallFromAnotherService(
+      @InjectBlockingStub proxyCounter: ProxyCounterGrpc.ProxyCounterBlockingStub,
       @InjectBlockingStub counterClient: CounterBlockingStub
   ) {
-    noopClient.doAndReportInvocationCount(Empty.getDefaultInstance())
-    noopClient.doAndReportInvocationCount(Empty.getDefaultInstance())
-    noopClient.doAndReportInvocationCount(Empty.getDefaultInstance())
+    val counterName = "setStateViaOneWayCallFromAnotherService"
+    val counterRequest =
+        CounterAddRequest.newBuilder().setCounterName(counterName).setValue(1).build()
+
+    proxyCounter.addInBackground(counterRequest)
+    proxyCounter.addInBackground(counterRequest)
+    proxyCounter.addInBackground(counterRequest)
 
     await untilCallTo
         {
           counterClient.get(
-              CounterProto.CounterRequest.newBuilder()
-                  .setCounterName("doAndReportInvocationCount")
-                  .build())
+              CounterProto.CounterRequest.newBuilder().setCounterName(counterName).build())
         } matches
         { num ->
           num!!.value == 3L

@@ -1,8 +1,8 @@
-package dev.restate.e2e.functions.counter;
+package dev.restate.e2e.services.counter;
 
 import com.google.protobuf.Empty;
-import dev.restate.e2e.functions.singletoncounter.SingletonCounterGrpc;
-import dev.restate.e2e.functions.singletoncounter.SingletonCounterProto.CounterNumber;
+import dev.restate.e2e.services.singletoncounter.SingletonCounterGrpc;
+import dev.restate.e2e.services.singletoncounter.SingletonCounterProto.CounterNumber;
 import dev.restate.sdk.blocking.RestateBlockingService;
 import dev.restate.sdk.core.StateKey;
 import io.grpc.stub.StreamObserver;

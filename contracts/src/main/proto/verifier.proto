@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option java_package = "dev.restate.e2e.functions.verification.verifier";
+option java_package = "dev.restate.e2e.services.verification.verifier";
 option java_outer_classname = "VerifierProto";
 
 import "dev/restate/ext.proto";

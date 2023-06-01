@@ -1,9 +1,9 @@
-package dev.restate.e2e.java
+package dev.restate.e2e.runtime
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import dev.restate.e2e.Containers
-import dev.restate.e2e.functions.counter.CounterGrpc
+import dev.restate.e2e.services.counter.CounterGrpc
 import dev.restate.e2e.utils.InjectGrpcIngressURL
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
@@ -18,7 +18,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
-class HttpEndpointTest {
+/** Test the Connect ingress support */
+class ConnectIngressTest {
 
   companion object {
     @RegisterExtension

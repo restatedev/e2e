@@ -1,6 +1,6 @@
 plugins {
   java
-  kotlin("jvm") version "1.8.10"
+  kotlin("jvm")
 }
 
 dependencies {
@@ -45,7 +45,7 @@ tasks {
     }
   }
 
-  register<Test>("test-always-suspending") {
+  register<Test>("testAlwaysSuspending") {
     environment =
         environment +
             baseRestateEnvironment(name) +
@@ -59,7 +59,7 @@ tasks {
     systemProperties["junit.jupiter.execution.timeout.testable.method.default"] = "30 s"
   }
 
-  register<Test>("test-single-thread-single-partition") {
+  register<Test>("testSingleThreadSinglePartition") {
     environment =
         environment +
             baseRestateEnvironment(name) +
@@ -84,7 +84,7 @@ tasks {
   }
 }
 
-tasks.named("build") {
-  dependsOn("test-always-suspending")
-  dependsOn("test-single-thread-single-partition")
+tasks.named("check") {
+  dependsOn("testAlwaysSuspending")
+  dependsOn("testSingleThreadSinglePartition")
 }

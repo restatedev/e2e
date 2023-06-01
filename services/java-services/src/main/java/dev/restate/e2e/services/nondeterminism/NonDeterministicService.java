@@ -1,9 +1,9 @@
-package dev.restate.e2e.functions.nondeterminism;
+package dev.restate.e2e.services.nondeterminism;
 
 import com.google.protobuf.Empty;
-import dev.restate.e2e.functions.counter.CounterGrpc;
-import dev.restate.e2e.functions.counter.CounterProto.CounterAddRequest;
-import dev.restate.e2e.functions.counter.CounterProto.CounterRequest;
+import dev.restate.e2e.services.counter.CounterGrpc;
+import dev.restate.e2e.services.counter.CounterProto.CounterAddRequest;
+import dev.restate.e2e.services.counter.CounterProto.CounterRequest;
 import dev.restate.sdk.blocking.RestateBlockingService;
 import dev.restate.sdk.core.StateKey;
 import dev.restate.sdk.core.TypeTag;

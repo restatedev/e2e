@@ -1,14 +1,14 @@
-package dev.restate.e2e.functions.coordinator;
+package dev.restate.e2e.services.coordinator;
 
-import static dev.restate.e2e.functions.coordinator.CoordinatorProto.*;
+import static dev.restate.e2e.services.coordinator.CoordinatorProto.*;
 
 import com.google.protobuf.Empty;
-import dev.restate.e2e.functions.collections.list.ListProto.AppendRequest;
-import dev.restate.e2e.functions.collections.list.ListServiceGrpc;
-import dev.restate.e2e.functions.receiver.ReceiverGrpc;
-import dev.restate.e2e.functions.receiver.ReceiverProto.GetValueRequest;
-import dev.restate.e2e.functions.receiver.ReceiverProto.PingRequest;
-import dev.restate.e2e.functions.receiver.ReceiverProto.SetValueRequest;
+import dev.restate.e2e.services.collections.list.ListProto.AppendRequest;
+import dev.restate.e2e.services.collections.list.ListServiceGrpc;
+import dev.restate.e2e.services.receiver.ReceiverGrpc;
+import dev.restate.e2e.services.receiver.ReceiverProto.GetValueRequest;
+import dev.restate.e2e.services.receiver.ReceiverProto.PingRequest;
+import dev.restate.e2e.services.receiver.ReceiverProto.SetValueRequest;
 import dev.restate.sdk.blocking.Awaitable;
 import dev.restate.sdk.blocking.RestateBlockingService;
 import dev.restate.sdk.blocking.RestateContext;
@@ -62,7 +62,7 @@ public class CoordinatorService extends CoordinatorGrpc.CoordinatorImplBase
     var receiverUUID = ctx.sideEffect(TypeTag.STRING_UTF8, () -> UUID.randomUUID().toString());
 
     LOG.info("Send fire and forget call to {}", ReceiverGrpc.getServiceDescriptor().getName());
-    // Functions should be invoked in the same order they were called. This means that
+    // services should be invoked in the same order they were called. This means that
     // background calls as well as request-response calls have an absolute ordering that is defined
     // by their call order. In this concrete case, setValue is guaranteed to be executed before
     // getValue.

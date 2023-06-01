@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option java_package = "dev.restate.e2e.functions.coordinator";
+option java_package = "dev.restate.e2e.services.coordinator";
 option java_outer_classname = "CoordinatorProto";
 
 import "google/protobuf/empty.proto";

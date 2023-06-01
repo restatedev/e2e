@@ -1,7 +1,7 @@
 plugins {
   java
-  kotlin("jvm") version "1.8.10"
-  kotlin("plugin.serialization") version "1.8.10"
+  kotlin("jvm")
+  kotlin("plugin.serialization")
   `maven-publish`
   id("com.github.jk1.dependency-license-report") version "2.1"
 }

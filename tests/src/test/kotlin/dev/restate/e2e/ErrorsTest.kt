@@ -1,14 +1,14 @@
 package dev.restate.e2e
 
-import dev.restate.e2e.functions.counter.CounterGrpc
-import dev.restate.e2e.functions.counter.CounterProto
-import dev.restate.e2e.functions.errors.ErrorsProto.ErrorMessage
-import dev.restate.e2e.functions.errors.ErrorsProto.FailRequest
-import dev.restate.e2e.functions.errors.FailingServiceGrpc.FailingServiceBlockingStub
-import dev.restate.e2e.utils.FunctionSpec
+import dev.restate.e2e.services.counter.CounterGrpc
+import dev.restate.e2e.services.counter.CounterProto
+import dev.restate.e2e.services.errors.ErrorsProto.ErrorMessage
+import dev.restate.e2e.services.errors.ErrorsProto.FailRequest
+import dev.restate.e2e.services.errors.FailingServiceGrpc.FailingServiceBlockingStub
 import dev.restate.e2e.utils.InjectBlockingStub
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
+import dev.restate.e2e.utils.ServiceSpec
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import java.util.*
@@ -16,6 +16,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.assertj.core.api.InstanceOfAssertFactories
 import org.assertj.core.api.InstanceOfAssertFactories.type
+import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
@@ -33,14 +34,15 @@ class JavaErrorsTest : BaseErrorsTest() {
                 .withServiceEndpoint(
                     Containers.JAVA_COUNTER_FUNCTION_SPEC.copy(
                         registrationOptions =
-                            FunctionSpec.RegistrationOptions(
-                                retryPolicy = FunctionSpec.RetryPolicy.None)))
+                            ServiceSpec.RegistrationOptions(
+                                retryPolicy = ServiceSpec.RetryPolicy.None)))
                 .withContainer(Containers.EXTERNALCALL_HTTP_SERVER_CONTAINER_SPEC)
                 .build())
   }
 
+  @DisplayName("Test propagate failure from sideEffect and internal invoke")
   @Test
-  fun externalCallFailurePropagation(@InjectBlockingStub stub: FailingServiceBlockingStub) {
+  fun sideEffectFailurePropagation(@InjectBlockingStub stub: FailingServiceBlockingStub) {
     assertThat(
             stub.invokeExternalAndHandleFailure(
                 FailRequest.newBuilder().setKey(UUID.randomUUID().toString()).build()))
@@ -48,6 +50,7 @@ class JavaErrorsTest : BaseErrorsTest() {
         .isEqualTo("begin:external_call:internal_call")
   }
 
+  @DisplayName("Test calling unknown service method from within another service")
   @Test
   fun propagate404(@InjectBlockingStub stub: FailingServiceBlockingStub) {
     assertThat(
@@ -69,8 +72,8 @@ class NodeErrorsTest : BaseErrorsTest() {
                 .withServiceEndpoint(
                     Containers.NODE_COUNTER_FUNCTION_SPEC.copy(
                         registrationOptions =
-                            FunctionSpec.RegistrationOptions(
-                                retryPolicy = FunctionSpec.RetryPolicy.None)))
+                            ServiceSpec.RegistrationOptions(
+                                retryPolicy = ServiceSpec.RetryPolicy.None)))
                 .build())
   }
 }
@@ -102,8 +105,11 @@ abstract class BaseErrorsTest {
     fail(stub)
   }
 
+  @DisplayName("Test set than fail should persist the set")
   @Test
-  fun addThenFail(@InjectBlockingStub counterClient: CounterGrpc.CounterBlockingStub) {
+  fun setStateThenFailShouldPersistState(
+      @InjectBlockingStub counterClient: CounterGrpc.CounterBlockingStub
+  ) {
     val counterName = "my-failure-counter"
 
     assertThatThrownBy {
@@ -124,6 +130,7 @@ abstract class BaseErrorsTest {
     assertThat(response.value).isEqualTo(1)
   }
 
+  @DisplayName("Test propagate failure from another service")
   @Test
   fun internalCallFailurePropagation(@InjectBlockingStub stub: FailingServiceBlockingStub) {
     val errorMessage = "propagated error"
