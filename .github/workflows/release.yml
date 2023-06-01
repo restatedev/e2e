@@ -84,38 +84,14 @@ jobs:
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}
-      - name: Build amd64 Docker image with Gradle
-        uses: gradle/gradle-build-action@v2
-        env:
-          DOCKER_BUILD_PLATFORM: amd64
+      - name: Build and push node-services Docker image
+        uses: docker/build-push-action@v3
         with:
-          arguments: dockerBuild
-      - name: Tag and push amd64 Docker image
-        run: |
-          while IFS= read -r tag; do
-          echo "Tagging image ${tag}-amd64"
-          docker tag restatedev/e2e-node-services:latest "${tag}-amd64"
-          done <<< "${{ steps.meta.outputs.tags }}"
-          docker push -a ghcr.io/restatedev/e2e-node-services
-      - name: Build arm64 Docker image with Gradle
-        uses: gradle/gradle-build-action@v2
-        env:
-          DOCKER_BUILD_PLATFORM: arm64/v8
-        with:
-          arguments: dockerBuild
-      - name: Tag and push arm64 Docker image
-        run: |
-          while IFS= read -r tag; do
-          echo "Tagging image ${tag}-arm64"
-          docker tag restatedev/e2e-node-services:latest "${tag}-arm64"
-          done <<< "${{ steps.meta.outputs.tags }}"
-          docker push -a ghcr.io/restatedev/e2e-node-services
-      - name: Create and push Docker manifest
-        run: |
-          while IFS= read -r tag; do
-          echo "Creating manifest for ${tag}"
-          docker manifest create "${tag}" \
-              --amend "${tag}-amd64" \
-              --amend "${tag}-arm64"
-          docker manifest push "${tag}"
-          done <<< "${{ steps.meta.outputs.tags }}"
+          context: ./services/node-services
+          file: "services/node-services/Dockerfile"
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/arm64,linux/amd64
+          build-args: |
+            GH_PACKAGE_READ_ACCESS_TOKEN=${{ secrets.GH_PACKAGE_READ_ACCESS_TOKEN }}
