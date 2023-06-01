@@ -41,7 +41,10 @@ tasks.create<DockerBuildImage>("dockerBuild") {
   dependsOn("prepareDockerBuild")
   images.add("restatedev/e2e-node-services")
   if (!System.getenv("DOCKER_BUILD_PLATFORM").isNullOrEmpty()) {
-    platform.set(System.getenv("DOCKER_BUILD_PLATFORM"))
+    platform.set("linux/" + System.getenv("DOCKER_BUILD_PLATFORM"))
+    // workaround for
+    // https://stackoverflow.com/questions/69537478/docker-build-for-varying-architectures-with-same-base-image-not-working
+    buildArgs.put("PLATFORM_REPO", System.getenv("DOCKER_BUILD_PLATFORM").replace("/", "") + "/")
   }
   buildArgs.put("GH_PACKAGE_READ_ACCESS_TOKEN", System.getenv("GH_PACKAGE_READ_ACCESS_TOKEN"))
 }

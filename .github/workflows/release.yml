@@ -87,7 +87,7 @@ jobs:
       - name: Build amd64 Docker image with Gradle
         uses: gradle/gradle-build-action@v2
         env:
-          DOCKER_BUILD_PLATFORM: linux/amd64
+          DOCKER_BUILD_PLATFORM: amd64
         with:
           arguments: dockerBuild
       - name: Tag and push amd64 Docker image
@@ -100,7 +100,7 @@ jobs:
       - name: Build arm64 Docker image with Gradle
         uses: gradle/gradle-build-action@v2
         env:
-          DOCKER_BUILD_PLATFORM: linux/arm64
+          DOCKER_BUILD_PLATFORM: arm64/v8
         with:
           arguments: dockerBuild
       - name: Tag and push arm64 Docker image

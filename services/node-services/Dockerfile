@@ -1,5 +1,8 @@
-FROM node:18 AS build
+ARG PLATFORM_REPO
+ARG BASE=${PLATFORM_REPO}node:18
+FROM $BASE AS build
 ARG GH_PACKAGE_READ_ACCESS_TOKEN
+
 
 WORKDIR /usr/src/app
 COPY . .
@@ -7,7 +10,7 @@ COPY . .
 RUN npm ci
 RUN npm run build
 
-FROM node:18 as prod
+FROM $BASE as prod
 ARG GH_PACKAGE_READ_ACCESS_TOKEN
 WORKDIR /usr/src/app
 
@@ -17,7 +20,7 @@ RUN npm ci --production
 
 COPY --from=build /usr/src/app/dist /usr/src/app/dist
 
-FROM node:18
+FROM $BASE
 
 # Use a new stage so that the build-arg GH_PACKAGE_READ_ACCESS_TOKEN isn't leaked into the final image history
 COPY --from=prod /usr/src/app/ /usr/src/app/
