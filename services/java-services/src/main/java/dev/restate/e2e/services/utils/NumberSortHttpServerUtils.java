@@ -1,4 +1,4 @@
-package dev.restate.e2e.functions.utils;
+package dev.restate.e2e.services.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

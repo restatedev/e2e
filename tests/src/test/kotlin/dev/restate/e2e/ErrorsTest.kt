@@ -1,10 +1,10 @@
 package dev.restate.e2e
 
-import dev.restate.e2e.functions.counter.CounterGrpc
-import dev.restate.e2e.functions.counter.CounterProto
-import dev.restate.e2e.functions.errors.ErrorsProto.ErrorMessage
-import dev.restate.e2e.functions.errors.ErrorsProto.FailRequest
-import dev.restate.e2e.functions.errors.FailingServiceGrpc.FailingServiceBlockingStub
+import dev.restate.e2e.services.counter.CounterGrpc
+import dev.restate.e2e.services.counter.CounterProto
+import dev.restate.e2e.services.errors.ErrorsProto.ErrorMessage
+import dev.restate.e2e.services.errors.ErrorsProto.FailRequest
+import dev.restate.e2e.services.errors.FailingServiceGrpc.FailingServiceBlockingStub
 import dev.restate.e2e.utils.InjectBlockingStub
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension

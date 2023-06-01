@@ -1,16 +1,16 @@
 package dev.restate.e2e
 
-import dev.restate.e2e.functions.collections.list.ListServiceGrpc
-import dev.restate.e2e.functions.coordinator.CoordinatorGrpc
-import dev.restate.e2e.functions.counter.CounterGrpc
-import dev.restate.e2e.functions.counter.NoopGrpc
-import dev.restate.e2e.functions.errors.FailingServiceGrpc
-import dev.restate.e2e.functions.externalcall.RandomNumberListGeneratorGrpc
-import dev.restate.e2e.functions.externalcall.ReplierGrpc
-import dev.restate.e2e.functions.receiver.ReceiverGrpc
-import dev.restate.e2e.functions.singletoncounter.SingletonCounterGrpc
-import dev.restate.e2e.functions.verification.interpreter.CommandInterpreterGrpc
-import dev.restate.e2e.functions.verification.verifier.CommandVerifierGrpc
+import dev.restate.e2e.services.collections.list.ListServiceGrpc
+import dev.restate.e2e.services.coordinator.CoordinatorGrpc
+import dev.restate.e2e.services.counter.CounterGrpc
+import dev.restate.e2e.services.counter.NoopGrpc
+import dev.restate.e2e.services.errors.FailingServiceGrpc
+import dev.restate.e2e.services.externalcall.RandomNumberListGeneratorGrpc
+import dev.restate.e2e.services.externalcall.ReplierGrpc
+import dev.restate.e2e.services.receiver.ReceiverGrpc
+import dev.restate.e2e.services.singletoncounter.SingletonCounterGrpc
+import dev.restate.e2e.services.verification.interpreter.CommandInterpreterGrpc
+import dev.restate.e2e.services.verification.verifier.CommandVerifierGrpc
 import dev.restate.e2e.utils.ServiceSpec
 import dev.restate.e2e.utils.ServiceSpec.RegistrationOptions
 import dev.restate.e2e.utils.ServiceSpec.RetryPolicy

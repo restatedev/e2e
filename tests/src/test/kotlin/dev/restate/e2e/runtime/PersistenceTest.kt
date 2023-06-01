@@ -1,8 +1,8 @@
 package dev.restate.e2e.runtime
 
 import dev.restate.e2e.Containers
-import dev.restate.e2e.functions.counter.CounterGrpc
-import dev.restate.e2e.functions.counter.CounterProto.CounterAddRequest
+import dev.restate.e2e.services.counter.CounterGrpc
+import dev.restate.e2e.services.counter.CounterProto.CounterAddRequest
 import dev.restate.e2e.utils.*
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*

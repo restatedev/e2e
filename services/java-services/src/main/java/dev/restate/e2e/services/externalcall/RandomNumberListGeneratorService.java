@@ -1,11 +1,11 @@
-package dev.restate.e2e.functions.externalcall;
+package dev.restate.e2e.services.externalcall;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.restate.e2e.functions.externalcall.RandomNumberListGeneratorProto.GenerateNumbersRequest;
-import dev.restate.e2e.functions.externalcall.RandomNumberListGeneratorProto.GenerateNumbersResponse;
-import dev.restate.e2e.functions.utils.NumberSortHttpServerUtils;
+import dev.restate.e2e.services.externalcall.RandomNumberListGeneratorProto.GenerateNumbersRequest;
+import dev.restate.e2e.services.externalcall.RandomNumberListGeneratorProto.GenerateNumbersResponse;
+import dev.restate.e2e.services.utils.NumberSortHttpServerUtils;
 import dev.restate.sdk.blocking.Awakeable;
 import dev.restate.sdk.blocking.RestateBlockingService;
 import dev.restate.sdk.core.TypeTag;

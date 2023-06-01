@@ -44,4 +44,4 @@ jib {
 }
 
 // Use gradle shadowJar to build the fat jar
-tasks.jar { manifest { attributes["Main-Class"] = "dev.restate.e2e.functions.Main" } }
+tasks.jar { manifest { attributes["Main-Class"] = "dev.restate.e2e.services.Main" } }

@@ -1,10 +1,10 @@
 package dev.restate.e2e
 
 import com.google.protobuf.Empty
-import dev.restate.e2e.functions.coordinator.CoordinatorGrpc
-import dev.restate.e2e.functions.coordinator.CoordinatorGrpc.CoordinatorBlockingStub
-import dev.restate.e2e.functions.coordinator.CoordinatorProto
-import dev.restate.e2e.functions.receiver.ReceiverGrpc
+import dev.restate.e2e.services.coordinator.CoordinatorGrpc
+import dev.restate.e2e.services.coordinator.CoordinatorGrpc.CoordinatorBlockingStub
+import dev.restate.e2e.services.coordinator.CoordinatorProto
+import dev.restate.e2e.services.receiver.ReceiverGrpc
 import dev.restate.e2e.utils.InjectBlockingStub
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension

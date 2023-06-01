@@ -1,10 +1,10 @@
 package dev.restate.e2e
 
-import dev.restate.e2e.functions.verification.interpreter.InterpreterProto.TestParams
-import dev.restate.e2e.functions.verification.verifier.CommandVerifierGrpc.CommandVerifierBlockingStub
-import dev.restate.e2e.functions.verification.verifier.VerifierProto
-import dev.restate.e2e.functions.verification.verifier.VerifierProto.ExecuteRequest
-import dev.restate.e2e.functions.verification.verifier.VerifierProto.VerificationRequest
+import dev.restate.e2e.services.verification.interpreter.InterpreterProto.TestParams
+import dev.restate.e2e.services.verification.verifier.CommandVerifierGrpc.CommandVerifierBlockingStub
+import dev.restate.e2e.services.verification.verifier.VerifierProto
+import dev.restate.e2e.services.verification.verifier.VerifierProto.ExecuteRequest
+import dev.restate.e2e.services.verification.verifier.VerifierProto.VerificationRequest
 import dev.restate.e2e.utils.*
 import io.grpc.StatusRuntimeException
 import java.util.concurrent.TimeUnit

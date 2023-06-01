@@ -1,10 +1,10 @@
 package dev.restate.e2e
 
 import com.google.protobuf.Empty
-import dev.restate.e2e.functions.counter.CounterGrpc.CounterBlockingStub
-import dev.restate.e2e.functions.counter.CounterProto
-import dev.restate.e2e.functions.counter.CounterProto.CounterAddRequest
-import dev.restate.e2e.functions.counter.NoopGrpc
+import dev.restate.e2e.services.counter.CounterGrpc.CounterBlockingStub
+import dev.restate.e2e.services.counter.CounterProto
+import dev.restate.e2e.services.counter.CounterProto.CounterAddRequest
+import dev.restate.e2e.services.counter.NoopGrpc
 import dev.restate.e2e.utils.InjectBlockingStub
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension

@@ -1,8 +1,8 @@
 package dev.restate.e2e.node
 
 import dev.restate.e2e.Containers
-import dev.restate.e2e.functions.collections.list.ListProto.*
-import dev.restate.e2e.functions.collections.list.ListServiceGrpc.ListServiceBlockingStub
+import dev.restate.e2e.services.collections.list.ListProto.*
+import dev.restate.e2e.services.collections.list.ListServiceGrpc.ListServiceBlockingStub
 import dev.restate.e2e.utils.InjectBlockingStub
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension

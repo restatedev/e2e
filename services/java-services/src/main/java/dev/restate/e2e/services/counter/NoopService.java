@@ -1,6 +1,6 @@
-package dev.restate.e2e.functions.counter;
+package dev.restate.e2e.services.counter;
 
-import static dev.restate.e2e.functions.counter.CounterProto.CounterAddRequest;
+import static dev.restate.e2e.services.counter.CounterProto.CounterAddRequest;
 
 import com.google.protobuf.Empty;
 import dev.restate.sdk.blocking.RestateBlockingService;

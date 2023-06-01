@@ -2,8 +2,8 @@ package dev.restate.e2e.runtime
 
 import com.google.protobuf.Empty
 import dev.restate.e2e.Containers
-import dev.restate.e2e.functions.singletoncounter.SingletonCounterGrpc.SingletonCounterBlockingStub
-import dev.restate.e2e.functions.singletoncounter.SingletonCounterProto.CounterNumber
+import dev.restate.e2e.services.singletoncounter.SingletonCounterGrpc.SingletonCounterBlockingStub
+import dev.restate.e2e.services.singletoncounter.SingletonCounterProto.CounterNumber
 import dev.restate.e2e.utils.InjectBlockingStub
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension

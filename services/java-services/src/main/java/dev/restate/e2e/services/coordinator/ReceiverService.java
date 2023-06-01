@@ -1,8 +1,8 @@
-package dev.restate.e2e.functions.coordinator;
+package dev.restate.e2e.services.coordinator;
 
 import com.google.protobuf.Empty;
-import dev.restate.e2e.functions.receiver.ReceiverGrpc;
-import dev.restate.e2e.functions.receiver.ReceiverProto.*;
+import dev.restate.e2e.services.receiver.ReceiverGrpc;
+import dev.restate.e2e.services.receiver.ReceiverProto.*;
 import dev.restate.sdk.blocking.RestateBlockingService;
 import dev.restate.sdk.core.StateKey;
 import dev.restate.sdk.core.TypeTag;

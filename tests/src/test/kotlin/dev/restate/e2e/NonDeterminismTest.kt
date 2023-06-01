@@ -1,11 +1,11 @@
 package dev.restate.e2e
 
 import com.google.protobuf.Empty
-import dev.restate.e2e.functions.counter.CounterGrpc
-import dev.restate.e2e.functions.counter.CounterGrpc.CounterBlockingStub
-import dev.restate.e2e.functions.counter.CounterProto
-import dev.restate.e2e.functions.nondeterminism.NonDeterminismProto.NonDeterministicRequest
-import dev.restate.e2e.functions.nondeterminism.NonDeterministicServiceGrpc
+import dev.restate.e2e.services.counter.CounterGrpc
+import dev.restate.e2e.services.counter.CounterGrpc.CounterBlockingStub
+import dev.restate.e2e.services.counter.CounterProto
+import dev.restate.e2e.services.nondeterminism.NonDeterminismProto.NonDeterministicRequest
+import dev.restate.e2e.services.nondeterminism.NonDeterministicServiceGrpc
 import dev.restate.e2e.utils.*
 import dev.restate.e2e.utils.ServiceSpec.*
 import io.grpc.*

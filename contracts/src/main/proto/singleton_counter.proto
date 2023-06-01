@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option java_package = "dev.restate.e2e.functions.singletoncounter";
+option java_package = "dev.restate.e2e.services.singletoncounter";
 option java_outer_classname = "SingletonCounterProto";
 
 import "google/protobuf/empty.proto";

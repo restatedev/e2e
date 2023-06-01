@@ -1,10 +1,10 @@
 package dev.restate.e2e.runtime
 
 import dev.restate.e2e.Containers
-import dev.restate.e2e.functions.collections.list.ListProto.Request
-import dev.restate.e2e.functions.collections.list.ListServiceGrpc.ListServiceBlockingStub
-import dev.restate.e2e.functions.coordinator.CoordinatorGrpc.CoordinatorBlockingStub
-import dev.restate.e2e.functions.coordinator.CoordinatorProto.InvokeSequentiallyRequest
+import dev.restate.e2e.services.collections.list.ListProto.Request
+import dev.restate.e2e.services.collections.list.ListServiceGrpc.ListServiceBlockingStub
+import dev.restate.e2e.services.coordinator.CoordinatorGrpc.CoordinatorBlockingStub
+import dev.restate.e2e.services.coordinator.CoordinatorProto.InvokeSequentiallyRequest
 import dev.restate.e2e.utils.InjectBlockingStub
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension

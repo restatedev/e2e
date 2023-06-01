@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option java_package = "dev.restate.e2e.functions.receiver";
+option java_package = "dev.restate.e2e.services.receiver";
 option java_outer_classname = "ReceiverProto";
 
 import "google/protobuf/empty.proto";

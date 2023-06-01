@@ -1,8 +1,8 @@
 package dev.restate.e2e.java
 
 import dev.restate.e2e.Containers
-import dev.restate.e2e.functions.externalcall.RandomNumberListGeneratorGrpc.RandomNumberListGeneratorBlockingStub
-import dev.restate.e2e.functions.externalcall.RandomNumberListGeneratorProto.GenerateNumbersRequest
+import dev.restate.e2e.services.externalcall.RandomNumberListGeneratorGrpc.RandomNumberListGeneratorBlockingStub
+import dev.restate.e2e.services.externalcall.RandomNumberListGeneratorProto.GenerateNumbersRequest
 import dev.restate.e2e.utils.InjectBlockingStub
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension

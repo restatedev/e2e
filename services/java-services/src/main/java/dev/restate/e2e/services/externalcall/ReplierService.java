@@ -1,8 +1,8 @@
-package dev.restate.e2e.functions.externalcall;
+package dev.restate.e2e.services.externalcall;
 
 import com.google.protobuf.Empty;
 import com.google.protobuf.InvalidProtocolBufferException;
-import dev.restate.e2e.functions.externalcall.ReplierProto.Reply;
+import dev.restate.e2e.services.externalcall.ReplierProto.Reply;
 import dev.restate.generated.core.AwakeableIdentifier;
 import dev.restate.sdk.blocking.RestateBlockingService;
 import dev.restate.sdk.core.TypeTag;

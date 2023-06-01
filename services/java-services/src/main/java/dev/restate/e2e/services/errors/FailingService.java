@@ -1,10 +1,10 @@
-package dev.restate.e2e.functions.errors;
+package dev.restate.e2e.services.errors;
 
 import com.google.protobuf.Empty;
 import com.google.rpc.Code;
-import dev.restate.e2e.functions.errors.ErrorsProto.ErrorMessage;
-import dev.restate.e2e.functions.errors.ErrorsProto.FailRequest;
-import dev.restate.e2e.functions.utils.NumberSortHttpServerUtils;
+import dev.restate.e2e.services.errors.ErrorsProto.ErrorMessage;
+import dev.restate.e2e.services.errors.ErrorsProto.FailRequest;
+import dev.restate.e2e.services.utils.NumberSortHttpServerUtils;
 import dev.restate.sdk.blocking.Awakeable;
 import dev.restate.sdk.blocking.RestateBlockingService;
 import dev.restate.sdk.core.TypeTag;
