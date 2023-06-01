@@ -35,6 +35,8 @@ class VerificationTest {
           .build()
     }
 
+    private const val E2E_VERIFICATION_SEED_ENV = "E2E_VERIFICATION_SEED"
+
     private val ALPHANUMERIC_ALPHABET: Array<Char> =
         (('0'..'9').toList() + ('a'..'z').toList() + ('A'..'Z').toList()).toTypedArray()
 
@@ -149,7 +151,7 @@ class VerificationTest {
   }
 
   private fun testParams(): TestParams {
-    val seed = generateAlphanumericString(16)
+    val seed = System.getenv(E2E_VERIFICATION_SEED_ENV).ifEmpty { generateAlphanumericString(16) }
     // Some sample seeds helpful for debugging
     // W8JmvLJVlwAB0E2Z -> This should take ~3 seconds
     // idkQ4rJpKnpD60wC -> This should take ~10 seconds
