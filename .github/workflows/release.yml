@@ -72,6 +72,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           arguments: publishMavenPublicationToGitHubPackagesRepository
+      - name: Build Docker image with Gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: dockerBuild
       - name: Extract metadata (tags, labels)
         id: meta
         uses: docker/metadata-action@v4
