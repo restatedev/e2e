@@ -15,6 +15,11 @@ jobs:
     if: github.repository == 'restatedev/e2e'
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: read
+      issues: read
+      checks: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v3
 
@@ -56,6 +61,13 @@ jobs:
           path: |
             tests/build/test-results/*/container-logs/**
             tests/build/reports/tests/**
+            tests/build/test-results/*/*.xml
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: |
             tests/build/test-results/*/*.xml
 
 
