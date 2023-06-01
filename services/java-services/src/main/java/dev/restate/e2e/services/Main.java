@@ -7,7 +7,6 @@ import dev.restate.e2e.services.coordinator.CoordinatorService;
 import dev.restate.e2e.services.coordinator.ReceiverService;
 import dev.restate.e2e.services.counter.*;
 import dev.restate.e2e.services.counter.CounterService;
-import dev.restate.e2e.services.counter.NoopService;
 import dev.restate.e2e.services.counter.SingletonCounterService;
 import dev.restate.e2e.services.errors.FailingService;
 import dev.restate.e2e.services.errors.FailingServiceGrpc;
@@ -44,8 +43,8 @@ public class Main {
         case CounterGrpc.SERVICE_NAME:
           restateHttpEndpointBuilder.withService(new CounterService());
           break;
-        case NoopGrpc.SERVICE_NAME:
-          restateHttpEndpointBuilder.withService(new NoopService());
+        case ProxyCounterGrpc.SERVICE_NAME:
+          restateHttpEndpointBuilder.withService(new ProxyCounterService());
           break;
         case SingletonCounterGrpc.SERVICE_NAME:
           restateHttpEndpointBuilder.withService(new SingletonCounterService());

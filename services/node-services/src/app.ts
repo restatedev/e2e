@@ -1,7 +1,6 @@
 import * as restate from "@restatedev/restate-sdk";
 
 import { protoMetadata as counterProtoMetadata } from "./generated/counter";
-import { protoMetadata as noopProtoMetadata } from "./generated/noop";
 import { protoMetadata as coordinatorProtoMetadata } from "./generated/coordinator";
 import { protoMetadata as receiverProtoMetadata } from "./generated/receiver";
 import { protoMetadata as listProtoMetadata } from "./generated/list";
@@ -12,7 +11,7 @@ import { protoMetadata as interpreterProtoMetadata } from "./generated/interpret
 import { CounterService, CounterServiceFQN } from "./counter";
 import { ListService, ListServiceFQN } from "./collections";
 import { FailingService, FailingServiceFQN } from "./errors";
-import { NoopService, NoopServiceFQN } from "./noop";
+import { ProxyCounterService, ProxyCounterServiceFQN } from "./proxy_counter";
 import { CoordinatorService, CoordinatorServiceFQN } from "./coordinator";
 import { ReceiverService, ReceiverServiceFQN } from "./receiver";
 import {
@@ -37,11 +36,11 @@ const services = new Map<string, restate.ServiceOpts>([
     },
   ],
   [
-    NoopServiceFQN,
+    ProxyCounterServiceFQN,
     {
-      descriptor: noopProtoMetadata,
-      service: "Noop",
-      instance: new NoopService(),
+      descriptor: counterProtoMetadata,
+      service: "ProxyCounter",
+      instance: new ProxyCounterService(),
     },
   ],
   [

@@ -107,7 +107,9 @@ abstract class BaseErrorsTest {
 
   @DisplayName("Test set than fail should persist the set")
   @Test
-  fun setStateThenFailShouldPersistState(@InjectBlockingStub counterClient: CounterGrpc.CounterBlockingStub) {
+  fun setStateThenFailShouldPersistState(
+      @InjectBlockingStub counterClient: CounterGrpc.CounterBlockingStub
+  ) {
     val counterName = "my-failure-counter"
 
     assertThatThrownBy {

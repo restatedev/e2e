@@ -1,10 +1,9 @@
 package dev.restate.e2e
 
-import com.google.protobuf.Empty
 import dev.restate.e2e.services.counter.CounterGrpc.CounterBlockingStub
 import dev.restate.e2e.services.counter.CounterProto
 import dev.restate.e2e.services.counter.CounterProto.CounterAddRequest
-import dev.restate.e2e.services.counter.NoopGrpc
+import dev.restate.e2e.services.counter.ProxyCounterGrpc
 import dev.restate.e2e.utils.InjectBlockingStub
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
@@ -69,19 +68,21 @@ abstract class BaseStateTest {
 
   @Test
   fun setStateViaOneWayCallFromAnotherService(
-      @InjectBlockingStub noopClient: NoopGrpc.NoopBlockingStub,
+      @InjectBlockingStub proxyCounter: ProxyCounterGrpc.ProxyCounterBlockingStub,
       @InjectBlockingStub counterClient: CounterBlockingStub
   ) {
-    noopClient.doAndReportInvocationCount(Empty.getDefaultInstance())
-    noopClient.doAndReportInvocationCount(Empty.getDefaultInstance())
-    noopClient.doAndReportInvocationCount(Empty.getDefaultInstance())
+    val counterName = "setStateViaOneWayCallFromAnotherService"
+    val counterRequest =
+        CounterAddRequest.newBuilder().setCounterName(counterName).setValue(1).build()
+
+    proxyCounter.addInBackground(counterRequest)
+    proxyCounter.addInBackground(counterRequest)
+    proxyCounter.addInBackground(counterRequest)
 
     await untilCallTo
         {
           counterClient.get(
-              CounterProto.CounterRequest.newBuilder()
-                  .setCounterName("doAndReportInvocationCount")
-                  .build())
+              CounterProto.CounterRequest.newBuilder().setCounterName(counterName).build())
         } matches
         { num ->
           num!!.value == 3L

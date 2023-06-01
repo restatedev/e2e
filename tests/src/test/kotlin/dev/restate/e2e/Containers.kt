@@ -3,7 +3,7 @@ package dev.restate.e2e
 import dev.restate.e2e.services.collections.list.ListServiceGrpc
 import dev.restate.e2e.services.coordinator.CoordinatorGrpc
 import dev.restate.e2e.services.counter.CounterGrpc
-import dev.restate.e2e.services.counter.NoopGrpc
+import dev.restate.e2e.services.counter.ProxyCounterGrpc
 import dev.restate.e2e.services.errors.FailingServiceGrpc
 import dev.restate.e2e.services.externalcall.RandomNumberListGeneratorGrpc
 import dev.restate.e2e.services.externalcall.ReplierGrpc
@@ -50,7 +50,7 @@ object Containers {
       javaServicesContainer(
               "java-counter",
               CounterGrpc.SERVICE_NAME,
-              NoopGrpc.SERVICE_NAME,
+              ProxyCounterGrpc.SERVICE_NAME,
               SingletonCounterGrpc.SERVICE_NAME)
           .build()
 
@@ -86,7 +86,8 @@ object Containers {
   }
 
   val NODE_COUNTER_FUNCTION_SPEC =
-      nodeServicesContainer("node-counter", CounterGrpc.SERVICE_NAME, NoopGrpc.SERVICE_NAME).build()
+      nodeServicesContainer("node-counter", CounterGrpc.SERVICE_NAME, ProxyCounterGrpc.SERVICE_NAME)
+          .build()
 
   val NODE_COORDINATOR_FUNCTION_SPEC =
       nodeServicesContainer(

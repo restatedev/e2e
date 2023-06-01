@@ -18,6 +18,12 @@ service Counter {
   rpc GetAndAdd (CounterAddRequest) returns (CounterUpdateResult);
 }
 
+service ProxyCounter {
+  option (dev.restate.ext.service_type) = UNKEYED;
+
+  rpc AddInBackground (CounterAddRequest) returns (google.protobuf.Empty);
+}
+
 message CounterRequest {
   string counter_name = 1 [(dev.restate.ext.field) = KEY];
 }
