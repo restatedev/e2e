@@ -58,4 +58,11 @@ jobs:
             tests/build/reports/tests/**
             tests/build/test-results/*/*.xml
 
+      - name: Test Summary
+        if: always()
+        uses: test-summary/action@v2
+        with:
+          paths: |
+            tests/build/test-results/*/*.xml
+
 
