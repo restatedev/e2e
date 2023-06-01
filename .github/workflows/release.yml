@@ -35,6 +35,13 @@ jobs:
           node-version: "18.x"
           registry-url: "https://npm.pkg.github.com"
 
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v1
 
@@ -65,3 +72,22 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           arguments: publishMavenPublicationToGitHubPackagesRepository
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ghcr.io/restatedev/e2e-node-services
+          # Note: We need this to generate the latest tag until we have a first stable release.
+          # Check https://github.com/docker/metadata-action/issues/34
+          flavor: |
+            latest=true
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+      - name: Tag and push Docker image
+        run: |
+          while IFS= read -r tag; do
+          echo "Tagging image $tag"
+          docker tag restatedev/e2e-node-services:latest "$tag"
+          done <<< "${{ steps.meta.outputs.tags }}"
+          docker push -a ghcr.io/restatedev/e2e-node-services
