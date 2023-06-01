@@ -17,6 +17,8 @@ import dev.restate.e2e.services.externalcall.ReplierService;
 import dev.restate.e2e.services.nondeterminism.NonDeterministicService;
 import dev.restate.e2e.services.nondeterminism.NonDeterministicServiceGrpc;
 import dev.restate.e2e.services.receiver.ReceiverGrpc;
+import dev.restate.e2e.services.sideeffect.SideEffectGrpc;
+import dev.restate.e2e.services.sideeffect.SideEffectService;
 import dev.restate.e2e.services.singletoncounter.SingletonCounterGrpc;
 import dev.restate.sdk.vertx.RestateHttpEndpointBuilder;
 import io.vertx.core.Vertx;
@@ -60,6 +62,9 @@ public class Main {
           break;
         case NonDeterministicServiceGrpc.SERVICE_NAME:
           restateHttpEndpointBuilder.withService(new NonDeterministicService());
+          break;
+        case SideEffectGrpc.SERVICE_NAME:
+          restateHttpEndpointBuilder.withService(new SideEffectService());
           break;
       }
     }

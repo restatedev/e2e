@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+option java_package = "dev.restate.e2e.services.sideeffect";
+option java_outer_classname = "SideEffectProto";
+
+import "google/protobuf/empty.proto";
+import "dev/restate/ext.proto";
+
+package sideeffect;
+
+service SideEffect {
+  option (dev.restate.ext.service_type) = UNKEYED;
+
+  rpc InvokeSideEffects(InvokeSideEffectsRequest) returns (InvokeSideEffectsResult);
+}
+
+message InvokeSideEffectsRequest {}
+
+message InvokeSideEffectsResult {
+  int32 non_deterministic_invocation_count = 1;
+}
