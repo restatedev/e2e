@@ -50,7 +50,7 @@ class JavaErrorsTest : BaseErrorsTest() {
         .isEqualTo("begin:external_call:internal_call")
   }
 
-  @DisplayName("Test propagate 404")
+  @DisplayName("Test calling unknown service method from within another service")
   @Test
   fun propagate404(@InjectBlockingStub stub: FailingServiceBlockingStub) {
     assertThat(
@@ -107,7 +107,7 @@ abstract class BaseErrorsTest {
 
   @DisplayName("Test set than fail should persist the set")
   @Test
-  fun addThenFail(@InjectBlockingStub counterClient: CounterGrpc.CounterBlockingStub) {
+  fun setStateThenFailShouldPersistState(@InjectBlockingStub counterClient: CounterGrpc.CounterBlockingStub) {
     val counterName = "my-failure-counter"
 
     assertThatThrownBy {

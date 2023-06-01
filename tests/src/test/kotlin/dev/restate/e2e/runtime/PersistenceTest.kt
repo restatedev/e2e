@@ -17,7 +17,7 @@ class PersistenceTest {
     val deployerExt: RestateDeployerForEachExtension = RestateDeployerForEachExtension {
       RestateDeployer.Builder()
           .withEnv(Containers.getRestateEnvironment())
-          .withServiceEndpoint(Containers.JAVA_COUNTER_FUNCTION_SPEC)
+          .withServiceEndpoint(Containers.NODE_COUNTER_FUNCTION_SPEC)
           .build()
     }
   }

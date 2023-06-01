@@ -2,9 +2,10 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
-  kotlin("jvm") version "1.8.21"
   java
   alias(libs.plugins.spotless)
+  kotlin("jvm") version "1.8.21" apply false
+  kotlin("plugin.serialization") version "1.8.21" apply false
 }
 
 val restateVersion = libs.versions.restate.get()

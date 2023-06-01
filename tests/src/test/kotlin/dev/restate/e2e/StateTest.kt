@@ -68,7 +68,7 @@ abstract class BaseStateTest {
   }
 
   @Test
-  fun setThroughAnotherService(
+  fun setStateViaOneWayCallFromAnotherService(
       @InjectBlockingStub noopClient: NoopGrpc.NoopBlockingStub,
       @InjectBlockingStub counterClient: CounterBlockingStub
   ) {

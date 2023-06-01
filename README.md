@@ -36,11 +36,11 @@ To run tests, just execute:
 gradle build
 ```
 
-This will populate your local image registry with the various function containers, required for testing, and then execute the tests.
+This will populate your local image registry with the various service containers, required for testing, and then execute the tests.
 
 ### Test report and container logs
 
-For each deployment of `RestateDeployer`, the `stdout` and `stderr` of the containers and the inspect info are written in `tests/build/test-results/[test-configuration]/container-logs/[test-name]`.
+For each deployment of `RestateDeployer`, the `stdout` and `stderr` of the containers and the `docker inspect` info are written in `tests/build/test-results/[test-configuration]/container-logs/[test-name]`.
 
 ### How to test Java SDK changes
 
