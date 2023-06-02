@@ -151,7 +151,11 @@ class VerificationTest {
   }
 
   private fun testParams(): TestParams {
-    val seed = System.getenv(E2E_VERIFICATION_SEED_ENV).ifEmpty { generateAlphanumericString(16) }
+    var seed = System.getenv(E2E_VERIFICATION_SEED_ENV)
+    if (seed.isNullOrEmpty()) {
+      seed = generateAlphanumericString(16)
+    }
+
     logger.info("Using seed {}", seed)
     return TestParams.newBuilder()
         .setSeed(seed)
