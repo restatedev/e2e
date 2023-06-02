@@ -57,6 +57,10 @@ Currently, we run tests in the following configurations:
 * `gradle :tests:testAlwaysSuspending`: Runtime setup to always suspend after replay, to mimic the behavior of RequestResponse stream type
 * `gradle :tests:testSingleThreadSinglePartition`: Runtime setup with a single thread and single partition
 
+### `VerificationTest` seed
+
+`VerificationTest` is using a random seed to generate the execution tree. You can fix the seed to use setting the environment variable `E2E_VERIFICATION_SEED`. 
+
 ### Test report and container logs
 
 For each deployment of `RestateDeployer`, the `stdout` and `stderr` of the containers and the `docker inspect` info are written in `tests/build/test-results/[test-configuration]/container-logs/[test-name]`.

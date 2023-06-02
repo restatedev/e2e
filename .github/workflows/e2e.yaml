@@ -14,7 +14,7 @@ jobs:
   build:
     if: github.repository == 'restatedev/e2e'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     permissions:
       contents: read
       issues: read
@@ -50,6 +50,7 @@ jobs:
           GH_PACKAGE_READ_ACCESS_TOKEN: ${{ secrets.GH_PACKAGE_READ_ACCESS_TOKEN }}
           E2E_IMAGE_PULL_POLICY: always
           NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGE_READ_ACCESS_TOKEN }}
+          E2E_VERIFICATION_SEED: ${{ github.run_id }}
         with:
           arguments: -Djib.console=plain build
 
