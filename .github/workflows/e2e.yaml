@@ -9,6 +9,20 @@ on:
   schedule:
     - cron: '0 */6 * * *' # Every 6 hours
   workflow_dispatch: # To start from UI
+    inputs:
+      sdkTypescriptCommit:
+        description: 'sdk-typescript commit'
+        required: false
+        default: ''
+        type: string
+  workflow_call:
+    inputs:
+      sdkTypescriptCommit:
+        description: 'sdk-typescript commit'
+        required: false
+        default: ''
+        type: string
+
 
 jobs:
   build:
@@ -20,8 +34,11 @@ jobs:
       issues: read
       checks: write
       pull-requests: write
+      actions: read
     steps:
       - uses: actions/checkout@v3
+        with:
+          repository: restatedev/e2e
 
       # Setup Java
       - uses: actions/setup-java@v3
@@ -41,6 +58,22 @@ jobs:
           registry: ghcr.io
           username: ${{ secrets.GH_PACKAGE_READ_ACCESS_USER }}
           password: ${{ secrets.GH_PACKAGE_READ_ACCESS_TOKEN }}
+
+      # Setup sdk-typescript snapshot if necessary
+      - name: Download sdk-typescript snapshot
+        if: ${{ inputs.sdkTypescriptCommit != '' }}
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          repo: restatedev/sdk-typescript
+          commit: ${{ inputs.sdkTypescriptCommit != '' }}
+          name: restatedev-restate-sdk
+          path: services/node-services
+
+      - name: Install sdk-typescript snapshot
+        if: ${{ inputs.sdkTypescriptCommit != '' }}
+        run: npm install restatedev-restate-sdk.tgz
+        working-directory: services/node-services
 
       # Run tests
       - name: Test
