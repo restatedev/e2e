@@ -152,9 +152,6 @@ class VerificationTest {
 
   private fun testParams(): TestParams {
     val seed = System.getenv(E2E_VERIFICATION_SEED_ENV).ifEmpty { generateAlphanumericString(16) }
-    // Some sample seeds helpful for debugging
-    // W8JmvLJVlwAB0E2Z -> This should take ~3 seconds
-    // idkQ4rJpKnpD60wC -> This should take ~10 seconds
     logger.info("Using seed {}", seed)
     return TestParams.newBuilder()
         .setSeed(seed)
