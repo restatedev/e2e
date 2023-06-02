@@ -9,6 +9,12 @@ on:
   schedule:
     - cron: '0 */6 * * *' # Every 6 hours
   workflow_dispatch: # To start from UI
+    inputs:
+      sdkTypescriptCommit:
+        description: 'sdk-typescript commit'
+        required: false
+        default: ''
+        type: string
   workflow_call:
     inputs:
       sdkTypescriptCommit:
