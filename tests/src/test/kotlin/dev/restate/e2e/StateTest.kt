@@ -24,7 +24,7 @@ class JavaStateTest : BaseStateTest() {
         RestateDeployerExtension(
             RestateDeployer.Builder()
                 .withEnv(Containers.getRestateEnvironment())
-                .withServiceEndpoint(Containers.JAVA_COUNTER_FUNCTION_SPEC)
+                .withServiceEndpoint(Containers.JAVA_COUNTER_SERVICE_SPEC)
                 .build())
   }
 }
@@ -38,7 +38,7 @@ class NodeStateTest : BaseStateTest() {
         RestateDeployerExtension(
             RestateDeployer.Builder()
                 .withEnv(Containers.getRestateEnvironment())
-                .withServiceEndpoint(Containers.NODE_COUNTER_FUNCTION_SPEC)
+                .withServiceEndpoint(Containers.NODE_COUNTER_SERVICE_SPEC)
                 .build())
   }
 }

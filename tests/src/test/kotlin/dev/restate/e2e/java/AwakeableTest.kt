@@ -20,7 +20,7 @@ class AwakeableTest {
         RestateDeployerExtension(
             RestateDeployer.Builder()
                 .withEnv(Containers.getRestateEnvironment())
-                .withServiceEndpoint(Containers.JAVA_EXTERNALCALL_FUNCTION_SPEC)
+                .withServiceEndpoint(Containers.JAVA_EXTERNALCALL_SERVICE_SPEC)
                 .withContainer(Containers.EXTERNALCALL_HTTP_SERVER_CONTAINER_SPEC)
                 .build())
   }

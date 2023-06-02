@@ -21,7 +21,7 @@ class JavaSampleWorkflowTest : BaseSampleWorkflowTest() {
         RestateDeployerExtension(
             RestateDeployer.Builder()
                 .withEnv(Containers.getRestateEnvironment())
-                .withServiceEndpoint(Containers.JAVA_COORDINATOR_FUNCTION_SPEC)
+                .withServiceEndpoint(Containers.JAVA_COORDINATOR_SERVICE_SPEC)
                 .build())
   }
 }
@@ -34,7 +34,7 @@ class NodeSampleWorkflowTest : BaseSampleWorkflowTest() {
         RestateDeployerExtension(
             RestateDeployer.Builder()
                 .withEnv(Containers.getRestateEnvironment())
-                .withServiceEndpoint(Containers.NODE_COORDINATOR_FUNCTION_SPEC)
+                .withServiceEndpoint(Containers.NODE_COORDINATOR_SERVICE_SPEC)
                 .build())
   }
 }

@@ -21,7 +21,7 @@ class AwaitTimeoutTest {
         RestateDeployerExtension(
             RestateDeployer.Builder()
                 .withEnv(Containers.getRestateEnvironment())
-                .withServiceEndpoint(Containers.JAVA_COORDINATOR_FUNCTION_SPEC)
+                .withServiceEndpoint(Containers.JAVA_COORDINATOR_SERVICE_SPEC)
                 .build())
   }
 

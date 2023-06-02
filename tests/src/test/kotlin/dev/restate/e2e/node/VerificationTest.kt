@@ -31,7 +31,7 @@ class VerificationTest {
     val deployerExt: RestateDeployerForEachExtension = RestateDeployerForEachExtension {
       RestateDeployer.Builder()
           .withEnv(Containers.getRestateEnvironment())
-          .withServiceEndpoint(Containers.VERIFICATION_FUNCTION_SPEC)
+          .withServiceEndpoint(Containers.VERIFICATION_SERVICE_SPEC)
           .build()
     }
 
@@ -76,7 +76,7 @@ class VerificationTest {
   @Test
   fun killingTheServiceEndpoint(
       @InjectBlockingStub verifier: CommandVerifierBlockingStub,
-      @InjectContainerHandle(Containers.VERIFICATION_FUNCTION_HOSTNAME)
+      @InjectContainerHandle(Containers.VERIFICATION_SERVICE_HOSTNAME)
       verificationContainer: ContainerHandle
   ) {
     val testParams = testParams()
@@ -96,7 +96,7 @@ class VerificationTest {
   @Test
   fun stoppingTheServiceEndpoint(
       @InjectBlockingStub verifier: CommandVerifierBlockingStub,
-      @InjectContainerHandle(Containers.VERIFICATION_FUNCTION_HOSTNAME)
+      @InjectContainerHandle(Containers.VERIFICATION_SERVICE_HOSTNAME)
       verificationContainer: ContainerHandle
   ) {
     val testParams = testParams()

@@ -21,7 +21,7 @@ class SingletonCounterTest {
         RestateDeployerExtension(
             RestateDeployer.Builder()
                 .withEnv(Containers.getRestateEnvironment())
-                .withServiceEndpoint(Containers.JAVA_COUNTER_FUNCTION_SPEC)
+                .withServiceEndpoint(Containers.JAVA_COUNTER_SERVICE_SPEC)
                 .build())
   }
   @Test

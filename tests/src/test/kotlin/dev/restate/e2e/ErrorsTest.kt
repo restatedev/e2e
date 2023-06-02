@@ -29,10 +29,10 @@ class JavaErrorsTest : BaseErrorsTest() {
         RestateDeployerExtension(
             RestateDeployer.Builder()
                 .withEnv(Containers.getRestateEnvironment())
-                .withServiceEndpoint(Containers.JAVA_ERRORS_FUNCTION_SPEC)
-                .withServiceEndpoint(Containers.JAVA_EXTERNALCALL_FUNCTION_SPEC)
+                .withServiceEndpoint(Containers.JAVA_ERRORS_SERVICE_SPEC)
+                .withServiceEndpoint(Containers.JAVA_EXTERNALCALL_SERVICE_SPEC)
                 .withServiceEndpoint(
-                    Containers.JAVA_COUNTER_FUNCTION_SPEC.copy(
+                    Containers.JAVA_COUNTER_SERVICE_SPEC.copy(
                         registrationOptions =
                             ServiceSpec.RegistrationOptions(
                                 retryPolicy = ServiceSpec.RetryPolicy.None)))
@@ -68,9 +68,9 @@ class NodeErrorsTest : BaseErrorsTest() {
         RestateDeployerExtension(
             RestateDeployer.Builder()
                 .withEnv(Containers.getRestateEnvironment())
-                .withServiceEndpoint(Containers.NODE_ERRORS_FUNCTION_SPEC)
+                .withServiceEndpoint(Containers.NODE_ERRORS_SERVICE_SPEC)
                 .withServiceEndpoint(
-                    Containers.NODE_COUNTER_FUNCTION_SPEC.copy(
+                    Containers.NODE_COUNTER_SERVICE_SPEC.copy(
                         registrationOptions =
                             ServiceSpec.RegistrationOptions(
                                 retryPolicy = ServiceSpec.RetryPolicy.None)))
