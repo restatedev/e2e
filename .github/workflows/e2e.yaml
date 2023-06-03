@@ -25,7 +25,7 @@ on:
     secrets:
       E2E_CONTENTS_READ_TOKEN:
         description: 'token to allow reading the contents of the e2e repo, for cross-repo workflow calls'
-        required: false
+        required: true
 
 jobs:
   build:
