@@ -22,7 +22,10 @@ on:
         required: false
         default: ''
         type: string
-
+    secrets:
+      E2E_CONTENTS_READ_TOKEN:
+        description: 'token to allow reading the contents of the e2e repo, for cross-repo workflow calls'
+        required: false
 
 jobs:
   build:
@@ -40,6 +43,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           repository: restatedev/e2e
+          token: ${{ secrets.E2E_CONTENTS_READ_TOKEN || secrets.GITHUB_TOKEN  }}
 
       # Setup Java
       - uses: actions/setup-java@v3
@@ -65,7 +69,7 @@ jobs:
         if: ${{ inputs.sdkTypescriptCommit != '' }}
         uses: dawidd6/action-download-artifact@v2
         with:
-          github_token: ${{secrets.GITHUB_TOKEN}}
+          github_token: ${{ secrets.SDK_TYPESCRIPT_ACTION_READ_TOKEN || secrets.GITHUB_TOKEN }}
           repo: restatedev/sdk-typescript
           commit: ${{ inputs.sdkTypescriptCommit != '' }}
           name: restatedev-restate-sdk
