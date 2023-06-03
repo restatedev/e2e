@@ -26,7 +26,8 @@ on:
 
 jobs:
   build:
-    if: github.repository == 'restatedev/e2e'
+    # prevent e2e running on forks
+    if: github.repository_owner == 'restatedev'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
