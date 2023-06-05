@@ -74,6 +74,7 @@ jobs:
           commit: ${{ inputs.sdkTypescriptCommit }}
           name: restatedev-restate-sdk
           path: services/node-services
+          workflow_conclusion: ""
 
       - name: Install sdk-typescript snapshot
         if: ${{ inputs.sdkTypescriptCommit != '' }}
