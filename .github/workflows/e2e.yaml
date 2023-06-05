@@ -22,6 +22,15 @@ on:
         required: false
         default: ''
         type: string
+      restateCommit:
+        description: 'restate commit'
+        required: false
+        default: ''
+        type: string
+      e2eRef:
+        description: 'e2e repo ref, for cross-repo workflow calls'
+        required: true
+        type: string
     secrets:
       E2E_CONTENTS_READ_TOKEN:
         description: 'token to allow reading the contents of the e2e repo, for cross-repo workflow calls'
@@ -43,6 +52,9 @@ jobs:
       - uses: actions/checkout@v3
         with:
           repository: restatedev/e2e
+          # if we are in a workflow_call, use the e2e branch from the workflow call (usually main)
+          # otherwise, defer to the checkout actions default, which depends on the triggering event
+          ref: ${{ inputs.e2eRef || '' }}
           token: ${{ secrets.E2E_CONTENTS_READ_TOKEN || secrets.GITHUB_TOKEN  }}
 
       # Setup Java
@@ -90,6 +102,36 @@ jobs:
         run: npm install restatedev-restate-sdk.tgz
         working-directory: services/node-services
 
+      # Setup restate snapshot if necessary
+      # Due to https://github.com/actions/upload-artifact/issues/53
+      # We must use download-artifact to get artifacts created during *this* workflow run, ie by workflow call
+      - name: Download restate snapshot from in-progress workflow
+        if: ${{ inputs.restateCommit != '' && github.event_name != 'workflow_dispatch' }}
+        uses: actions/download-artifact@v3
+        with:
+          name: restate
+          path: snapshot
+
+      # In the workflow dispatch case where the artifact was created in a previous run, we can download as normal
+      - name: Download restate snapshot from completed workflow
+        if: ${{ inputs.restateCommit != '' && github.event_name == 'workflow_dispatch' }}
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          github_token: ${{ secrets.RESTATE_ACTION_READ_TOKEN || secrets.GITHUB_TOKEN }}
+          repo: restatedev/restate
+          commit: ${{ inputs.restateCommit }}
+          name: restate
+          path: snapshot
+
+      - name: Install restate snapshot
+        if: ${{ inputs.restateCommit != '' }}
+        uses: docker/build-push-action@v3
+        with:
+          context: ./snapshot
+          tags: restatedev/restate:snapshot
+          push: false
+          platforms: linux/amd64
+
       # Run tests
       - name: Test
         uses: gradle/gradle-build-action@v2
@@ -99,6 +141,7 @@ jobs:
           E2E_IMAGE_PULL_POLICY: always
           NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGE_READ_ACCESS_TOKEN }}
           E2E_VERIFICATION_SEED: ${{ github.run_id }}
+          RESTATE_RUNTIME_CONTAINER: ${{ inputs.restateCommit != '' && 'restatedev/restate:snapshot' || 'ghcr.io/restatedev/restate:latest' }}
         with:
           arguments: -Djib.console=plain build
 
