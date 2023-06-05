@@ -13,6 +13,8 @@ import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
+// Only a Java test because the typescript SDK is still lacking this feature:
+// https://github.com/restatedev/sdk-typescript/issues/21
 @Tag("always-suspending")
 class AwaitTimeoutTest {
   companion object {
