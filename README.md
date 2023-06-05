@@ -56,6 +56,7 @@ Currently, we run tests in the following configurations:
 * `gradle :tests:test`: Default runtime configuration
 * `gradle :tests:testAlwaysSuspending`: Runtime setup to always suspend after replay, to mimic the behavior of RequestResponse stream type
 * `gradle :tests:testSingleThreadSinglePartition`: Runtime setup with a single thread and single partition
+* `gradle :tests:testPersistedTimers`: Runtime setup with timers in memory = 1, to trigger timer queue spilling to disk
 
 ### `VerificationTest` seed
 

@@ -10,6 +10,7 @@ dependencies {
 
   testImplementation(libs.junit.all)
   testImplementation(libs.assertj)
+  testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.1")
 
   testImplementation(libs.log4j.api)
   testRuntimeOnly(libs.log4j.core)
@@ -77,6 +78,20 @@ tasks {
     }
   }
 
+  register<Test>("testPersistedTimers") {
+    environment =
+        environment +
+            baseRestateEnvironment(name) +
+            mapOf("RESTATE_WORKER__TIMERS__NUM_TIMERS_IN_MEMORY_LIMIT" to "1")
+
+    useJUnitPlatform {
+      // Run all the tests with always-suspending or only-always-suspending tag
+      includeTags("timers")
+    }
+    // Increase a bit the default timeout
+    systemProperties["junit.jupiter.execution.timeout.testable.method.default"] = "20 s"
+  }
+
   withType<Test>().configureEach {
     dependsOn(":services:http-server:jibDockerBuild")
     dependsOn(":services:java-services:jibDockerBuild")
@@ -87,4 +102,5 @@ tasks {
 tasks.named("check") {
   dependsOn("testAlwaysSuspending")
   dependsOn("testSingleThreadSinglePartition")
+  dependsOn("testPersistedTimers")
 }

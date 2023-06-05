@@ -24,7 +24,10 @@ allprojects {
   version = restateVersion
 
   configure<com.diffplug.gradle.spotless.SpotlessExtension> {
-    kotlin { ktfmt() }
+    kotlin {
+      ktfmt()
+      targetExclude("build/generated/**/*.kt")
+    }
     kotlinGradle { ktfmt() }
     java {
       googleJavaFormat()

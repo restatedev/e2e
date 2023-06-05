@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -27,9 +28,17 @@ public class CoordinatorService extends CoordinatorGrpc.CoordinatorImplBase
 
   @Override
   public void sleep(Duration request, StreamObserver<Empty> responseObserver) {
-    LOG.info("Putting service to sleep for {} ms", request.getMillis());
+    manyTimers(ManyTimersRequest.newBuilder().addTimer(request).build(), responseObserver);
+  }
 
-    restateContext().sleep(java.time.Duration.ofMillis(request.getMillis()));
+  @Override
+  public void manyTimers(ManyTimersRequest request, StreamObserver<Empty> responseObserver) {
+    LOG.info("many timers {}", request.getTimerList());
+
+    awaitableAll(
+        request.getTimerList().stream()
+            .map(d -> restateContext().timer(java.time.Duration.ofMillis(d.getMillis())))
+            .collect(Collectors.toList()));
 
     responseObserver.onNext(Empty.newBuilder().build());
     responseObserver.onCompleted();
@@ -128,19 +137,23 @@ public class CoordinatorService extends CoordinatorGrpc.CoordinatorImplBase
       }
     }
 
-    if (collectedAwaitables.size() == 1) {
-      collectedAwaitables.get(0).await();
-    } else if (collectedAwaitables.size() == 2) {
-      Awaitable.all(collectedAwaitables.get(0), collectedAwaitables.get(1)).await();
-    } else if (collectedAwaitables.size() >= 2) {
-      Awaitable.all(
-              collectedAwaitables.get(0),
-              collectedAwaitables.get(1),
-              collectedAwaitables.subList(2, collectedAwaitables.size()).toArray(Awaitable[]::new))
-          .await();
-    }
+    awaitableAll(collectedAwaitables);
 
     responseObserver.onNext(Empty.getDefaultInstance());
     responseObserver.onCompleted();
+  }
+
+  private static void awaitableAll(List<Awaitable<?>> awaitables) {
+    if (awaitables.size() == 1) {
+      awaitables.get(0).await();
+    } else if (awaitables.size() == 2) {
+      Awaitable.all(awaitables.get(0), awaitables.get(1)).await();
+    } else if (awaitables.size() >= 2) {
+      Awaitable.all(
+              awaitables.get(0),
+              awaitables.get(1),
+              awaitables.subList(2, awaitables.size()).toArray(Awaitable[]::new))
+          .await();
+    }
   }
 }

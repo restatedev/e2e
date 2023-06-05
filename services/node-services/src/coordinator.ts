@@ -5,6 +5,7 @@ import {
   ComplexResponse,
   Coordinator,
   Duration,
+  ManyTimersRequest,
   ProxyResponse,
   TimeoutResponse,
   protobufPackage,
@@ -17,10 +18,16 @@ export const CoordinatorServiceFQN = protobufPackage + ".Coordinator";
 
 export class CoordinatorService implements Coordinator {
   async sleep(request: Duration): Promise<Empty> {
-    console.log("sleep: " + JSON.stringify(request));
+    return this.manyTimers({ timer: [request] });
+  }
+
+  async manyTimers(request: ManyTimersRequest): Promise<Empty> {
+    console.log("many timers: " + JSON.stringify(request));
+
     const ctx = restate.useContext(this);
 
-    await ctx.sleep(request.millis);
+    // Promise.all is not deterministic wrt failures, but this is fine as sleep never fails
+    await Promise.all(request.timer.map((value) => ctx.sleep(value.millis)));
 
     return {};
   }
