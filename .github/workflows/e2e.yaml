@@ -48,6 +48,13 @@ jobs:
       checks: write
       pull-requests: write
       actions: read
+    services:
+      registry:
+        # if we are building a restate snapshot, start a local docker registry to store it
+        # an empty image skips the service (see https://github.com/actions/runner/issues/822)
+        image: ${{ inputs.restateCommit != '' && 'registry:2' || '' }}
+        ports:
+          - 5000:5000
     steps:
       - uses: actions/checkout@v3
         with:
@@ -128,8 +135,8 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: ./snapshot
-          tags: restatedev/restate:snapshot
-          push: false
+          tags: localhost:5000/restatedev/restate:latest
+          push: true
           platforms: linux/amd64
 
       # Run tests
@@ -141,7 +148,7 @@ jobs:
           E2E_IMAGE_PULL_POLICY: always
           NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGE_READ_ACCESS_TOKEN }}
           E2E_VERIFICATION_SEED: ${{ github.run_id }}
-          RESTATE_RUNTIME_CONTAINER: ${{ inputs.restateCommit != '' && 'restatedev/restate:snapshot' || 'ghcr.io/restatedev/restate:latest' }}
+          RESTATE_RUNTIME_CONTAINER: ${{ inputs.restateCommit != '' && 'localhost:5000/restatedev/restate:latest' || 'ghcr.io/restatedev/restate:latest' }}
         with:
           arguments: -Djib.console=plain build
 
