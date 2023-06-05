@@ -43,10 +43,10 @@ object Containers {
         .withHostName(hostName)
   }
 
-  val JAVA_COLLECTIONS_FUNCTION_SPEC =
+  val JAVA_COLLECTIONS_SERVICE_SPEC =
       javaServicesContainer("java-collections", ListServiceGrpc.SERVICE_NAME).build()
 
-  val JAVA_COUNTER_FUNCTION_SPEC =
+  val JAVA_COUNTER_SERVICE_SPEC =
       javaServicesContainer(
               "java-counter",
               CounterGrpc.SERVICE_NAME,
@@ -54,12 +54,12 @@ object Containers {
               SingletonCounterGrpc.SERVICE_NAME)
           .build()
 
-  val JAVA_COORDINATOR_FUNCTION_SPEC =
+  val JAVA_COORDINATOR_SERVICE_SPEC =
       javaServicesContainer(
               "java-coordinator", CoordinatorGrpc.SERVICE_NAME, ReceiverGrpc.SERVICE_NAME)
           .build()
 
-  val JAVA_EXTERNALCALL_FUNCTION_SPEC =
+  val JAVA_EXTERNALCALL_SERVICE_SPEC =
       javaServicesContainer(
               "java-externalcall",
               ReplierGrpc.SERVICE_NAME,
@@ -68,7 +68,7 @@ object Containers {
               "HTTP_SERVER_ADDRESS", "http://${EXTERNALCALL_HTTP_SERVER_CONTAINER_SPEC.first}:8080")
           .build()
 
-  val JAVA_ERRORS_FUNCTION_SPEC =
+  val JAVA_ERRORS_SERVICE_SPEC =
       javaServicesContainer("java-errors", FailingServiceGrpc.SERVICE_NAME)
           .withEnv(
               "HTTP_SERVER_ADDRESS", "http://${EXTERNALCALL_HTTP_SERVER_CONTAINER_SPEC.first}:8080")
@@ -85,28 +85,28 @@ object Containers {
         .withHostName(hostName)
   }
 
-  val NODE_COUNTER_FUNCTION_SPEC =
+  val NODE_COUNTER_SERVICE_SPEC =
       nodeServicesContainer("node-counter", CounterGrpc.SERVICE_NAME, ProxyCounterGrpc.SERVICE_NAME)
           .build()
 
-  val NODE_COORDINATOR_FUNCTION_SPEC =
+  val NODE_COORDINATOR_SERVICE_SPEC =
       nodeServicesContainer(
           "node-coordinator", CoordinatorGrpc.SERVICE_NAME, ReceiverGrpc.SERVICE_NAME)
 
-  val NODE_COLLECTIONS_FUNCTION_SPEC =
+  val NODE_COLLECTIONS_SERVICE_SPEC =
       nodeServicesContainer("node-collections", ListServiceGrpc.SERVICE_NAME)
 
-  val NODE_ERRORS_FUNCTION_SPEC =
+  val NODE_ERRORS_SERVICE_SPEC =
       nodeServicesContainer("node-errors", FailingServiceGrpc.SERVICE_NAME)
           .withRegistrationOptions(RegistrationOptions(retryPolicy = RetryPolicy.None))
 
   // -- Verification test container
 
-  const val VERIFICATION_FUNCTION_HOSTNAME = "restate-verification"
+  const val VERIFICATION_SERVICE_HOSTNAME = "restate-verification"
 
-  val VERIFICATION_FUNCTION_SPEC =
+  val VERIFICATION_SERVICE_SPEC =
       nodeServicesContainer(
-              VERIFICATION_FUNCTION_HOSTNAME,
+              VERIFICATION_SERVICE_HOSTNAME,
               CommandVerifierGrpc.SERVICE_NAME,
               CommandInterpreterGrpc.SERVICE_NAME)
           .withRegistrationOptions(RegistrationOptions(retryPolicy = FIXED_DELAY_RETRY_POLICY))

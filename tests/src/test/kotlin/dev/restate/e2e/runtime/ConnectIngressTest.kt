@@ -26,7 +26,7 @@ class ConnectIngressTest {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .withServiceEndpoint(Containers.JAVA_COUNTER_FUNCTION_SPEC)
+                .withServiceEndpoint(Containers.JAVA_COUNTER_SERVICE_SPEC)
                 .build())
 
     private val objMapper = ObjectMapper()

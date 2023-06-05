@@ -27,7 +27,7 @@ class JavaSleepTest : BaseSleepTest() {
       RestateDeployer.Builder()
           .withEnv(Containers.getRestateEnvironment())
           .withServiceEndpoint(
-              Containers.JAVA_COORDINATOR_FUNCTION_SPEC.copy(
+              Containers.JAVA_COORDINATOR_SERVICE_SPEC.copy(
                   hostName = COORDINATOR_HOSTNAME,
                   registrationOptions =
                       RegistrationOptions(retryPolicy = FIXED_DELAY_RETRY_POLICY)))
@@ -44,7 +44,7 @@ class NodeSleepTest : BaseSleepTest() {
       RestateDeployer.Builder()
           .withEnv(Containers.getRestateEnvironment())
           .withServiceEndpoint(
-              Containers.NODE_COORDINATOR_FUNCTION_SPEC.copy(
+              Containers.NODE_COORDINATOR_SERVICE_SPEC.copy(
                   hostName = COORDINATOR_HOSTNAME,
                   registrationOptions =
                       RegistrationOptions(retryPolicy = FIXED_DELAY_RETRY_POLICY)))

@@ -11,6 +11,8 @@ import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
+// Need to implement the typescript e2e test:
+// https://github.com/restatedev/e2e/issues/108
 @Tag("always-suspending")
 class AwakeableTest {
 
@@ -20,7 +22,7 @@ class AwakeableTest {
         RestateDeployerExtension(
             RestateDeployer.Builder()
                 .withEnv(Containers.getRestateEnvironment())
-                .withServiceEndpoint(Containers.JAVA_EXTERNALCALL_FUNCTION_SPEC)
+                .withServiceEndpoint(Containers.JAVA_EXTERNALCALL_SERVICE_SPEC)
                 .withContainer(Containers.EXTERNALCALL_HTTP_SERVER_CONTAINER_SPEC)
                 .build())
   }
