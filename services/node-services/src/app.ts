@@ -8,6 +8,7 @@ import { protoMetadata as errorsProtoMetadata } from "./generated/errors";
 import { protoMetadata as nonDeterminismProtoMetadata } from "./generated/non_determinism";
 import { protoMetadata as verifierProtoMetadata } from "./generated/verifier";
 import { protoMetadata as interpreterProtoMetadata } from "./generated/interpreter";
+import { protoMetadata as sideEffectProtoMetadata } from "./generated/side_effect";
 import { CounterService, CounterServiceFQN } from "./counter";
 import { ListService, ListServiceFQN } from "./collections";
 import { FailingService, FailingServiceFQN } from "./errors";
@@ -23,6 +24,7 @@ import {
   CommandInterpreterService,
   CommandInterpreterServiceFQN,
 } from "./interpreter";
+import { SideEffectService, SideEffectServiceFQN } from "./side_effect";
 
 let serverBuilder = restate.createServer();
 
@@ -97,6 +99,14 @@ const services = new Map<string, restate.ServiceOpts>([
       descriptor: interpreterProtoMetadata,
       service: "CommandInterpreter",
       instance: new CommandInterpreterService(),
+    },
+  ],
+  [
+    SideEffectServiceFQN,
+    {
+      descriptor: sideEffectProtoMetadata,
+      service: "SideEffect",
+      instance: new SideEffectService(),
     },
   ],
 ]);
