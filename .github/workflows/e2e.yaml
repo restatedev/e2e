@@ -71,7 +71,7 @@ jobs:
         with:
           github_token: ${{ secrets.SDK_TYPESCRIPT_ACTION_READ_TOKEN || secrets.GITHUB_TOKEN }}
           repo: restatedev/sdk-typescript
-          commit: ${{ inputs.sdkTypescriptCommit != '' }}
+          commit: ${{ inputs.sdkTypescriptCommit }}
           name: restatedev-restate-sdk
           path: services/node-services
 
