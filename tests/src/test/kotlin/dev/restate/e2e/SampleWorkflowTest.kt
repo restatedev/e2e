@@ -42,7 +42,7 @@ class NodeSampleWorkflowTest : BaseSampleWorkflowTest() {
 abstract class BaseSampleWorkflowTest {
 
   @Test
-  @DisplayName("Sample workflow with sleep, side effect, call and background call")
+  @DisplayName("Sample workflow with sleep, side effect, call and one way call")
   fun sampleWorkflow(
       @InjectBlockingStub coordinatorClient: CoordinatorGrpc.CoordinatorBlockingStub
   ) {
