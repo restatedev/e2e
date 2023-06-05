@@ -65,8 +65,18 @@ jobs:
           password: ${{ secrets.GH_PACKAGE_READ_ACCESS_TOKEN }}
 
       # Setup sdk-typescript snapshot if necessary
-      - name: Download sdk-typescript snapshot
-        if: ${{ inputs.sdkTypescriptCommit != '' }}
+      # Due to https://github.com/actions/upload-artifact/issues/53
+      # We must use download-artifact to get artifacts created during *this* workflow run, ie by workflow call
+      - name: Download sdk-typescript snapshot from in-progress workflow
+        if: ${{ inputs.sdkTypescriptCommit != '' && github.event_name != 'workflow_dispatch' }}
+        uses: actions/download-artifact@v3
+        with:
+          name: restatedev-restate-sdk
+          path: services/node-services
+
+      # In the workflow dispatch case where the artifact was created in a previous run, we can download as normal
+      - name: Download sdk-typescript snapshot from completed workflow
+        if: ${{ inputs.sdkTypescriptCommit != '' && github.event_name == 'workflow_dispatch' }}
         uses: dawidd6/action-download-artifact@v2
         with:
           github_token: ${{ secrets.SDK_TYPESCRIPT_ACTION_READ_TOKEN || secrets.GITHUB_TOKEN }}
@@ -74,7 +84,6 @@ jobs:
           commit: ${{ inputs.sdkTypescriptCommit }}
           name: restatedev-restate-sdk
           path: services/node-services
-          workflow_conclusion: ""
 
       - name: Install sdk-typescript snapshot
         if: ${{ inputs.sdkTypescriptCommit != '' }}
