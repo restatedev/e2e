@@ -73,8 +73,22 @@ tasks {
     useJUnitPlatform {
       // Run all the tests with either no tags, or always-suspending tag
       includeTags("none() | always-suspending")
-      // Increase a bit the default timeout
-      systemProperties["junit.jupiter.execution.timeout.testable.method.default"] = "30 s"
+    }
+    // Increase a bit the default timeout
+    systemProperties["junit.jupiter.execution.timeout.testable.method.default"] = "30 s"
+  }
+
+  register<Test>("testLazyState") {
+    environment =
+        environment +
+            baseRestateEnvironment(name) +
+            mapOf(
+                "RESTATE_WORKER__INVOKER__DISABLE_EAGER_STATE" to "true",
+            )
+
+    useJUnitPlatform {
+      // Run all the tests with either no tags, or always-suspending tag
+      includeTags("lazy-state")
     }
   }
 
@@ -103,4 +117,5 @@ tasks.named("check") {
   dependsOn("testAlwaysSuspending")
   dependsOn("testSingleThreadSinglePartition")
   dependsOn("testPersistedTimers")
+  dependsOn("testLazyState")
 }

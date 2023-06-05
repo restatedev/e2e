@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
 @Tag("always-suspending")
+@Tag("lazy-state")
 class JavaStateTest : BaseStateTest() {
 
   companion object {
@@ -30,6 +31,7 @@ class JavaStateTest : BaseStateTest() {
 }
 
 @Tag("always-suspending")
+@Tag("lazy-state")
 class NodeStateTest : BaseStateTest() {
 
   companion object {
