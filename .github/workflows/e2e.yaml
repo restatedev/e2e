@@ -121,8 +121,7 @@ jobs:
         if: ${{ inputs.restateCommit != '' && github.event_name != 'workflow_dispatch' }}
         uses: actions/download-artifact@v3
         with:
-          name: restate
-          path: snapshot
+          name: restate.tar
 
       # In the workflow dispatch case where the artifact was created in a previous run, we can download as normal
       - name: Download restate snapshot from completed workflow
@@ -132,24 +131,14 @@ jobs:
           github_token: ${{ secrets.RESTATE_ACTION_READ_TOKEN || secrets.GITHUB_TOKEN }}
           repo: restatedev/restate
           commit: ${{ inputs.restateCommit }}
-          name: restate
-          path: snapshot
-
-      - name: Create snapshot Dockerfile
-        if: ${{ inputs.restateCommit != '' }}
-        run: |
-          touch snapshot/Dockerfile
-          echo 'FROM ghcr.io/restatedev/restate:latest' >> snapshot/Dockerfile
-          echo 'COPY --chmod=755 ./restate /usr/local/bin/restate' >> snapshot/Dockerfile
+          name: restate.tar
 
       - name: Install restate snapshot
         if: ${{ inputs.restateCommit != '' }}
-        uses: docker/build-push-action@v3
-        with:
-          context: ./snapshot
-          tags: localhost:5000/restatedev/restate:latest
-          push: true
-          platforms: linux/amd64
+        run: |
+          output=$(docker load --input restate.tar)
+          docker tag "${output#*: }" "localhost:5000/restatedev/restate:latest"
+          docker push localhost:5000/restatedev/restate:latest
 
       # Run tests
       - name: Test
