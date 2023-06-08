@@ -116,9 +116,7 @@ private constructor(
       private var additionalContainers: MutableMap<String, GenericContainer<*>> = mutableMapOf(),
       private var additionalEnv: MutableMap<String, String> = mutableMapOf(),
       private var runtimeContainer: String =
-          if (System.getenv(RESTATE_RUNTIME_CONTAINER_ENV).isNullOrEmpty())
-              DEFAULT_RUNTIME_CONTAINER
-          else System.getenv(RESTATE_RUNTIME_CONTAINER_ENV),
+          System.getenv(RESTATE_RUNTIME_CONTAINER_ENV) ?: DEFAULT_RUNTIME_CONTAINER,
       private var enableTracesExport: Boolean = true
   ) {
 
