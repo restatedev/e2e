@@ -30,7 +30,9 @@ tasks {
           // We don't need many partitions, fewer partitions will occupy less test resources
           "RESTATE_WORKER__PARTITIONS" to "10",
           "RESTATE_RUNTIME_CONTAINER" to
-              (System.getenv("RESTATE_RUNTIME_CONTAINER") ?: "ghcr.io/restatedev/restate:latest"),
+              (if (System.getenv("RESTATE_RUNTIME_CONTAINER").isNullOrEmpty())
+                  "ghcr.io/restatedev/restate:latest"
+              else System.getenv("RESTATE_RUNTIME_CONTAINER")),
           "RUST_LOG" to (System.getenv("RUST_LOG") ?: "info,restate_invoker=trace,restate=debug"),
           "RESTATE_OBSERVABILITY__JAEGER_FILE__FILTER" to
               (System.getenv("RESTATE_OBSERVABILITY__JAEGER_FILE__FILTER")
