@@ -71,6 +71,7 @@ abstract class BaseSimpleSleepTest {
   }
 
   @Test
+  @Timeout(value = 60, unit = TimeUnit.SECONDS)
   fun manySleeps(@InjectChannel runtimeChannel: Channel) =
       runTest(timeout = 60.seconds) {
         val minSleepDuration = 10.milliseconds
