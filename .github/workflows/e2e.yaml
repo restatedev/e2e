@@ -148,7 +148,7 @@ jobs:
           E2E_IMAGE_PULL_POLICY: always
           NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGE_READ_ACCESS_TOKEN }}
           E2E_VERIFICATION_SEED: ${{ github.run_id }}
-          RESTATE_RUNTIME_CONTAINER: ${{ inputs.restateCommit != '' && 'localhost:5000/restatedev/restate:latest' || 'ghcr.io/restatedev/restate:latest' }}
+          RESTATE_RUNTIME_CONTAINER: ${{ inputs.restateCommit != '' && 'localhost:5000/restatedev/restate:latest' || '' }}
         with:
           arguments: -Djib.console=plain build
 
