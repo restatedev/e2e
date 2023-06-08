@@ -130,6 +130,13 @@ jobs:
           name: restate
           path: snapshot
 
+      - name: Create snapshot Dockerfile
+        if: ${{ inputs.restateCommit != '' }}
+        run: |
+          touch snapshot/Dockerfile
+          echo 'FROM ghcr.io/restatedev/restate:latest' >> snapshot/Dockerfile
+          echo 'COPY --chmod=755 ./restate /usr/local/bin/restate' >> snapshot/Dockerfile
+
       - name: Install restate snapshot
         if: ${{ inputs.restateCommit != '' }}
         uses: docker/build-push-action@v3
