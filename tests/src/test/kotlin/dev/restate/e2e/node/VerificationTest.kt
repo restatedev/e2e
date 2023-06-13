@@ -1,6 +1,14 @@
 package dev.restate.e2e.node
 
 import dev.restate.e2e.Containers
+import dev.restate.e2e.services.verification.interpreter.CommandInterpreterGrpc.CommandInterpreterBlockingStub
+import dev.restate.e2e.services.verification.interpreter.InterpreterProto.CallRequest
+import dev.restate.e2e.services.verification.interpreter.InterpreterProto.Command
+import dev.restate.e2e.services.verification.interpreter.InterpreterProto.Command.AsyncCall
+import dev.restate.e2e.services.verification.interpreter.InterpreterProto.Command.AsyncCallAwait
+import dev.restate.e2e.services.verification.interpreter.InterpreterProto.Command.Sleep
+import dev.restate.e2e.services.verification.interpreter.InterpreterProto.Commands
+import dev.restate.e2e.services.verification.interpreter.InterpreterProto.Key
 import dev.restate.e2e.services.verification.interpreter.InterpreterProto.TestParams
 import dev.restate.e2e.services.verification.verifier.CommandVerifierGrpc.CommandVerifierBlockingStub
 import dev.restate.e2e.services.verification.verifier.VerifierProto
@@ -17,6 +25,7 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 import org.apache.logging.log4j.LogManager
 import org.awaitility.kotlin.*
+import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
@@ -148,6 +157,45 @@ class VerificationTest {
     verifier.awaitVerify(testParams)
 
     verifier.clear(VerifierProto.ClearRequest.newBuilder().setParams(testParams).build())
+  }
+
+  @Timeout(value = 1, unit = TimeUnit.MINUTES)
+  @DisplayName("Suspending or returning with an unawaited blocked syncCall should not deadlock")
+  @Test
+  fun unawaitedSelfCall(@InjectBlockingStub interpreter: CommandInterpreterBlockingStub) {
+    val params = TestParams.newBuilder().build()
+    val key = Key.newBuilder().setParams(params).setTarget(1).build()
+    val commands =
+        Commands.newBuilder()
+            .addCommand(
+                Command.newBuilder()
+                    .setAsyncCall(
+                        AsyncCall.newBuilder()
+                            .setTarget(2) // won't deadlock
+                            .setCallId(1)
+                            .setCommands(
+                                Commands.newBuilder()
+                                    .addCommand(
+                                        Command.newBuilder()
+                                            .setSleep(Sleep.newBuilder().setMilliseconds(5000)))
+                                    .build())
+                            .build())
+                    .build())
+            .addCommand(
+                Command.newBuilder()
+                    .setAsyncCall(
+                        AsyncCall.newBuilder()
+                            .setTarget(1) // would deadlock if awaited, but we don't await it
+                            .build())
+                    .build())
+            .addCommand(
+                Command.newBuilder()
+                    .setAsyncCallAwait(
+                        AsyncCallAwait.newBuilder()
+                            .setCallId(1) // waits 5 seconds so we trigger the suspend timeout
+                            .build()))
+            .build()
+    interpreter.call(CallRequest.newBuilder().setKey(key).setCommands(commands).build())
   }
 
   private fun testParams(): TestParams {
