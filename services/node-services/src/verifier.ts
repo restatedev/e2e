@@ -22,7 +22,6 @@ import {
 import seedrandom from "seedrandom";
 import { useContext } from "@restatedev/restate-sdk";
 
-const MAX_TARGET = 1024;
 const DEFAULT_MAX_SLEEP = 32768;
 
 export class CommandBuilder {
@@ -36,15 +35,6 @@ export class CommandBuilder {
 
   randomInt(max: number) {
     return Math.floor(Math.abs(this.random() * max));
-  }
-
-  randomTarget(...lockedTargets: Array<number>): number {
-    let target = this.randomInt(MAX_TARGET);
-    // rejection sampling
-    while (lockedTargets.includes(target)) {
-      target = this.randomInt(MAX_TARGET);
-    }
-    return target;
   }
 
   normaliseSleeps(commands: Commands | undefined, factor: number) {
@@ -99,7 +89,7 @@ export class CommandBuilder {
     maxSleepMillis: number,
     depth: number
   ): { target: number; commands: Commands } {
-    const call = this._buildCommands(this.randomTarget(), depth, []);
+    const call = this._buildCommands(0, depth, []);
     const duration = this.durationUpperBound(call.commands);
     // normalise so that the entire job takes less time than the max sleep
     this.normaliseSleeps(call.commands, maxSleepMillis / duration);
@@ -133,7 +123,10 @@ export class CommandBuilder {
       () => ({
         // hit a known-unlocked target with a sync call, and pass on the lock list for future blocking calls
         syncCall: this._buildCommands(
-          this.randomTarget(target, ...lockedTargets),
+          // jump to a target between 1 and 32 ahead
+          // by only going upwards we avoid cycles
+          // by skipping up to 32 we avoid all paths landing on the same few keys
+          target + 1 + this.randomInt(32),
           depth - 1,
           [target, ...lockedTargets]
         ),
@@ -143,7 +136,7 @@ export class CommandBuilder {
           callId: asyncUnlockedCounter++,
           // hit a known-unlocked target with an async call that may be awaited, and pass on the lock list for future blocking calls
           ...this._buildCommands(
-            this.randomTarget(target, ...lockedTargets),
+            target + 1 + this.randomInt(32),
             depth - 1,
             [target, ...lockedTargets]
           ),
@@ -182,7 +175,7 @@ export class CommandBuilder {
       () => ({
         // deliberately hit a known-unlocked target with a background call (the call should schedule asap)
         backgroundCall: this._buildCommands(
-          this.randomTarget(target, ...lockedTargets),
+          target + 1 + this.randomInt(32),
           depth - 1,
           []
         ),
