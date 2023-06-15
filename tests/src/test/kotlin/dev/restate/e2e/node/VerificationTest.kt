@@ -159,7 +159,7 @@ class VerificationTest {
     logger.info("Using seed {}", seed)
     return TestParams.newBuilder()
         .setSeed(seed)
-        .setWidth(3)
+        .setWidth(4)
         .setDepth(14)
         .setMaxSleepMillis(5.seconds.inWholeMilliseconds.toInt())
         .build()
