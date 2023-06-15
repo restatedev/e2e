@@ -61,7 +61,7 @@ class VerificationTest {
             }
   }
 
-  @Timeout(value = 1, unit = TimeUnit.MINUTES)
+  @Timeout(value = 2, unit = TimeUnit.MINUTES)
   @Test
   fun simple(@InjectBlockingStub verifier: CommandVerifierBlockingStub) {
     val testParams = testParams()
@@ -72,7 +72,7 @@ class VerificationTest {
     verifier.clear(VerifierProto.ClearRequest.newBuilder().setParams(testParams).build())
   }
 
-  @Timeout(value = 1, unit = TimeUnit.MINUTES)
+  @Timeout(value = 2, unit = TimeUnit.MINUTES)
   @Test
   fun killingTheServiceEndpoint(
       @InjectBlockingStub verifier: CommandVerifierBlockingStub,
@@ -92,7 +92,7 @@ class VerificationTest {
     verifier.clear(VerifierProto.ClearRequest.newBuilder().setParams(testParams).build())
   }
 
-  @Timeout(value = 1, unit = TimeUnit.MINUTES)
+  @Timeout(value = 2, unit = TimeUnit.MINUTES)
   @Test
   fun stoppingTheServiceEndpoint(
       @InjectBlockingStub verifier: CommandVerifierBlockingStub,
@@ -112,7 +112,7 @@ class VerificationTest {
     verifier.clear(VerifierProto.ClearRequest.newBuilder().setParams(testParams).build())
   }
 
-  @Timeout(value = 1, unit = TimeUnit.MINUTES)
+  @Timeout(value = 2, unit = TimeUnit.MINUTES)
   @Test
   fun killingTheRuntime(
       @InjectBlockingStub verifier: CommandVerifierBlockingStub,
@@ -131,7 +131,7 @@ class VerificationTest {
     verifier.clear(VerifierProto.ClearRequest.newBuilder().setParams(testParams).build())
   }
 
-  @Timeout(value = 1, unit = TimeUnit.MINUTES)
+  @Timeout(value = 2, unit = TimeUnit.MINUTES)
   @Test
   fun stoppingTheRuntime(
       @InjectBlockingStub verifier: CommandVerifierBlockingStub,
@@ -159,7 +159,7 @@ class VerificationTest {
     logger.info("Using seed {}", seed)
     return TestParams.newBuilder()
         .setSeed(seed)
-        .setWidth(3)
+        .setWidth(4)
         .setDepth(14)
         .setMaxSleepMillis(5.seconds.inWholeMilliseconds.toInt())
         .build()
