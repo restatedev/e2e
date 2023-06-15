@@ -31,6 +31,7 @@ message TestParams {
 
 message Key {
   TestParams params = 1;
+  // target is an arbitrary integer allowing us to select different service keys
   int32 target = 2;
 }
 
