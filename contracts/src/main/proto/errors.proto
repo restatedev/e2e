@@ -13,7 +13,6 @@ service FailingService {
   rpc Fail (ErrorMessage) returns (google.protobuf.Empty);
   rpc FailAndHandle (ErrorMessage) returns (ErrorMessage);
   rpc InvokeExternalAndHandleFailure(FailRequest) returns (ErrorMessage);
-  rpc HandleNotFound (FailRequest) returns (ErrorMessage);
 }
 
 message FailRequest {

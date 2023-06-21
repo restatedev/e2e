@@ -42,7 +42,4 @@ export class FailingService implements IFailingService {
   invokeExternalAndHandleFailure(): Promise<ErrorMessage> {
     throw new Error("Method not implemented.");
   }
-  handleNotFound(): Promise<ErrorMessage> {
-    throw new Error("Method not implemented.");
-  }
 }

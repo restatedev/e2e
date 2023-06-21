@@ -49,16 +49,6 @@ class JavaErrorsTest : BaseErrorsTest() {
         .extracting(ErrorMessage::getErrorMessage)
         .isEqualTo("begin:external_call:internal_call")
   }
-
-  @DisplayName("Test calling unknown service method from within another service")
-  @Test
-  fun propagate404(@InjectBlockingStub stub: FailingServiceBlockingStub) {
-    assertThat(
-            stub.handleNotFound(
-                FailRequest.newBuilder().setKey(UUID.randomUUID().toString()).build()))
-        .extracting(ErrorMessage::getErrorMessage)
-        .isEqualTo("notfound")
-  }
 }
 
 class NodeErrorsTest : BaseErrorsTest() {

@@ -1,14 +1,12 @@
 package dev.restate.e2e.services.errors;
 
 import com.google.protobuf.Empty;
-import com.google.rpc.Code;
 import dev.restate.e2e.services.errors.ErrorsProto.ErrorMessage;
 import dev.restate.e2e.services.errors.ErrorsProto.FailRequest;
 import dev.restate.e2e.services.utils.NumberSortHttpServerUtils;
 import dev.restate.sdk.blocking.Awakeable;
 import dev.restate.sdk.blocking.RestateBlockingService;
 import dev.restate.sdk.core.TypeTag;
-import io.grpc.MethodDescriptor;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
@@ -94,27 +92,5 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase
 
     responseObserver.onNext(ErrorMessage.newBuilder().setErrorMessage(finalMessage).build());
     responseObserver.onCompleted();
-  }
-
-  @Override
-  public void handleNotFound(FailRequest request, StreamObserver<ErrorMessage> responseObserver) {
-    var methodDescriptor =
-        FailingServiceGrpc.getFailMethod().toBuilder()
-            .setFullMethodName(
-                MethodDescriptor.generateFullMethodName(
-                    FailingServiceGrpc.SERVICE_NAME, "UnknownFn"))
-            .build();
-    try {
-      restateContext().call(methodDescriptor, ErrorMessage.getDefaultInstance()).await();
-    } catch (StatusRuntimeException e) {
-      if (e.getStatus().getCode().value() == Code.NOT_FOUND_VALUE) {
-        responseObserver.onNext(ErrorMessage.newBuilder().setErrorMessage("notfound").build());
-        responseObserver.onCompleted();
-      } else {
-        throw new IllegalStateException("Got unexpected error: " + e.getMessage());
-      }
-    }
-
-    throw new IllegalStateException("This should be unreachable");
   }
 }
