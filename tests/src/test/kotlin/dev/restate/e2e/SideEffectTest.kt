@@ -7,14 +7,13 @@ import dev.restate.e2e.utils.InjectBlockingStub
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
 @Tag("only-always-suspending")
-class JavaSideEffectTest : BaseSideEffectTest() {
+class JavaSideEffectTest : BaseSideEffectTest(1) {
   companion object {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension =
@@ -28,9 +27,12 @@ class JavaSideEffectTest : BaseSideEffectTest() {
   }
 }
 
+// Note: TS SDK awaits the ack after each side effect.
+// So the last execution will have 0 as result because the last side effect will lead to a
+// suspension and a replay.
+// During the last replay no side effects will be executed anymore.
 @Tag("only-always-suspending")
-@Disabled("https://github.com/restatedev/sdk-typescript/issues/82")
-class NodeSideEffectTest : BaseSideEffectTest() {
+class NodeSideEffectTest : BaseSideEffectTest(0) {
   companion object {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension =
@@ -44,7 +46,7 @@ class NodeSideEffectTest : BaseSideEffectTest() {
   }
 }
 
-abstract class BaseSideEffectTest {
+abstract class BaseSideEffectTest(private val result: Int) {
   @DisplayName("Side effect should wait on acknowledgements")
   @Test
   fun sideEffectFlush(@InjectBlockingStub sideEffectStub: SideEffectBlockingStub) {
@@ -52,6 +54,6 @@ abstract class BaseSideEffectTest {
             sideEffectStub.invokeSideEffects(
                 SideEffectProto.InvokeSideEffectsRequest.newBuilder().build()))
         .extracting { it.nonDeterministicInvocationCount }
-        .isEqualTo(1)
+        .isEqualTo(result)
   }
 }
