@@ -9,6 +9,8 @@ import { protoMetadata as nonDeterminismProtoMetadata } from "./generated/non_de
 import { protoMetadata as verifierProtoMetadata } from "./generated/verifier";
 import { protoMetadata as interpreterProtoMetadata } from "./generated/interpreter";
 import { protoMetadata as sideEffectProtoMetadata } from "./generated/side_effect";
+import { protoMetadata as rngProtoMetadata } from "./generated/rng";
+import { protoMetadata as replierProtoMetadata } from "./generated/replier";
 import { CounterService, CounterServiceFQN } from "./counter";
 import { ListService, ListServiceFQN } from "./collections";
 import { FailingService, FailingServiceFQN } from "./errors";
@@ -25,6 +27,8 @@ import {
   CommandInterpreterServiceFQN,
 } from "./interpreter";
 import { SideEffectService, SideEffectServiceFQN } from "./side_effect";
+import { RandomNumberListGeneratorService, RandomNumberListGeneratorServiceFQN } from "./random_number_generator";
+import { ReplierService, ReplierServiceFQN } from "./replier";
 
 let serverBuilder = restate.createServer();
 
@@ -107,6 +111,22 @@ const services = new Map<string, restate.ServiceOpts>([
       descriptor: sideEffectProtoMetadata,
       service: "SideEffect",
       instance: new SideEffectService(),
+    },
+  ],
+  [
+    RandomNumberListGeneratorServiceFQN,
+    {
+      descriptor: rngProtoMetadata,
+      service: "RandomNumberListGenerator",
+      instance: new RandomNumberListGeneratorService(),
+    },
+  ],
+  [
+    ReplierServiceFQN,
+    {
+      descriptor: replierProtoMetadata,
+      service: "Replier",
+      instance: new ReplierService(),
     },
   ],
 ]);

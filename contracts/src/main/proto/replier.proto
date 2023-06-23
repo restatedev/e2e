@@ -6,7 +6,7 @@ option java_outer_classname = "ReplierProto";
 import "google/protobuf/empty.proto";
 import "dev/restate/ext.proto";
 
-package restate.e2e.externalcall.replier;
+package replier;
 
 service Replier {
   option (dev.restate.ext.service_type) = UNKEYED;
