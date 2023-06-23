@@ -1,6 +1,5 @@
-package dev.restate.e2e.java
+package dev.restate.e2e
 
-import dev.restate.e2e.Containers
 import dev.restate.e2e.services.externalcall.RandomNumberListGeneratorGrpc.RandomNumberListGeneratorBlockingStub
 import dev.restate.e2e.services.externalcall.RandomNumberListGeneratorProto.GenerateNumbersRequest
 import dev.restate.e2e.utils.InjectBlockingStub
@@ -10,14 +9,9 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
-import org.junit.jupiter.api.parallel.Execution
-import org.junit.jupiter.api.parallel.ExecutionMode
 
-// Need to implement the typescript e2e test:
-// https://github.com/restatedev/e2e/issues/108
 @Tag("always-suspending")
-class AwakeableTest {
-
+class JavaAwakeableTest : BaseAwakeableTest() {
   companion object {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension =
@@ -28,9 +22,25 @@ class AwakeableTest {
                 .withContainer(Containers.EXTERNALCALL_HTTP_SERVER_CONTAINER_SPEC)
                 .build())
   }
+}
+
+@Tag("always-suspending")
+class NodeAwakeableTest : BaseAwakeableTest() {
+  companion object {
+    @RegisterExtension
+    val deployerExt: RestateDeployerExtension =
+        RestateDeployerExtension(
+            RestateDeployer.Builder()
+                .withEnv(Containers.getRestateEnvironment())
+                .withServiceEndpoint(Containers.NODE_EXTERNALCALL_SERVICE_SPEC)
+                .withContainer(Containers.EXTERNALCALL_HTTP_SERVER_CONTAINER_SPEC)
+                .build())
+  }
+}
+
+abstract class BaseAwakeableTest {
 
   @Test
-  @Execution(ExecutionMode.CONCURRENT)
   fun generate(
       @InjectBlockingStub randomNumberListGenerator: RandomNumberListGeneratorBlockingStub
   ) {

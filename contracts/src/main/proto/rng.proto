@@ -5,7 +5,7 @@ option java_outer_classname = "RandomNumberListGeneratorProto";
 
 import "dev/restate/ext.proto";
 
-package restate.e2e.externalcall.rnlg;
+package rnlg;
 
 service RandomNumberListGenerator {
   option (dev.restate.ext.service_type) = UNKEYED;

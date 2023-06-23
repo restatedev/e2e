@@ -10,6 +10,8 @@ import { protoMetadata as verifierProtoMetadata } from "./generated/verifier";
 import { protoMetadata as interpreterProtoMetadata } from "./generated/interpreter";
 import { protoMetadata as sideEffectProtoMetadata } from "./generated/side_effect";
 import { protoMetadata as proxyProtoMetadata } from "./generated/proxy";
+import { protoMetadata as rngProtoMetadata } from "./generated/rng";
+import { protoMetadata as replierProtoMetadata } from "./generated/replier";
 import { CounterService, CounterServiceFQN } from "./counter";
 import { ListService, ListServiceFQN } from "./collections";
 import { FailingService, FailingServiceFQN } from "./errors";
@@ -30,6 +32,11 @@ import {
   ProxyService,
   ProxyServiceFQN,
 } from "./proxy";
+import {
+  RandomNumberListGeneratorService,
+  RandomNumberListGeneratorServiceFQN,
+} from "./random_number_generator";
+import { ReplierService, ReplierServiceFQN } from "./replier";
 
 let serverBuilder = restate.createServer();
 
@@ -120,6 +127,22 @@ const services = new Map<string, restate.ServiceOpts>([
       descriptor: proxyProtoMetadata,
       service: "ProxyService",
       instance: new ProxyService(),
+    },
+  ],
+  [
+    RandomNumberListGeneratorServiceFQN,
+    {
+      descriptor: rngProtoMetadata,
+      service: "RandomNumberListGenerator",
+      instance: new RandomNumberListGeneratorService(),
+    },
+  ],
+  [
+    ReplierServiceFQN,
+    {
+      descriptor: replierProtoMetadata,
+      service: "Replier",
+      instance: new ReplierService(),
     },
   ],
 ]);

@@ -94,6 +94,15 @@ object Containers {
   val NODE_COLLECTIONS_SERVICE_SPEC =
       nodeServicesContainer("node-collections", ListServiceGrpc.SERVICE_NAME).build()
 
+  val NODE_EXTERNALCALL_SERVICE_SPEC =
+      nodeServicesContainer(
+              "node-externalcall",
+              ReplierGrpc.SERVICE_NAME,
+              RandomNumberListGeneratorGrpc.SERVICE_NAME)
+          .withEnv(
+              "HTTP_SERVER_ADDRESS", "http://${EXTERNALCALL_HTTP_SERVER_CONTAINER_SPEC.first}:8080")
+          .build()
+
   val NODE_ERRORS_SERVICE_SPEC =
       nodeServicesContainer("node-errors", FailingServiceGrpc.SERVICE_NAME).build()
 
