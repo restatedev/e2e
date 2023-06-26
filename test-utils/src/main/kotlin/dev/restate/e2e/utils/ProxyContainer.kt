@@ -1,6 +1,7 @@
 package dev.restate.e2e.utils
 
 import eu.rekawek.toxiproxy.ToxiproxyClient
+import java.util.stream.IntStream
 import org.testcontainers.containers.Network
 import org.testcontainers.containers.ToxiproxyContainer
 import org.testcontainers.containers.wait.strategy.Wait
@@ -9,8 +10,11 @@ internal class ProxyContainer(private val container: ToxiproxyContainer) {
 
   companion object {
     // From https://www.testcontainers.org/modules/toxiproxy/
+    private const val TOXIPROXY_CONTROL_PORT = 8474
+    // From https://www.testcontainers.org/modules/toxiproxy/
     private const val PORT_OFFSET = 8666
-    private const val MAX_PORTS = 31
+    // For the time being, we use only 2 ports.
+    private const val MAX_PORTS = 2
   }
 
   private val client by lazy { ToxiproxyClient(container.host, container.controlPort) }
@@ -21,9 +25,18 @@ internal class ProxyContainer(private val container: ToxiproxyContainer) {
   // -- Lifecycle
 
   internal fun start(network: Network, testReportDir: String) {
+    // We override what ToxiproxyContainer sets as default
+    val portsToExpose =
+        IntStream.concat(
+                IntStream.of(TOXIPROXY_CONTROL_PORT),
+                IntStream.range(PORT_OFFSET, PORT_OFFSET + MAX_PORTS))
+            .boxed()
+            .toArray { arrayOfNulls<Int>(it) }
+
     container
         .withNetwork(network)
         .withLogConsumer(ContainerLogger(testReportDir, "toxiproxy"))
+        .withExposedPorts(*portsToExpose)
         .start()
   }
 
