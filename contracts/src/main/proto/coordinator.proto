@@ -46,4 +46,5 @@ message TimeoutResponse {
 
 message InvokeSequentiallyRequest {
   repeated bool execute_as_background_call = 1;
+  string list_name = 2;
 }
