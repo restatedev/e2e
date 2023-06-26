@@ -12,6 +12,8 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 
 @Tag("only-always-suspending")
 class JavaSideEffectTest : BaseSideEffectTest() {
@@ -47,6 +49,7 @@ class NodeSideEffectTest : BaseSideEffectTest() {
 abstract class BaseSideEffectTest {
   @DisplayName("Side effect should wait on acknowledgements")
   @Test
+  @Execution(ExecutionMode.CONCURRENT)
   fun sideEffectFlush(@InjectBlockingStub sideEffectStub: SideEffectBlockingStub) {
     assertThat(
             sideEffectStub.invokeSideEffects(

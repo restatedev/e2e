@@ -14,6 +14,8 @@ import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 
 @Tag("always-suspending")
 @Tag("lazy-state")
@@ -48,12 +50,14 @@ class NodeStateTest : BaseStateTest() {
 abstract class BaseStateTest {
 
   @Test
+  @Execution(ExecutionMode.CONCURRENT)
   fun add(@InjectBlockingStub counterClient: CounterBlockingStub) {
     counterClient.add(
         CounterAddRequest.newBuilder().setCounterName("noReturnValue").setValue(1).build())
   }
 
   @Test
+  @Execution(ExecutionMode.CONCURRENT)
   fun getAndSet(@InjectBlockingStub counterClient: CounterBlockingStub) {
     val res1 =
         counterClient.getAndAdd(
@@ -69,6 +73,7 @@ abstract class BaseStateTest {
   }
 
   @Test
+  @Execution(ExecutionMode.CONCURRENT)
   fun setStateViaOneWayCallFromAnotherService(
       @InjectBlockingStub proxyCounter: ProxyCounterGrpc.ProxyCounterBlockingStub,
       @InjectBlockingStub counterClient: CounterBlockingStub

@@ -27,6 +27,8 @@ import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 
 /** Test the Connect ingress support */
 class IngressServiceTest {
@@ -55,6 +57,7 @@ class IngressServiceTest {
   }
 
   @Test
+  @Execution(ExecutionMode.CONCURRENT)
   fun invokeAddThroughConnect(
       @InjectGrpcIngressURL httpEndpointURL: URL,
       @InjectBlockingStub counterClient: CounterBlockingStub
@@ -94,6 +97,7 @@ class IngressServiceTest {
   }
 
   @Test
+  @Execution(ExecutionMode.CONCURRENT)
   fun invokeAddThroughGrpc(
       @InjectBlockingStub ingressClient: IngressBlockingStub,
       @InjectBlockingStub counterClient: CounterBlockingStub

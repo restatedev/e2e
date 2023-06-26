@@ -17,6 +17,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.InstanceOfAssertFactories
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.extension.RegisterExtension
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -72,6 +74,7 @@ abstract class NonDeterminismTest {
 
   @ParameterizedTest(name = "{0}")
   @MethodSource
+  @Execution(ExecutionMode.CONCURRENT)
   fun method(
       methodName: String,
       methodDescriptor: MethodDescriptor<NonDeterministicRequest, Empty>,

@@ -17,6 +17,8 @@ import java.nio.charset.StandardCharsets
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 
 /** Test the Connect ingress support */
 class ConnectIngressTest {
@@ -45,13 +47,14 @@ class ConnectIngressTest {
   }
 
   @Test
+  @Execution(ExecutionMode.CONCURRENT)
   fun getAndAdd(@InjectGrpcIngressURL httpEndpointURL: URL) {
     val client = HttpClient.newHttpClient()
 
     val req =
         HttpRequest.newBuilder(
                 URI.create("$httpEndpointURL${CounterGrpc.getGetAndAddMethod().fullMethodName}"))
-            .POST(jacksonBodyPublisher(mapOf("counter_name" to "my-counter", "value" to 1)))
+            .POST(jacksonBodyPublisher(mapOf("counterName" to "my-counter", "value" to 1)))
             .headers("Content-Type", "application/json")
             .build()
 
@@ -66,13 +69,14 @@ class ConnectIngressTest {
   }
 
   @Test
+  @Execution(ExecutionMode.CONCURRENT)
   fun badContentType(@InjectGrpcIngressURL httpEndpointURL: URL) {
     val client = HttpClient.newHttpClient()
 
     val req =
         HttpRequest.newBuilder(
                 URI.create("$httpEndpointURL${CounterGrpc.getGetAndAddMethod().fullMethodName}"))
-            .POST(jacksonBodyPublisher(mapOf("counter_name" to "my-counter", "value" to 1)))
+            .POST(jacksonBodyPublisher(mapOf("counterName" to "my-counter", "value" to 1)))
             .headers("Content-Type", "application/whatever")
             .build()
 
@@ -82,6 +86,7 @@ class ConnectIngressTest {
   }
 
   @Test
+  @Execution(ExecutionMode.CONCURRENT)
   fun malformedJson(@InjectGrpcIngressURL httpEndpointURL: URL) {
     val client = HttpClient.newHttpClient()
 

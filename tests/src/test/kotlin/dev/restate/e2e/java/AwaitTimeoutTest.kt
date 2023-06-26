@@ -12,6 +12,8 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 
 // Only a Java test because the typescript SDK is still lacking this feature:
 // https://github.com/restatedev/sdk-typescript/issues/21
@@ -29,6 +31,7 @@ class AwaitTimeoutTest {
 
   @Test
   @DisplayName("Test Awaitable#await(Duration)")
+  @Execution(ExecutionMode.CONCURRENT)
   fun timeout(@InjectBlockingStub coordinatorClient: CoordinatorBlockingStub) {
     val timeout = Duration.ofMillis(100L)
     val response =
