@@ -119,21 +119,15 @@ public class CoordinatorService extends CoordinatorGrpc.CoordinatorImplBase
     List<Awaitable<?>> collectedAwaitables = new ArrayList<>();
 
     for (int i = 0; i < request.getExecuteAsBackgroundCallCount(); i++) {
+      var appendRequest =
+          AppendRequest.newBuilder()
+              .setListName(request.getListName())
+              .setValue(String.valueOf(i))
+              .build();
       if (request.getExecuteAsBackgroundCall(i)) {
-        ctx.backgroundCall(
-            ListServiceGrpc.getAppendMethod(),
-            AppendRequest.newBuilder()
-                .setListName("invokeSequentially")
-                .setValue(String.valueOf(i))
-                .build());
+        ctx.backgroundCall(ListServiceGrpc.getAppendMethod(), appendRequest);
       } else {
-        collectedAwaitables.add(
-            ctx.call(
-                ListServiceGrpc.getAppendMethod(),
-                AppendRequest.newBuilder()
-                    .setListName("invokeSequentially")
-                    .setValue(String.valueOf(i))
-                    .build()));
+        collectedAwaitables.add(ctx.call(ListServiceGrpc.getAppendMethod(), appendRequest));
       }
     }
 

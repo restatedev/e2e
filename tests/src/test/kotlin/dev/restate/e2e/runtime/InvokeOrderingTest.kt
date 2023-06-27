@@ -8,6 +8,7 @@ import dev.restate.e2e.services.coordinator.CoordinatorProto.InvokeSequentiallyR
 import dev.restate.e2e.utils.InjectBlockingStub
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
+import java.util.UUID
 import java.util.stream.Stream
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.extension.RegisterExtension
@@ -29,9 +30,14 @@ class InvokeOrderingTest {
 
     @JvmStatic
     fun ordering(): Stream<Arguments> {
+      // To enforce ordering wrt listClient.clear(...) executed in the test code,
+      // the last call must be sync!
       return Stream.of(
-          Arguments.of(booleanArrayOf(true, false, true)),
-          Arguments.of(booleanArrayOf(false, true, false)))
+          Arguments.of(booleanArrayOf(true, false, false)),
+          Arguments.of(booleanArrayOf(false, true, false)),
+          Arguments.of(
+              booleanArrayOf(true, true, false),
+          ))
     }
   }
 
@@ -42,12 +48,15 @@ class InvokeOrderingTest {
       @InjectBlockingStub coordinatorClient: CoordinatorBlockingStub,
       @InjectBlockingStub listClient: ListServiceBlockingStub
   ) {
+    val listName = UUID.randomUUID().toString()
+
     coordinatorClient.invokeSequentially(
         InvokeSequentiallyRequest.newBuilder()
             .addAllExecuteAsBackgroundCall(ordering.asIterable())
+            .setListName(listName)
             .build())
 
-    val listClientRequest = Request.newBuilder().setListName("invokeSequentially").build()
+    val listClientRequest = Request.newBuilder().setListName(listName).build()
 
     assertThat(listClient.clear(listClientRequest).valuesList).containsExactly("0", "1", "2")
   }
