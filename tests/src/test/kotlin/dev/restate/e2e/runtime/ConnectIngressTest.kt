@@ -1,8 +1,9 @@
 package dev.restate.e2e.runtime
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.JsonNodeType
 import dev.restate.e2e.Containers
+import dev.restate.e2e.Utils.jacksonBodyHandler
+import dev.restate.e2e.Utils.jacksonBodyPublisher
 import dev.restate.e2e.services.counter.CounterGrpc
 import dev.restate.e2e.utils.InjectGrpcIngressURL
 import dev.restate.e2e.utils.RestateDeployer
@@ -12,8 +13,6 @@ import java.net.URL
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpRequest.BodyPublishers
-import java.net.http.HttpResponse
-import java.nio.charset.StandardCharsets
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
@@ -32,25 +31,12 @@ class ConnectIngressTest {
                 .withServiceEndpoint(Containers.JAVA_COUNTER_SERVICE_SPEC)
                 .build())
 
-    private val objMapper = ObjectMapper()
-
-    private val jacksonBodySubscriber: HttpResponse.BodySubscriber<JsonNode> =
-        HttpResponse.BodySubscribers.mapping(
-            HttpResponse.BodySubscribers.ofString(StandardCharsets.UTF_8), objMapper::readTree)
-
-    private val jacksonBodyHandler: HttpResponse.BodyHandler<JsonNode> =
-        HttpResponse.BodyHandler { jacksonBodySubscriber }
-
-    private fun jacksonBodyPublisher(value: Any): HttpRequest.BodyPublisher {
-      return BodyPublishers.ofString(objMapper.writeValueAsString(value))
-    }
+    val client = HttpClient.newHttpClient()
   }
 
   @Test
   @Execution(ExecutionMode.CONCURRENT)
   fun getAndAdd(@InjectGrpcIngressURL httpEndpointURL: URL) {
-    val client = HttpClient.newHttpClient()
-
     val req =
         HttpRequest.newBuilder(
                 URI.create("$httpEndpointURL${CounterGrpc.getGetAndAddMethod().fullMethodName}"))
@@ -58,21 +44,37 @@ class ConnectIngressTest {
             .headers("Content-Type", "application/json")
             .build()
 
-    val response = client.send(req, jacksonBodyHandler)
+    val response = client.send(req, jacksonBodyHandler())
 
     assertThat(response.statusCode()).isEqualTo(200)
     assertThat(response.headers().firstValue("content-type"))
         .get()
         .asString()
         .contains("application/json")
-    assertThat(response.body().get("newValue").asInt()).isEqualTo(1)
+
+    assertThat(response.body().has("newValue"))
+        .withFailMessage {
+          "Expecting newValue field in body. Body is " + response.body().toPrettyString()
+        }
+        .isTrue()
+    val newValueField = response.body().get("newValue")
+    // This is because the default for serialize_stringify_64_bit_integers is true
+    assertThat(newValueField.nodeType)
+        .withFailMessage {
+          "Expecting newValue field to be STRING. Body is " + response.body().toPrettyString()
+        }
+        .isEqualTo(JsonNodeType.STRING)
+    // asLong parses the string!
+    assertThat(newValueField.asLong())
+        .withFailMessage {
+          "Expecting newValue field == 1L. Body is " + response.body().toPrettyString()
+        }
+        .isEqualTo(1L)
   }
 
   @Test
   @Execution(ExecutionMode.CONCURRENT)
   fun badContentType(@InjectGrpcIngressURL httpEndpointURL: URL) {
-    val client = HttpClient.newHttpClient()
-
     val req =
         HttpRequest.newBuilder(
                 URI.create("$httpEndpointURL${CounterGrpc.getGetAndAddMethod().fullMethodName}"))
@@ -80,7 +82,7 @@ class ConnectIngressTest {
             .headers("Content-Type", "application/whatever")
             .build()
 
-    val response = client.send(req, jacksonBodyHandler)
+    val response = client.send(req, jacksonBodyHandler())
 
     assertThat(response.statusCode()).isEqualTo(415)
   }
@@ -88,8 +90,6 @@ class ConnectIngressTest {
   @Test
   @Execution(ExecutionMode.CONCURRENT)
   fun malformedJson(@InjectGrpcIngressURL httpEndpointURL: URL) {
-    val client = HttpClient.newHttpClient()
-
     val req =
         HttpRequest.newBuilder(
                 URI.create("$httpEndpointURL${CounterGrpc.getGetAndAddMethod().fullMethodName}"))
@@ -97,7 +97,7 @@ class ConnectIngressTest {
             .headers("Content-Type", "application/json")
             .build()
 
-    val response = client.send(req, jacksonBodyHandler)
+    val response = client.send(req, jacksonBodyHandler())
 
     assertThat(response.statusCode()).isEqualTo(400)
   }
