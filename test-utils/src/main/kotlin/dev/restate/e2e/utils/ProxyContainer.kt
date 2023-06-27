@@ -37,6 +37,7 @@ internal class ProxyContainer(private val container: ToxiproxyContainer) {
         .withNetwork(network)
         .withLogConsumer(ContainerLogger(testReportDir, "toxiproxy"))
         .withExposedPorts(*portsToExpose)
+        .withStartupAttempts(3)
         .start()
   }
 
