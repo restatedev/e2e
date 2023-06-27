@@ -9,7 +9,6 @@ import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpRequest.BodyPublishers
 import java.net.http.HttpResponse.BodyHandlers
-import java.nio.file.Files
 import java.nio.file.Path
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -45,6 +44,8 @@ private constructor(
 
     private const val IMAGE_PULL_POLICY_ENV = "E2E_IMAGE_PULL_POLICY"
     private const val ALWAYS_PULL = "always"
+
+    private const val MOUNT_STATE_DIRECTORY_ENV = "E2E_MOUNT_STATE_DIRECTORY"
 
     private val logger = LogManager.getLogger(RestateDeployer::class.java)
 
@@ -83,7 +84,6 @@ private constructor(
   private val serviceContainers =
       serviceSpecs.associate { spec -> spec.hostName to (spec to spec.toContainer()) }
   private val network = Network.newNetwork()
-  private val tmpDir = Files.createTempDirectory("restate-e2e").toFile()
 
   private val proxyContainer = ProxyContainer(ToxiproxyContainer("ghcr.io/shopify/toxiproxy:2.5.0"))
   private val runtimeContainer = GenericContainer(DockerImageName.parse(runtimeContainerName))
@@ -223,10 +223,6 @@ private constructor(
       logger.debug("Started container {} with image {}", containerHost, container.dockerImageName)
     }
 
-    // Prepare state directory to mount
-    val stateDir = File(tmpDir, "state")
-    stateDir.mkdirs()
-
     logger.debug("Starting runtime container '{}'", runtimeContainerName)
 
     // Configure runtime container
@@ -245,9 +241,14 @@ private constructor(
         .withNetworkAliases(RESTATE_RUNTIME)
         .withLogConsumer(ContainerLogger(testReportDir, "restate-runtime"))
 
-    // Mount state directory
-    runtimeContainer.addFileSystemBind(
-        stateDir.toString(), "/state", BindMode.READ_WRITE, SelinuxContext.SINGLE)
+    if ("true" == System.getenv(MOUNT_STATE_DIRECTORY_ENV)) {
+      val stateDir = File(testReportDir, "state")
+      stateDir.mkdirs()
+
+      logger.debug("Mounting state directory to '{}'", stateDir.toPath())
+      runtimeContainer.addFileSystemBind(
+          stateDir.toString(), "/state", BindMode.READ_WRITE, SelinuxContext.SINGLE)
+    }
     runtimeContainer
         .withEnv("RESTATE_META__STORAGE_PATH", "/state/meta")
         .withEnv("RESTATE_WORKER__STORAGE_ROCKSDB__PATH", "/state/worker")
@@ -271,8 +272,7 @@ private constructor(
 
   private fun deployProxy(testReportDir: String) {
     // We use an external proxy to access from the test code to the restate container in order to
-    // retain
-    // the tcp port binding across restarts
+    // retain the tcp port binding across restarts.
 
     // Configure toxiproxy and start
     proxyContainer.start(network, testReportDir)
@@ -283,8 +283,8 @@ private constructor(
 
     logger.debug(
         "Toxiproxy started. gRPC ingress port: {}. Meta REST API port: {}",
-        getContainerPort(RESTATE_RUNTIME, RUNTIME_GRPC_INGRESS_ENDPOINT_PORT),
-        getContainerPort(RESTATE_RUNTIME, RUNTIME_META_ENDPOINT_PORT))
+        proxyContainer.getMappedPort(RESTATE_RUNTIME, RUNTIME_GRPC_INGRESS_ENDPOINT_PORT),
+        proxyContainer.getMappedPort(RESTATE_RUNTIME, RUNTIME_META_ENDPOINT_PORT))
   }
 
   @Serializable
