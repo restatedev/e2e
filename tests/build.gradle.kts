@@ -112,6 +112,8 @@ tasks {
     dependsOn(":services:http-server:jibDockerBuild")
     dependsOn(":services:java-services:jibDockerBuild")
     dependsOn(":services:node-services:dockerBuild")
+
+    maxParallelForks = 3
   }
 }
 
