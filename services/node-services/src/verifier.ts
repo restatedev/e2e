@@ -135,11 +135,10 @@ export class CommandBuilder {
         asyncCall: {
           callId: asyncUnlockedCounter++,
           // hit a known-unlocked target with an async call that may be awaited, and pass on the lock list for future blocking calls
-          ...this._buildCommands(
-            target + 1 + this.randomInt(32),
-            depth - 1,
-            [target, ...lockedTargets]
-          ),
+          ...this._buildCommands(target + 1 + this.randomInt(32), depth - 1, [
+            target,
+            ...lockedTargets,
+          ]),
         },
       }),
       () => ({

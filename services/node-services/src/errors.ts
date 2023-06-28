@@ -2,7 +2,6 @@ import * as restate from "@restatedev/restate-sdk";
 
 import {
   ErrorMessage,
-  FailRequest,
   FailingService as IFailingService,
   FailingServiceClientImpl,
   protobufPackage,
