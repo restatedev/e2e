@@ -6,7 +6,7 @@ import {
 } from "./generated/rng";
 import { NumberSortHttpServerUtils } from "./number_sort_utils";
 
-export const RandomNumberListGeneratorServiceFQN = protobufPackage + ".RandomNumberListGeneratorService";
+export const RandomNumberListGeneratorServiceFQN = protobufPackage + ".RandomNumberListGenerator";
 
 export class RandomNumberListGeneratorService implements IRandomNumberListGeneratorService {
 
