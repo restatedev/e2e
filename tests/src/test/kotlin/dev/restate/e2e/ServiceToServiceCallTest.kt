@@ -12,6 +12,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 
 @Tag("always-suspending")
 class JavaServiceToServiceCallTest : BaseServiceToServiceCallTest() {
@@ -74,6 +76,7 @@ class NodeCoordinatorWithJavaReceiverServiceToServiceCallTest : BaseServiceToSer
 abstract class BaseServiceToServiceCallTest {
 
   @Test
+  @Execution(ExecutionMode.CONCURRENT)
   fun synchronousCall(
       @InjectBlockingStub coordinatorClient: CoordinatorGrpc.CoordinatorBlockingStub
   ) {

@@ -1,8 +1,8 @@
 package dev.restate.e2e.runtime
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
 import dev.restate.e2e.Containers
+import dev.restate.e2e.Utils.jacksonBodyHandler
+import dev.restate.e2e.Utils.jacksonBodyPublisher
 import dev.restate.e2e.services.counter.CounterGrpc
 import dev.restate.e2e.services.counter.CounterGrpc.CounterBlockingStub
 import dev.restate.e2e.services.counter.CounterProto
@@ -17,9 +17,6 @@ import java.net.URI
 import java.net.URL
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
-import java.net.http.HttpRequest.BodyPublishers
-import java.net.http.HttpResponse
-import java.nio.charset.StandardCharsets
 import java.util.UUID
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
@@ -27,6 +24,8 @@ import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 
 /** Test the Connect ingress support */
 class IngressServiceTest {
@@ -39,22 +38,10 @@ class IngressServiceTest {
                 .withEnv(Containers.getRestateEnvironment())
                 .withServiceEndpoint(Containers.JAVA_COUNTER_SERVICE_SPEC)
                 .build())
-
-    private val objMapper = ObjectMapper()
-
-    private val jacksonBodySubscriber: HttpResponse.BodySubscriber<JsonNode> =
-        HttpResponse.BodySubscribers.mapping(
-            HttpResponse.BodySubscribers.ofString(StandardCharsets.UTF_8), objMapper::readTree)
-
-    private val jacksonBodyHandler: HttpResponse.BodyHandler<JsonNode> =
-        HttpResponse.BodyHandler { jacksonBodySubscriber }
-
-    private fun jacksonBodyPublisher(value: Any): HttpRequest.BodyPublisher {
-      return BodyPublishers.ofString(objMapper.writeValueAsString(value))
-    }
   }
 
   @Test
+  @Execution(ExecutionMode.CONCURRENT)
   fun invokeAddThroughConnect(
       @InjectGrpcIngressURL httpEndpointURL: URL,
       @InjectBlockingStub counterClient: CounterBlockingStub
@@ -74,7 +61,7 @@ class IngressServiceTest {
             .headers("Content-Type", "application/json")
             .build()
 
-    val response = client.send(req, jacksonBodyHandler)
+    val response = client.send(req, jacksonBodyHandler())
 
     assertThat(response.statusCode()).isEqualTo(200)
     assertThat(response.headers().firstValue("content-type"))
@@ -94,6 +81,7 @@ class IngressServiceTest {
   }
 
   @Test
+  @Execution(ExecutionMode.CONCURRENT)
   fun invokeAddThroughGrpc(
       @InjectBlockingStub ingressClient: IngressBlockingStub,
       @InjectBlockingStub counterClient: CounterBlockingStub

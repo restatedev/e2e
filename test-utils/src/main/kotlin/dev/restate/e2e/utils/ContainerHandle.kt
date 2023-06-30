@@ -13,7 +13,7 @@ class ContainerHandle
 internal constructor(
     internal val container: GenericContainer<*>,
     private val getMappedPort: (Int) -> Int? = { container.getMappedPort(it) },
-    private val waitStrategy: () -> Unit = {},
+    private val restartWaitStrategy: () -> Unit = {},
 ) {
 
   private val logger = LogManager.getLogger(ContainerHandle::class.java)
@@ -105,7 +105,7 @@ internal constructor(
     }
 
     // Additional wait strategy for ports
-    waitStrategy()
+    restartWaitStrategy()
 
     logger.info("Container {} started and passed all the checks.", container.containerName)
   }

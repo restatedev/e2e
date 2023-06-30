@@ -10,6 +10,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 
 // Need to implement the typescript e2e test:
 // https://github.com/restatedev/e2e/issues/108
@@ -28,6 +30,7 @@ class AwakeableTest {
   }
 
   @Test
+  @Execution(ExecutionMode.CONCURRENT)
   fun generate(
       @InjectBlockingStub randomNumberListGenerator: RandomNumberListGeneratorBlockingStub
   ) {

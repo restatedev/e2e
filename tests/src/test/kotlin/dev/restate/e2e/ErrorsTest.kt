@@ -20,6 +20,8 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 
 @Tag("always-suspending")
 class JavaErrorsTest : BaseErrorsTest() {
@@ -42,6 +44,7 @@ class JavaErrorsTest : BaseErrorsTest() {
 
   @DisplayName("Test propagate failure from sideEffect and internal invoke")
   @Test
+  @Execution(ExecutionMode.CONCURRENT)
   fun sideEffectFailurePropagation(@InjectBlockingStub stub: FailingServiceBlockingStub) {
     assertThat(
             stub.invokeExternalAndHandleFailure(
@@ -71,6 +74,7 @@ class NodeErrorsTest : BaseErrorsTest() {
 abstract class BaseErrorsTest {
 
   @Test
+  @Execution(ExecutionMode.CONCURRENT)
   fun fail(@InjectBlockingStub stub: FailingServiceBlockingStub) {
     val errorMessage = "my error"
 
@@ -88,6 +92,7 @@ abstract class BaseErrorsTest {
   }
 
   @Test
+  @Execution(ExecutionMode.CONCURRENT)
   fun failSeveralTimes(@InjectBlockingStub stub: FailingServiceBlockingStub) {
     // This test checks the endpoint doesn't become unstable after the first failure
     fail(stub)
@@ -97,6 +102,7 @@ abstract class BaseErrorsTest {
 
   @DisplayName("Test set than fail should persist the set")
   @Test
+  @Execution(ExecutionMode.CONCURRENT)
   fun setStateThenFailShouldPersistState(
       @InjectBlockingStub counterClient: CounterGrpc.CounterBlockingStub
   ) {
@@ -122,6 +128,7 @@ abstract class BaseErrorsTest {
 
   @DisplayName("Test propagate failure from another service")
   @Test
+  @Execution(ExecutionMode.CONCURRENT)
   fun internalCallFailurePropagation(@InjectBlockingStub stub: FailingServiceBlockingStub) {
     val errorMessage = "propagated error"
 

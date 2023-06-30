@@ -52,7 +52,7 @@ export class CommandInterpreterService implements CommandInterpreter {
     for (const c of commands.command) {
       switch (true) {
         case c.increment !== undefined:
-          await this._increment(ctx, c.increment as Command_IncrementState);
+          await this._increment(ctx);
           break;
         case c.syncCall !== undefined:
           await this._syncCall(
@@ -98,10 +98,7 @@ export class CommandInterpreterService implements CommandInterpreter {
     return Empty.create({});
   }
 
-  async _increment(
-    ctx: RestateContext,
-    request: Command_IncrementState
-  ): Promise<void> {
+  async _increment(ctx: RestateContext): Promise<void> {
     const counter = (await ctx.get<number>("counter")) || 0;
     return ctx.set("counter", counter + 1);
   }
@@ -179,7 +176,7 @@ export class CommandInterpreterService implements CommandInterpreter {
     });
   }
 
-  async clear(request: ClearRequest): Promise<Empty> {
+  async clear(): Promise<Empty> {
     const ctx = useContext(this);
 
     await ctx.clear("counter");

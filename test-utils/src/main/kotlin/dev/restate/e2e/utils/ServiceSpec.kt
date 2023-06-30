@@ -59,6 +59,7 @@ data class ServiceSpec(
 
     fun withEnv(key: String, value: String) = apply { this.envs[key] = value }
 
+    /// Note: the port is not exposed!
     fun withPort(port: Int) = apply { this.port = port }
 
     fun withEnvs(envs: Map<String, String>) = apply { this.envs.putAll(envs) }
@@ -87,7 +88,6 @@ data class ServiceSpec(
         .withEnv("PORT", port.toString())
         .withEnv(envs)
         .dependsOn(dependencies)
-        .withExposedPorts(port)
   }
 
   internal fun getEndpointUrl(): URL {

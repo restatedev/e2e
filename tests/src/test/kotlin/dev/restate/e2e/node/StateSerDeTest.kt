@@ -10,6 +10,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 
 /** Test that we can ser/de proto generated objects (check the source of ListService.append) */
 @Tag("always-suspending")
@@ -25,6 +27,7 @@ class StateSerDeTest {
   }
 
   @Test
+  @Execution(ExecutionMode.CONCURRENT)
   fun addAndClear(@InjectBlockingStub listClient: ListServiceBlockingStub) {
     listClient.append(AppendRequest.newBuilder().setListName("list-a").setValue("1").build())
     listClient.append(AppendRequest.newBuilder().setListName("list-b").setValue("2").build())

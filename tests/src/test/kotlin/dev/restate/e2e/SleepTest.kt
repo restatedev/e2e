@@ -23,6 +23,8 @@ import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.extension.RegisterExtension
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 
 // -- Simple sleep tests
 
@@ -57,6 +59,7 @@ class NodeSimpleSleepTest : BaseSimpleSleepTest() {
 abstract class BaseSimpleSleepTest {
 
   @Test
+  @Execution(ExecutionMode.CONCURRENT)
   fun sleep(@InjectBlockingStub coordinatorClient: CoordinatorGrpc.CoordinatorBlockingStub) {
     val sleepDuration = 10.milliseconds
 
@@ -72,6 +75,7 @@ abstract class BaseSimpleSleepTest {
 
   @Test
   @Timeout(value = 60, unit = TimeUnit.SECONDS)
+  @Execution(ExecutionMode.CONCURRENT)
   fun manySleeps(@InjectChannel runtimeChannel: Channel) =
       runTest(timeout = 60.seconds) {
         val minSleepDuration = 10.milliseconds
