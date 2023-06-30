@@ -6,6 +6,7 @@ plugins {
   idea
   alias(libs.plugins.shadowJar)
   alias(libs.plugins.jib)
+  application
 }
 
 dependencies {
@@ -45,3 +46,5 @@ jib {
 
 // Use gradle shadowJar to build the fat jar
 tasks.jar { manifest { attributes["Main-Class"] = "dev.restate.e2e.services.Main" } }
+
+application { mainClass.set("dev.restate.e2e.services.Main") }

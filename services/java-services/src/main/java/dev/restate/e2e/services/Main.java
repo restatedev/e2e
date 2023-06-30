@@ -27,7 +27,10 @@ import java.util.Objects;
 public class Main {
 
   public static void main(String[] args) {
-    String env = Objects.requireNonNull(System.getenv("SERVICES"));
+    String env =
+        Objects.requireNonNull(
+            System.getenv("SERVICES"),
+            "SERVICES env variable needs to specify which service to run.");
 
     RestateHttpEndpointBuilder restateHttpEndpointBuilder =
         RestateHttpEndpointBuilder.builder(Vertx.vertx());
