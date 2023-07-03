@@ -112,4 +112,8 @@ You can manually build a docker image in the restate project using `just docker`
 
 ### Retain runtime state after test
 
-To retain the runtime RocksDB and Meta state, set the environment variable `E2E_MOUNT_STATE_DIRECTORY=true` to mount the state directory in the same directory of the [container logs](#test-report-and-container-logs). 
+To retain the runtime RocksDB and Meta state, set the environment variable `E2E_MOUNT_STATE_DIRECTORY=true` to mount the state directory in the same directory of the [container logs](#test-report-and-container-logs).
+
+## Running the services
+
+For running the services see [services/README.md](services/README.md).
