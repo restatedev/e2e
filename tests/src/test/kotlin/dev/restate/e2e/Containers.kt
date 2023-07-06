@@ -12,8 +12,6 @@ import dev.restate.e2e.services.singletoncounter.SingletonCounterGrpc
 import dev.restate.e2e.services.verification.interpreter.CommandInterpreterGrpc
 import dev.restate.e2e.services.verification.verifier.CommandVerifierGrpc
 import dev.restate.e2e.utils.ServiceSpec
-import dev.restate.e2e.utils.ServiceSpec.RegistrationOptions
-import dev.restate.e2e.utils.ServiceSpec.RetryPolicy
 import org.testcontainers.containers.GenericContainer
 
 object Containers {
@@ -25,8 +23,6 @@ object Containers {
           GenericContainer("restatedev/e2e-http-server")
               .withEnv("PORT", "8080")
               .withExposedPorts(8080)
-
-  val FIXED_DELAY_RETRY_POLICY = RetryPolicy.FixedDelay("1s", 20)
 
   fun getRestateEnvironment(): Map<String, String> {
     return System.getenv().filterKeys {
@@ -73,7 +69,6 @@ object Containers {
       javaServicesContainer("java-errors", FailingServiceGrpc.SERVICE_NAME)
           .withEnv(
               "HTTP_SERVER_ADDRESS", "http://${EXTERNALCALL_HTTP_SERVER_CONTAINER_SPEC.first}:8080")
-          .withRegistrationOptions(RegistrationOptions(retryPolicy = RetryPolicy.None))
           .build()
 
   // -- Node containers
@@ -99,7 +94,6 @@ object Containers {
 
   val NODE_ERRORS_SERVICE_SPEC =
       nodeServicesContainer("node-errors", FailingServiceGrpc.SERVICE_NAME)
-          .withRegistrationOptions(RegistrationOptions(retryPolicy = RetryPolicy.None))
 
   // -- Verification test container
 
@@ -107,8 +101,7 @@ object Containers {
 
   val VERIFICATION_SERVICE_SPEC =
       nodeServicesContainer(
-              VERIFICATION_SERVICE_HOSTNAME,
-              CommandVerifierGrpc.SERVICE_NAME,
-              CommandInterpreterGrpc.SERVICE_NAME)
-          .withRegistrationOptions(RegistrationOptions(retryPolicy = FIXED_DELAY_RETRY_POLICY))
+          VERIFICATION_SERVICE_HOSTNAME,
+          CommandVerifierGrpc.SERVICE_NAME,
+          CommandInterpreterGrpc.SERVICE_NAME)
 }

@@ -36,6 +36,28 @@ private constructor(
     private val enableTracesExport: Boolean
 ) : AutoCloseable, ExtensionContext.Store.CloseableResource {
 
+  // Perhaps at some point we could autogenerate these from the openapi doc and also remove the need
+  // to manually implement these serialization routines
+  sealed class RetryPolicy {
+
+    abstract fun toInvokerSetupEnv(): Map<String, String>
+
+    object None : RetryPolicy() {
+      override fun toInvokerSetupEnv(): Map<String, String> {
+        return mapOf("RESTATE_WORKER__INVOKER__RETRY_POLICY__TYPE" to "None")
+      }
+    }
+
+    class FixedDelay(private val interval: String, private val maxAttempts: Int) : RetryPolicy() {
+      override fun toInvokerSetupEnv(): Map<String, String> {
+        return mapOf(
+            "RESTATE_WORKER__INVOKER__RETRY_POLICY__TYPE" to "FixedDelay",
+            "RESTATE_WORKER__INVOKER__RETRY_POLICY__INTERVAL" to interval,
+            "RESTATE_WORKER__INVOKER__RETRY_POLICY__MAX_ATTEMPTS" to maxAttempts.toString())
+      }
+    }
+  }
+
   companion object {
     private const val RESTATE_RUNTIME_CONTAINER_ENV = "RESTATE_RUNTIME_CONTAINER"
     private const val DEFAULT_RUNTIME_CONTAINER = "ghcr.io/restatedev/restate"
@@ -117,7 +139,8 @@ private constructor(
       private var additionalEnv: MutableMap<String, String> = mutableMapOf(),
       private var runtimeContainer: String =
           System.getenv(RESTATE_RUNTIME_CONTAINER_ENV) ?: DEFAULT_RUNTIME_CONTAINER,
-      private var enableTracesExport: Boolean = true
+      private var invokerRetryPolicy: RetryPolicy? = null,
+      private var enableTracesExport: Boolean = true,
   ) {
 
     fun withServiceEndpoint(serviceSpec: ServiceSpec) = apply {
@@ -154,6 +177,8 @@ private constructor(
 
     fun withEnv(map: Map<String, String>) = apply { this.additionalEnv.putAll(map) }
 
+    fun withInvokerRetryPolicy(policy: RetryPolicy) = apply { this.invokerRetryPolicy = policy }
+
     fun disableTracesExport() = apply { this.enableTracesExport = false }
 
     fun build() =
@@ -161,7 +186,7 @@ private constructor(
             runtimeDeployments,
             serviceEndpoints,
             additionalContainers,
-            additionalEnv,
+            additionalEnv + (invokerRetryPolicy?.toInvokerSetupEnv() ?: emptyMap()),
             runtimeContainer,
             enableTracesExport)
   }
@@ -291,7 +316,6 @@ private constructor(
   private data class RegisterServiceEndpointRequest(
       val uri: String,
       val additionalHeaders: Map<String, String>? = null,
-      val retryPolicy: ServiceSpec.RetryPolicy? = null
   )
 
   @OptIn(ExperimentalSerializationApi::class)
@@ -304,8 +328,7 @@ private constructor(
         jsonEncoder.encodeToString(
             RegisterServiceEndpointRequest(
                 uri = url.toString(),
-                additionalHeaders = spec.registrationOptions.additionalHeaders,
-                retryPolicy = spec.registrationOptions.retryPolicy))
+                additionalHeaders = spec.registrationOptions.additionalHeaders))
     logger.debug("Going to request discovery of endpoint: {}", body)
 
     val client = HttpClient.newHttpClient()
