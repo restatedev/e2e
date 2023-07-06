@@ -125,3 +125,34 @@ not resolve until a failing Job is deleted - which would ideally be done after t
 
 We should expect that the `restate` cluster is vary stable, and failures should be taken very seriously. Failures
 in the `restate-chaos` cluster are somewhat harder to debug and are probably lower priority at the moment.
+
+## Database snapshots
+You can pull down all the db files with the following command:
+```bash
+kubectl cp restate-0:/target/db ./target/db
+```
+
+However, sometimes you might want to store the whole EBS volume for later analysis. This can be done with a script in
+the kube-manifests repo:
+```bash
+kube-manifests/scripts/clone.sh -n restate-chaos
+```
+This will create an EBS snapshot of the current state of the Restate storage volume. The snapshot will persist until
+the VolumeSnapshot object that this script creates is deleted.
+
+To attach a busybox pod to a snapshot, use the following command:
+```bash
+kube-manifests/scripts/attach-snapshot.sh -n restate-chaos -s $SNAPSHOT_NAME
+```
+While that command is running, you can exec into the pod and inspect the contexts, or copy down files as usual:
+```bash
+kubectl -n restate-chaos exec -it $SNAPSHOT_NAME -- sh
+kubectl -n restate-chaos cp $SNAPSHOT_NAME:/target/db ./target/db 
+```
+
+## Wiping the database
+On upgrades or when there is an irrecoverable failure, you may choose to wipe the storage of a given cluster:
+```bash
+kube-manifests/scripts/wipe.sh -n restate-chaos
+```
+This script automatically takes a snapshot of the existing database before deleting anything.
