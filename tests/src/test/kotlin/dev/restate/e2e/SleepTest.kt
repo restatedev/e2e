@@ -1,11 +1,9 @@
 package dev.restate.e2e
 
-import dev.restate.e2e.Containers.FIXED_DELAY_RETRY_POLICY
 import dev.restate.e2e.services.coordinator.CoordinatorGrpc
 import dev.restate.e2e.services.coordinator.CoordinatorGrpcKt
 import dev.restate.e2e.services.coordinator.CoordinatorProto
 import dev.restate.e2e.utils.*
-import dev.restate.e2e.utils.ServiceSpec.RegistrationOptions
 import io.grpc.Channel
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random
@@ -118,10 +116,7 @@ class JavaSleepWithFailuresTest : BaseSleepWithFailuresTest() {
       RestateDeployer.Builder()
           .withEnv(Containers.getRestateEnvironment())
           .withServiceEndpoint(
-              Containers.JAVA_COORDINATOR_SERVICE_SPEC.copy(
-                  hostName = COORDINATOR_HOSTNAME,
-                  registrationOptions =
-                      RegistrationOptions(retryPolicy = FIXED_DELAY_RETRY_POLICY)))
+              Containers.JAVA_COORDINATOR_SERVICE_SPEC.copy(hostName = COORDINATOR_HOSTNAME))
           .build()
     }
   }
@@ -137,8 +132,7 @@ class NodeSleepWithFailuresTest : BaseSleepWithFailuresTest() {
           .withServiceEndpoint(
               Containers.NODE_COORDINATOR_SERVICE_SPEC.copy(
                   hostName = COORDINATOR_HOSTNAME,
-                  registrationOptions =
-                      RegistrationOptions(retryPolicy = FIXED_DELAY_RETRY_POLICY)))
+              ))
           .build()
     }
   }

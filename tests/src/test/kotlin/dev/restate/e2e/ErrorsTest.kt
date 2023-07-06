@@ -8,7 +8,6 @@ import dev.restate.e2e.services.errors.FailingServiceGrpc.FailingServiceBlocking
 import dev.restate.e2e.utils.InjectBlockingStub
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
-import dev.restate.e2e.utils.ServiceSpec
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import java.util.*
@@ -31,13 +30,10 @@ class JavaErrorsTest : BaseErrorsTest() {
         RestateDeployerExtension(
             RestateDeployer.Builder()
                 .withEnv(Containers.getRestateEnvironment())
+                .withInvokerRetryPolicy(RestateDeployer.RetryPolicy.None)
                 .withServiceEndpoint(Containers.JAVA_ERRORS_SERVICE_SPEC)
                 .withServiceEndpoint(Containers.JAVA_EXTERNALCALL_SERVICE_SPEC)
-                .withServiceEndpoint(
-                    Containers.JAVA_COUNTER_SERVICE_SPEC.copy(
-                        registrationOptions =
-                            ServiceSpec.RegistrationOptions(
-                                retryPolicy = ServiceSpec.RetryPolicy.None)))
+                .withServiceEndpoint(Containers.JAVA_COUNTER_SERVICE_SPEC)
                 .withContainer(Containers.EXTERNALCALL_HTTP_SERVER_CONTAINER_SPEC)
                 .build())
   }
@@ -61,12 +57,9 @@ class NodeErrorsTest : BaseErrorsTest() {
         RestateDeployerExtension(
             RestateDeployer.Builder()
                 .withEnv(Containers.getRestateEnvironment())
+                .withInvokerRetryPolicy(RestateDeployer.RetryPolicy.None)
                 .withServiceEndpoint(Containers.NODE_ERRORS_SERVICE_SPEC)
-                .withServiceEndpoint(
-                    Containers.NODE_COUNTER_SERVICE_SPEC.copy(
-                        registrationOptions =
-                            ServiceSpec.RegistrationOptions(
-                                retryPolicy = ServiceSpec.RetryPolicy.None)))
+                .withServiceEndpoint(Containers.NODE_COUNTER_SERVICE_SPEC)
                 .build())
   }
 }

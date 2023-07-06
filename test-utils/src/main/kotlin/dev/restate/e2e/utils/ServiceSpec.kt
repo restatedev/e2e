@@ -1,8 +1,6 @@
 package dev.restate.e2e.utils
 
 import java.net.URL
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.lifecycle.Startable
 import org.testcontainers.utility.DockerImageName
@@ -17,21 +15,8 @@ data class ServiceSpec(
     internal val dependencies: List<Startable>,
 ) {
 
-  // Perhaps at some point we could autogenerate these from the openapi doc and also remove the need
-  // to manually implement these serialization routines
-  @Serializable
-  sealed class RetryPolicy {
-
-    @Serializable @SerialName("None") object None : RetryPolicy()
-
-    @Serializable
-    @SerialName("FixedDelay")
-    class FixedDelay(val interval: String, val maxAttempts: Int) : RetryPolicy()
-  }
-
   data class RegistrationOptions(
       val additionalHeaders: Map<String, String> = mapOf(),
-      val retryPolicy: RetryPolicy? = null
   )
 
   companion object {

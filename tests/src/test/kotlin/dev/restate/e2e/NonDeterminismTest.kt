@@ -31,13 +31,12 @@ class JavaNonDeterminismTest : NonDeterminismTest() {
         RestateDeployerExtension(
             RestateDeployer.Builder()
                 .withEnv(Containers.getRestateEnvironment())
+                .withInvokerRetryPolicy(RestateDeployer.RetryPolicy.None)
                 .withServiceEndpoint(
                     Containers.javaServicesContainer(
-                            "java-non-determinism",
-                            NonDeterministicServiceGrpc.SERVICE_NAME,
-                            CounterGrpc.SERVICE_NAME)
-                        .withRegistrationOptions(
-                            RegistrationOptions(retryPolicy = RetryPolicy.None)))
+                        "java-non-determinism",
+                        NonDeterministicServiceGrpc.SERVICE_NAME,
+                        CounterGrpc.SERVICE_NAME))
                 .build())
   }
 }
@@ -50,13 +49,12 @@ class NodeNonDeterminismTest : NonDeterminismTest() {
         RestateDeployerExtension(
             RestateDeployer.Builder()
                 .withEnv(Containers.getRestateEnvironment())
+                .withInvokerRetryPolicy(RestateDeployer.RetryPolicy.None)
                 .withServiceEndpoint(
                     Containers.nodeServicesContainer(
-                            "node-non-determinism",
-                            NonDeterministicServiceGrpc.SERVICE_NAME,
-                            CounterGrpc.SERVICE_NAME)
-                        .withRegistrationOptions(
-                            RegistrationOptions(retryPolicy = RetryPolicy.None)))
+                        "node-non-determinism",
+                        NonDeterministicServiceGrpc.SERVICE_NAME,
+                        CounterGrpc.SERVICE_NAME))
                 .build())
   }
 }
