@@ -133,7 +133,7 @@ kubectl cp restate-0:/target/db ./target/db
 ```
 
 However, sometimes you might want to store the whole EBS volume for later analysis. This can be done with a script in
-the kube-manifests repo:
+the [kube-manifests repo](https://github.com/restatedev/kube-manifests):
 ```bash
 kube-manifests/scripts/clone.sh -n restate-chaos
 ```
