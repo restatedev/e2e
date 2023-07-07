@@ -13,6 +13,7 @@ service ListService {
 
   rpc Append(AppendRequest) returns (google.protobuf.Empty);
   rpc Clear(Request) returns (List);
+  rpc Get(Request) returns (List);
 }
 
 message AppendRequest {

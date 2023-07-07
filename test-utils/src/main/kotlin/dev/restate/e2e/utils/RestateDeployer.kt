@@ -318,18 +318,18 @@ private constructor(
     val url = spec.getEndpointUrl()
     if (spec.skipRegistration) {
       logger.debug("Skipping registration for endpoint {}", url)
+      return
     }
 
     val request =
         RegisterServiceEndpointRequest(
             uri = url.toString(),
             additionalHeaders = spec.registrationOptions.additionalHeaders,
-            retryPolicy = null,
             force = false)
 
     val response = client.createServiceEndpoint(request)
 
-    if ((200 until 300).contains(response.statusCode)) {
+    if (response.statusCode !in 200..299) {
       fail(
           "Error when discovering endpoint $url, " +
               "got status code ${response.statusCode} with body: ${response.data}")

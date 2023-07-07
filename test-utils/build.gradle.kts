@@ -43,6 +43,11 @@ val generatedDir = "$buildDir/generated"
 
 sourceSets { main { kotlin.srcDir("$generatedDir/src/main/kotlin") } }
 
+java {
+  withJavadocJar()
+  withSourcesJar()
+}
+
 tasks {
   val generateCode by
       creating(JavaExec::class) {
@@ -68,12 +73,11 @@ tasks {
             )
       }
 
+  // Make sure generateCode is correctly linked to compilation tasks
   withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> { dependsOn(generateCode) }
-}
+  withType<JavaCompile> { dependsOn(generateCode) }
 
-java {
-  withJavadocJar()
-  withSourcesJar()
+  check { dependsOn(checkLicense) }
 }
 
 publishing {
@@ -97,8 +101,6 @@ publishing {
     }
   }
 }
-
-tasks { check { dependsOn(checkLicense) } }
 
 licenseReport {
   renderers = arrayOf(com.github.jk1.license.render.CsvReportRenderer())

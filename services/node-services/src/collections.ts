@@ -34,4 +34,8 @@ export class ListService implements IListService {
 
     return list;
   }
+
+  get(): Promise<List> {
+    throw new Error("Method not implemented.");
+  }
 }

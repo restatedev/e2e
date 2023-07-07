@@ -102,7 +102,7 @@ abstract class BaseRestateDeployerExtension : ParameterResolver {
         "http",
         "127.0.0.1",
         getDeployer(extensionContext).getContainerPort(RESTATE_RUNTIME, RUNTIME_META_ENDPOINT_PORT),
-        "/")
+        "")
   }
 
   private fun resolveContainerHandle(
