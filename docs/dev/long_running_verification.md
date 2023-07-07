@@ -138,9 +138,9 @@ the [kube-manifests repo](https://github.com/restatedev/kube-manifests):
 kube-manifests/scripts/clone.sh -n restate-chaos
 ```
 This will create an EBS snapshot of the current state of the Restate storage volume. The snapshot will persist until
-the VolumeSnapshot object that this script creates is deleted.
+the VolumeSnapshot object that this script creates is deleted by `kubectl -n restate-chaos delete volumesnapshot $SNAPSHOT_NAME`
 
-To attach a busybox pod to a snapshot, use the following command:
+You can list existing snapshots with `kubectl -n restate-chaos get volumesnapshot`. To attach a busybox pod to a snapshot, use the following command:
 ```bash
 kube-manifests/scripts/attach-snapshot.sh -n restate-chaos -s $SNAPSHOT_NAME
 ```
