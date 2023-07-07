@@ -12,6 +12,7 @@ data class ServiceSpec(
     internal val envs: Map<String, String>,
     internal val port: Int,
     internal val registrationOptions: RegistrationOptions,
+    internal val skipRegistration: Boolean,
     internal val dependencies: List<Startable>,
 ) {
 
@@ -38,6 +39,7 @@ data class ServiceSpec(
       private var envs: MutableMap<String, String> = mutableMapOf(),
       private var port: Int = 8080,
       private var registrationOptions: RegistrationOptions = RegistrationOptions(),
+      private var skipRegistration: Boolean = false,
       private var dependencies: MutableList<Startable> = mutableListOf(),
   ) {
     fun withHostName(hostName: String) = apply { this.hostName = hostName }
@@ -53,10 +55,19 @@ data class ServiceSpec(
       this.registrationOptions = registrationOptions
     }
 
+    fun skipRegistration() = apply { this.skipRegistration = true }
+
     fun dependsOn(container: Startable) = apply { this.dependencies.add(container) }
 
     fun build() =
-        ServiceSpec(containerImage, hostName, envs, port, registrationOptions, dependencies)
+        ServiceSpec(
+            containerImage,
+            hostName,
+            envs,
+            port,
+            registrationOptions,
+            skipRegistration,
+            dependencies)
   }
 
   fun toBuilder(): Builder {

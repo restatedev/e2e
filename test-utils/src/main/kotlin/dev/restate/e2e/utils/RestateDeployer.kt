@@ -5,18 +5,13 @@ import dev.restate.e2e.utils.meta.client.EndpointsClient
 import dev.restate.e2e.utils.meta.models.RegisterServiceEndpointRequest
 import io.grpc.ManagedChannel
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder
-import okhttp3.OkHttpClient
 import java.io.File
 import java.lang.reflect.Method
-import java.net.URI
-import java.net.http.HttpClient
-import java.net.http.HttpRequest
-import java.net.http.HttpRequest.BodyPublishers
-import java.net.http.HttpResponse.BodyHandlers
 import java.nio.file.Path
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.time.Duration.Companion.seconds
+import okhttp3.OkHttpClient
 import org.apache.logging.log4j.LogManager
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.api.fail
@@ -200,7 +195,11 @@ private constructor(
     deployProxy(testReportDir)
 
     // Let's execute service discovery to register the services
-    val client = EndpointsClient(ObjectMapper(), "http://localhost:${getContainerPort(RESTATE_RUNTIME, RUNTIME_META_ENDPOINT_PORT)}", OkHttpClient())
+    val client =
+        EndpointsClient(
+            ObjectMapper(),
+            "http://localhost:${getContainerPort(RESTATE_RUNTIME, RUNTIME_META_ENDPOINT_PORT)}",
+            OkHttpClient())
     serviceContainers.values.forEach { (spec, _) -> discoverServiceEndpoint(client, spec) }
 
     // Log environment
@@ -317,12 +316,16 @@ private constructor(
 
   fun discoverServiceEndpoint(client: EndpointsClient, spec: ServiceSpec) {
     val url = spec.getEndpointUrl()
+    if (spec.skipRegistration) {
+      logger.debug("Skipping registration for endpoint {}", url)
+    }
 
-    val request =  RegisterServiceEndpointRequest(
-      uri = url.toString(),
-      additionalHeaders = spec.registrationOptions.additionalHeaders,
-      retryPolicy = null,
-      force = false)
+    val request =
+        RegisterServiceEndpointRequest(
+            uri = url.toString(),
+            additionalHeaders = spec.registrationOptions.additionalHeaders,
+            retryPolicy = null,
+            force = false)
 
     val response = client.createServiceEndpoint(request)
 
@@ -332,8 +335,7 @@ private constructor(
               "got status code ${response.statusCode} with body: ${response.data}")
     }
 
-    logger.debug(
-        "Successfully executed discovery for endpoint {}. Result: {}", url, response.data)
+    logger.debug("Successfully executed discovery for endpoint {}. Result: {}", url, response.data)
   }
 
   private fun writeEnvironmentReport(testReportDir: String) {
