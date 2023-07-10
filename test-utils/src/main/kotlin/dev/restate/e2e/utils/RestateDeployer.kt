@@ -336,14 +336,14 @@ private constructor(
     val req =
         HttpRequest.newBuilder(
                 URI.create(
-                    "http://localhost:${getContainerPort(RESTATE_RUNTIME, RUNTIME_META_ENDPOINT_PORT)}/endpoint/discover"))
+                    "http://localhost:${getContainerPort(RESTATE_RUNTIME, RUNTIME_META_ENDPOINT_PORT)}/endpoints"))
             .POST(BodyPublishers.ofString(body))
             .headers("Content-Type", "application/json")
             .build()
 
     val response = client.send(req, BodyHandlers.ofString())
 
-    if (response.statusCode() != 200) {
+    if (response.statusCode() != 201) {
       fail(
           "Error when discovering endpoint $url, " +
               "got status code ${response.statusCode()} with body: ${response.body()}")
