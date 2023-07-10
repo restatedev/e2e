@@ -50,7 +50,7 @@ SERVICES=verifier.CommandVerifier,interpreter.CommandInterpreter npm run app
 
 Then discover the services:
 ```bash
-$ curl 127.0.0.1:8081/endpoint/discover -H 'content-type: application/json' -d '{"uri": "http://localhost:8080"}'
+$ curl 127.0.0.1:8081/endpoints -H 'content-type: application/json' -d '{"uri": "http://localhost:8080"}'
 {"services":["verifier.CommandVerifier","interpreter.CommandInterpreter"]}
 ```
 
