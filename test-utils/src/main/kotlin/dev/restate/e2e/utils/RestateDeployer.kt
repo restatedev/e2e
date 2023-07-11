@@ -1,20 +1,17 @@
 package dev.restate.e2e.utils
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import dev.restate.e2e.utils.meta.client.EndpointsClient
+import dev.restate.e2e.utils.meta.models.RegisterServiceEndpointRequest
 import io.grpc.ManagedChannel
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder
 import java.io.File
 import java.lang.reflect.Method
-import java.net.URI
-import java.net.http.HttpClient
-import java.net.http.HttpRequest
-import java.net.http.HttpRequest.BodyPublishers
-import java.net.http.HttpResponse.BodyHandlers
 import java.nio.file.Path
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.time.Duration.Companion.seconds
-import kotlinx.serialization.*
-import kotlinx.serialization.json.*
+import okhttp3.OkHttpClient
 import org.apache.logging.log4j.LogManager
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.api.fail
@@ -198,7 +195,12 @@ private constructor(
     deployProxy(testReportDir)
 
     // Let's execute service discovery to register the services
-    serviceContainers.values.forEach { (spec, _) -> discoverServiceEndpoint(spec) }
+    val client =
+        EndpointsClient(
+            ObjectMapper(),
+            "http://localhost:${getContainerPort(RESTATE_RUNTIME, RUNTIME_META_ENDPOINT_PORT)}",
+            OkHttpClient())
+    serviceContainers.values.forEach { (spec, _) -> discoverServiceEndpoint(client, spec) }
 
     // Log environment
     writeEnvironmentReport(testReportDir)
@@ -312,45 +314,28 @@ private constructor(
         proxyContainer.getMappedPort(RESTATE_RUNTIME, RUNTIME_META_ENDPOINT_PORT))
   }
 
-  @Serializable
-  private data class RegisterServiceEndpointRequest(
-      val uri: String,
-      val additionalHeaders: Map<String, String>? = null,
-  )
-
-  @OptIn(ExperimentalSerializationApi::class)
-  fun discoverServiceEndpoint(spec: ServiceSpec) {
+  fun discoverServiceEndpoint(client: EndpointsClient, spec: ServiceSpec) {
     val url = spec.getEndpointUrl()
-
-    // Can replace with code generated from the openapi contract
-    val jsonEncoder = Json { namingStrategy = JsonNamingStrategy.SnakeCase }
-    val body =
-        jsonEncoder.encodeToString(
-            RegisterServiceEndpointRequest(
-                uri = url.toString(),
-                additionalHeaders = spec.registrationOptions.additionalHeaders))
-    logger.debug("Going to request discovery of endpoint: {}", body)
-
-    val client = HttpClient.newHttpClient()
-
-    val req =
-        HttpRequest.newBuilder(
-                URI.create(
-                    "http://localhost:${getContainerPort(RESTATE_RUNTIME, RUNTIME_META_ENDPOINT_PORT)}/endpoints"))
-            .POST(BodyPublishers.ofString(body))
-            .headers("Content-Type", "application/json")
-            .build()
-
-    val response = client.send(req, BodyHandlers.ofString())
-
-    if (response.statusCode() != 201) {
-      fail(
-          "Error when discovering endpoint $url, " +
-              "got status code ${response.statusCode()} with body: ${response.body()}")
+    if (spec.skipRegistration) {
+      logger.debug("Skipping registration for endpoint {}", url)
+      return
     }
 
-    logger.debug(
-        "Successfully executed discovery for endpoint {}. Result: {}", url, response.body())
+    val request =
+        RegisterServiceEndpointRequest(
+            uri = url.toString(),
+            additionalHeaders = spec.registrationOptions.additionalHeaders,
+            force = false)
+
+    val response = client.createServiceEndpoint(request)
+
+    if (response.statusCode !in 200..299) {
+      fail(
+          "Error when discovering endpoint $url, " +
+              "got status code ${response.statusCode} with body: ${response.data}")
+    }
+
+    logger.debug("Successfully executed discovery for endpoint {}. Result: {}", url, response.data)
   }
 
   private fun writeEnvironmentReport(testReportDir: String) {

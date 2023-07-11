@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+option java_package = "dev.restate.e2e.services.upgradetest";
+option java_outer_classname = "UpgradeTestProto";
+
+import "google/protobuf/empty.proto";
+import "dev/restate/ext.proto";
+import "dev/restate/core.proto";
+
+package upgrade_test;
+
+service UpgradeTestService {
+  option (dev.restate.ext.service_type) = UNKEYED;
+
+  rpc ExecuteSimple(google.protobuf.Empty) returns (Result);
+  rpc ExecuteComplex(google.protobuf.Empty) returns (Result);
+}
+
+service AwakeableHolderService {
+  option (dev.restate.ext.service_type) = SINGLETON;
+
+  rpc Hold(dev.restate.core.AwakeableIdentifier) returns (google.protobuf.Empty);
+  rpc HasAwakeable(google.protobuf.Empty) returns (HasAwakeableResponse);
+  rpc Unlock(google.protobuf.Empty) returns (google.protobuf.Empty);
+}
+
+message Result {
+  string message = 1;
+}
+
+message HasAwakeableResponse {
+  bool has_awakeable = 1;
+}
+

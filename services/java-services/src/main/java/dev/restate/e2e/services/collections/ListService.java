@@ -33,4 +33,13 @@ public class ListService extends ListServiceGrpc.ListServiceImplBase
     responseObserver.onNext(list);
     responseObserver.onCompleted();
   }
+
+  @Override
+  public void get(ListProto.Request request, StreamObserver<ListProto.List> responseObserver) {
+    ListProto.List list =
+        restateContext().get(LIST_KEY).orElse(ListProto.List.getDefaultInstance());
+
+    responseObserver.onNext(list);
+    responseObserver.onCompleted();
+  }
 }
