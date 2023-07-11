@@ -76,6 +76,7 @@ tasks {
   // Make sure generateCode is correctly linked to compilation tasks
   withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> { dependsOn(generateCode) }
   withType<JavaCompile> { dependsOn(generateCode) }
+  withType<Jar> { dependsOn(generateCode) }
 
   check { dependsOn(checkLicense) }
 }
