@@ -51,9 +51,7 @@ class UpgradeServiceTest {
       val registrationResult =
           client.createServiceEndpoint(
               RegisterServiceEndpointRequest(
-                  uri = "http://version2:8080/",
-                  additionalHeaders = null,
-                  force = false))
+                  uri = "http://version2:8080/", additionalHeaders = null, force = false))
       assertThat(registrationResult.statusCode).isGreaterThanOrEqualTo(200).isLessThan(300)
     }
   }

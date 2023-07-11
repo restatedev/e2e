@@ -9,11 +9,14 @@ import dev.restate.sdk.blocking.RestateBlockingService;
 import dev.restate.sdk.blocking.RestateContext;
 import dev.restate.sdk.core.TypeTag;
 import io.grpc.stub.StreamObserver;
+import java.util.Objects;
 
 public class UpgradeTestService extends UpgradeTestServiceGrpc.UpgradeTestServiceImplBase
     implements RestateBlockingService {
 
-  private final String version = System.getenv("E2E_UPGRADETEST_VERSION").trim();
+  // Value should be either "v1" or "v2"
+  private final String version =
+      Objects.requireNonNull(System.getenv("E2E_UPGRADETEST_VERSION")).trim();
 
   @Override
   public void executeSimple(Empty request, StreamObserver<Result> responseObserver) {
