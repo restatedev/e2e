@@ -23,6 +23,9 @@
     },
     {
       "moduleName": "org.jetbrains.kotlinx:kotlinx-serialization-core"
+    },
+    {
+      "moduleName": "com.squareup.okio:okio"
     }
   ]
 }

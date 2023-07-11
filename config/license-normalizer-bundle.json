@@ -38,6 +38,10 @@
     {
       "bundleName": "Apache-2.0",
       "modulePattern": "org.jetbrains.kotlinx:kotlinx-serialization-core:.*"
+    },
+    {
+      "bundleName": "Apache-2.0",
+      "modulePattern": "com.squareup.okio:okio:.*"
     }
   ]
 }
