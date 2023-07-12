@@ -12,6 +12,9 @@ import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
+// Note: Java SDK only waits for the ack upon the next blocking operation.
+// So the last execution will have 1 as result because the last side effect will get executed and
+// then the response gets send back immediately.
 @Tag("only-always-suspending")
 class JavaSideEffectTest : BaseSideEffectTest(1) {
   companion object {
@@ -46,7 +49,7 @@ class NodeSideEffectTest : BaseSideEffectTest(0) {
   }
 }
 
-abstract class BaseSideEffectTest(private val result: Int) {
+abstract class BaseSideEffectTest(private val sideEffectExecutionCountExpectedValue: Int) {
   @DisplayName("Side effect should wait on acknowledgements")
   @Test
   fun sideEffectFlush(@InjectBlockingStub sideEffectStub: SideEffectBlockingStub) {
@@ -54,6 +57,6 @@ abstract class BaseSideEffectTest(private val result: Int) {
             sideEffectStub.invokeSideEffects(
                 SideEffectProto.InvokeSideEffectsRequest.newBuilder().build()))
         .extracting { it.nonDeterministicInvocationCount }
-        .isEqualTo(result)
+        .isEqualTo(sideEffectExecutionCountExpectedValue)
   }
 }
