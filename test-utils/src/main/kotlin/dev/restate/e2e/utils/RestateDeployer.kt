@@ -286,7 +286,7 @@ private constructor(
       tracesDir.mkdirs()
       runtimeContainer.addFileSystemBind(
           tracesDir.toString(), "/traces", BindMode.READ_WRITE, SelinuxContext.SINGLE)
-      runtimeContainer.withEnv("RESTATE_OBSERVABILITY__JAEGER_FILE__PATH", "/traces")
+      runtimeContainer.withEnv("RESTATE_OBSERVABILITY__TRACING__JSON_FILE_EXPORT_PATH", "/traces")
     }
 
     if (System.getenv(IMAGE_PULL_POLICY_ENV) == ALWAYS_PULL) {
