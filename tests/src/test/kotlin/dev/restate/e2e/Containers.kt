@@ -7,6 +7,7 @@ import dev.restate.e2e.services.counter.ProxyCounterGrpc
 import dev.restate.e2e.services.errors.FailingServiceGrpc
 import dev.restate.e2e.services.externalcall.RandomNumberListGeneratorGrpc
 import dev.restate.e2e.services.externalcall.ReplierGrpc
+import dev.restate.e2e.services.proxy.ProxyServiceGrpc
 import dev.restate.e2e.services.receiver.ReceiverGrpc
 import dev.restate.e2e.services.singletoncounter.SingletonCounterGrpc
 import dev.restate.e2e.services.verification.interpreter.CommandInterpreterGrpc
@@ -87,13 +88,17 @@ object Containers {
 
   val NODE_COORDINATOR_SERVICE_SPEC =
       nodeServicesContainer(
-          "node-coordinator", CoordinatorGrpc.SERVICE_NAME, ReceiverGrpc.SERVICE_NAME)
+              "node-coordinator", CoordinatorGrpc.SERVICE_NAME, ReceiverGrpc.SERVICE_NAME)
+          .build()
 
   val NODE_COLLECTIONS_SERVICE_SPEC =
-      nodeServicesContainer("node-collections", ListServiceGrpc.SERVICE_NAME)
+      nodeServicesContainer("node-collections", ListServiceGrpc.SERVICE_NAME).build()
 
   val NODE_ERRORS_SERVICE_SPEC =
-      nodeServicesContainer("node-errors", FailingServiceGrpc.SERVICE_NAME)
+      nodeServicesContainer("node-errors", FailingServiceGrpc.SERVICE_NAME).build()
+
+  val NODE_PROXY_SERVICE_SPEC =
+      nodeServicesContainer("node-proxy", ProxyServiceGrpc.SERVICE_NAME).build()
 
   // -- Verification test container
 
@@ -101,7 +106,8 @@ object Containers {
 
   val VERIFICATION_SERVICE_SPEC =
       nodeServicesContainer(
-          VERIFICATION_SERVICE_HOSTNAME,
-          CommandVerifierGrpc.SERVICE_NAME,
-          CommandInterpreterGrpc.SERVICE_NAME)
+              VERIFICATION_SERVICE_HOSTNAME,
+              CommandVerifierGrpc.SERVICE_NAME,
+              CommandInterpreterGrpc.SERVICE_NAME)
+          .build()
 }

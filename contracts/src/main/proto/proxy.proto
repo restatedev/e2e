@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+option java_package = "dev.restate.e2e.services.proxy";
+option java_outer_classname = "ProxyServiceProto";
+
+import "google/protobuf/empty.proto";
+import "dev/restate/ext.proto";
+
+package proxy;
+
+service ProxyService {
+  option (dev.restate.ext.service_type) = UNKEYED;
+
+  rpc OneWayCall(Request) returns (google.protobuf.Empty);
+  rpc Call(Request) returns (Result);
+  rpc GetRetryCount(Request) returns (RetryCount);
+}
+
+message Request {
+  string service_name = 1;
+  string service_method = 2;
+  bytes message = 3;
+}
+
+message Result {
+  bytes message = 1;
+}
+
+message RetryCount {
+  uint32 count = 1;
+}
