@@ -8,7 +8,7 @@ import org.testcontainers.utility.DockerImageName
 /** Definition of a service to deploy. */
 data class ServiceSpec(
     internal val containerImage: String,
-    internal val hostName: String,
+    val hostName: String,
     internal val envs: Map<String, String>,
     internal val port: Int,
     internal val registrationOptions: RegistrationOptions,

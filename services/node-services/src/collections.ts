@@ -35,7 +35,10 @@ export class ListService implements IListService {
     return list;
   }
 
-  get(): Promise<List> {
-    throw new Error("Method not implemented.");
+  async get(request: Request): Promise<List> {
+    console.log("get: " + JSON.stringify(request));
+    const ctx = restate.useContext(this);
+
+    return (await ctx.get<List>(LIST_KEY)) ?? List.create({});
   }
 }
