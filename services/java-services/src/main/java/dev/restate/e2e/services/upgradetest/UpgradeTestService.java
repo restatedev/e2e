@@ -1,6 +1,8 @@
 package dev.restate.e2e.services.upgradetest;
 
 import com.google.protobuf.Empty;
+import dev.restate.e2e.services.awakeableholder.AwakeableHolderProto;
+import dev.restate.e2e.services.awakeableholder.AwakeableHolderServiceGrpc;
 import dev.restate.e2e.services.collections.list.ListProto;
 import dev.restate.e2e.services.collections.list.ListServiceGrpc;
 import dev.restate.e2e.services.upgradetest.UpgradeTestProto.Result;
@@ -36,7 +38,12 @@ public class UpgradeTestService extends UpgradeTestServiceGrpc.UpgradeTestServic
     // In v1 case we create an awakeable, we ask the AwakeableHolderService to hold it, and then we
     // await on it
     Awakeable<String> awakeable = ctx.awakeable(TypeTag.STRING_UTF8);
-    ctx.backgroundCall(AwakeableHolderServiceGrpc.getHoldMethod(), awakeable.id());
+    ctx.backgroundCall(
+        AwakeableHolderServiceGrpc.getHoldMethod(),
+        AwakeableHolderProto.HoldRequest.newBuilder()
+            .setAwakeableId("upgrade")
+            .setIdStruct(awakeable.id())
+            .build());
     awakeable.await();
 
     // Store the result in List service, because this service is invoked with

@@ -20,8 +20,6 @@ import dev.restate.e2e.services.receiver.ReceiverGrpc;
 import dev.restate.e2e.services.sideeffect.SideEffectGrpc;
 import dev.restate.e2e.services.sideeffect.SideEffectService;
 import dev.restate.e2e.services.singletoncounter.SingletonCounterGrpc;
-import dev.restate.e2e.services.upgradetest.AwakeableHolderService;
-import dev.restate.e2e.services.upgradetest.AwakeableHolderServiceGrpc;
 import dev.restate.e2e.services.upgradetest.UpgradeTestService;
 import dev.restate.e2e.services.upgradetest.UpgradeTestServiceGrpc;
 import dev.restate.sdk.vertx.RestateHttpEndpointBuilder;
@@ -72,9 +70,6 @@ public class Main {
           break;
         case SideEffectGrpc.SERVICE_NAME:
           restateHttpEndpointBuilder.withService(new SideEffectService());
-          break;
-        case AwakeableHolderServiceGrpc.SERVICE_NAME:
-          restateHttpEndpointBuilder.withService(new AwakeableHolderService());
           break;
         case UpgradeTestServiceGrpc.SERVICE_NAME:
           restateHttpEndpointBuilder.withService(new UpgradeTestService());

@@ -9,6 +9,7 @@ import {
   protobufPackage,
 } from "./generated/counter";
 import { Empty } from "./generated/google/protobuf/empty";
+import { AwakeableHolderServiceClientImpl } from "./generated/awakeable_holder";
 
 const COUNTER_KEY = "counter";
 
@@ -58,5 +59,27 @@ export class CounterService implements Counter {
     ctx.set(COUNTER_KEY, newValue);
 
     return CounterUpdateResult.create({ oldValue, newValue });
+  }
+
+  async infiniteIncrementLoop(request: CounterRequest): Promise<Empty> {
+    console.log("infiniteIncrementLoop: " + JSON.stringify(request));
+    const ctx = restate.useContext(this);
+
+    let counter = 1;
+    ctx.set(COUNTER_KEY, counter);
+
+    // Wait for the sync with the test runner
+    const awakeableHolderClient = new AwakeableHolderServiceClientImpl(ctx);
+    const {id, promise} = ctx.awakeable()
+    awakeableHolderClient.hold({awakeableId: request.counterName, idString: id})
+    await promise;
+
+    // Now start looping
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      counter++;
+      ctx.set(COUNTER_KEY, counter);
+      await ctx.sleep(50); // Short sleeps to slow down the loop
+    }
   }
 }

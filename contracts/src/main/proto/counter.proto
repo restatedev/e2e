@@ -16,6 +16,7 @@ service Counter {
   rpc AddThenFail (CounterAddRequest) returns (google.protobuf.Empty);
   rpc Get (CounterRequest) returns (GetResponse);
   rpc GetAndAdd (CounterAddRequest) returns (CounterUpdateResult);
+  rpc InfiniteIncrementLoop (CounterRequest) returns (google.protobuf.Empty);
 }
 
 service ProxyCounter {

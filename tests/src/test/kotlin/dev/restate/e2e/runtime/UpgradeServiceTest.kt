@@ -3,9 +3,11 @@ package dev.restate.e2e.runtime
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.protobuf.Empty
 import dev.restate.e2e.Containers
+import dev.restate.e2e.services.awakeableholder.AwakeableHolderServiceGrpc
+import dev.restate.e2e.services.awakeableholder.hasAwakeableRequest
+import dev.restate.e2e.services.awakeableholder.unlockRequest
 import dev.restate.e2e.services.collections.list.ListProto
 import dev.restate.e2e.services.collections.list.ListServiceGrpc
-import dev.restate.e2e.services.upgradetest.AwakeableHolderServiceGrpc
 import dev.restate.e2e.services.upgradetest.UpgradeTestServiceGrpc
 import dev.restate.e2e.utils.*
 import dev.restate.e2e.utils.meta.client.EndpointsClient
@@ -34,11 +36,11 @@ class UpgradeServiceTest {
           .withEnv(Containers.getRestateEnvironment())
           .withServiceEndpoint(
               Containers.javaServicesContainer(
-                      "version1",
-                      UpgradeTestServiceGrpc.SERVICE_NAME,
-                      AwakeableHolderServiceGrpc.SERVICE_NAME,
-                      ListServiceGrpc.SERVICE_NAME)
+                      "version1", UpgradeTestServiceGrpc.SERVICE_NAME, ListServiceGrpc.SERVICE_NAME)
                   .withEnv("E2E_UPGRADETEST_VERSION", "v1"))
+          .withServiceEndpoint(
+              Containers.nodeServicesContainer(
+                  "awakeable-holder", AwakeableHolderServiceGrpc.SERVICE_NAME))
           .withServiceEndpoint(
               Containers.javaServicesContainer("version2", UpgradeTestServiceGrpc.SERVICE_NAME)
                   .withEnv("E2E_UPGRADETEST_VERSION", "v2")
@@ -128,7 +130,7 @@ class UpgradeServiceTest {
     // Await until AwakeableHolder has an awakeable
     await untilCallTo
         {
-          awakeableHolderClient.hasAwakeable(Empty.getDefaultInstance())
+          awakeableHolderClient.hasAwakeable(hasAwakeableRequest { awakeableId = "upgrade" })
         } matches
         { result ->
           result!!.hasAwakeable
@@ -149,7 +151,7 @@ class UpgradeServiceTest {
     restartRuntimeFn()
 
     // Now let's resume the awakeable
-    awakeableHolderClient.unlock(Empty.getDefaultInstance())
+    awakeableHolderClient.unlock(unlockRequest { awakeableId = "upgrade" })
 
     // Let's wait for the list service to contain "v1" once
     await untilAsserted

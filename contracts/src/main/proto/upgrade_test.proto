@@ -16,19 +16,6 @@ service UpgradeTestService {
   rpc ExecuteComplex(google.protobuf.Empty) returns (Result);
 }
 
-service AwakeableHolderService {
-  option (dev.restate.ext.service_type) = SINGLETON;
-
-  rpc Hold(dev.restate.core.AwakeableIdentifier) returns (google.protobuf.Empty);
-  rpc HasAwakeable(google.protobuf.Empty) returns (HasAwakeableResponse);
-  rpc Unlock(google.protobuf.Empty) returns (google.protobuf.Empty);
-}
-
 message Result {
   string message = 1;
 }
-
-message HasAwakeableResponse {
-  bool has_awakeable = 1;
-}
-
