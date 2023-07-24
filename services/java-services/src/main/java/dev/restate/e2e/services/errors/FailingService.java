@@ -70,7 +70,7 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase
               throw new RuntimeException(
                   "Something went wrong while trying to invoke the external http server", e);
             }
-            throw new IllegalStateException("external_call");
+            throw Status.INTERNAL.withDescription("external_call").asRuntimeException();
           });
 
       awakeable.await();
