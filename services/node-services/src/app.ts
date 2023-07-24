@@ -12,6 +12,7 @@ import { protoMetadata as sideEffectProtoMetadata } from "./generated/side_effec
 import { protoMetadata as proxyProtoMetadata } from "./generated/proxy";
 import { protoMetadata as rngProtoMetadata } from "./generated/rng";
 import { protoMetadata as replierProtoMetadata } from "./generated/replier";
+import { protoMetadata as awakeableHolderProtoMetadata } from "./generated/awakeable_holder";
 import { CounterService, CounterServiceFQN } from "./counter";
 import { ListService, ListServiceFQN } from "./collections";
 import { FailingService, FailingServiceFQN } from "./errors";
@@ -37,6 +38,10 @@ import {
   RandomNumberListGeneratorServiceFQN,
 } from "./random_number_generator";
 import { ReplierService, ReplierServiceFQN } from "./replier";
+import {
+  AwakeableHolderService,
+  AwakeableHolderServiceFQN,
+} from "./awakeable_holder";
 
 let serverBuilder = restate.createServer();
 
@@ -143,6 +148,14 @@ const services = new Map<string, restate.ServiceOpts>([
       descriptor: replierProtoMetadata,
       service: "Replier",
       instance: new ReplierService(),
+    },
+  ],
+  [
+    AwakeableHolderServiceFQN,
+    {
+      descriptor: awakeableHolderProtoMetadata,
+      service: "AwakeableHolderService",
+      instance: new AwakeableHolderService(),
     },
   ],
 ]);
