@@ -11,8 +11,7 @@ import dev.restate.e2e.utils.RestateDeployerExtension
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import java.util.*
-import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.assertj.core.api.Assertions.*
 import org.assertj.core.api.InstanceOfAssertFactories
 import org.assertj.core.api.InstanceOfAssertFactories.type
 import org.junit.jupiter.api.DisplayName
@@ -45,8 +44,10 @@ class JavaErrorsTest : BaseErrorsTest() {
     assertThat(
             stub.invokeExternalAndHandleFailure(
                 FailRequest.newBuilder().setKey(UUID.randomUUID().toString()).build()))
-        .extracting(ErrorMessage::getErrorMessage)
-        .isEqualTo("begin:external_call:internal_call")
+        .extracting(ErrorMessage::getErrorMessage, STRING)
+        // We match on this regex because there might be additional parts of the string injected
+        // by runtime/sdk in the error message strings
+        .matches("begin.*external_call.*internal_call")
   }
 }
 
