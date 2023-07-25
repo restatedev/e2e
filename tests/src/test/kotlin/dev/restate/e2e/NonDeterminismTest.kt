@@ -49,6 +49,7 @@ class NodeNonDeterminismTest : NonDeterminismTest() {
         RestateDeployerExtension(
             RestateDeployer.Builder()
                 .withEnv(Containers.getRestateEnvironment())
+                // Disable the retries so we get the error propagated back
                 .withInvokerRetryPolicy(RestateDeployer.RetryPolicy.None)
                 .withServiceEndpoint(
                     Containers.nodeServicesContainer(
@@ -91,7 +92,10 @@ abstract class NonDeterminismTest {
         .asInstanceOf(InstanceOfAssertFactories.type(StatusRuntimeException::class.java))
         .extracting(StatusRuntimeException::getStatus)
         .extracting(Status::getCode)
-        .isEqualTo(Status.Code.INTERNAL)
+        // SDKs might return different error codes, because the gRPC error space doesn't have a
+        // journal mismatch error type defined, and the service-protocol doesn't strictly enforce
+        // the usage of JOURNAL_MISMATCH error code.
+        .isIn(Status.Code.INTERNAL, Status.Code.UNKNOWN)
 
     // Assert the counter was not incremented
     assertThat(
