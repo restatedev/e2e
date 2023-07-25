@@ -114,13 +114,7 @@ private constructor(
                   { proxyContainer.getMappedPort(RESTATE_RUNTIME, it) },
                   {
                     Wait.forListeningPort().waitUntilReady(NotCachedContainerInfo(runtimeContainer))
-                    // Technically we don't need to wait on the proxy container ports to be
-                    // ready as they should be anyway because the proxy is never restarted.
-                    // But for robustness we do this check anyway.
-                    proxyContainer.waitPorts(
-                        RESTATE_RUNTIME,
-                        RUNTIME_META_ENDPOINT_PORT,
-                        RUNTIME_GRPC_INGRESS_ENDPOINT_PORT)
+                    waitRuntimeHealthy()
                   })) +
           serviceContainers.map { it.key to ContainerHandle(it.value.second) } +
           additionalContainers.map { it.key to ContainerHandle(it.value) }
@@ -193,6 +187,8 @@ private constructor(
     deployAdditionalContainers(testReportDir)
     deployRuntime(testReportDir)
     deployProxy(testReportDir)
+
+    waitRuntimeHealthy()
 
     // Let's execute service discovery to register the services
     val client =
@@ -312,6 +308,20 @@ private constructor(
         "Toxiproxy started. gRPC ingress port: {}. Meta REST API port: {}",
         proxyContainer.getMappedPort(RESTATE_RUNTIME, RUNTIME_GRPC_INGRESS_ENDPOINT_PORT),
         proxyContainer.getMappedPort(RESTATE_RUNTIME, RUNTIME_META_ENDPOINT_PORT))
+  }
+
+  private fun waitRuntimeHealthy() {
+    proxyContainer.waitHttp(
+        Wait.forHttp("/health"),
+        RESTATE_RUNTIME,
+        RUNTIME_META_ENDPOINT_PORT,
+    )
+    proxyContainer.waitHttp(
+        Wait.forHttp("/grpc.health.v1.Health/Check"),
+        RESTATE_RUNTIME,
+        RUNTIME_GRPC_INGRESS_ENDPOINT_PORT,
+    )
+    logger.debug("Runtime META and Ingress healthy")
   }
 
   fun discoverServiceEndpoint(client: EndpointsClient, spec: ServiceSpec) {

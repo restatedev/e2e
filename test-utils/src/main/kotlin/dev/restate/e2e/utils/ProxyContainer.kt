@@ -4,7 +4,7 @@ import eu.rekawek.toxiproxy.ToxiproxyClient
 import java.util.stream.IntStream
 import org.testcontainers.containers.Network
 import org.testcontainers.containers.ToxiproxyContainer
-import org.testcontainers.containers.wait.strategy.Wait
+import org.testcontainers.containers.wait.strategy.HttpWaitStrategy
 
 internal class ProxyContainer(private val container: ToxiproxyContainer) {
 
@@ -65,13 +65,13 @@ internal class ProxyContainer(private val container: ToxiproxyContainer) {
     return portMappings[address(hostName, port)]?.let { container.getMappedPort(it) }
   }
 
-  internal fun waitPorts(hostName: String, vararg ports: Int) {
-    val mappedPorts =
-        ports.map {
-          portMappings[address(hostName, it)]
-              ?: throw IllegalArgumentException("Cannot wait on non existing port")
-        }
-    Wait.forListeningPort().waitUntilReady(WaitOnSpecificPortsTarget(mappedPorts, container))
+  internal fun waitHttp(httpWaitStrategy: HttpWaitStrategy, hostName: String, port: Int) {
+    val mappedPort =
+        portMappings[address(hostName, port)]
+            ?: throw IllegalArgumentException("Cannot wait on non existing port")
+    httpWaitStrategy
+        .forPort(mappedPort)
+        .waitUntilReady(WaitOnSpecificPortsTarget(listOf(mappedPort), container))
   }
 
   private fun address(hostName: String, port: Int): String {
