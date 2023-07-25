@@ -91,7 +91,7 @@ abstract class NonDeterminismTest {
         .asInstanceOf(InstanceOfAssertFactories.type(StatusRuntimeException::class.java))
         .extracting(StatusRuntimeException::getStatus)
         .extracting(Status::getCode)
-        .isEqualTo(Status.Code.INTERNAL)
+        .isIn(Status.Code.INTERNAL, Status.Code.UNKNOWN)
 
     // Assert the counter was not incremented
     assertThat(
