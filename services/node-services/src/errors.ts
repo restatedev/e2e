@@ -13,7 +13,7 @@ export const FailingServiceFQN = protobufPackage + ".FailingService";
 export class FailingService implements IFailingService {
   fail(request: ErrorMessage): Promise<Empty> {
     console.log("fail: " + JSON.stringify(request));
-    throw new Error(request.errorMessage);
+    throw new restate.TerminalError(request.errorMessage);
   }
 
   async failAndHandle(request: ErrorMessage): Promise<ErrorMessage> {
@@ -39,6 +39,6 @@ export class FailingService implements IFailingService {
   }
 
   invokeExternalAndHandleFailure(): Promise<ErrorMessage> {
-    throw new Error("Method not implemented.");
+    throw new restate.TerminalError("Method not implemented.");
   }
 }
