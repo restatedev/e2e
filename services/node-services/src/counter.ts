@@ -38,7 +38,7 @@ export class CounterService implements Counter {
   async addThenFail(request: CounterAddRequest): Promise<Empty> {
     await this.add(request);
 
-    throw new Error(request.counterName);
+    throw new restate.TerminalError(request.counterName);
   }
 
   async get(request: CounterRequest): Promise<GetResponse> {
