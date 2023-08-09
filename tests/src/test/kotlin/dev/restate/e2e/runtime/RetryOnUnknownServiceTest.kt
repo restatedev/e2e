@@ -34,7 +34,6 @@ class RetryOnUnknownServiceTest {
     val deployerExt: RestateDeployerForEachExtension = RestateDeployerForEachExtension {
       RestateDeployer.Builder()
           .withEnv(Containers.getRestateEnvironment())
-          .withInvokerRetryPolicy(RestateDeployer.RetryPolicy.FixedDelay("100ms", 100))
           .withServiceEndpoint(Containers.NODE_PROXY_SERVICE_SPEC)
           .withServiceEndpoint(
               Containers.NODE_COLLECTIONS_SERVICE_SPEC.copy(skipRegistration = true))
