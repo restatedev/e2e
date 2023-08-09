@@ -12,6 +12,7 @@ import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import java.util.Arrays;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -20,31 +21,28 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase
 
   private static final Logger LOG = LogManager.getLogger(FailingService.class);
 
+  private final AtomicInteger eventualSuccessCalls = new AtomicInteger(0);
+  private final AtomicInteger eventualSuccessSideEffectCalls = new AtomicInteger(0);
+
   @Override
-  public void fail(ErrorMessage request, StreamObserver<Empty> responseObserver) {
+  public void terminallyFailingCall(ErrorMessage request, StreamObserver<Empty> responseObserver) {
     LOG.info("Invoked fail");
 
-    throw Status.UNKNOWN.withDescription(request.getErrorMessage()).asRuntimeException();
+    throw Status.INTERNAL.withDescription(request.getErrorMessage()).asRuntimeException();
   }
 
   @Override
-  public void failAndHandle(ErrorMessage request, StreamObserver<ErrorMessage> responseObserver) {
+  public void callTerminallyFailingCall(
+      ErrorMessage request, StreamObserver<ErrorMessage> responseObserver) {
     var ctx = restateContext();
     LOG.info("Invoked failAndHandle");
 
-    try {
-      ctx.call(
-              FailingServiceGrpc.getFailMethod(),
-              request.toBuilder()
-                  .setKey(ctx.sideEffect(TypeTag.STRING_UTF8, () -> UUID.randomUUID().toString()))
-                  .build())
-          .await();
-    } catch (StatusRuntimeException e) {
-      responseObserver.onNext(
-          ErrorMessage.newBuilder().setErrorMessage(e.getStatus().getDescription()).build());
-      responseObserver.onCompleted();
-      return;
-    }
+    ctx.call(
+            FailingServiceGrpc.getTerminallyFailingCallMethod(),
+            request.toBuilder()
+                .setKey(ctx.sideEffect(TypeTag.STRING_UTF8, () -> UUID.randomUUID().toString()))
+                .build())
+        .await();
 
     throw new IllegalStateException("This should be unreachable");
   }
@@ -80,7 +78,7 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase
 
     try {
       ctx.call(
-              FailingServiceGrpc.getFailMethod(),
+              FailingServiceGrpc.getTerminallyFailingCallMethod(),
               ErrorMessage.newBuilder()
                   .setKey(ctx.sideEffect(TypeTag.STRING_UTF8, () -> UUID.randomUUID().toString()))
                   .setErrorMessage("internal_call")
@@ -92,5 +90,62 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase
 
     responseObserver.onNext(ErrorMessage.newBuilder().setErrorMessage(finalMessage).build());
     responseObserver.onCompleted();
+  }
+
+  @Override
+  public void failingCallWithEventualSuccess(
+      ErrorsProto.Request request, StreamObserver<ErrorsProto.AttemptResponse> responseObserver) {
+    final int currentAttempt = this.eventualSuccessCalls.incrementAndGet();
+
+    if (currentAttempt >= 4) {
+      this.eventualSuccessCalls.set(0);
+      responseObserver.onNext(
+          ErrorsProto.AttemptResponse.newBuilder().setAttempts(currentAttempt).build());
+      responseObserver.onCompleted();
+    } else {
+      throw new IllegalArgumentException("Failed at attempt: " + currentAttempt);
+    }
+  }
+
+  @Override
+  public void failingSideEffectWithEventualSuccess(
+      ErrorsProto.Request request, StreamObserver<ErrorsProto.AttemptResponse> responseObserver) {
+    final int successAttempt =
+        restateContext()
+            .sideEffect(
+                Integer.class,
+                () -> {
+                  final int currentAttempt = this.eventualSuccessSideEffectCalls.incrementAndGet();
+
+                  if (currentAttempt >= 4) {
+                    this.eventualSuccessSideEffectCalls.set(0);
+                    return currentAttempt;
+                  } else {
+                    throw new IllegalArgumentException("Failed at attempt: " + currentAttempt);
+                  }
+                });
+
+    responseObserver.onNext(
+        ErrorsProto.AttemptResponse.newBuilder().setAttempts(successAttempt).build());
+    responseObserver.onCompleted();
+  }
+
+  @Override
+  public void terminallyFailingSideEffect(
+      ErrorMessage request, StreamObserver<Empty> responseObserver) {
+    restateContext()
+        .sideEffect(
+            () -> {
+              throw Status.INTERNAL.withDescription(request.getErrorMessage()).asRuntimeException();
+            });
+
+    throw new IllegalStateException("Should not be reached.");
+  }
+
+  @Override
+  public void failingSideEffectWithFiniteRetryPolicy(
+      ErrorMessage request, StreamObserver<Empty> responseObserver) {
+    throw new UnsupportedOperationException(
+        "The Java SDK does not support side effects with a finite retry policy.");
   }
 }

@@ -70,8 +70,11 @@ export class CounterService implements Counter {
 
     // Wait for the sync with the test runner
     const awakeableHolderClient = new AwakeableHolderServiceClientImpl(ctx);
-    const {id, promise} = ctx.awakeable()
-    awakeableHolderClient.hold({awakeableId: request.counterName, idString: id})
+    const { id, promise } = ctx.awakeable();
+    awakeableHolderClient.hold({
+      awakeableId: request.counterName,
+      idString: id,
+    });
     await promise;
 
     // Now start looping

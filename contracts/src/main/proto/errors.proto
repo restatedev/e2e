@@ -10,9 +10,13 @@ package errors;
 service FailingService {
   option (dev.restate.ext.service_type) = KEYED;
 
-  rpc Fail (ErrorMessage) returns (google.protobuf.Empty);
-  rpc FailAndHandle (ErrorMessage) returns (ErrorMessage);
+  rpc TerminallyFailingCall (ErrorMessage) returns (google.protobuf.Empty);
+  rpc CallTerminallyFailingCall (ErrorMessage) returns (ErrorMessage);
   rpc InvokeExternalAndHandleFailure(FailRequest) returns (ErrorMessage);
+  rpc FailingCallWithEventualSuccess(Request) returns (AttemptResponse);
+  rpc FailingSideEffectWithEventualSuccess (Request) returns (AttemptResponse);
+  rpc TerminallyFailingSideEffect (ErrorMessage) returns (google.protobuf.Empty);
+  rpc FailingSideEffectWithFiniteRetryPolicy(ErrorMessage) returns (google.protobuf.Empty);
 }
 
 message FailRequest {
@@ -23,4 +27,12 @@ message ErrorMessage {
   string key = 1 [(dev.restate.ext.field) = KEY];
 
   string error_message = 2;
+}
+
+message Request {
+  string key = 1 [(dev.restate.ext.field)= KEY];
+}
+
+message AttemptResponse {
+  int32 attempts = 1;
 }

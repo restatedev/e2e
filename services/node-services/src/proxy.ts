@@ -28,24 +28,23 @@ function getRetryCount(req: Request): number {
   if (count == undefined) {
     return 0;
   }
-  return count
+  return count;
 }
 
-export const ProxyServiceFQN =
-  protobufPackage + ".ProxyService";
+export const ProxyServiceFQN = protobufPackage + ".ProxyService";
 
 export class ProxyService implements IProxyService {
   async getRetryCount(request: Request): Promise<RetryCount> {
     return RetryCount.create({
-      count: getRetryCount(request)
-    })
+      count: getRetryCount(request),
+    });
   }
 
   async oneWayCall(request: Request): Promise<Empty> {
     const ctx = restate.useContext(this);
     const rpc = ctx as Rpc;
 
-    incrementRetryCount(request)
+    incrementRetryCount(request);
 
     await ctx.oneWayCall(() =>
       rpc.request(request.serviceName, request.serviceMethod, request.message)
@@ -58,7 +57,7 @@ export class ProxyService implements IProxyService {
     const ctx = restate.useContext(this);
     const rpc = ctx as Rpc;
 
-    incrementRetryCount(request)
+    incrementRetryCount(request);
 
     const response = await rpc.request(
       request.serviceName,

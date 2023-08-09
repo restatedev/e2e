@@ -29,10 +29,7 @@ import {
   CommandInterpreterServiceFQN,
 } from "./interpreter";
 import { SideEffectService, SideEffectServiceFQN } from "./side_effect";
-import {
-  ProxyService,
-  ProxyServiceFQN,
-} from "./proxy";
+import { ProxyService, ProxyServiceFQN } from "./proxy";
 import {
   RandomNumberListGeneratorService,
   RandomNumberListGeneratorServiceFQN,

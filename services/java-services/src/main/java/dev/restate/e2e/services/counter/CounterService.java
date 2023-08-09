@@ -5,6 +5,7 @@ import static dev.restate.e2e.services.counter.CounterProto.*;
 import com.google.protobuf.Empty;
 import dev.restate.sdk.blocking.RestateBlockingService;
 import dev.restate.sdk.core.StateKey;
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -55,7 +56,7 @@ public class CounterService extends CounterGrpc.CounterImplBase implements Resta
 
     logger.info("New counter value: {}", counter);
 
-    throw new IllegalStateException(request.getCounterName());
+    throw Status.INTERNAL.withDescription(request.getCounterName()).asRuntimeException();
   }
 
   @Override
