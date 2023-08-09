@@ -2,11 +2,9 @@ import { RestateContext, useContext } from "@restatedev/restate-sdk";
 import {
   BackgroundCallRequest,
   CallRequest,
-  ClearRequest,
   Command_AsyncCall,
   Command_AsyncCallAwait,
   Command_BackgroundCall,
-  Command_IncrementState,
   Command_Sleep,
   Command_SyncCall,
   CommandInterpreter,
