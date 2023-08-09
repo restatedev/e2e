@@ -20,7 +20,7 @@ import {
   VerificationRequest as InterpreterVerificationRequest,
 } from "./generated/interpreter";
 import seedrandom from "seedrandom";
-import { useContext } from "@restatedev/restate-sdk";
+import { useContext, TerminalError } from "@restatedev/restate-sdk";
 
 const DEFAULT_MAX_SLEEP = 32768;
 
@@ -203,7 +203,7 @@ export class CommandVerifierService implements CommandVerifier {
     commands: Commands | undefined
   ): void {
     if (!commands?.command) {
-      throw new Error("CallRequest with no commands");
+      throw new TerminalError("CallRequest with no commands");
     }
     for (const c of commands.command) {
       if (c.increment !== undefined) {
@@ -224,14 +224,14 @@ export class CommandVerifierService implements CommandVerifier {
         // do nothing
       } else {
         // should be unreachable
-        throw new Error("Empty Command in CallRequest");
+        throw new TerminalError("Empty Command in CallRequest");
       }
     }
   }
 
   async execute(request: ExecuteRequest): Promise<Empty> {
     if (!request.params) {
-      throw new Error("No params in ExecuteRequest");
+      throw new TerminalError("No params in ExecuteRequest");
     }
     const ctx = useContext(this);
 
@@ -261,7 +261,7 @@ export class CommandVerifierService implements CommandVerifier {
 
   async verify(request: VerificationRequest): Promise<VerificationResponse> {
     if (!request.params) {
-      throw new Error("No params in VerificationRequest");
+      throw new TerminalError("No params in VerificationRequest");
     }
     const ctx = useContext(this);
     const client = new CommandInterpreterClientImpl(ctx);
@@ -289,12 +289,12 @@ export class CommandVerifierService implements CommandVerifier {
           })
         );
         if (resp.expected != value) {
-          throw new Error(
+          throw new TerminalError(
             `Incorrect value back for expected: sent ${value}, received ${resp.expected}`
           );
         }
         if (resp.expected != resp.actual) {
-          throw new Error(
+          throw new TerminalError(
             `Incorrect value for target ${key}: expected ${resp.expected}, got ${resp.actual}`
           );
         }
@@ -306,7 +306,7 @@ export class CommandVerifierService implements CommandVerifier {
 
   async clear(request: ClearRequest): Promise<ClearResponse> {
     if (!request.params) {
-      throw new Error("No params in ClearRequest");
+      throw new TerminalError("No params in ClearRequest");
     }
     const ctx = useContext(this);
     // clear the idempotent flag, given that we can now execute again
@@ -343,7 +343,7 @@ export class CommandVerifierService implements CommandVerifier {
 
   async inspect(request: InspectRequest): Promise<InspectResponse> {
     if (!request.params) {
-      throw new Error("No params in InspectRequest");
+      throw new TerminalError("No params in InspectRequest");
     }
     const builder = new CommandBuilder(
       seedrandom(request.params.seed),
