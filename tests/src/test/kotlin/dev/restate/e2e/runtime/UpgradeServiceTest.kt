@@ -130,7 +130,7 @@ class UpgradeServiceTest {
     // Await until AwakeableHolder has an awakeable
     await untilCallTo
         {
-          awakeableHolderClient.hasAwakeable(hasAwakeableRequest { awakeableId = "upgrade" })
+          awakeableHolderClient.hasAwakeable(hasAwakeableRequest { name = "upgrade" })
         } matches
         { result ->
           result!!.hasAwakeable
@@ -151,7 +151,7 @@ class UpgradeServiceTest {
     restartRuntimeFn()
 
     // Now let's resume the awakeable
-    awakeableHolderClient.unlock(unlockRequest { awakeableId = "upgrade" })
+    awakeableHolderClient.unlock(unlockRequest { name = "upgrade" })
 
     // Let's wait for the list service to contain "v1" once
     await untilAsserted

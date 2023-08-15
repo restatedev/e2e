@@ -10,7 +10,7 @@ export class NumberSortHttpServerUtils {
     const response = await fetch(url, {
       method: "POST",
       headers: {
-        "x-reply-id": Buffer.from(replyId).toString("base64"),
+        "x-reply-id": replyId,
       },
       body: JSON.stringify(numbers),
     });

@@ -20,11 +20,7 @@ export class AwakeableHolderService implements IAwakeableHolderService {
     console.log("hold: " + JSON.stringify(request));
     const ctx = restate.useContext(this);
 
-    const id =
-      request.idString !== undefined
-        ? request.idString
-        : JSON.stringify(request.idStruct);
-    ctx.set(ID_KEY, id);
+    ctx.set(ID_KEY, request.id);
 
     return {};
   }

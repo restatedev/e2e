@@ -64,12 +64,12 @@ class KillInvocationTest {
     //  With this synchronization point we make sure the invocation has started before killing it.
     await untilCallTo
         {
-          awakeableHolderClient.hasAwakeable(hasAwakeableRequest { awakeableId = counter })
+          awakeableHolderClient.hasAwakeable(hasAwakeableRequest { name = counter })
         } matches
         { result ->
           result!!.hasAwakeable
         }
-    awakeableHolderClient.unlock(unlockRequest { awakeableId = counter })
+    awakeableHolderClient.unlock(unlockRequest { name = counter })
 
     // Kill the invocation
     // We manually do the request with the http client due to

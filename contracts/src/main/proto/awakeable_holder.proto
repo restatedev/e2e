@@ -5,7 +5,6 @@ option java_outer_classname = "AwakeableHolderProto";
 
 import "google/protobuf/empty.proto";
 import "dev/restate/ext.proto";
-import "dev/restate/core.proto";
 
 package awakeableholder;
 
@@ -20,15 +19,13 @@ service AwakeableHolderService {
 }
 
 message HoldRequest {
-  string awakeable_id = 1 [(dev.restate.ext.field) = KEY];
-  oneof id {
-    dev.restate.core.AwakeableIdentifier id_struct = 2;
-    string id_string = 3;
-  }
+  // Name is an alias of the id we can address in the test
+  string name = 1 [(dev.restate.ext.field) = KEY];
+  string id = 2;
 }
 
 message HasAwakeableRequest {
-  string awakeable_id = 1 [(dev.restate.ext.field) = KEY];
+  string name = 1 [(dev.restate.ext.field) = KEY];
 }
 
 message HasAwakeableResponse {
@@ -36,6 +33,6 @@ message HasAwakeableResponse {
 }
 
 message UnlockRequest {
-  string awakeable_id = 1 [(dev.restate.ext.field) = KEY];
+  string name = 1 [(dev.restate.ext.field) = KEY];
   string payload = 2;
 }

@@ -13,7 +13,6 @@ import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Executors;
@@ -47,9 +46,6 @@ public class Main implements HttpHandler {
     try {
       logger.info("Got a new request with headers " + httpExchange.getRequestHeaders());
 
-      byte[] replyId =
-          Base64.getUrlDecoder().decode(httpExchange.getRequestHeaders().getFirst("x-reply-id"));
-
       List<Integer> inputIntegers =
           new ArrayList<>(
               objectMapper.readValue(httpExchange.getRequestBody(), new TypeReference<>() {}));
@@ -65,7 +61,7 @@ public class Main implements HttpHandler {
       Empty ignored =
           replierStub.replyToRandomNumberListGenerator(
               Reply.newBuilder()
-                  .setReplyIdentifier(ByteString.copyFrom(replyId))
+                  .setReplyIdentifier(httpExchange.getRequestHeaders().getFirst("x-reply-id"))
                   .setPayload(ByteString.copyFromUtf8(outputBody))
                   .build());
 

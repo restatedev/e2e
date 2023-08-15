@@ -15,6 +15,6 @@ service Replier {
 }
 
 message Reply {
-  bytes reply_identifier = 1;
+  string reply_identifier = 1;
   bytes payload = 2;
 }
