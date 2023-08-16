@@ -6,7 +6,6 @@ import dev.restate.e2e.services.counter.CounterGrpc
 import dev.restate.e2e.services.counter.ProxyCounterGrpc
 import dev.restate.e2e.services.errors.FailingServiceGrpc
 import dev.restate.e2e.services.externalcall.RandomNumberListGeneratorGrpc
-import dev.restate.e2e.services.externalcall.ReplierGrpc
 import dev.restate.e2e.services.proxy.ProxyServiceGrpc
 import dev.restate.e2e.services.receiver.ReceiverGrpc
 import dev.restate.e2e.services.singletoncounter.SingletonCounterGrpc
@@ -60,7 +59,6 @@ object Containers {
   val JAVA_EXTERNALCALL_SERVICE_SPEC =
       javaServicesContainer(
               "java-externalcall",
-              ReplierGrpc.SERVICE_NAME,
               RandomNumberListGeneratorGrpc.SERVICE_NAME)
           .withEnv(
               "HTTP_SERVER_ADDRESS", "http://${EXTERNALCALL_HTTP_SERVER_CONTAINER_SPEC.first}:8080")
@@ -97,7 +95,6 @@ object Containers {
   val NODE_EXTERNALCALL_SERVICE_SPEC =
       nodeServicesContainer(
               "node-externalcall",
-              ReplierGrpc.SERVICE_NAME,
               RandomNumberListGeneratorGrpc.SERVICE_NAME)
           .withEnv(
               "HTTP_SERVER_ADDRESS", "http://${EXTERNALCALL_HTTP_SERVER_CONTAINER_SPEC.first}:8080")

@@ -12,8 +12,6 @@ import dev.restate.e2e.services.errors.FailingService;
 import dev.restate.e2e.services.errors.FailingServiceGrpc;
 import dev.restate.e2e.services.externalcall.RandomNumberListGeneratorGrpc;
 import dev.restate.e2e.services.externalcall.RandomNumberListGeneratorService;
-import dev.restate.e2e.services.externalcall.ReplierGrpc;
-import dev.restate.e2e.services.externalcall.ReplierService;
 import dev.restate.e2e.services.nondeterminism.NonDeterministicService;
 import dev.restate.e2e.services.nondeterminism.NonDeterministicServiceGrpc;
 import dev.restate.e2e.services.receiver.ReceiverGrpc;
@@ -61,9 +59,6 @@ public class Main {
           break;
         case RandomNumberListGeneratorGrpc.SERVICE_NAME:
           restateHttpEndpointBuilder.withService(new RandomNumberListGeneratorService());
-          break;
-        case ReplierGrpc.SERVICE_NAME:
-          restateHttpEndpointBuilder.withService(new ReplierService());
           break;
         case NonDeterministicServiceGrpc.SERVICE_NAME:
           restateHttpEndpointBuilder.withService(new NonDeterministicService());
