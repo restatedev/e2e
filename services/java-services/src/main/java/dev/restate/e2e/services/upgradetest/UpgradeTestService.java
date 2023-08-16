@@ -41,8 +41,8 @@ public class UpgradeTestService extends UpgradeTestServiceGrpc.UpgradeTestServic
     ctx.backgroundCall(
         AwakeableHolderServiceGrpc.getHoldMethod(),
         AwakeableHolderProto.HoldRequest.newBuilder()
-            .setAwakeableId("upgrade")
-            .setIdStruct(awakeable.id())
+            .setName("upgrade")
+            .setId(awakeable.id())
             .build());
     awakeable.await();
 

@@ -72,8 +72,8 @@ export class CounterService implements Counter {
     const awakeableHolderClient = new AwakeableHolderServiceClientImpl(ctx);
     const { id, promise } = ctx.awakeable();
     awakeableHolderClient.hold({
-      awakeableId: request.counterName,
-      idString: id,
+      name: request.counterName,
+      id,
     });
     await promise;
 
