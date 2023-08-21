@@ -13,8 +13,8 @@ tasks.register("generateProto") {
 tasks.register<Copy>("prepareDockerBuild") {
   dependsOn("generateProto")
 
-  if (!System.getenv("TYPESCRIPT_SDK_LOCAL_BUILD").isNullOrEmpty()) {
-    dependsOn("installLocalTypescriptSdk")
+  if (!System.getenv("SDK_TYPESCRIPT_LOCAL_BUILD").isNullOrEmpty()) {
+    dependsOn("installLocalSdkTypescript")
   }
 
   from(".") {
@@ -48,31 +48,37 @@ tasks.named("check") {
   dependsOn("npm_run_lint")
 }
 
-tasks.register("installLocalTypescriptSdk") {
-  val typescriptSdkDirectory = file("${rootDir}/../sdk-typescript")
-  check(typescriptSdkDirectory.exists()) {
-    "Cannot find the typescript directory. We assume it's in ${typescriptSdkDirectory.toPath()}"
+tasks.register("installLocalSdkTypescript") {
+  val sdkTypescriptDirectory =
+      file(properties["sdkTypescriptLocation"] ?: "${rootDir}/../sdk-typescript")
+  check(sdkTypescriptDirectory.exists()) {
+    "Cannot find the typescript directory. Looking in ${sdkTypescriptDirectory.toPath()}"
   }
 
   doLast {
     exec {
-          workingDir = typescriptSdkDirectory
+          workingDir = sdkTypescriptDirectory
+          commandLine("npm", "install")
+        }
+        .assertNormalExitValue()
+    exec {
+          workingDir = sdkTypescriptDirectory
           commandLine("npm", "run", "proto")
         }
         .assertNormalExitValue()
     exec {
-          workingDir = typescriptSdkDirectory
+          workingDir = sdkTypescriptDirectory
           commandLine("npm", "run", "build")
         }
         .assertNormalExitValue()
     exec {
-          workingDir = typescriptSdkDirectory
+          workingDir = sdkTypescriptDirectory
           commandLine("npm", "pack")
         }
         .assertNormalExitValue()
 
     copy {
-      from("${rootDir}/../sdk-typescript")
+      from(sdkTypescriptDirectory)
       include("*.tgz")
       into(".")
     }
