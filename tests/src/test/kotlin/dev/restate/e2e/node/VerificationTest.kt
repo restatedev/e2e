@@ -1,11 +1,16 @@
 package dev.restate.e2e.node
 
 import dev.restate.e2e.Containers
+import dev.restate.e2e.services.verification.interpreter.*
+import dev.restate.e2e.services.verification.interpreter.CommandInterpreterGrpc.CommandInterpreterBlockingStub
+import dev.restate.e2e.services.verification.interpreter.CommandKt.asyncCall
+import dev.restate.e2e.services.verification.interpreter.CommandKt.asyncCallAwait
+import dev.restate.e2e.services.verification.interpreter.CommandKt.sleep
 import dev.restate.e2e.services.verification.interpreter.InterpreterProto.TestParams
 import dev.restate.e2e.services.verification.verifier.CommandVerifierGrpc.CommandVerifierBlockingStub
-import dev.restate.e2e.services.verification.verifier.VerifierProto
-import dev.restate.e2e.services.verification.verifier.VerifierProto.ExecuteRequest
-import dev.restate.e2e.services.verification.verifier.VerifierProto.VerificationRequest
+import dev.restate.e2e.services.verification.verifier.clearRequest
+import dev.restate.e2e.services.verification.verifier.executeRequest
+import dev.restate.e2e.services.verification.verifier.verificationRequest
 import dev.restate.e2e.utils.*
 import io.grpc.StatusRuntimeException
 import java.util.concurrent.TimeUnit
@@ -17,6 +22,7 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 import org.apache.logging.log4j.LogManager
 import org.awaitility.kotlin.*
+import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
@@ -56,20 +62,18 @@ class VerificationTest {
             .pollInterval(POLL_INTERVAL)
             .atMost(MAX_POLL_TIME)
             .ignoreException(StatusRuntimeException::class)
-            .untilAsserted {
-              this.verify(VerificationRequest.newBuilder().setParams(testParams).build())
-            }
+            .untilAsserted { this.verify(verificationRequest { params = testParams }) }
   }
 
   @Timeout(value = 1, unit = TimeUnit.MINUTES)
   @Test
   fun simple(@InjectBlockingStub verifier: CommandVerifierBlockingStub) {
     val testParams = testParams()
+    verifier.execute(executeRequest { params = testParams })
 
-    verifier.execute(ExecuteRequest.newBuilder().setParams(testParams).build())
     verifier.awaitVerify(testParams)
 
-    verifier.clear(VerifierProto.ClearRequest.newBuilder().setParams(testParams).build())
+    verifier.clear(clearRequest { params = testParams })
   }
 
   @Timeout(value = 1, unit = TimeUnit.MINUTES)
@@ -81,7 +85,7 @@ class VerificationTest {
   ) {
     val testParams = testParams()
 
-    verifier.execute(ExecuteRequest.newBuilder().setParams(testParams).build())
+    verifier.execute(executeRequest { params = testParams })
 
     Thread.sleep(Random.nextInt(1..10).seconds.inWholeMilliseconds)
 
@@ -89,7 +93,7 @@ class VerificationTest {
 
     verifier.awaitVerify(testParams)
 
-    verifier.clear(VerifierProto.ClearRequest.newBuilder().setParams(testParams).build())
+    verifier.clear(clearRequest { params = testParams })
   }
 
   @Timeout(value = 1, unit = TimeUnit.MINUTES)
@@ -101,7 +105,7 @@ class VerificationTest {
   ) {
     val testParams = testParams()
 
-    verifier.execute(ExecuteRequest.newBuilder().setParams(testParams).build())
+    verifier.execute(executeRequest { params = testParams })
 
     Thread.sleep(Random.nextInt(1..10).seconds.inWholeMilliseconds)
 
@@ -109,7 +113,7 @@ class VerificationTest {
 
     verifier.awaitVerify(testParams)
 
-    verifier.clear(VerifierProto.ClearRequest.newBuilder().setParams(testParams).build())
+    verifier.clear(clearRequest { params = testParams })
   }
 
   @Timeout(value = 1, unit = TimeUnit.MINUTES)
@@ -120,7 +124,7 @@ class VerificationTest {
   ) {
     val testParams = testParams()
 
-    verifier.execute(ExecuteRequest.newBuilder().setParams(testParams).build())
+    verifier.execute(executeRequest { params = testParams })
 
     Thread.sleep(Random.nextInt(1..10).seconds.inWholeMilliseconds)
 
@@ -128,7 +132,7 @@ class VerificationTest {
 
     verifier.awaitVerify(testParams)
 
-    verifier.clear(VerifierProto.ClearRequest.newBuilder().setParams(testParams).build())
+    verifier.clear(clearRequest { params = testParams })
   }
 
   @Timeout(value = 1, unit = TimeUnit.MINUTES)
@@ -139,7 +143,7 @@ class VerificationTest {
   ) {
     val testParams = testParams()
 
-    verifier.execute(ExecuteRequest.newBuilder().setParams(testParams).build())
+    verifier.execute(executeRequest { params = testParams })
 
     Thread.sleep(Random.nextInt(1..10).seconds.inWholeMilliseconds)
 
@@ -147,21 +151,57 @@ class VerificationTest {
 
     verifier.awaitVerify(testParams)
 
-    verifier.clear(VerifierProto.ClearRequest.newBuilder().setParams(testParams).build())
+    verifier.clear(clearRequest { params = testParams })
+  }
+
+  @Timeout(value = 2, unit = TimeUnit.MINUTES)
+  @DisplayName("Suspending or returning with an unawaited blocked syncCall should not deadlock")
+  @Test
+  fun unawaitedSelfCall(@InjectBlockingStub interpreter: CommandInterpreterBlockingStub) {
+    interpreter.call(
+        callRequest {
+          key = key {
+            params = testParams {}
+            target = 1
+          }
+          commands = commands {
+            command.addAll(
+                listOf(
+                    command {
+                      asyncCall = asyncCall {
+                        target = 2 // won't deadlock
+                        callId = 1
+                        commands = commands {
+                          command.add(command { sleep = sleep { milliseconds = 35000 } })
+                        }
+                      }
+                    },
+                    command {
+                      asyncCall = asyncCall {
+                        target = 1 // would deadlock if awaited, but we don't await it
+                      }
+                    },
+                    command {
+                      asyncCallAwait = asyncCallAwait {
+                        callId = 1 // waits 5 seconds so we trigger the suspend timeout
+                      }
+                    }))
+          }
+        })
   }
 
   private fun testParams(): TestParams {
-    var seed = System.getenv(E2E_VERIFICATION_SEED_ENV)
-    if (seed.isNullOrEmpty()) {
-      seed = generateAlphanumericString(16)
+    var testSeed = System.getenv(E2E_VERIFICATION_SEED_ENV)
+    if (testSeed.isNullOrEmpty()) {
+      testSeed = generateAlphanumericString(16)
     }
 
-    logger.info("Using seed {}", seed)
-    return TestParams.newBuilder()
-        .setSeed(seed)
-        .setWidth(3)
-        .setDepth(14)
-        .setMaxSleepMillis(5.seconds.inWholeMilliseconds.toInt())
-        .build()
+    logger.info("Using seed {}", testSeed)
+    return dev.restate.e2e.services.verification.interpreter.testParams {
+      seed = testSeed
+      width = 3
+      depth = 14
+      maxSleepMillis = 5.seconds.inWholeMilliseconds.toInt()
+    }
   }
 }
