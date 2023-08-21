@@ -45,7 +45,7 @@ export class AwakeableHolderService implements IAwakeableHolderService {
       throw new Error("No awakeable registered");
     }
 
-    ctx.completeAwakeable(id, request.payload);
+    ctx.resolveAwakeable(id, request.payload);
     ctx.clear(ID_KEY);
 
     return {};

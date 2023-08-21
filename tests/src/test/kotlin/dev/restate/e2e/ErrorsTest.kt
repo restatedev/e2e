@@ -34,7 +34,7 @@ class JavaErrorsTest : BaseErrorsTest() {
                 .withServiceEndpoint(Containers.JAVA_ERRORS_SERVICE_SPEC)
                 .withServiceEndpoint(Containers.JAVA_EXTERNALCALL_SERVICE_SPEC)
                 .withServiceEndpoint(Containers.JAVA_COUNTER_SERVICE_SPEC)
-                .withContainer(Containers.EXTERNALCALL_HTTP_SERVER_CONTAINER_SPEC)
+                .withContainer(Containers.INT_SORTER_HTTP_SERVER_CONTAINER_SPEC)
                 .build())
   }
 

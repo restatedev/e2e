@@ -12,7 +12,9 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Executors;
@@ -29,6 +31,7 @@ public class Main implements HttpHandler {
 
   private final ObjectMapper objectMapper = new ObjectMapper();
   private final HttpClient client = HttpClient.newHttpClient();
+  private final boolean encode_result_as_base64 = System.getenv("ENCODE_RESULT_AS_BASE64") != null;
 
   public static void main(String[] args) throws IOException {
     HttpServer server =
@@ -57,7 +60,18 @@ public class Main implements HttpHandler {
       // Resolve awakeable
       ObjectNode resolveAwakeableRequest = objectMapper.createObjectNode();
       resolveAwakeableRequest.set("id", objectMapper.valueToTree(replyId));
-      resolveAwakeableRequest.set("result", objectMapper.valueToTree(inputIntegers));
+      if (encode_result_as_base64) {
+        String json_string = objectMapper.valueToTree(inputIntegers).toPrettyString();
+        resolveAwakeableRequest.set(
+            "bytes_result",
+            objectMapper
+                .getNodeFactory()
+                .textNode(
+                    Base64.getEncoder()
+                        .encodeToString(json_string.getBytes(StandardCharsets.UTF_8))));
+      } else {
+        resolveAwakeableRequest.set("json_result", objectMapper.valueToTree(inputIntegers));
+      }
       logger.info("Sending body: " + resolveAwakeableRequest.toPrettyString());
 
       HttpRequest req =
@@ -68,10 +82,15 @@ public class Main implements HttpHandler {
       HttpResponse<String> response = client.send(req, HttpResponse.BodyHandlers.ofString());
 
       if (response.statusCode() < 200 || response.statusCode() >= 300) {
-        throw new RuntimeException("Unexpected status code " + response.statusCode() + ". Body: " + response.body());
+        throw new RuntimeException(
+            "Unexpected status code " + response.statusCode() + ". Body: " + response.body());
       }
 
-      logger.info("Replier stub invoked and response received. Status code " + response.statusCode() + ". Body: " + response.body());
+      logger.info(
+          "Replier stub invoked and response received. Status code "
+              + response.statusCode()
+              + ". Body: "
+              + response.body());
 
       httpExchange.sendResponseHeaders(200, -1);
       httpExchange.getResponseBody().close();
