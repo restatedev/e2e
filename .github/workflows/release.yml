@@ -56,6 +56,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           arguments: publishMavenPublicationToGitHubPackagesRepository
+
       - name: Extract metadata (tags, labels)
         id: meta
         uses: docker/metadata-action@v4
@@ -70,10 +71,13 @@ jobs:
             type=semver,pattern={{version}}
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
+
       - name: Generate proto
         # this relies on a symlink so it doesn't work inside the docker build
-        run: npm ci && npm run proto
+        # We use npm install to write the package-lock.json
+        run: npm install && npm run proto
         working-directory: services/node-services
+
       - name: Build and push node-services Docker image
         uses: docker/build-push-action@v3
         with:
