@@ -31,7 +31,7 @@ tasks {
           "RESTATE_WORKER__PARTITIONS" to "10",
           "RESTATE_RUNTIME_CONTAINER" to
               (if (System.getenv("RESTATE_RUNTIME_CONTAINER").isNullOrEmpty())
-                  "ghcr.io/restatedev/restate:latest"
+                  "ghcr.io/restatedev/restate:main"
               else System.getenv("RESTATE_RUNTIME_CONTAINER")),
           "RUST_LOG" to (System.getenv("RUST_LOG") ?: "info,restate_invoker=trace,restate=debug"),
           "RUST_BACKTRACE" to "full")

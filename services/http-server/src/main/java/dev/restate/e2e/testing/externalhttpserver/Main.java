@@ -2,17 +2,19 @@ package dev.restate.e2e.testing.externalhttpserver;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.protobuf.ByteString;
-import com.google.protobuf.Empty;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
-import dev.restate.e2e.services.externalcall.ReplierGrpc;
-import dev.restate.e2e.services.externalcall.ReplierProto.Reply;
-import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Executors;
@@ -25,9 +27,11 @@ import org.apache.logging.log4j.Logger;
  */
 public class Main implements HttpHandler {
 
-  private final ObjectMapper objectMapper = new ObjectMapper();
-
   private static final Logger logger = LogManager.getLogger(Main.class);
+
+  private final ObjectMapper objectMapper = new ObjectMapper();
+  private final HttpClient client = HttpClient.newHttpClient();
+  private final boolean encode_result_as_base64 = System.getenv("ENCODE_RESULT_AS_BASE64") != null;
 
   public static void main(String[] args) throws IOException {
     HttpServer server =
@@ -42,38 +46,59 @@ public class Main implements HttpHandler {
   }
 
   @Override
-  public void handle(HttpExchange httpExchange) throws IOException {
+  public void handle(HttpExchange httpExchange) {
     try {
-      logger.info("Got a new request with headers " + httpExchange.getRequestHeaders());
+      String replyId = httpExchange.getRequestHeaders().getFirst("x-reply-id");
+      logger.info("Got a new request with reply id " + replyId);
 
       List<Integer> inputIntegers =
           new ArrayList<>(
               objectMapper.readValue(httpExchange.getRequestBody(), new TypeReference<>() {}));
       inputIntegers.sort(Integer::compareTo);
-      String outputBody = objectMapper.writeValueAsString(inputIntegers);
+      logger.info("Output list of numbers is: " + inputIntegers);
 
-      logger.info("Output list of numbers is: " + outputBody);
+      // Resolve awakeable
+      ObjectNode resolveAwakeableRequest = objectMapper.createObjectNode();
+      resolveAwakeableRequest.set("id", objectMapper.valueToTree(replyId));
+      if (encode_result_as_base64) {
+        String json_string = objectMapper.valueToTree(inputIntegers).toPrettyString();
+        resolveAwakeableRequest.set(
+            "bytes_result",
+            objectMapper
+                .getNodeFactory()
+                .textNode(
+                    Base64.getEncoder()
+                        .encodeToString(json_string.getBytes(StandardCharsets.UTF_8))));
+      } else {
+        resolveAwakeableRequest.set("json_result", objectMapper.valueToTree(inputIntegers));
+      }
+      logger.info("Sending body: " + resolveAwakeableRequest.toPrettyString());
 
-      ReplierGrpc.ReplierBlockingStub replierStub =
-          ReplierGrpc.newBlockingStub(
-              NettyChannelBuilder.forAddress("runtime", 9090).usePlaintext().build());
+      HttpRequest req =
+          HttpRequest.newBuilder(URI.create("http://runtime:9090/dev.restate.Awakeables/Resolve"))
+              .POST(HttpRequest.BodyPublishers.ofString(resolveAwakeableRequest.toPrettyString()))
+              .headers("Content-Type", "application/json")
+              .build();
+      HttpResponse<String> response = client.send(req, HttpResponse.BodyHandlers.ofString());
 
-      Empty ignored =
-          replierStub.replyToRandomNumberListGenerator(
-              Reply.newBuilder()
-                  .setReplyIdentifier(httpExchange.getRequestHeaders().getFirst("x-reply-id"))
-                  .setPayload(ByteString.copyFromUtf8(outputBody))
-                  .build());
+      if (response.statusCode() < 200 || response.statusCode() >= 300) {
+        throw new RuntimeException(
+            "Unexpected status code " + response.statusCode() + ". Body: " + response.body());
+      }
 
-      logger.info("Replier stub invoked and response received");
+      logger.info(
+          "Replier stub invoked and response received. Status code "
+              + response.statusCode()
+              + ". Body: "
+              + response.body());
 
       httpExchange.sendResponseHeaders(200, -1);
       httpExchange.getResponseBody().close();
 
       logger.info("Response sent");
-    } catch (Exception e) {
+    } catch (Throwable e) {
       logger.error("Error occurred while processing the request", e);
-      throw e;
+      throw new RuntimeException(e);
     }
   }
 }

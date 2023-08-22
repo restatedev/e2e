@@ -99,12 +99,12 @@ In order to test local changes to the `sdk-typescript`, you need to check it out
 Then run:
 
 ```shell
-gradle :services:node-services:installLocalTypescriptSdk 
+gradle :services:node-services:installLocalSdkTypescript 
 ```
 
 This will build the Typescript SDK, pack it with `npm pack`, and copy it over to the node-services directory and install it.
 
-You can include `gradle :services:node-services:installLocalTypescriptSdk` in the build process by setting `TYPESCRIPT_SDK_LOCAL_BUILD=true`.
+You can include `gradle :services:node-services:installLocalSdkTypescript` in the build process by setting `SDK_TYPESCRIPT_LOCAL_BUILD=true`.
 
 ### How to test Restate runtime changes
 

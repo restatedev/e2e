@@ -342,7 +342,7 @@ private constructor(
     if (response.statusCode !in 200..299) {
       fail(
           "Error when discovering endpoint $url, " +
-              "got status code ${response.statusCode} with body: ${response.data}")
+              "got status code ${response.statusCode} with body: ${response.data?.toPrettyString()}")
     }
 
     logger.debug("Successfully executed discovery for endpoint {}. Result: {}", url, response.data)

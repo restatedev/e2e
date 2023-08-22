@@ -11,7 +11,6 @@ import { protoMetadata as interpreterProtoMetadata } from "./generated/interpret
 import { protoMetadata as sideEffectProtoMetadata } from "./generated/side_effect";
 import { protoMetadata as proxyProtoMetadata } from "./generated/proxy";
 import { protoMetadata as rngProtoMetadata } from "./generated/rng";
-import { protoMetadata as replierProtoMetadata } from "./generated/replier";
 import { protoMetadata as awakeableHolderProtoMetadata } from "./generated/awakeable_holder";
 import { CounterService, CounterServiceFQN } from "./counter";
 import { ListService, ListServiceFQN } from "./collections";
@@ -34,7 +33,6 @@ import {
   RandomNumberListGeneratorService,
   RandomNumberListGeneratorServiceFQN,
 } from "./random_number_generator";
-import { ReplierService, ReplierServiceFQN } from "./replier";
 import {
   AwakeableHolderService,
   AwakeableHolderServiceFQN,
@@ -137,14 +135,6 @@ const services = new Map<string, restate.ServiceOpts>([
       descriptor: rngProtoMetadata,
       service: "RandomNumberListGenerator",
       instance: new RandomNumberListGeneratorService(),
-    },
-  ],
-  [
-    ReplierServiceFQN,
-    {
-      descriptor: replierProtoMetadata,
-      service: "Replier",
-      instance: new ReplierService(),
     },
   ],
   [

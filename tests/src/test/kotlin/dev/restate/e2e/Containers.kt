@@ -6,7 +6,6 @@ import dev.restate.e2e.services.counter.CounterGrpc
 import dev.restate.e2e.services.counter.ProxyCounterGrpc
 import dev.restate.e2e.services.errors.FailingServiceGrpc
 import dev.restate.e2e.services.externalcall.RandomNumberListGeneratorGrpc
-import dev.restate.e2e.services.externalcall.ReplierGrpc
 import dev.restate.e2e.services.proxy.ProxyServiceGrpc
 import dev.restate.e2e.services.receiver.ReceiverGrpc
 import dev.restate.e2e.services.singletoncounter.SingletonCounterGrpc
@@ -19,11 +18,12 @@ object Containers {
 
   // -- Generic containers and utils
 
-  val EXTERNALCALL_HTTP_SERVER_CONTAINER_SPEC =
-      "e2e-http-server" to
-          GenericContainer("restatedev/e2e-http-server")
-              .withEnv("PORT", "8080")
-              .withExposedPorts(8080)
+  val INT_SORTER_HTTP_SERVER_HOSTNAME = "e2e-http-server"
+  fun intSorterHttpServerContainer() =
+      GenericContainer("restatedev/e2e-http-server").withEnv("PORT", "8080").withExposedPorts(8080)
+
+  val INT_SORTER_HTTP_SERVER_CONTAINER_SPEC =
+      INT_SORTER_HTTP_SERVER_HOSTNAME to intSorterHttpServerContainer()
 
   fun getRestateEnvironment(): Map<String, String> {
     return System.getenv().filterKeys {
@@ -58,18 +58,15 @@ object Containers {
           .build()
 
   val JAVA_EXTERNALCALL_SERVICE_SPEC =
-      javaServicesContainer(
-              "java-externalcall",
-              ReplierGrpc.SERVICE_NAME,
-              RandomNumberListGeneratorGrpc.SERVICE_NAME)
+      javaServicesContainer("java-externalcall", RandomNumberListGeneratorGrpc.SERVICE_NAME)
           .withEnv(
-              "HTTP_SERVER_ADDRESS", "http://${EXTERNALCALL_HTTP_SERVER_CONTAINER_SPEC.first}:8080")
+              "HTTP_SERVER_ADDRESS", "http://${INT_SORTER_HTTP_SERVER_CONTAINER_SPEC.first}:8080")
           .build()
 
   val JAVA_ERRORS_SERVICE_SPEC =
       javaServicesContainer("java-errors", FailingServiceGrpc.SERVICE_NAME)
           .withEnv(
-              "HTTP_SERVER_ADDRESS", "http://${EXTERNALCALL_HTTP_SERVER_CONTAINER_SPEC.first}:8080")
+              "HTTP_SERVER_ADDRESS", "http://${INT_SORTER_HTTP_SERVER_CONTAINER_SPEC.first}:8080")
           .build()
 
   // -- Node containers
@@ -95,12 +92,9 @@ object Containers {
       nodeServicesContainer("node-collections", ListServiceGrpc.SERVICE_NAME).build()
 
   val NODE_EXTERNALCALL_SERVICE_SPEC =
-      nodeServicesContainer(
-              "node-externalcall",
-              ReplierGrpc.SERVICE_NAME,
-              RandomNumberListGeneratorGrpc.SERVICE_NAME)
+      nodeServicesContainer("node-externalcall", RandomNumberListGeneratorGrpc.SERVICE_NAME)
           .withEnv(
-              "HTTP_SERVER_ADDRESS", "http://${EXTERNALCALL_HTTP_SERVER_CONTAINER_SPEC.first}:8080")
+              "HTTP_SERVER_ADDRESS", "http://${INT_SORTER_HTTP_SERVER_CONTAINER_SPEC.first}:8080")
           .build()
 
   val NODE_ERRORS_SERVICE_SPEC =
