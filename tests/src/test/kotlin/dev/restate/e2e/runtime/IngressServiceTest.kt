@@ -68,7 +68,7 @@ class IngressServiceTest {
         .get()
         .asString()
         .contains("application/json")
-    assertThat(response.body().get("sid").asText()).contains(CounterGrpc.SERVICE_NAME)
+    assertThat(response.body().get("id").asText()).isNotEmpty()
 
     await untilCallTo
         {
@@ -101,7 +101,7 @@ class IngressServiceTest {
                       .toByteString()
             })
 
-    assertThat(response.sid).contains(CounterGrpc.SERVICE_NAME)
+    assertThat(response.id).isNotEmpty()
 
     await untilCallTo
         {
