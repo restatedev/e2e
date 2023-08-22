@@ -5,7 +5,6 @@ option java_outer_classname = "UpgradeTestProto";
 
 import "google/protobuf/empty.proto";
 import "dev/restate/ext.proto";
-import "dev/restate/core.proto";
 
 package upgrade_test;
 

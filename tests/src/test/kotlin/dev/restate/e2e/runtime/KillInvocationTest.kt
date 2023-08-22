@@ -10,15 +10,12 @@ import dev.restate.e2e.services.counter.CounterGrpc
 import dev.restate.e2e.services.counter.CounterGrpc.CounterBlockingStub
 import dev.restate.e2e.services.counter.counterRequest
 import dev.restate.e2e.utils.*
-import dev.restate.e2e.utils.meta.models.CancelInvocationRequest
+import dev.restate.e2e.utils.meta.client.InvocationsClient
 import dev.restate.generated.IngressGrpc.IngressBlockingStub
 import dev.restate.generated.invokeRequest
 import java.net.URL
 import java.util.*
-import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
@@ -50,7 +47,7 @@ class KillInvocationTest {
     val counter = UUID.randomUUID().toString()
     val counterRequest = counterRequest { counterName = counter }
 
-    val sid =
+    val id =
         ingressClient
             .invoke(
                 invokeRequest {
@@ -58,7 +55,7 @@ class KillInvocationTest {
                   method = CounterGrpc.getInfiniteIncrementLoopMethod().bareMethodName!!
                   argument = counterRequest.toByteString()
                 })
-            .sid
+            .id
 
     // Await until AwakeableHolder has an awakeable and then complete it.
     //  With this synchronization point we make sure the invocation has started before killing it.
@@ -72,19 +69,9 @@ class KillInvocationTest {
     awakeableHolderClient.unlock(unlockRequest { name = counter })
 
     // Kill the invocation
-    // We manually do the request with the http client due to
-    // https://github.com/cjbooms/fabrikt/issues/225
-    val killRequest =
-        Request.Builder()
-            .url("$metaURL/invocations")
-            .delete(
-                ObjectMapper()
-                    .writeValueAsString(CancelInvocationRequest(sid))
-                    .toRequestBody("application/json".toMediaType()))
-            .build()
-    assertThat(OkHttpClient().newCall(killRequest).execute().code)
-        .isGreaterThanOrEqualTo(200)
-        .isLessThan(300)
+    val client = InvocationsClient(ObjectMapper(), metaURL.toString(), OkHttpClient())
+    val response = client.cancelInvocation(id)
+    assertThat(response.statusCode).isGreaterThanOrEqualTo(200).isLessThan(300)
 
     // Now let's invoke the greeter on the same key.
     // At some point we should get an answer because the service is unlocked by the kill
