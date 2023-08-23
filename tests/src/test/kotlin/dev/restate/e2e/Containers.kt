@@ -103,6 +103,11 @@ object Containers {
   val NODE_PROXY_SERVICE_SPEC =
       nodeServicesContainer("node-proxy", ProxyServiceGrpc.SERVICE_NAME).build()
 
+  const val HANDLER_API_ECHO_TEST_SERVICE_NAME = "handlerapi.HandlerAPIEchoTest"
+
+  val NODE_HANDLER_API_ECHO_TEST_SERVICE_SPEC =
+    nodeServicesContainer("node-proxy", HANDLER_API_ECHO_TEST_SERVICE_NAME).build()
+
   // -- Verification test container
 
   const val VERIFICATION_SERVICE_HOSTNAME = "restate-verification"
