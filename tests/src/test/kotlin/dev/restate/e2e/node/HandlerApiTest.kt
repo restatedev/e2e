@@ -46,7 +46,7 @@ class HandlerApiTest {
     val req =
         HttpRequest.newBuilder(
                 URI.create(
-                    "${httpEndpointURL}${Containers.HANDLER_API_ECHO_TEST_SERVICE_NAME}/EchoEcho"))
+                    "${httpEndpointURL}${Containers.HANDLER_API_ECHO_TEST_SERVICE_NAME}/echoEcho"))
             .POST(jacksonBodyPublisher(mapOf("request" to expectedOutput)))
             .headers("Content-Type", "application/json")
             .build()

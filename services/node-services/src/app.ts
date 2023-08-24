@@ -37,10 +37,7 @@ import {
   AwakeableHolderService,
   AwakeableHolderServiceFQN,
 } from "./awakeable_holder";
-import {
-  HandlerAPIEchoTestFQN,
-    HandlerApiEchoRouter
-} from "./handler_api";
+import { HandlerAPIEchoTestFQN, HandlerApiEchoRouter } from "./handler_api";
 
 let serverBuilder = restate.createServer();
 
@@ -171,10 +168,15 @@ for (let service of servicesEnv) {
     throw new Error("Unknown service '" + service + "'");
   } else if ((foundService as restate.ServiceOpts).descriptor !== undefined) {
     console.log("Mounting " + service);
-    serverBuilder = serverBuilder.bindService(foundService as restate.ServiceOpts);
+    serverBuilder = serverBuilder.bindService(
+      foundService as restate.ServiceOpts
+    );
   } else {
     console.log("Mounting router " + service);
-    serverBuilder = serverBuilder.bindRouter(service, (foundService as {router: any}).router);
+    serverBuilder = serverBuilder.bindRouter(
+      service,
+      (foundService as { router: any }).router
+    );
   }
 }
 
