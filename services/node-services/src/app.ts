@@ -37,10 +37,11 @@ import {
   AwakeableHolderService,
   AwakeableHolderServiceFQN,
 } from "./awakeable_holder";
+import { HandlerAPIEchoTestFQN, HandlerApiEchoRouter } from "./handler_api";
 
 let serverBuilder = restate.createServer();
 
-const services = new Map<string, restate.ServiceOpts>([
+const services = new Map<string, restate.ServiceOpts | { router: any }>([
   [
     CounterServiceFQN,
     {
@@ -145,6 +146,12 @@ const services = new Map<string, restate.ServiceOpts>([
       instance: new AwakeableHolderService(),
     },
   ],
+  [
+    HandlerAPIEchoTestFQN,
+    {
+      router: HandlerApiEchoRouter,
+    },
+  ],
 ]);
 
 console.log(services.keys());
@@ -157,11 +164,19 @@ console.log("Services to mount: " + servicesEnv);
 for (let service of servicesEnv) {
   service = service.trim();
   const foundService = services.get(service);
-  if (foundService == undefined) {
+  if (foundService === undefined) {
     throw new Error("Unknown service '" + service + "'");
-  } else {
+  } else if ((foundService as restate.ServiceOpts).descriptor !== undefined) {
     console.log("Mounting " + service);
-    serverBuilder = serverBuilder.bindService(foundService);
+    serverBuilder = serverBuilder.bindService(
+      foundService as restate.ServiceOpts
+    );
+  } else {
+    console.log("Mounting router " + service);
+    serverBuilder = serverBuilder.bindRouter(
+      service,
+      (foundService as { router: any }).router
+    );
   }
 }
 
