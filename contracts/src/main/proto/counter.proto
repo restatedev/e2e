@@ -5,6 +5,7 @@ option java_outer_classname = "CounterProto";
 
 import "google/protobuf/empty.proto";
 import "dev/restate/ext.proto";
+import "dev/restate/events.proto";
 
 package counter;
 
@@ -17,6 +18,7 @@ service Counter {
   rpc Get (CounterRequest) returns (GetResponse);
   rpc GetAndAdd (CounterAddRequest) returns (CounterUpdateResult);
   rpc InfiniteIncrementLoop (CounterRequest) returns (google.protobuf.Empty);
+  rpc HandleEvent(dev.restate.StringKeyedEvent) returns (google.protobuf.Empty);
 }
 
 service ProxyCounter {
