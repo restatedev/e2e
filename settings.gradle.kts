@@ -66,6 +66,8 @@ dependencyResolutionManagement {
       library("jackson-databind", "com.fasterxml.jackson.core", "jackson-databind").withoutVersion()
       library("jackson-kotlin", "com.fasterxml.jackson.module", "jackson-module-kotlin")
           .withoutVersion()
+      library("jackson-yaml", "com.fasterxml.jackson.dataformat", "jackson-dataformat-yaml")
+          .withoutVersion()
 
       library("junit-all", "org.junit.jupiter", "junit-jupiter").versionRef("junit-jupiter")
       library("junit-api", "org.junit.jupiter", "junit-jupiter-api").versionRef("junit-jupiter")

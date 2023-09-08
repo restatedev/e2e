@@ -1,6 +1,9 @@
 package dev.restate.e2e.utils
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
+import dev.restate.e2e.utils.config.RestateConfigSchema
 import dev.restate.e2e.utils.meta.client.EndpointsClient
 import dev.restate.e2e.utils.meta.models.RegisterServiceEndpointRequest
 import io.grpc.ManagedChannel
@@ -18,6 +21,7 @@ import org.junit.jupiter.api.fail
 import org.testcontainers.containers.*
 import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.images.PullPolicy
+import org.testcontainers.images.builder.Transferable
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider
 import org.testcontainers.shaded.com.github.dockerjava.core.DockerClientConfig
@@ -30,7 +34,8 @@ private constructor(
     private val additionalContainers: Map<String, GenericContainer<*>>,
     private val additionalEnv: Map<String, String>,
     private val runtimeContainerName: String,
-    private val enableTracesExport: Boolean
+    private val enableTracesExport: Boolean,
+    private val configSchema: RestateConfigSchema?
 ) : AutoCloseable, ExtensionContext.Store.CloseableResource {
 
   // Perhaps at some point we could autogenerate these from the openapi doc and also remove the need
@@ -132,6 +137,7 @@ private constructor(
           System.getenv(RESTATE_RUNTIME_CONTAINER_ENV) ?: DEFAULT_RUNTIME_CONTAINER,
       private var invokerRetryPolicy: RetryPolicy? = null,
       private var enableTracesExport: Boolean = true,
+      private var configSchema: RestateConfigSchema? = null
   ) {
 
     fun withServiceEndpoint(serviceSpec: ServiceSpec) = apply {
@@ -172,6 +178,8 @@ private constructor(
 
     fun disableTracesExport() = apply { this.enableTracesExport = false }
 
+    fun withConfig(configSchema: RestateConfigSchema) = apply { this.configSchema = configSchema }
+
     fun build() =
         RestateDeployer(
             runtimeDeployments,
@@ -179,7 +187,8 @@ private constructor(
             additionalContainers,
             additionalEnv + (invokerRetryPolicy?.toInvokerSetupEnv() ?: emptyMap()),
             runtimeContainer,
-            enableTracesExport)
+            enableTracesExport,
+            configSchema)
   }
 
   fun deployAll(testReportDir: String) {
@@ -283,6 +292,14 @@ private constructor(
       runtimeContainer.addFileSystemBind(
           tracesDir.toString(), "/traces", BindMode.READ_WRITE, SelinuxContext.SINGLE)
       runtimeContainer.withEnv("RESTATE_OBSERVABILITY__TRACING__JSON_FILE_EXPORT_PATH", "/traces")
+    }
+
+    if (this.configSchema != null) {
+      val yamlMapper =
+          ObjectMapper(YAMLFactory().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER))
+      runtimeContainer.copyFileToContainer(
+          Transferable.of(yamlMapper.writeValueAsBytes(this.configSchema)), "/config.yaml")
+      runtimeContainer.withEnv("RESTATE_CONFIG", "/config.yaml")
     }
 
     if (System.getenv(IMAGE_PULL_POLICY_ENV) == ALWAYS_PULL) {
