@@ -297,7 +297,7 @@ private constructor(
     if (this.configSchema != null) {
       val yamlMapper =
           ObjectMapper(YAMLFactory().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER))
-      runtimeContainer.copyFileToContainer(
+      runtimeContainer.withCopyToContainer(
           Transferable.of(yamlMapper.writeValueAsBytes(this.configSchema)), "/config.yaml")
       runtimeContainer.withEnv("RESTATE_CONFIG", "/config.yaml")
     }

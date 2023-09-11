@@ -24,7 +24,7 @@ import org.junit.jupiter.api.extension.RegisterExtension
 private const val TOPIC = "my-topic"
 
 private fun kafkaClusterOptions(): RestateConfigSchema {
-  RestateConfigSchema()
+  return RestateConfigSchema()
       .withWorker(
           WorkerOptions()
               .withKafka(
@@ -85,7 +85,7 @@ abstract class BaseKafkaIngressTest {
   @Test
   fun handleKeyedEvent(
       @InjectMetaURL metaURL: URL,
-      @InjectContainerPort(hostName = "kafka", port = 9092) kafkaPort: Int,
+      @InjectContainerPort(hostName = "kafka", port = KafkaContainer.EXTERNAL_PORT) kafkaPort: Int,
       @InjectBlockingStub counterClient: CounterBlockingStub
   ) {
     val counter = UUID.randomUUID().toString()
