@@ -44,7 +44,12 @@ dependencies {
 val apiFile = "$projectDir/src/main/openapi/meta.json"
 val generatedDir = "$buildDir/generated"
 
-sourceSets { main { kotlin.srcDir("$generatedDir/src/main/kotlin") } }
+sourceSets {
+  main {
+    java.srcDir("$generatedDir/j2sp")
+    kotlin.srcDir("$generatedDir/src/main/kotlin")
+  }
+}
 
 java {
   withJavadocJar()
@@ -54,6 +59,7 @@ java {
 jsonSchema2Pojo {
   setSource(files("$projectDir/src/main/json"))
   targetPackage = "dev.restate.e2e.utils.config"
+  targetDirectory = file("$generatedDir/j2sp")
 
   useLongIntegers = true
   includeSetters = true
