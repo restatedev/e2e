@@ -91,7 +91,7 @@ abstract class BaseKafkaIngressTest {
     val counter = UUID.randomUUID().toString()
 
     // Produce message to kafka
-    produceMessageToKafka("kafka:$kafkaPort", TOPIC, counter, "123")
+    produceMessageToKafka("PLAINTEXT://localhost:$kafkaPort", TOPIC, counter, "123")
 
     // Create subscription
     val subscriptionsClient =
