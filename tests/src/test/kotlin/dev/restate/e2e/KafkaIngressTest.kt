@@ -33,7 +33,8 @@ private fun kafkaClusterOptions(): RestateConfigSchema {
                           Clusters()
                               .withAdditionalProperty(
                                   "my-cluster",
-                                  KafkaClusterOptions().withMetadataBrokerList("kafka:9092")))))
+                                  KafkaClusterOptions()
+                                      .withMetadataBrokerList("PLAINTEXT://kafka:9092")))))
 }
 
 class JavaKafkaIngressTest : BaseKafkaIngressTest() {
@@ -101,7 +102,8 @@ abstract class BaseKafkaIngressTest {
                 CreateSubscriptionRequest(
                     source = "kafka://my-cluster/$TOPIC",
                     sink =
-                        "service://${CounterGrpc.SERVICE_NAME}/${CounterGrpc.getHandleEventMethod().bareMethodName}")))
+                        "service://${CounterGrpc.SERVICE_NAME}/${CounterGrpc.getHandleEventMethod().bareMethodName}",
+                    options = mapOf("auto.offset.reset" to "earliest"))))
         .extracting { it.statusCode }
         .isEqualTo(201)
 
