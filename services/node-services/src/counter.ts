@@ -94,7 +94,7 @@ export class CounterService implements Counter {
       const ctx = restate.useContext(this);
 
       const value = (await ctx.get<number>(COUNTER_KEY)) || 0;
-      ctx.set(COUNTER_KEY, value + parseInt(request.payload.toString());
+      ctx.set(COUNTER_KEY, value + parseInt(request.payload.toString()));
 
       return Empty.create({});
     }
