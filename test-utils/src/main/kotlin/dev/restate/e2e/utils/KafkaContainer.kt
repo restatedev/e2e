@@ -16,7 +16,7 @@ class KafkaContainer(private vararg val topics: String) :
         DockerImageName.parse("confluentinc/cp-kafka:7.1.0-1-ubi8")) {
 
   companion object {
-    const val PORT = KAFKA_PORT
+    const val EXTERNAL_PORT = KAFKA_PORT
   }
 
   init {

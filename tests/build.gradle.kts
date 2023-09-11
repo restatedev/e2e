@@ -20,6 +20,8 @@ dependencies {
   testImplementation(libs.jackson.core)
   testImplementation(libs.jackson.databind)
 
+  testImplementation("org.apache.kafka:kafka-clients:3.5.0")
+
   testImplementation(libs.awaitility)
 }
 

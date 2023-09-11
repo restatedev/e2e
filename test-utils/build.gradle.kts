@@ -4,6 +4,7 @@ plugins {
   kotlin("plugin.serialization")
   `maven-publish`
   id("com.github.jk1.dependency-license-report") version "2.1"
+  id("org.jsonschema2pojo") version "1.2.1"
 }
 
 // Dependency set for code-generating the openapi client
@@ -34,6 +35,8 @@ dependencies {
 
   implementation(libs.testcontainers.toxiproxy)
 
+  implementation(libs.jackson.yaml)
+
   testImplementation(libs.junit.all)
   testImplementation(libs.assertj)
 }
@@ -41,11 +44,27 @@ dependencies {
 val apiFile = "$projectDir/src/main/openapi/meta.json"
 val generatedDir = "$buildDir/generated"
 
-sourceSets { main { kotlin.srcDir("$generatedDir/src/main/kotlin") } }
+sourceSets {
+  main {
+    java.srcDir("$generatedDir/j2sp")
+    kotlin.srcDir("$generatedDir/src/main/kotlin")
+  }
+}
 
 java {
   withJavadocJar()
   withSourcesJar()
+}
+
+jsonSchema2Pojo {
+  setSource(files("$projectDir/src/main/json"))
+  targetPackage = "dev.restate.e2e.utils.config"
+  targetDirectory = file("$generatedDir/j2sp")
+
+  useLongIntegers = true
+  includeSetters = true
+  includeGetters = true
+  generateBuilders = true
 }
 
 tasks {
@@ -74,9 +93,11 @@ tasks {
       }
 
   // Make sure generateCode is correctly linked to compilation tasks
-  withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> { dependsOn(generateCode) }
-  withType<JavaCompile> { dependsOn(generateCode) }
-  withType<Jar> { dependsOn(generateCode) }
+  withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    dependsOn(generateCode, generateJsonSchema2Pojo)
+  }
+  withType<JavaCompile> { dependsOn(generateCode, generateJsonSchema2Pojo) }
+  withType<Jar> { dependsOn(generateCode, generateJsonSchema2Pojo) }
 
   check { dependsOn(checkLicense) }
 }
