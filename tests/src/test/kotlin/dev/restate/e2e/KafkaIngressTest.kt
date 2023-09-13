@@ -71,7 +71,7 @@ abstract class BaseKafkaIngressTest {
       bootstrapServer: String,
       topic: String,
       key: String,
-      value: String
+      values: List<String>
   ) {
     val props = Properties()
     props["bootstrap.servers"] = bootstrapServer
@@ -79,7 +79,9 @@ abstract class BaseKafkaIngressTest {
     props["value.serializer"] = "org.apache.kafka.common.serialization.StringSerializer"
 
     val producer: Producer<String, String> = KafkaProducer(props)
-    producer.send(ProducerRecord(topic, key, value))
+    for (value in values) {
+      producer.send(ProducerRecord(topic, key, value))
+    }
     producer.close()
   }
 
@@ -90,9 +92,6 @@ abstract class BaseKafkaIngressTest {
       @InjectBlockingStub counterClient: CounterBlockingStub
   ) {
     val counter = UUID.randomUUID().toString()
-
-    // Produce message to kafka
-    produceMessageToKafka("PLAINTEXT://localhost:$kafkaPort", TOPIC, counter, "123")
 
     // Create subscription
     val subscriptionsClient =
@@ -107,13 +106,16 @@ abstract class BaseKafkaIngressTest {
         .extracting { it.statusCode }
         .isEqualTo(201)
 
+    // Produce message to kafka
+    produceMessageToKafka("PLAINTEXT://localhost:$kafkaPort", TOPIC, counter, listOf("1", "2", "3"))
+
     // Now wait for the update to be visible
     await untilCallTo
         {
           counterClient.get(counterRequest { counterName = counter })
         } matches
         { num ->
-          num!!.value == 123L
+          num!!.value == 6L
         }
   }
 }
