@@ -51,10 +51,7 @@ sourceSets {
   }
 }
 
-java {
-  withJavadocJar()
-  withSourcesJar()
-}
+java { withSourcesJar() }
 
 jsonSchema2Pojo {
   setSource(files("$projectDir/src/main/json"))
