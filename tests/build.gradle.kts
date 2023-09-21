@@ -35,7 +35,9 @@ tasks {
               (if (System.getenv("RESTATE_RUNTIME_CONTAINER").isNullOrEmpty())
                   "ghcr.io/restatedev/restate:main"
               else System.getenv("RESTATE_RUNTIME_CONTAINER")),
-          "RUST_LOG" to (System.getenv("RUST_LOG") ?: "info,restate_invoker=trace,restate_ingress_kafka=trace,restate=debug"),
+          "RUST_LOG" to
+              (System.getenv("RUST_LOG")
+                  ?: "info,restate_invoker=trace,restate_ingress_kafka=trace,restate=debug"),
           "RUST_BACKTRACE" to "full")
 
   test {

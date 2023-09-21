@@ -1,8 +1,6 @@
 package dev.restate.e2e
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import dev.restate.e2e.node.HandlerApiTest
 import dev.restate.e2e.services.counter.CounterGrpc
 import dev.restate.e2e.services.counter.CounterGrpc.CounterBlockingStub
 import dev.restate.e2e.services.counter.counterRequest
@@ -10,7 +8,10 @@ import dev.restate.e2e.utils.*
 import dev.restate.e2e.utils.config.*
 import dev.restate.e2e.utils.meta.client.SubscriptionsClient
 import dev.restate.e2e.utils.meta.models.CreateSubscriptionRequest
+import java.net.URI
 import java.net.URL
+import java.net.http.HttpClient
+import java.net.http.HttpRequest
 import java.util.*
 import okhttp3.OkHttpClient
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -23,9 +24,6 @@ import org.awaitility.kotlin.untilAsserted
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
-import java.net.URI
-import java.net.http.HttpClient
-import java.net.http.HttpRequest
 
 private const val TOPIC = "my-topic"
 
@@ -108,46 +106,41 @@ abstract class BaseKafkaIngressTest {
   }
 }
 
-
 class NodeHandlerAPIKafkaIngressTest {
 
   companion object {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension =
-      RestateDeployerExtension(
-        RestateDeployer.Builder()
-          .withEnv(Containers.getRestateEnvironment())
-          .withServiceEndpoint(
-            Containers.nodeServicesContainer(
-              "node-counter",
-              Containers.HANDLER_API_COUNTER_SERVICE_NAME
-            )
-          )
-          .withContainer("kafka", KafkaContainer(TOPIC))
-          .withConfig(kafkaClusterOptions())
-          .build())
+        RestateDeployerExtension(
+            RestateDeployer.Builder()
+                .withEnv(Containers.getRestateEnvironment())
+                .withServiceEndpoint(
+                    Containers.nodeServicesContainer(
+                        "node-counter", Containers.HANDLER_API_COUNTER_SERVICE_NAME))
+                .withContainer("kafka", KafkaContainer(TOPIC))
+                .withConfig(kafkaClusterOptions())
+                .build())
   }
 
   @Test
   fun handleKeyedEvent(
-    @InjectMetaURL metaURL: URL,
-    @InjectContainerPort(hostName = "kafka", port = KafkaContainer.EXTERNAL_PORT) kafkaPort: Int,
-    @InjectGrpcIngressURL httpEndpointURL: URL
+      @InjectMetaURL metaURL: URL,
+      @InjectContainerPort(hostName = "kafka", port = KafkaContainer.EXTERNAL_PORT) kafkaPort: Int,
+      @InjectGrpcIngressURL httpEndpointURL: URL
   ) {
     val counter = UUID.randomUUID().toString()
 
     // Create subscription
     val subscriptionsClient =
-      SubscriptionsClient(ObjectMapper(), metaURL.toString(), OkHttpClient())
+        SubscriptionsClient(ObjectMapper(), metaURL.toString(), OkHttpClient())
     assertThat(
-      subscriptionsClient.createSubscription(
-        CreateSubscriptionRequest(
-          source = "kafka://my-cluster/$TOPIC",
-          sink =
-          "service://${Containers.HANDLER_API_COUNTER_SERVICE_NAME}/handleEvent",
-          options = mapOf("auto.offset.reset" to "earliest"))))
-      .extracting { it.statusCode }
-      .isEqualTo(201)
+            subscriptionsClient.createSubscription(
+                CreateSubscriptionRequest(
+                    source = "kafka://my-cluster/$TOPIC",
+                    sink = "service://${Containers.HANDLER_API_COUNTER_SERVICE_NAME}/handleEvent",
+                    options = mapOf("auto.offset.reset" to "earliest"))))
+        .extracting { it.statusCode }
+        .isEqualTo(201)
 
     // Produce message to kafka
     produceMessageToKafka("PLAINTEXT://localhost:$kafkaPort", TOPIC, counter, listOf("1", "2", "3"))
@@ -158,30 +151,30 @@ class NodeHandlerAPIKafkaIngressTest {
     await untilAsserted
         {
           val req =
-            HttpRequest.newBuilder(
-              URI.create(
-                "${httpEndpointURL}${Containers.HANDLER_API_COUNTER_SERVICE_NAME}/get"))
-              .POST(Utils.jacksonBodyPublisher(mapOf("key" to counter)))
-              .headers("Content-Type", "application/json")
-              .build()
+              HttpRequest.newBuilder(
+                      URI.create(
+                          "${httpEndpointURL}${Containers.HANDLER_API_COUNTER_SERVICE_NAME}/get"))
+                  .POST(Utils.jacksonBodyPublisher(mapOf("key" to counter)))
+                  .headers("Content-Type", "application/json")
+                  .build()
 
           val response = client.send(req, Utils.jacksonBodyHandler())
 
           assertThat(response.statusCode()).isEqualTo(200)
           assertThat(response.headers().firstValue("content-type"))
-            .get()
-            .asString()
-            .contains("application/json")
+              .get()
+              .asString()
+              .contains("application/json")
           assertThat(response.body().get("response").get("counter").asInt()).isEqualTo(6)
         }
   }
 }
 
 private fun produceMessageToKafka(
-  bootstrapServer: String,
-  topic: String,
-  key: String,
-  values: List<String>
+    bootstrapServer: String,
+    topic: String,
+    key: String,
+    values: List<String>
 ) {
   val props = Properties()
   props["bootstrap.servers"] = bootstrapServer

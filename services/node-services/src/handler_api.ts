@@ -40,7 +40,7 @@ const handleEvent = async (ctx: restate.RpcContext, request: restate.Event) => {
 
   const value = (await ctx.get<number>(COUNTER_KEY)) || 0;
   const eventValue = parseInt(new TextDecoder().decode(request.body()));
-  console.log("Event value: " + eventValue)
+  console.log("Event value: " + eventValue);
   ctx.set(COUNTER_KEY, value + eventValue);
 };
 
