@@ -8,9 +8,7 @@ import {
   GetResponse,
   protobufPackage,
 } from "./generated/counter";
-import {
-  StringKeyedEvent
-} from "./generated/dev/restate/events";
+import { StringKeyedEvent } from "./generated/dev/restate/events";
 import { Empty } from "./generated/google/protobuf/empty";
 import { AwakeableHolderServiceClientImpl } from "./generated/awakeable_holder";
 
@@ -89,13 +87,13 @@ export class CounterService implements Counter {
     }
   }
 
-    async handleEvent(request: StringKeyedEvent): Promise<Empty> {
-      console.log("handleEvent: " + JSON.stringify(request));
-      const ctx = restate.useContext(this);
+  async handleEvent(request: StringKeyedEvent): Promise<Empty> {
+    console.log("handleEvent: " + JSON.stringify(request));
+    const ctx = restate.useContext(this);
 
-      const value = (await ctx.get<number>(COUNTER_KEY)) || 0;
-      ctx.set(COUNTER_KEY, value + parseInt(request.payload.toString()));
+    const value = (await ctx.get<number>(COUNTER_KEY)) || 0;
+    ctx.set(COUNTER_KEY, value + parseInt(request.payload.toString()));
 
-      return Empty.create({});
-    }
+    return Empty.create({});
+  }
 }

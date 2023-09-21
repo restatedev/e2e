@@ -104,6 +104,7 @@ object Containers {
       nodeServicesContainer("node-proxy", ProxyServiceGrpc.SERVICE_NAME).build()
 
   const val HANDLER_API_ECHO_TEST_SERVICE_NAME = "handlerapi.HandlerAPIEchoTest"
+  const val HANDLER_API_COUNTER_SERVICE_NAME = "handlerapi.Counter"
 
   val NODE_HANDLER_API_ECHO_TEST_SERVICE_SPEC =
       nodeServicesContainer("node-proxy", HANDLER_API_ECHO_TEST_SERVICE_NAME).build()
