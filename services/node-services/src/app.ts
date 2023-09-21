@@ -37,11 +37,19 @@ import {
   AwakeableHolderService,
   AwakeableHolderServiceFQN,
 } from "./awakeable_holder";
-import { HandlerAPIEchoTestFQN, HandlerApiEchoRouter } from "./handler_api";
+import {
+  HandlerAPIEchoTestFQN,
+  HandlerAPIEchoRouter,
+  CounterHandlerAPIFQN,
+  CounterHandlerAPIRouter,
+} from "./handler_api";
 
 let serverBuilder = restate.createServer();
 
-const services = new Map<string, restate.ServiceOpts | { router: any }>([
+const services = new Map<
+  string,
+  restate.ServiceOpts | { router: any } | { keyedRouter: any }
+>([
   [
     CounterServiceFQN,
     {
@@ -149,7 +157,13 @@ const services = new Map<string, restate.ServiceOpts | { router: any }>([
   [
     HandlerAPIEchoTestFQN,
     {
-      router: HandlerApiEchoRouter,
+      router: HandlerAPIEchoRouter,
+    },
+  ],
+  [
+    CounterHandlerAPIFQN,
+    {
+      keyedRouter: CounterHandlerAPIRouter,
     },
   ],
 ]);
@@ -171,11 +185,19 @@ for (let service of servicesEnv) {
     serverBuilder = serverBuilder.bindService(
       foundService as restate.ServiceOpts
     );
-  } else {
+  } else if (
+    (foundService as restate.UnKeyedRouter<any>).router !== undefined
+  ) {
     console.log("Mounting router " + service);
     serverBuilder = serverBuilder.bindRouter(
       service,
       (foundService as { router: any }).router
+    );
+  } else {
+    console.log("Mounting keyed router " + service);
+    serverBuilder = serverBuilder.bindKeyedRouter(
+      service,
+      (foundService as { keyedRouter: any }).keyedRouter
     );
   }
 }
