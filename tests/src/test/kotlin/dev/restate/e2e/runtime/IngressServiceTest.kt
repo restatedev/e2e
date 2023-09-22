@@ -5,7 +5,7 @@ import dev.restate.e2e.Utils.jacksonBodyHandler
 import dev.restate.e2e.Utils.jacksonBodyPublisher
 import dev.restate.e2e.services.counter.CounterGrpc
 import dev.restate.e2e.services.counter.CounterGrpc.CounterBlockingStub
-import dev.restate.e2e.services.counter.CounterProto
+import dev.restate.e2e.services.counter.CounterProto.CounterRequest
 import dev.restate.e2e.services.counter.counterAddRequest
 import dev.restate.e2e.utils.InjectBlockingStub
 import dev.restate.e2e.utils.InjectGrpcIngressURL
@@ -17,7 +17,7 @@ import java.net.URI
 import java.net.URL
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
-import java.util.UUID
+import java.util.*
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
@@ -72,8 +72,7 @@ class IngressServiceTest {
 
     await untilCallTo
         {
-          counterClient.get(
-              CounterProto.CounterRequest.newBuilder().setCounterName(counterName).build())
+          counterClient.get(CounterRequest.newBuilder().setCounterName(counterName).build())
         } matches
         { num ->
           num!!.value == 2L
@@ -93,7 +92,7 @@ class IngressServiceTest {
             invokeRequest {
               service = CounterGrpc.SERVICE_NAME
               method = CounterGrpc.getAddMethod().bareMethodName.toString()
-              argument =
+              pb =
                   counterAddRequest {
                         counterName = counterRandomName
                         value = 2
@@ -105,8 +104,7 @@ class IngressServiceTest {
 
     await untilCallTo
         {
-          counterClient.get(
-              CounterProto.CounterRequest.newBuilder().setCounterName(counterRandomName).build())
+          counterClient.get(CounterRequest.newBuilder().setCounterName(counterRandomName).build())
         } matches
         { num ->
           num!!.value == 2L

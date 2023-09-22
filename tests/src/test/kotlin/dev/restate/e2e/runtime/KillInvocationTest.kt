@@ -53,7 +53,7 @@ class KillInvocationTest {
                 invokeRequest {
                   service = CounterGrpc.SERVICE_NAME
                   method = CounterGrpc.getInfiniteIncrementLoopMethod().bareMethodName!!
-                  argument = counterRequest.toByteString()
+                  pb = counterRequest.toByteString()
                 })
             .id
 
