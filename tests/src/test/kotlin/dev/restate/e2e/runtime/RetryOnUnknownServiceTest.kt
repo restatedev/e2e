@@ -107,7 +107,7 @@ class RetryOnUnknownServiceTest {
         invokeRequest {
           service = ProxyServiceGrpc.SERVICE_NAME
           method = methodName
-          argument = request.toByteString()
+          pb = request.toByteString()
         })
 
     // Await until we got a try count of 2
