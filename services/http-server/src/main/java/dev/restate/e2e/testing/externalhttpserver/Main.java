@@ -75,7 +75,7 @@ public class Main implements HttpHandler {
       logger.info("Sending body: " + resolveAwakeableRequest.toPrettyString());
 
       HttpRequest req =
-          HttpRequest.newBuilder(URI.create("http://runtime:9090/dev.restate.Awakeables/Resolve"))
+          HttpRequest.newBuilder(URI.create("http://runtime:8080/dev.restate.Awakeables/Resolve"))
               .POST(HttpRequest.BodyPublishers.ofString(resolveAwakeableRequest.toPrettyString()))
               .headers("Content-Type", "application/json")
               .build();
