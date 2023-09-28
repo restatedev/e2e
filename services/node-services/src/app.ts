@@ -45,6 +45,7 @@ import {
   CounterHandlerAPIRouter,
 } from "./handler_api";
 import { EventHandlerFQN, EventHandlerService } from "./event_handler";
+import { startEmbeddedHandlerServer } from "./embedded_handler_api";
 
 let serverBuilder = restate.createServer();
 
@@ -177,39 +178,49 @@ const services = new Map<
     },
   ],
 ]);
+console.log("Known services: " + services.keys());
 
-console.log(services.keys());
-
-if (process.env.SERVICES === undefined) {
-  throw new Error("Cannot find SERVICES env");
+if (
+  process.env.SERVICES === undefined &&
+  process.env.EMBEDDED_HANDLER_PORT === undefined
+) {
+  throw new Error("Cannot find SERVICES nor EMBEDDED_HANDLER_PORT env");
 }
-const servicesEnv = process.env.SERVICES.split(",");
-console.log("Services to mount: " + servicesEnv);
-for (let service of servicesEnv) {
-  service = service.trim();
-  const foundService = services.get(service);
-  if (foundService === undefined) {
-    throw new Error("Unknown service '" + service + "'");
-  } else if ((foundService as restate.ServiceOpts).descriptor !== undefined) {
-    console.log("Mounting " + service);
-    serverBuilder = serverBuilder.bindService(
-      foundService as restate.ServiceOpts
-    );
-  } else if (
-    (foundService as restate.UnKeyedRouter<any>).router !== undefined
-  ) {
-    console.log("Mounting router " + service);
-    serverBuilder = serverBuilder.bindRouter(
-      service,
-      (foundService as { router: any }).router
-    );
-  } else {
-    console.log("Mounting keyed router " + service);
-    serverBuilder = serverBuilder.bindKeyedRouter(
-      service,
-      (foundService as { keyedRouter: any }).keyedRouter
-    );
+
+// If SERVICES env is set, start the restate services
+if (process.env.SERVICES !== undefined) {
+  const servicesEnv = process.env.SERVICES.split(",");
+  console.log("Services to mount: " + servicesEnv);
+  for (let service of servicesEnv) {
+    service = service.trim();
+    const foundService = services.get(service);
+    if (foundService === undefined) {
+      throw new Error("Unknown service '" + service + "'");
+    } else if ((foundService as restate.ServiceOpts).descriptor !== undefined) {
+      console.log("Mounting " + service);
+      serverBuilder = serverBuilder.bindService(
+        foundService as restate.ServiceOpts
+      );
+    } else if (
+      (foundService as restate.UnKeyedRouter<any>).router !== undefined
+    ) {
+      console.log("Mounting router " + service);
+      serverBuilder = serverBuilder.bindRouter(
+        service,
+        (foundService as { router: any }).router
+      );
+    } else {
+      console.log("Mounting keyed router " + service);
+      serverBuilder = serverBuilder.bindKeyedRouter(
+        service,
+        (foundService as { keyedRouter: any }).keyedRouter
+      );
+    }
   }
+
+  serverBuilder.listen();
 }
 
-serverBuilder.listen();
+if (process.env.EMBEDDED_HANDLER_PORT !== undefined) {
+  startEmbeddedHandlerServer(parseInt(process.env.EMBEDDED_HANDLER_PORT));
+}
