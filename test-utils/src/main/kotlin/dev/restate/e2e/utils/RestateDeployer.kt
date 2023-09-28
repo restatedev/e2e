@@ -3,6 +3,7 @@ package dev.restate.e2e.utils
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
+import dev.restate.e2e.utils.config.IngressOptions
 import dev.restate.e2e.utils.config.RestateConfigSchema
 import dev.restate.e2e.utils.meta.client.EndpointsClient
 import dev.restate.e2e.utils.meta.models.RegisterServiceEndpointRequest
@@ -10,6 +11,7 @@ import io.grpc.ManagedChannel
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder
 import java.io.File
 import java.lang.reflect.Method
+import java.net.URI
 import java.nio.file.Path
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -70,6 +72,8 @@ private constructor(
     private const val ALWAYS_PULL = "always"
 
     private const val MOUNT_STATE_DIRECTORY_ENV = "E2E_MOUNT_STATE_DIRECTORY"
+
+    private const val RESTATE_URI_ENV = "RESTATE_URI"
 
     private val logger = LogManager.getLogger(RestateDeployer::class.java)
 
@@ -192,8 +196,19 @@ private constructor(
   }
 
   fun deployAll(testReportDir: String) {
-    deployServices(testReportDir)
-    deployAdditionalContainers(testReportDir)
+    // Infer RESTATE_URI
+    val ingressPort =
+        URI(
+                "http",
+                configSchema?.worker?.ingressGrpc?.bindAddress ?: IngressOptions().bindAddress,
+                "/",
+                null,
+                null)
+            .port
+    val restateUri = "http://$RESTATE_RUNTIME:$ingressPort/"
+
+    deployServices(testReportDir, restateUri)
+    deployAdditionalContainers(testReportDir, restateUri)
     deployRuntime(testReportDir)
     deployProxy(testReportDir)
 
@@ -211,13 +226,14 @@ private constructor(
     writeEnvironmentReport(testReportDir)
   }
 
-  private fun deployServices(testReportDir: String) {
+  private fun deployServices(testReportDir: String, restateURI: String) {
     // Deploy services
     serviceContainers.forEach { (serviceName, serviceContainer) ->
       serviceContainer.second.networkAliases = ArrayList()
       serviceContainer.second
           .withNetwork(network)
           .withNetworkAliases(serviceName)
+          .withEnv(RESTATE_URI_ENV, restateURI)
           .withLogConsumer(ContainerLogger(testReportDir, serviceName))
           .start()
       logger.debug(
@@ -227,13 +243,14 @@ private constructor(
     }
   }
 
-  private fun deployAdditionalContainers(testReportDir: String) {
+  private fun deployAdditionalContainers(testReportDir: String, restateURI: String) {
     // Deploy additional containers
     additionalContainers.forEach { (containerHost, container) ->
       container.networkAliases = ArrayList()
       container
           .withNetwork(network)
           .withNetworkAliases(containerHost)
+          .withEnv(RESTATE_URI_ENV, restateURI)
           .withLogConsumer(ContainerLogger(testReportDir, containerHost))
           .start()
       logger.debug("Started container {} with image {}", containerHost, container.dockerImageName)

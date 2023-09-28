@@ -30,20 +30,22 @@ class EmbeddedHandlerApiTest {
                 .build())
   }
 
+  // TODO this test is an example, you can remove it
   @Test
   @Execution(ExecutionMode.CONCURRENT)
   fun example(
       @InjectContainerPort(
           hostName = EMBEDDED_HANDLER_SERVER_HOSTNAME, port = EMBEDDED_HANDLER_SERVER_PORT)
-      embeddedHandlerPort: Int
+      embeddedHandlerServerPort: Int
   ) {
     val client = HttpClient.newHttpClient()
 
-    val req = HttpRequest.newBuilder(URI.create("http://localhost:${embeddedHandlerPort}/")).build()
+    val req =
+        HttpRequest.newBuilder(URI.create("http://localhost:${embeddedHandlerServerPort}/")).build()
 
     val response = client.send(req, BodyHandlers.ofString())
 
     assertThat(response.statusCode()).isEqualTo(200)
-    assertThat(response.body()).isEqualTo("Hello World!")
+    assertThat(response.body()).isEqualTo("Hello Restate http://runtime:9090/")
   }
 }
