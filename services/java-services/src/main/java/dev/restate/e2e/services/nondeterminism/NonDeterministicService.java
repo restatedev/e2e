@@ -58,12 +58,12 @@ public class NonDeterministicService
       NonDeterminismProto.NonDeterministicRequest request, StreamObserver<Empty> responseObserver) {
     if (doLeftAction(request)) {
       restateContext()
-          .backgroundCall(
+          .oneWayCall(
               CounterGrpc.getGetMethod(),
               CounterRequest.newBuilder().setCounterName("abc").build());
     } else {
       restateContext()
-          .backgroundCall(
+          .oneWayCall(
               CounterGrpc.getResetMethod(),
               CounterRequest.newBuilder().setCounterName("abc").build());
     }
@@ -98,7 +98,7 @@ public class NonDeterministicService
   private void incrementCounterAndEnd(
       NonDeterminismProto.NonDeterministicRequest request, StreamObserver<Empty> responseObserver) {
     restateContext()
-        .backgroundCall(
+        .oneWayCall(
             CounterGrpc.getAddMethod(),
             CounterAddRequest.newBuilder().setCounterName(request.getKey()).setValue(1).build());
     responseObserver.onNext(Empty.getDefaultInstance());

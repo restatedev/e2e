@@ -38,7 +38,7 @@ public class UpgradeTestService extends UpgradeTestServiceGrpc.UpgradeTestServic
     // In v1 case we create an awakeable, we ask the AwakeableHolderService to hold it, and then we
     // await on it
     Awakeable<String> awakeable = ctx.awakeable(TypeTag.STRING_UTF8);
-    ctx.backgroundCall(
+    ctx.oneWayCall(
         AwakeableHolderServiceGrpc.getHoldMethod(),
         AwakeableHolderProto.HoldRequest.newBuilder()
             .setName("upgrade")
@@ -48,7 +48,7 @@ public class UpgradeTestService extends UpgradeTestServiceGrpc.UpgradeTestServic
 
     // Store the result in List service, because this service is invoked with
     // dev.restate.Ingress#Invoke
-    ctx.backgroundCall(
+    ctx.oneWayCall(
         ListServiceGrpc.getAppendMethod(),
         ListProto.AppendRequest.newBuilder().setListName("upgrade-test").setValue(version).build());
 

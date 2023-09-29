@@ -18,7 +18,7 @@ public class ProxyCounterService extends ProxyCounterGrpc.ProxyCounterImplBase
     logger.info("addInBackground invoked {}", request);
 
     // Increment the counter
-    restateContext().backgroundCall(CounterGrpc.getAddMethod(), request);
+    restateContext().oneWayCall(CounterGrpc.getAddMethod(), request);
 
     responseObserver.onNext(Empty.getDefaultInstance());
     responseObserver.onCompleted();
