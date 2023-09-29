@@ -24,7 +24,7 @@
     "meta": {
       "default": {
         "proxy_uri": null,
-        "rest_address": "0.0.0.0:8081",
+        "rest_address": "0.0.0.0:9070",
         "rest_concurrency_limit": 1000,
         "storage_path": "target/meta/"
       },
@@ -34,7 +34,7 @@
       "default": {
         "channel_size": 64,
         "ingress_grpc": {
-          "bind_address": "0.0.0.0:9090",
+          "bind_address": "0.0.0.0:8080",
           "concurrency_limit": 1000,
           "json": {
             "deserialize_deny_unknown_fields": true,
@@ -63,17 +63,23 @@
             "max_interval": "10s",
             "type": "Exponential"
           },
-          "tmp_dir": "/tmp/invoker-018a744ecb637c929166ca385bf5bddb"
+          "tmp_dir": "/tmp/invoker-018acbb0a3167eb698fc98eddce8ef84"
         },
         "kafka": {
           "clusters": {}
         },
         "partitions": 1024,
-        "storage_query": {
-          "bind_address": "0.0.0.0:5432",
+        "storage_query_datafusion": {
           "memory_limit": null,
           "query_parallelism": null,
           "temp_folder": null
+        },
+        "storage_query_http": {
+          "http_address": "0.0.0.0:9072",
+          "http_concurrency_limit": 1000
+        },
+        "storage_query_postgres": {
+          "bind_address": "0.0.0.0:9071"
         },
         "storage_rocksdb": {
           "cache_size": 1073741824,
@@ -212,7 +218,7 @@
         "rest_address": {
           "title": "Rest endpoint address",
           "description": "Address to bind for the Meta Operational REST APIs.",
-          "default": "0.0.0.0:8081",
+          "default": "0.0.0.0:9070",
           "type": "string"
         },
         "rest_concurrency_limit": {
@@ -257,14 +263,26 @@
           },
           "$ref": "#/definitions/TimerOptions"
         },
-        "storage_query": {
+        "storage_query_datafusion": {
           "default": {
-            "bind_address": "0.0.0.0:5432",
             "memory_limit": null,
             "query_parallelism": null,
             "temp_folder": null
           },
-          "$ref": "#/definitions/StorageQueryOptions"
+          "$ref": "#/definitions/StorageQueryDatafusionOptions"
+        },
+        "storage_query_http": {
+          "default": {
+            "http_address": "0.0.0.0:9072",
+            "http_concurrency_limit": 1000
+          },
+          "$ref": "#/definitions/StorageQueryHttpOptions"
+        },
+        "storage_query_postgres": {
+          "default": {
+            "bind_address": "0.0.0.0:9071"
+          },
+          "$ref": "#/definitions/StorageQueryPostgresOptions"
         },
         "storage_rocksdb": {
           "default": {
@@ -278,7 +296,7 @@
         },
         "ingress_grpc": {
           "default": {
-            "bind_address": "0.0.0.0:9090",
+            "bind_address": "0.0.0.0:8080",
             "concurrency_limit": 1000,
             "json": {
               "deserialize_deny_unknown_fields": true,
@@ -316,7 +334,7 @@
               "max_interval": "10s",
               "type": "Exponential"
             },
-            "tmp_dir": "/tmp/invoker-018a744ecb63731a89bcd30647753c6c"
+            "tmp_dir": "/tmp/invoker-018acbb0a3167f2087130a567cbbb214"
           },
           "$ref": "#/definitions/InvokerOptions"
         },
@@ -347,16 +365,10 @@
         }
       }
     },
-    "StorageQueryOptions": {
-      "title": "Storage query options",
+    "StorageQueryDatafusionOptions": {
+      "title": "Storage query datafusion options",
       "type": "object",
       "properties": {
-        "bind_address": {
-          "title": "Bind address",
-          "description": "The address to bind for the psql service.",
-          "default": "0.0.0.0:5432",
-          "type": "string"
-        },
         "memory_limit": {
           "title": "Memory limit",
           "description": "The total memory in bytes that can be used to preform sql queries",
@@ -387,6 +399,38 @@
           ],
           "format": "uint",
           "minimum": 0.0
+        }
+      }
+    },
+    "StorageQueryHttpOptions": {
+      "title": "Storage query http options",
+      "type": "object",
+      "properties": {
+        "http_address": {
+          "title": "Rest endpoint address",
+          "description": "Address to bind for the Storage HTTP APIs.",
+          "default": "0.0.0.0:9072",
+          "type": "string"
+        },
+        "http_concurrency_limit": {
+          "title": "Rest concurrency limit",
+          "description": "Concurrency limit for the Storage HTTP APIs.",
+          "default": 1000,
+          "type": "integer",
+          "format": "uint",
+          "minimum": 0.0
+        }
+      }
+    },
+    "StorageQueryPostgresOptions": {
+      "title": "Storage query postgres options",
+      "type": "object",
+      "properties": {
+        "bind_address": {
+          "title": "Bind address",
+          "description": "The address to bind for the psql service.",
+          "default": "0.0.0.0:9071",
+          "type": "string"
         }
       }
     },
@@ -441,7 +485,7 @@
         "bind_address": {
           "title": "Bind address",
           "description": "The address to bind for the ingress.",
-          "default": "0.0.0.0:9090",
+          "default": "0.0.0.0:8080",
           "type": "string"
         },
         "concurrency_limit": {
@@ -590,7 +634,7 @@
         "tmp_dir": {
           "title": "Temporary directory",
           "description": "Temporary directory to use for the invoker temporary files. If empty, the system temporary directory will be used instead.",
-          "default": "/tmp/invoker-018a744ecb637e87aae1050d63f0ef5c",
+          "default": "/tmp/invoker-018acbb0a3167cb994b305760ad93a70",
           "type": "string"
         },
         "concurrency_limit": {
