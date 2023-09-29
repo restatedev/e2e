@@ -5,24 +5,30 @@ import dev.restate.e2e.Utils.jacksonBodyHandler
 import dev.restate.e2e.Utils.jacksonBodyPublisher
 import dev.restate.e2e.services.counter.CounterGrpc
 import dev.restate.e2e.services.counter.CounterGrpc.CounterBlockingStub
-import dev.restate.e2e.services.counter.CounterProto.CounterRequest
+import dev.restate.e2e.services.counter.CounterProto.*
 import dev.restate.e2e.services.counter.counterAddRequest
+import dev.restate.e2e.services.counter.counterRequest
 import dev.restate.e2e.utils.InjectBlockingStub
 import dev.restate.e2e.utils.InjectGrpcIngressURL
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
 import dev.restate.generated.IngressGrpc.IngressBlockingStub
 import dev.restate.generated.invokeRequest
+import io.grpc.Metadata
+import io.grpc.stub.MetadataUtils
 import java.net.URI
 import java.net.URL
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.util.*
+import java.util.concurrent.TimeUnit
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
+import org.awaitility.kotlin.untilAsserted
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
@@ -109,5 +115,52 @@ class IngressServiceTest {
         { num ->
           num!!.value == 2L
         }
+  }
+
+  @Test
+  @Execution(ExecutionMode.CONCURRENT)
+  @Timeout(value = 15, unit = TimeUnit.SECONDS)
+  fun idempotentInvoke(@InjectBlockingStub counterClient: CounterBlockingStub) {
+    val counterRandomName = UUID.randomUUID().toString()
+    val myIdempotencyId = UUID.randomUUID().toString()
+
+    val requestMetadata = Metadata()
+    requestMetadata.put(
+        Metadata.Key.of("idempotency-key", Metadata.ASCII_STRING_MARSHALLER), myIdempotencyId)
+    requestMetadata.put(
+        Metadata.Key.of("idempotency-retention-period", Metadata.ASCII_STRING_MARSHALLER), "3")
+
+    val idempotentCounterClient =
+        counterClient.withInterceptors(MetadataUtils.newAttachHeadersInterceptor(requestMetadata))
+
+    val counterAdd = counterAddRequest {
+      counterName = counterRandomName
+      value = 2
+    }
+
+    // First call updates the value
+    val firstResponse = idempotentCounterClient.getAndAdd(counterAdd)
+    assertThat(firstResponse)
+        .returns(0, CounterUpdateResult::getOldValue)
+        .returns(2, CounterUpdateResult::getNewValue)
+
+    // Next call returns the same value
+    val secondResponse = idempotentCounterClient.getAndAdd(counterAdd)
+    assertThat(secondResponse)
+        .returns(0L, CounterUpdateResult::getOldValue)
+        .returns(2L, CounterUpdateResult::getNewValue)
+
+    // Await until the idempotency id is cleaned up and the next idempotency call updates the
+    // counter again
+    await untilAsserted
+        {
+          assertThat(idempotentCounterClient.getAndAdd(counterAdd))
+              .returns(2, CounterUpdateResult::getOldValue)
+              .returns(4, CounterUpdateResult::getNewValue)
+        }
+
+    // State in the counter service is now equal to 4
+    assertThat(counterClient.get(counterRequest { counterName = counterRandomName }))
+        .returns(4L, GetResponse::getValue)
   }
 }
