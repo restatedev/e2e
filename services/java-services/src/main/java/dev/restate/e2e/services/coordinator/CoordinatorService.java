@@ -75,7 +75,7 @@ public class CoordinatorService extends CoordinatorGrpc.CoordinatorImplBase
     // background calls as well as request-response calls have an absolute ordering that is defined
     // by their call order. In this concrete case, setValue is guaranteed to be executed before
     // getValue.
-    ctx.backgroundCall(
+    ctx.oneWayCall(
         ReceiverGrpc.getSetValueMethod(),
         SetValueRequest.newBuilder()
             .setKey(receiverUUID)
@@ -125,7 +125,7 @@ public class CoordinatorService extends CoordinatorGrpc.CoordinatorImplBase
               .setValue(String.valueOf(i))
               .build();
       if (request.getExecuteAsBackgroundCall(i)) {
-        ctx.backgroundCall(ListServiceGrpc.getAppendMethod(), appendRequest);
+        ctx.oneWayCall(ListServiceGrpc.getAppendMethod(), appendRequest);
       } else {
         collectedAwaitables.add(ctx.call(ListServiceGrpc.getAppendMethod(), appendRequest));
       }

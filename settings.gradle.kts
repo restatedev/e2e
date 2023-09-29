@@ -22,13 +22,11 @@ dependencyResolutionManagement {
 
   versionCatalogs {
     create("libs") {
-      version("protobuf", "3.21.9")
-      version("grpc", "1.50.2")
-      version("grpckt", "1.3.0")
-
+      version("protobuf", "3.24.3")
+      version("grpc", "1.58.0")
+      version("grpckt", "1.4.0")
       version("log4j", "2.19.0")
-
-      version("jackson", "2.13.3")
+      version("jackson", "2.15.2")
 
       version("junit-jupiter", "5.10.0")
       version("assertj", "3.24.2")
@@ -58,7 +56,7 @@ dependencyResolutionManagement {
       // Replace javax.annotations-api with tomcat annotations
       library("javax-annotation-api", "org.apache.tomcat", "annotations-api").version("6.0.53")
 
-      library("vertx-bom", "io.vertx:vertx-stack-depchain:4.4.0")
+      library("vertx-bom", "io.vertx:vertx-stack-depchain:4.4.5")
       library("vertx-core", "io.vertx", "vertx-core").withoutVersion()
 
       library("jackson-bom", "com.fasterxml.jackson", "jackson-bom").versionRef("jackson")
