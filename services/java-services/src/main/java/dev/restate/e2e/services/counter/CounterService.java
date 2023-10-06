@@ -3,7 +3,6 @@ package dev.restate.e2e.services.counter;
 import static dev.restate.e2e.services.counter.CounterProto.*;
 
 import com.google.protobuf.Empty;
-import dev.restate.generated.StringKeyedEvent;
 import dev.restate.sdk.blocking.RestateBlockingService;
 import dev.restate.sdk.core.StateKey;
 import io.grpc.Status;
@@ -88,16 +87,16 @@ public class CounterService extends CounterGrpc.CounterImplBase implements Resta
   }
 
   @Override
-  public void handleEvent(StringKeyedEvent request, StreamObserver<Empty> responseObserver) {
+  public void handleEvent(UpdateCounterEvent request, StreamObserver<Empty> responseObserver) {
     var ctx = restateContext();
 
     long counter = ctx.get(COUNTER_KEY).orElse(0L);
-    logger.info("Old counter '{}' value: {}", request.getKey(), counter);
+    logger.info("Old counter '{}' value: {}", request.getCounterName(), counter);
 
     counter += Long.parseLong(request.getPayload().toStringUtf8());
     ctx.set(COUNTER_KEY, counter);
 
-    logger.info("New counter '{}' value: {}", request.getKey(), counter);
+    logger.info("New counter '{}' value: {}", request.getCounterName(), counter);
 
     responseObserver.onNext(Empty.getDefaultInstance());
     responseObserver.onCompleted();

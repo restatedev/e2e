@@ -12,6 +12,7 @@ import { protoMetadata as sideEffectProtoMetadata } from "./generated/side_effec
 import { protoMetadata as proxyProtoMetadata } from "./generated/proxy";
 import { protoMetadata as rngProtoMetadata } from "./generated/rng";
 import { protoMetadata as awakeableHolderProtoMetadata } from "./generated/awakeable_holder";
+import { protoMetadata as eventHandlerProtoMetadata } from "./generated/event_handler";
 import { CounterService, CounterServiceFQN } from "./counter";
 import { ListService, ListServiceFQN } from "./collections";
 import { FailingService, FailingServiceFQN } from "./errors";
@@ -43,6 +44,7 @@ import {
   CounterHandlerAPIFQN,
   CounterHandlerAPIRouter,
 } from "./handler_api";
+import { EventHandlerFQN, EventHandlerService } from "./event_handler";
 
 let serverBuilder = restate.createServer();
 
@@ -164,6 +166,14 @@ const services = new Map<
     CounterHandlerAPIFQN,
     {
       keyedRouter: CounterHandlerAPIRouter,
+    },
+  ],
+  [
+    EventHandlerFQN,
+    {
+      descriptor: eventHandlerProtoMetadata,
+      service: "EventHandler",
+      instance: new EventHandlerService(),
     },
   ],
 ]);
