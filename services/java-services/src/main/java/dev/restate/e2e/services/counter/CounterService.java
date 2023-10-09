@@ -63,7 +63,10 @@ public class CounterService extends CounterGrpc.CounterImplBase implements Resta
   public void get(CounterRequest request, StreamObserver<GetResponse> responseObserver) {
     var ctx = restateContext();
 
-    GetResponse result = GetResponse.newBuilder().setValue(ctx.get(COUNTER_KEY).orElse(0L)).build();
+    long counter = ctx.get(COUNTER_KEY).orElse(0L);
+    logger.info("Get counter '{}' value: {}", request.getCounterName(), counter);
+
+    GetResponse result = GetResponse.newBuilder().setValue(counter).build();
 
     responseObserver.onNext(result);
     responseObserver.onCompleted();
