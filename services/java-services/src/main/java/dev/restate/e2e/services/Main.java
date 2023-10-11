@@ -20,8 +20,7 @@ import dev.restate.e2e.services.sideeffect.SideEffectService;
 import dev.restate.e2e.services.singletoncounter.SingletonCounterGrpc;
 import dev.restate.e2e.services.upgradetest.UpgradeTestService;
 import dev.restate.e2e.services.upgradetest.UpgradeTestServiceGrpc;
-import dev.restate.sdk.vertx.RestateHttpEndpointBuilder;
-import io.vertx.core.Vertx;
+import dev.restate.sdk.http.vertx.RestateHttpEndpointBuilder;
 import java.util.Objects;
 
 public class Main {
@@ -32,8 +31,7 @@ public class Main {
             System.getenv("SERVICES"),
             "SERVICES env variable needs to specify which service to run.");
 
-    RestateHttpEndpointBuilder restateHttpEndpointBuilder =
-        RestateHttpEndpointBuilder.builder(Vertx.vertx());
+    RestateHttpEndpointBuilder restateHttpEndpointBuilder = RestateHttpEndpointBuilder.builder();
     for (String service : env.split(",")) {
       switch (service.trim()) {
         case ListServiceGrpc.SERVICE_NAME:

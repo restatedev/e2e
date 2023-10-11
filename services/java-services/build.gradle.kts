@@ -10,9 +10,8 @@ plugins {
 }
 
 dependencies {
-  implementation(libs.restate.sdk.core)
-  implementation(libs.restate.sdk.blocking)
-  implementation(libs.restate.sdk.vertx)
+  implementation(libs.restate.sdk.java.blocking)
+  implementation(libs.restate.sdk.http.vertx)
   implementation(libs.restate.sdk.jackson)
 
   implementation(project(":contracts"))
@@ -25,9 +24,6 @@ dependencies {
   implementation(platform(libs.jackson.bom))
   implementation(libs.jackson.core)
   implementation(libs.jackson.databind)
-
-  implementation(platform(libs.vertx.bom))
-  implementation(libs.vertx.core)
 }
 
 jib {
