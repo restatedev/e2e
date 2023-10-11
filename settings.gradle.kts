@@ -37,9 +37,10 @@ dependencyResolutionManagement {
 
       // Libraries
       library("restate-sdk-core", "dev.restate.sdk", "sdk-core").versionRef("restate")
-      library("restate-sdk-blocking", "dev.restate.sdk", "sdk-blocking").versionRef("restate")
+      library("restate-sdk-java-blocking", "dev.restate.sdk", "sdk-java-blocking")
+          .versionRef("restate")
       library("restate-sdk-jackson", "dev.restate.sdk", "sdk-serde-jackson").versionRef("restate")
-      library("restate-sdk-vertx", "dev.restate.sdk", "sdk-vertx").versionRef("restate")
+      library("restate-sdk-http-vertx", "dev.restate.sdk", "sdk-http-vertx").versionRef("restate")
 
       library("protoc", "com.google.protobuf", "protoc").versionRef("protobuf")
       library("protobuf-java", "com.google.protobuf", "protobuf-java").versionRef("protobuf")
@@ -55,9 +56,6 @@ dependencyResolutionManagement {
 
       // Replace javax.annotations-api with tomcat annotations
       library("javax-annotation-api", "org.apache.tomcat", "annotations-api").version("6.0.53")
-
-      library("vertx-bom", "io.vertx:vertx-stack-depchain:4.4.5")
-      library("vertx-core", "io.vertx", "vertx-core").withoutVersion()
 
       library("jackson-bom", "com.fasterxml.jackson", "jackson-bom").versionRef("jackson")
       library("jackson-core", "com.fasterxml.jackson.core", "jackson-core").withoutVersion()
@@ -95,8 +93,8 @@ if (!System.getenv("JAVA_SDK_LOCAL_BUILD").isNullOrEmpty()) {
   includeBuild("../sdk-java") {
     dependencySubstitution {
       substitute(module("dev.restate.sdk:sdk-core")).using(project(":sdk-core"))
-      substitute(module("dev.restate.sdk:sdk-blocking")).using(project(":sdk-blocking"))
-      substitute(module("dev.restate.sdk:sdk-vertx")).using(project(":sdk-vertx"))
+      substitute(module("dev.restate.sdk:sdk-java-blocking")).using(project(":sdk-java-blocking"))
+      substitute(module("dev.restate.sdk:sdk-http-vertx")).using(project(":sdk-http-vertx"))
       substitute(module("dev.restate.sdk:sdk-serde-jackson")).using(project(":sdk-serde-jackson"))
     }
   }
