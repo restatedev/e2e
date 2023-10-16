@@ -4,10 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import dev.restate.e2e.services.counter.CounterGrpc
 import dev.restate.e2e.services.counter.CounterGrpc.CounterBlockingStub
 import dev.restate.e2e.services.counter.counterRequest
+import dev.restate.e2e.services.eventhandler.EventHandlerGrpc
 import dev.restate.e2e.utils.*
 import dev.restate.e2e.utils.config.*
 import dev.restate.e2e.utils.meta.client.SubscriptionsClient
 import dev.restate.e2e.utils.meta.models.CreateSubscriptionRequest
+import io.grpc.MethodDescriptor
 import java.net.URI
 import java.net.URL
 import java.net.http.HttpClient
@@ -24,8 +26,11 @@ import org.awaitility.kotlin.untilAsserted
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 
-private const val TOPIC = "my-topic"
+private const val COUNTER_TOPIC = "counter"
+private const val EVENT_HANDLER_TOPIC = "event-handler"
 
 private fun kafkaClusterOptions(): RestateConfigSchema {
   return RestateConfigSchema()
@@ -48,8 +53,10 @@ class JavaKafkaIngressTest : BaseKafkaIngressTest() {
         RestateDeployerExtension(
             RestateDeployer.Builder()
                 .withEnv(Containers.getRestateEnvironment())
-                .withServiceEndpoint(Containers.JAVA_COUNTER_SERVICE_SPEC)
-                .withContainer("kafka", KafkaContainer(TOPIC))
+                .withServiceEndpoint(
+                    Containers.javaServicesContainer(
+                        "java-counter", CounterGrpc.SERVICE_NAME, EventHandlerGrpc.SERVICE_NAME))
+                .withContainer("kafka", KafkaContainer(COUNTER_TOPIC, EVENT_HANDLER_TOPIC))
                 .withConfig(kafkaClusterOptions())
                 .build())
   }
@@ -62,8 +69,10 @@ class NodeKafkaIngressTest : BaseKafkaIngressTest() {
         RestateDeployerExtension(
             RestateDeployer.Builder()
                 .withEnv(Containers.getRestateEnvironment())
-                .withServiceEndpoint(Containers.NODE_COUNTER_SERVICE_SPEC)
-                .withContainer("kafka", KafkaContainer(TOPIC))
+                .withServiceEndpoint(
+                    Containers.nodeServicesContainer(
+                        "node-counter", CounterGrpc.SERVICE_NAME, EventHandlerGrpc.SERVICE_NAME))
+                .withContainer("kafka", KafkaContainer(COUNTER_TOPIC, EVENT_HANDLER_TOPIC))
                 .withConfig(kafkaClusterOptions())
                 .build())
   }
@@ -72,10 +81,33 @@ class NodeKafkaIngressTest : BaseKafkaIngressTest() {
 abstract class BaseKafkaIngressTest {
 
   @Test
-  fun handleKeyedEvent(
+  @Execution(ExecutionMode.CONCURRENT)
+  fun handleEventInCounterService(
       @InjectMetaURL metaURL: URL,
       @InjectContainerPort(hostName = "kafka", port = KafkaContainer.EXTERNAL_PORT) kafkaPort: Int,
       @InjectBlockingStub counterClient: CounterBlockingStub
+  ) {
+    counterEventsTest(
+        metaURL, kafkaPort, counterClient, COUNTER_TOPIC, CounterGrpc.getHandleEventMethod())
+  }
+
+  @Test
+  @Execution(ExecutionMode.CONCURRENT)
+  fun handleEventInEventHandler(
+      @InjectMetaURL metaURL: URL,
+      @InjectContainerPort(hostName = "kafka", port = KafkaContainer.EXTERNAL_PORT) kafkaPort: Int,
+      @InjectBlockingStub counterClient: CounterBlockingStub
+  ) {
+    counterEventsTest(
+        metaURL, kafkaPort, counterClient, EVENT_HANDLER_TOPIC, EventHandlerGrpc.getHandleMethod())
+  }
+
+  fun counterEventsTest(
+      metaURL: URL,
+      kafkaPort: Int,
+      counterClient: CounterBlockingStub,
+      topic: String,
+      methodDescriptor: MethodDescriptor<*, *>
   ) {
     val counter = UUID.randomUUID().toString()
 
@@ -85,15 +117,14 @@ abstract class BaseKafkaIngressTest {
     assertThat(
             subscriptionsClient.createSubscription(
                 CreateSubscriptionRequest(
-                    source = "kafka://my-cluster/$TOPIC",
-                    sink =
-                        "service://${CounterGrpc.SERVICE_NAME}/${CounterGrpc.getHandleEventMethod().bareMethodName}",
+                    source = "kafka://my-cluster/$topic",
+                    sink = "service://${methodDescriptor.fullMethodName}",
                     options = mapOf("auto.offset.reset" to "earliest"))))
         .extracting { it.statusCode }
         .isEqualTo(201)
 
     // Produce message to kafka
-    produceMessageToKafka("PLAINTEXT://localhost:$kafkaPort", TOPIC, counter, listOf("1", "2", "3"))
+    produceMessageToKafka("PLAINTEXT://localhost:$kafkaPort", topic, counter, listOf("1", "2", "3"))
 
     // Now wait for the update to be visible
     await untilCallTo
@@ -117,7 +148,7 @@ class NodeHandlerAPIKafkaIngressTest {
                 .withServiceEndpoint(
                     Containers.nodeServicesContainer(
                         "node-counter", Containers.HANDLER_API_COUNTER_SERVICE_NAME))
-                .withContainer("kafka", KafkaContainer(TOPIC))
+                .withContainer("kafka", KafkaContainer(COUNTER_TOPIC))
                 .withConfig(kafkaClusterOptions())
                 .build())
   }
@@ -136,14 +167,15 @@ class NodeHandlerAPIKafkaIngressTest {
     assertThat(
             subscriptionsClient.createSubscription(
                 CreateSubscriptionRequest(
-                    source = "kafka://my-cluster/$TOPIC",
+                    source = "kafka://my-cluster/$COUNTER_TOPIC",
                     sink = "service://${Containers.HANDLER_API_COUNTER_SERVICE_NAME}/handleEvent",
                     options = mapOf("auto.offset.reset" to "earliest"))))
         .extracting { it.statusCode }
         .isEqualTo(201)
 
     // Produce message to kafka
-    produceMessageToKafka("PLAINTEXT://localhost:$kafkaPort", TOPIC, counter, listOf("1", "2", "3"))
+    produceMessageToKafka(
+        "PLAINTEXT://localhost:$kafkaPort", COUNTER_TOPIC, counter, listOf("1", "2", "3"))
 
     val client = HttpClient.newHttpClient()
 

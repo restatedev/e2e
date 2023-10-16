@@ -5,6 +5,7 @@ import {
   CounterRequest,
   CounterAddRequest,
   CounterUpdateResult,
+  UpdateCounterEvent,
   GetResponse,
   protobufPackage,
 } from "./generated/counter";
@@ -87,7 +88,7 @@ export class CounterService implements Counter {
     }
   }
 
-  async handleEvent(request: StringKeyedEvent): Promise<Empty> {
+  async handleEvent(request: UpdateCounterEvent): Promise<Empty> {
     console.log("handleEvent: " + JSON.stringify(request));
     const ctx = restate.useContext(this);
 

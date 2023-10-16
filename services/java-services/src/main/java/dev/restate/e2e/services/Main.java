@@ -10,6 +10,8 @@ import dev.restate.e2e.services.counter.CounterService;
 import dev.restate.e2e.services.counter.SingletonCounterService;
 import dev.restate.e2e.services.errors.FailingService;
 import dev.restate.e2e.services.errors.FailingServiceGrpc;
+import dev.restate.e2e.services.eventhandler.EventHandlerGrpc;
+import dev.restate.e2e.services.eventhandler.EventHandlerService;
 import dev.restate.e2e.services.externalcall.RandomNumberListGeneratorGrpc;
 import dev.restate.e2e.services.externalcall.RandomNumberListGeneratorService;
 import dev.restate.e2e.services.nondeterminism.NonDeterministicService;
@@ -66,6 +68,9 @@ public class Main {
           break;
         case UpgradeTestServiceGrpc.SERVICE_NAME:
           restateHttpEndpointBuilder.withService(new UpgradeTestService());
+          break;
+        case EventHandlerGrpc.SERVICE_NAME:
+          restateHttpEndpointBuilder.withService(new EventHandlerService());
           break;
       }
     }
