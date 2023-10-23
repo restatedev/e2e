@@ -35,6 +35,20 @@ const get = async (
   return { counter };
 };
 
+const add = async (
+  ctx: restate.RpcContext,
+  key: string,
+  value: { value: number }
+): Promise<{ newCounter: number; oldCounter: number }> => {
+  console.log("add: " + JSON.stringify(key) + " " + JSON.stringify(value));
+
+  const oldCounter = (await ctx.get<number>(COUNTER_KEY)) || 0;
+  const newCounter = oldCounter + 1;
+  ctx.set<number>(COUNTER_KEY, newCounter);
+
+  return { oldCounter, newCounter };
+};
+
 const handleEvent = async (ctx: restate.RpcContext, request: restate.Event) => {
   console.log("handleEvent: " + JSON.stringify(request));
 
@@ -48,5 +62,10 @@ export const CounterHandlerAPIFQN = "handlerapi.Counter";
 
 export const CounterHandlerAPIRouter = restate.keyedRouter({
   get,
+  add,
   handleEvent: restate.keyedEventHandler(handleEvent),
 });
+
+export const CounterAPI: restate.ServiceApi<typeof CounterHandlerAPIRouter> = {
+  path: "handlerapi.Counter",
+};
