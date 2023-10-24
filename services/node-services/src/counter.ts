@@ -9,7 +9,6 @@ import {
   GetResponse,
   protobufPackage,
 } from "./generated/counter";
-import { StringKeyedEvent } from "./generated/dev/restate/events";
 import { Empty } from "./generated/google/protobuf/empty";
 import { AwakeableHolderServiceClientImpl } from "./generated/awakeable_holder";
 
