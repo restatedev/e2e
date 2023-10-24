@@ -26,6 +26,16 @@ dependencies {
 }
 
 tasks {
+  val defaultLogFilters =
+      mapOf(
+          "restate_invoker" to "trace",
+          "restate_ingress_kafka" to "trace",
+          "restate_worker::partition::services::non_deterministic::remote_context" to "trace",
+          "restate" to "debug")
+  val defaultLog =
+      (listOf("info") + defaultLogFilters.map { "${it.key}=${it.value}" }).joinToString(
+          separator = ",")
+
   fun baseRestateEnvironment(name: String) =
       mapOf(
           "CONTAINER_LOGS_DIR" to "$buildDir/test-results/$name/container-logs",
@@ -35,9 +45,7 @@ tasks {
               (if (System.getenv("RESTATE_RUNTIME_CONTAINER").isNullOrEmpty())
                   "ghcr.io/restatedev/restate:main"
               else System.getenv("RESTATE_RUNTIME_CONTAINER")),
-          "RUST_LOG" to
-              (System.getenv("RUST_LOG")
-                  ?: "info,restate_invoker=trace,restate_ingress_kafka=trace,restate=debug"),
+          "RUST_LOG" to (System.getenv("RUST_LOG") ?: defaultLog),
           "RUST_BACKTRACE" to "full")
 
   test {
