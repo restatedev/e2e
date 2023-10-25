@@ -12,7 +12,7 @@ ARG GH_PACKAGE_READ_ACCESS_TOKEN
 WORKDIR /usr/src/app
 
 # Install app dependencies
-COPY package*.json *.tgz .npmrc ./
+COPY package*.json *.tgz ./
 RUN npm ci --production
 
 COPY --from=build /usr/src/app/dist /usr/src/app/dist
