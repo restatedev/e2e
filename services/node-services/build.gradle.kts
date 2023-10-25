@@ -29,7 +29,6 @@ tasks.register<Copy>("prepareDockerBuild") {
           ".dockerignore",
           ".eslintignore",
           ".eslintrc.json",
-          ".npmrc",
           "package.json",
           "package-lock.json",
           "tsconfig.json",
