@@ -114,6 +114,8 @@ object Containers {
   fun embeddedHandlerServerContainer() =
       GenericContainer("restatedev/e2e-node-services")
           .withEnv("EMBEDDED_HANDLER_PORT", EMBEDDED_HANDLER_SERVER_PORT.toString())
+          .withEnv(
+              "HTTP_SERVER_ADDRESS", "http://${INT_SORTER_HTTP_SERVER_CONTAINER_SPEC.first}:8080")
           .withExposedPorts(EMBEDDED_HANDLER_SERVER_PORT)
 
   val EMBEDDED_HANDLER_SERVER_CONTAINER_SPEC =
