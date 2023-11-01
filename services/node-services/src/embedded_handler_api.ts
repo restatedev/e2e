@@ -4,7 +4,7 @@ import { CounterAPI } from "./handler_api";
 import { NumberSortHttpServerUtils } from "./number_sort_utils";
 
 // This contains the restate ingress address in the form http://hostname:port/
-const restateUri = process.env.RESTATE_URI!!;
+const restateUri = process.env.RESTATE_URI!;
 
 const app = express();
 app.use(express.json());
