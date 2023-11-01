@@ -39,7 +39,6 @@ tasks.register<Copy>("prepareDockerBuild") {
 tasks.create<DockerBuildImage>("dockerBuild") {
   dependsOn("prepareDockerBuild")
   images.add("restatedev/e2e-node-services")
-  buildArgs.put("GH_PACKAGE_READ_ACCESS_TOKEN", System.getenv("GH_PACKAGE_READ_ACCESS_TOKEN"))
 }
 
 tasks.named("check") {

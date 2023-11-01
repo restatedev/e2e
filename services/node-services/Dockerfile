@@ -8,7 +8,6 @@ RUN npm ci
 RUN npm run build
 
 FROM node:18 as prod
-ARG GH_PACKAGE_READ_ACCESS_TOKEN
 WORKDIR /usr/src/app
 
 # Install app dependencies

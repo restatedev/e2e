@@ -13,10 +13,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.Executors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,7 +28,8 @@ public class Main implements HttpHandler {
 
   private final ObjectMapper objectMapper = new ObjectMapper();
   private final HttpClient client = HttpClient.newHttpClient();
-  private final boolean encode_result_as_base64 = System.getenv("ENCODE_RESULT_AS_BASE64") != null;
+  private final boolean encodeResultAsBase64 = System.getenv("ENCODE_RESULT_AS_BASE64") != null;
+  private final String restateUri = Objects.requireNonNull(System.getenv("RESTATE_URI"));
 
   public static void main(String[] args) throws IOException {
     HttpServer server =
@@ -60,7 +58,7 @@ public class Main implements HttpHandler {
       // Resolve awakeable
       ObjectNode resolveAwakeableRequest = objectMapper.createObjectNode();
       resolveAwakeableRequest.set("id", objectMapper.valueToTree(replyId));
-      if (encode_result_as_base64) {
+      if (encodeResultAsBase64) {
         String json_string = objectMapper.valueToTree(inputIntegers).toPrettyString();
         resolveAwakeableRequest.set(
             "bytes_result",
@@ -75,7 +73,7 @@ public class Main implements HttpHandler {
       logger.info("Sending body: " + resolveAwakeableRequest.toPrettyString());
 
       HttpRequest req =
-          HttpRequest.newBuilder(URI.create("http://runtime:8080/dev.restate.Awakeables/Resolve"))
+          HttpRequest.newBuilder(URI.create(restateUri + "dev.restate.Awakeables/Resolve"))
               .POST(HttpRequest.BodyPublishers.ofString(resolveAwakeableRequest.toPrettyString()))
               .headers("Content-Type", "application/json")
               .build();
