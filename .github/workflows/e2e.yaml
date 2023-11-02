@@ -15,6 +15,11 @@ on:
         required: false
         default: ''
         type: string
+      sdkJavaCommit:
+        description: 'sdk-java commit'
+        required: false
+        default: ''
+        type: string
       restateCommit:
         description: 'restate commit'
         required: false
@@ -24,6 +29,11 @@ on:
     inputs:
       sdkTypescriptCommit:
         description: 'sdk-typescript commit'
+        required: false
+        default: ''
+        type: string
+      sdkJavaCommit:
+        description: 'sdk-java commit'
         required: false
         default: ''
         type: string
@@ -114,6 +124,17 @@ jobs:
         run: npm install restatedev-restate-sdk.tgz
         working-directory: services/node-services
 
+      # Setup sdk-java snapshot if necessary
+      - uses: actions/checkout@v3
+        if: ${{ inputs.sdkJavaCommit != '' }}
+        with:
+          repository: restatedev/sdk-java
+          # if we are in a workflow_call, use the e2e branch from the workflow call (usually main)
+          # otherwise, defer to the checkout actions default, which depends on the triggering event
+          ref: ${{ inputs.sdkJavaCommit }}
+          token: ${{ secrets.SDK_JAVA_CONTENTS_READ_TOKEN || secrets.GITHUB_TOKEN  }}
+          path: "../sdk-java"
+
       # Setup restate snapshot if necessary
       # Due to https://github.com/actions/upload-artifact/issues/53
       # We must use download-artifact to get artifacts created during *this* workflow run, ie by workflow call
@@ -149,6 +170,7 @@ jobs:
           E2E_IMAGE_PULL_POLICY: always
           E2E_VERIFICATION_SEED: ${{ github.run_id }}
           RESTATE_RUNTIME_CONTAINER: ${{ inputs.restateCommit != '' && 'localhost:5000/restatedev/restate:latest' || '' }}
+          JAVA_SDK_LOCAL_BUILD: ${{ inputs.sdkJavaCommit != '' && 'true' || '' }}
         with:
           arguments: -Djib.console=plain check
 
