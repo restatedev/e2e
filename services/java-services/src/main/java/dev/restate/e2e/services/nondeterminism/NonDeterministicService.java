@@ -10,7 +10,6 @@ import dev.restate.sdk.core.TypeTag;
 import io.grpc.stub.StreamObserver;
 import java.time.Duration;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class NonDeterministicService
@@ -79,14 +78,6 @@ public class NonDeterministicService
     } else {
       restateContext().set(STATE_B, "my-state");
     }
-    restateContext().sleep(Duration.ofMillis(100));
-    incrementCounterAndEnd(request, responseObserver);
-  }
-
-  @Override
-  public void setDifferentValue(
-      NonDeterminismProto.NonDeterministicRequest request, StreamObserver<Empty> responseObserver) {
-    restateContext().set(STATE_A, UUID.randomUUID().toString());
     restateContext().sleep(Duration.ofMillis(100));
     incrementCounterAndEnd(request, responseObserver);
   }
