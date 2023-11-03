@@ -15,6 +15,11 @@ on:
         required: false
         default: ''
         type: string
+      sdkJavaCommit:
+        description: 'sdk-java commit'
+        required: false
+        default: ''
+        type: string
       restateCommit:
         description: 'restate commit'
         required: false
@@ -24,6 +29,11 @@ on:
     inputs:
       sdkTypescriptCommit:
         description: 'sdk-typescript commit'
+        required: false
+        default: ''
+        type: string
+      sdkJavaCommit:
+        description: 'sdk-java commit'
         required: false
         default: ''
         type: string
@@ -64,6 +74,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           repository: restatedev/e2e
+          path: e2e
           # if we are in a workflow_call, use the e2e branch from the workflow call (usually main)
           # otherwise, defer to the checkout actions default, which depends on the triggering event
           ref: ${{ inputs.e2eRef || '' }}
@@ -96,7 +107,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: restatedev-restate-sdk
-          path: services/node-services
+          path: e2e/services/node-services
 
       # In the workflow dispatch case where the artifact was created in a previous run, we can download as normal
       - name: Download sdk-typescript snapshot from completed workflow
@@ -107,12 +118,24 @@ jobs:
           repo: restatedev/sdk-typescript
           commit: ${{ inputs.sdkTypescriptCommit }}
           name: restatedev-restate-sdk
-          path: services/node-services
+          path: e2e/services/node-services
 
       - name: Install sdk-typescript snapshot
         if: ${{ inputs.sdkTypescriptCommit != '' }}
         run: npm install restatedev-restate-sdk.tgz
-        working-directory: services/node-services
+        working-directory: e2e/services/node-services
+
+      # Setup sdk-java snapshot if necessary
+      - name: Checkout sdk-java repo
+        uses: actions/checkout@v3
+        if: ${{ inputs.sdkJavaCommit != '' }}
+        with:
+          repository: restatedev/sdk-java
+          # if we are in a workflow_call, use the e2e branch from the workflow call (usually main)
+          # otherwise, defer to the checkout actions default, which depends on the triggering event
+          ref: ${{ inputs.sdkJavaCommit }}
+          token: ${{ secrets.SDK_JAVA_CONTENTS_READ_TOKEN || secrets.GITHUB_TOKEN  }}
+          path: "sdk-java"
 
       # Setup restate snapshot if necessary
       # Due to https://github.com/actions/upload-artifact/issues/53
@@ -149,8 +172,10 @@ jobs:
           E2E_IMAGE_PULL_POLICY: always
           E2E_VERIFICATION_SEED: ${{ github.run_id }}
           RESTATE_RUNTIME_CONTAINER: ${{ inputs.restateCommit != '' && 'localhost:5000/restatedev/restate:latest' || '' }}
+          JAVA_SDK_LOCAL_BUILD: ${{ inputs.sdkJavaCommit != '' && 'true' || '' }}
         with:
           arguments: -Djib.console=plain check
+          build-root-directory: e2e
 
       # Upload container logs
       - uses: actions/upload-artifact@v3
@@ -158,15 +183,15 @@ jobs:
         with:
           name: container-logs
           path: |
-            tests/build/test-results/*/container-logs/**
-            tests/build/reports/tests/**
-            tests/build/test-results/*/*.xml
+            e2e/tests/build/test-results/*/container-logs/**
+            e2e/tests/build/reports/tests/**
+            e2e/tests/build/test-results/*/*.xml
 
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
           files: |
-            tests/build/test-results/*/*.xml
+            e2e/tests/build/test-results/*/*.xml
 
 
