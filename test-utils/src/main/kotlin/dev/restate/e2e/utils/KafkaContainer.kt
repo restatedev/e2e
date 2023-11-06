@@ -6,9 +6,8 @@ import org.testcontainers.utility.DockerImageName
 /**
  * This class overrides the testcontainers [org.testcontainers.containers.KafkaContainer] to
  * introduce two additional behaviours:
- *
  * * Fix the `advertised.listeners` override with the correct hostname (maybe we can upstream this
- * fix?)
+ *   fix?)
  * * Create topics after the container is started
  */
 class KafkaContainer(private vararg val topics: String) :

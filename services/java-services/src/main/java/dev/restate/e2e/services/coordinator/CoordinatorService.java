@@ -12,7 +12,7 @@ import dev.restate.e2e.services.receiver.ReceiverProto.SetValueRequest;
 import dev.restate.sdk.blocking.Awaitable;
 import dev.restate.sdk.blocking.RestateBlockingService;
 import dev.restate.sdk.blocking.RestateContext;
-import dev.restate.sdk.core.TypeTag;
+import dev.restate.sdk.core.CoreSerdes;
 import io.grpc.stub.StreamObserver;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,7 +48,7 @@ public class CoordinatorService extends CoordinatorGrpc.CoordinatorImplBase
   public void proxy(Empty request, StreamObserver<ProxyResponse> responseObserver) {
     RestateContext ctx = restateContext();
 
-    String key = ctx.sideEffect(TypeTag.STRING_UTF8, () -> UUID.randomUUID().toString());
+    String key = ctx.sideEffect(CoreSerdes.STRING_UTF8, () -> UUID.randomUUID().toString());
 
     var pong =
         ctx.call(ReceiverGrpc.getPingMethod(), PingRequest.newBuilder().setKey(key).build())
@@ -68,7 +68,7 @@ public class CoordinatorService extends CoordinatorGrpc.CoordinatorImplBase
 
     ctx.sleep(java.time.Duration.ofMillis(request.getSleepDuration().getMillis()));
 
-    var receiverUUID = ctx.sideEffect(TypeTag.STRING_UTF8, () -> UUID.randomUUID().toString());
+    var receiverUUID = ctx.sideEffect(CoreSerdes.STRING_UTF8, () -> UUID.randomUUID().toString());
 
     LOG.info("Send fire and forget call to {}", ReceiverGrpc.getServiceDescriptor().getName());
     // services should be invoked in the same order they were called. This means that
@@ -99,7 +99,7 @@ public class CoordinatorService extends CoordinatorGrpc.CoordinatorImplBase
   public void timeout(Duration request, StreamObserver<TimeoutResponse> responseObserver) {
     var timeoutOccurred = false;
 
-    var awakeable = restateContext().awakeable(TypeTag.VOID);
+    var awakeable = restateContext().awakeable(CoreSerdes.VOID);
     try {
       awakeable.await(java.time.Duration.ofMillis(request.getMillis()));
     } catch (TimeoutException te) {

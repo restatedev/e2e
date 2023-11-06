@@ -19,6 +19,7 @@ object Containers {
   // -- Generic containers and utils
 
   const val INT_SORTER_HTTP_SERVER_HOSTNAME = "e2e-http-server"
+
   fun intSorterHttpServerContainer() =
       GenericContainer("restatedev/e2e-http-server").withEnv("PORT", "8080").withExposedPorts(8080)
 
@@ -111,6 +112,7 @@ object Containers {
 
   const val EMBEDDED_HANDLER_SERVER_HOSTNAME = "node-embedded-handler"
   const val EMBEDDED_HANDLER_SERVER_PORT = 8080
+
   fun embeddedHandlerServerContainer() =
       GenericContainer("restatedev/e2e-node-services")
           .withEnv("EMBEDDED_HANDLER_PORT", EMBEDDED_HANDLER_SERVER_PORT.toString())

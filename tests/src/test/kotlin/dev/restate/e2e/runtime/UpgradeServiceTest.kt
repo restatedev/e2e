@@ -108,8 +108,8 @@ class UpgradeServiceTest {
   ) {
     inFlightInvocationtest(
         ingressClient, upgradeTestClient, awakeableHolderClient, listClient, metaURL) {
-      runtimeContainer.terminateAndRestart()
-    }
+          runtimeContainer.terminateAndRestart()
+        }
   }
 
   fun inFlightInvocationtest(

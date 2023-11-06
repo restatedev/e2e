@@ -9,7 +9,7 @@ import dev.restate.e2e.services.upgradetest.UpgradeTestProto.Result;
 import dev.restate.sdk.blocking.Awakeable;
 import dev.restate.sdk.blocking.RestateBlockingService;
 import dev.restate.sdk.blocking.RestateContext;
-import dev.restate.sdk.core.TypeTag;
+import dev.restate.sdk.core.CoreSerdes;
 import io.grpc.stub.StreamObserver;
 import java.util.Objects;
 
@@ -37,7 +37,7 @@ public class UpgradeTestService extends UpgradeTestServiceGrpc.UpgradeTestServic
 
     // In v1 case we create an awakeable, we ask the AwakeableHolderService to hold it, and then we
     // await on it
-    Awakeable<String> awakeable = ctx.awakeable(TypeTag.STRING_UTF8);
+    Awakeable<String> awakeable = ctx.awakeable(CoreSerdes.STRING_UTF8);
     ctx.oneWayCall(
         AwakeableHolderServiceGrpc.getHoldMethod(),
         AwakeableHolderProto.HoldRequest.newBuilder()

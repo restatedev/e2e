@@ -24,6 +24,7 @@ class SingletonCounterTest {
                 .withServiceEndpoint(Containers.JAVA_COUNTER_SERVICE_SPEC)
                 .build())
   }
+
   @Test
   fun singleton(@InjectBlockingStub counterClient: SingletonCounterBlockingStub) {
     for (i in 1..10) {
