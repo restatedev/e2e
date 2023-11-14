@@ -10,6 +10,7 @@ include(
 
 dependencyResolutionManagement {
   repositories {
+    mavenLocal()
     mavenCentral()
     maven {
       url = uri("https://maven.pkg.github.com/restatedev/sdk-java")

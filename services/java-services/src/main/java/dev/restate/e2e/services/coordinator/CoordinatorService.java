@@ -2,18 +2,16 @@ package dev.restate.e2e.services.coordinator;
 
 import static dev.restate.e2e.services.coordinator.CoordinatorProto.*;
 
-import com.google.protobuf.Empty;
 import dev.restate.e2e.services.collections.list.ListProto.AppendRequest;
-import dev.restate.e2e.services.collections.list.ListServiceGrpc;
+import dev.restate.e2e.services.collections.list.ListServiceRestate;
 import dev.restate.e2e.services.receiver.ReceiverGrpc;
 import dev.restate.e2e.services.receiver.ReceiverProto.GetValueRequest;
 import dev.restate.e2e.services.receiver.ReceiverProto.PingRequest;
 import dev.restate.e2e.services.receiver.ReceiverProto.SetValueRequest;
+import dev.restate.e2e.services.receiver.ReceiverRestate;
 import dev.restate.sdk.blocking.Awaitable;
-import dev.restate.sdk.blocking.RestateBlockingService;
 import dev.restate.sdk.blocking.RestateContext;
 import dev.restate.sdk.core.CoreSerdes;
-import io.grpc.stub.StreamObserver;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -22,102 +20,86 @@ import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class CoordinatorService extends CoordinatorGrpc.CoordinatorImplBase
-    implements RestateBlockingService {
+public class CoordinatorService extends CoordinatorRestate.CoordinatorRestateImplBase {
   private static final Logger LOG = LogManager.getLogger(CoordinatorService.class);
 
   @Override
-  public void sleep(Duration request, StreamObserver<Empty> responseObserver) {
-    manyTimers(ManyTimersRequest.newBuilder().addTimer(request).build(), responseObserver);
+  public void sleep(RestateContext context, Duration request) {
+    manyTimers(context, ManyTimersRequest.newBuilder().addTimer(request).build());
   }
 
   @Override
-  public void manyTimers(ManyTimersRequest request, StreamObserver<Empty> responseObserver) {
+  public void manyTimers(RestateContext context, ManyTimersRequest request) {
     LOG.info("many timers {}", request.getTimerList());
 
     awaitableAll(
         request.getTimerList().stream()
-            .map(d -> restateContext().timer(java.time.Duration.ofMillis(d.getMillis())))
+            .map(d -> context.timer(java.time.Duration.ofMillis(d.getMillis())))
             .collect(Collectors.toList()));
-
-    responseObserver.onNext(Empty.newBuilder().build());
-    responseObserver.onCompleted();
   }
 
   @Override
-  public void proxy(Empty request, StreamObserver<ProxyResponse> responseObserver) {
-    RestateContext ctx = restateContext();
-
-    String key = ctx.sideEffect(CoreSerdes.STRING_UTF8, () -> UUID.randomUUID().toString());
+  public ProxyResponse proxy(RestateContext context) {
+    String key = context.sideEffect(CoreSerdes.STRING_UTF8, () -> UUID.randomUUID().toString());
 
     var pong =
-        ctx.call(ReceiverGrpc.getPingMethod(), PingRequest.newBuilder().setKey(key).build())
-            .await();
+        ReceiverRestate.newClient().ping(PingRequest.newBuilder().setKey(key).build()).await();
 
-    responseObserver.onNext(ProxyResponse.newBuilder().setMessage(pong.getMessage()).build());
-    responseObserver.onCompleted();
+    return ProxyResponse.newBuilder().setMessage(pong.getMessage()).build();
   }
 
   @Override
-  public void complex(ComplexRequest request, StreamObserver<ComplexResponse> responseObserver) {
-    RestateContext ctx = restateContext();
-
+  public ComplexResponse complex(RestateContext context, ComplexRequest request) {
     LOG.info(
         "Starting complex coordination by sleeping for {} ms",
         request.getSleepDuration().getMillis());
 
-    ctx.sleep(java.time.Duration.ofMillis(request.getSleepDuration().getMillis()));
+    context.sleep(java.time.Duration.ofMillis(request.getSleepDuration().getMillis()));
 
-    var receiverUUID = ctx.sideEffect(CoreSerdes.STRING_UTF8, () -> UUID.randomUUID().toString());
+    var receiverUUID =
+        context.sideEffect(CoreSerdes.STRING_UTF8, () -> UUID.randomUUID().toString());
+    var receiverClient = ReceiverRestate.newClient();
 
     LOG.info("Send fire and forget call to {}", ReceiverGrpc.getServiceDescriptor().getName());
     // services should be invoked in the same order they were called. This means that
     // background calls as well as request-response calls have an absolute ordering that is defined
     // by their call order. In this concrete case, setValue is guaranteed to be executed before
     // getValue.
-    ctx.oneWayCall(
-        ReceiverGrpc.getSetValueMethod(),
-        SetValueRequest.newBuilder()
-            .setKey(receiverUUID)
-            .setValue(request.getRequestValue())
-            .build());
+    receiverClient
+        .oneWay()
+        .setValue(
+            SetValueRequest.newBuilder()
+                .setKey(receiverUUID)
+                .setValue(request.getRequestValue())
+                .build());
 
     LOG.info("Get current value from {}", ReceiverGrpc.getServiceDescriptor().getName());
     var response =
-        ctx.call(
-                ReceiverGrpc.getGetValueMethod(),
-                GetValueRequest.newBuilder().setKey(receiverUUID).build())
-            .await();
+        receiverClient.getValue(GetValueRequest.newBuilder().setKey(receiverUUID).build()).await();
 
     LOG.info("Finish complex coordination with response value '{}'", response.getValue());
-    responseObserver.onNext(
-        ComplexResponse.newBuilder().setResponseValue(response.getValue()).build());
-    responseObserver.onCompleted();
+    return ComplexResponse.newBuilder().setResponseValue(response.getValue()).build();
   }
 
   @Override
-  public void timeout(Duration request, StreamObserver<TimeoutResponse> responseObserver) {
+  public TimeoutResponse timeout(RestateContext context, Duration request) {
     var timeoutOccurred = false;
 
-    var awakeable = restateContext().awakeable(CoreSerdes.VOID);
+    var awakeable = context.awakeable(CoreSerdes.VOID);
     try {
       awakeable.await(java.time.Duration.ofMillis(request.getMillis()));
     } catch (TimeoutException te) {
       timeoutOccurred = true;
     }
 
-    responseObserver.onNext(
-        TimeoutResponse.newBuilder().setTimeoutOccurred(timeoutOccurred).build());
-    responseObserver.onCompleted();
+    return TimeoutResponse.newBuilder().setTimeoutOccurred(timeoutOccurred).build();
   }
 
   @Override
-  public void invokeSequentially(
-      InvokeSequentiallyRequest request, StreamObserver<Empty> responseObserver) {
-    RestateContext ctx = restateContext();
-
+  public void invokeSequentially(RestateContext context, InvokeSequentiallyRequest request) {
     List<Awaitable<?>> collectedAwaitables = new ArrayList<>();
 
+    var listClient = ListServiceRestate.newClient();
     for (int i = 0; i < request.getExecuteAsBackgroundCallCount(); i++) {
       var appendRequest =
           AppendRequest.newBuilder()
@@ -125,16 +107,13 @@ public class CoordinatorService extends CoordinatorGrpc.CoordinatorImplBase
               .setValue(String.valueOf(i))
               .build();
       if (request.getExecuteAsBackgroundCall(i)) {
-        ctx.oneWayCall(ListServiceGrpc.getAppendMethod(), appendRequest);
+        listClient.oneWay().append(appendRequest);
       } else {
-        collectedAwaitables.add(ctx.call(ListServiceGrpc.getAppendMethod(), appendRequest));
+        collectedAwaitables.add(listClient.append(appendRequest));
       }
     }
 
     awaitableAll(collectedAwaitables);
-
-    responseObserver.onNext(Empty.getDefaultInstance());
-    responseObserver.onCompleted();
   }
 
   private static void awaitableAll(List<Awaitable<?>> awaitables) {
