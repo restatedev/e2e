@@ -4,14 +4,14 @@ import com.google.protobuf.Empty;
 import dev.restate.e2e.services.receiver.ReceiverGrpc;
 import dev.restate.e2e.services.receiver.ReceiverProto.*;
 import dev.restate.sdk.blocking.RestateBlockingService;
+import dev.restate.sdk.core.CoreSerdes;
 import dev.restate.sdk.core.StateKey;
-import dev.restate.sdk.core.TypeTag;
 import io.grpc.stub.StreamObserver;
 
 public class ReceiverService extends ReceiverGrpc.ReceiverImplBase
     implements RestateBlockingService {
 
-  public static final StateKey<String> STATE_KEY = StateKey.of("my-state", TypeTag.STRING_UTF8);
+  public static final StateKey<String> STATE_KEY = StateKey.of("my-state", CoreSerdes.STRING_UTF8);
 
   @Override
   public void ping(PingRequest request, StreamObserver<Pong> responseObserver) {

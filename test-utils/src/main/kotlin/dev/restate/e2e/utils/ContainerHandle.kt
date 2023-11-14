@@ -86,7 +86,8 @@ internal constructor(
     return retryDockerClientCommand { dockerClient, containerId ->
           dockerClient.inspectContainerCmd(containerId).exec()
         }
-        .state.running
+        .state
+        .running
         ?: false
   }
 

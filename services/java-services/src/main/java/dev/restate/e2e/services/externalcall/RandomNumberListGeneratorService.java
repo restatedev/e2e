@@ -1,6 +1,5 @@
 package dev.restate.e2e.services.externalcall;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.restate.e2e.services.externalcall.RandomNumberListGeneratorProto.GenerateNumbersRequest;
@@ -8,9 +7,9 @@ import dev.restate.e2e.services.externalcall.RandomNumberListGeneratorProto.Gene
 import dev.restate.e2e.services.utils.NumberSortHttpServerUtils;
 import dev.restate.sdk.blocking.Awakeable;
 import dev.restate.sdk.blocking.RestateBlockingService;
-import dev.restate.sdk.core.TypeTag;
+import dev.restate.sdk.core.Serde;
+import dev.restate.sdk.core.serde.jackson.JacksonSerdes;
 import io.grpc.stub.StreamObserver;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -24,23 +23,8 @@ public class RandomNumberListGeneratorService
   private static final Logger LOG = LogManager.getLogger(RandomNumberListGeneratorService.class);
 
   private static final ObjectMapper jsonObjectMapper = new ObjectMapper();
-  private static final TypeReference<List<Integer>> INT_LIST_TYPE_REF = new TypeReference<>() {};
-  private static final TypeTag<List<Integer>> INT_LIST_TYPE_TAG =
-      TypeTag.using(
-          value -> {
-            try {
-              return jsonObjectMapper.writeValueAsBytes(value);
-            } catch (JsonProcessingException e) {
-              throw new RuntimeException(e);
-            }
-          },
-          b -> {
-            try {
-              return jsonObjectMapper.readValue(b, INT_LIST_TYPE_REF);
-            } catch (IOException e) {
-              throw new RuntimeException(e);
-            }
-          });
+  private static final Serde<List<Integer>> INT_LIST_SERDE =
+      JacksonSerdes.of(jsonObjectMapper, new TypeReference<>() {});
 
   @Override
   public void generateNumbers(
@@ -56,7 +40,7 @@ public class RandomNumberListGeneratorService
 
     var ctx = restateContext();
 
-    Awakeable<List<Integer>> awakeable = ctx.awakeable(INT_LIST_TYPE_TAG);
+    Awakeable<List<Integer>> awakeable = ctx.awakeable(INT_LIST_SERDE);
 
     ctx.sideEffect(
         () -> {

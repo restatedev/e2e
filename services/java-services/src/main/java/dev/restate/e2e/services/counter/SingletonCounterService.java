@@ -4,6 +4,7 @@ import com.google.protobuf.Empty;
 import dev.restate.e2e.services.singletoncounter.SingletonCounterGrpc;
 import dev.restate.e2e.services.singletoncounter.SingletonCounterProto.CounterNumber;
 import dev.restate.sdk.blocking.RestateBlockingService;
+import dev.restate.sdk.core.CoreSerdes;
 import dev.restate.sdk.core.StateKey;
 import io.grpc.stub.StreamObserver;
 import org.apache.logging.log4j.LogManager;
@@ -14,7 +15,7 @@ public class SingletonCounterService extends SingletonCounterGrpc.SingletonCount
 
   private static final Logger logger = LogManager.getLogger(SingletonCounterService.class);
 
-  private static final StateKey<Long> COUNTER_KEY = StateKey.of("counter", Long.TYPE);
+  private static final StateKey<Long> COUNTER_KEY = StateKey.of("counter", CoreSerdes.LONG);
 
   @Override
   public void reset(Empty request, StreamObserver<Empty> responseObserver) {

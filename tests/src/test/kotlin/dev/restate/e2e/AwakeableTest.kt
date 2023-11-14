@@ -64,6 +64,7 @@ abstract class BaseAwakeableTest {
             randomNumberListGenerator
                 .generateNumbers(GenerateNumbersRequest.newBuilder().setItemsNumber(10).build())
                 .numbersList)
-        .isSorted.hasSize(10)
+        .isSorted
+        .hasSize(10)
   }
 }

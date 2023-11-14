@@ -6,7 +6,7 @@ import dev.restate.e2e.services.errors.ErrorsProto.FailRequest;
 import dev.restate.e2e.services.utils.NumberSortHttpServerUtils;
 import dev.restate.sdk.blocking.Awakeable;
 import dev.restate.sdk.blocking.RestateBlockingService;
-import dev.restate.sdk.core.TypeTag;
+import dev.restate.sdk.core.CoreSerdes;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
@@ -40,7 +40,7 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase
     ctx.call(
             FailingServiceGrpc.getTerminallyFailingCallMethod(),
             request.toBuilder()
-                .setKey(ctx.sideEffect(TypeTag.STRING_UTF8, () -> UUID.randomUUID().toString()))
+                .setKey(ctx.sideEffect(CoreSerdes.STRING_UTF8, () -> UUID.randomUUID().toString()))
                 .build())
         .await();
 
@@ -56,7 +56,7 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase
 
     String finalMessage = "begin";
 
-    Awakeable<byte[]> awakeable = ctx.awakeable(TypeTag.BYTES);
+    Awakeable<byte[]> awakeable = ctx.awakeable(CoreSerdes.BYTES);
 
     try {
       ctx.sideEffect(
@@ -80,7 +80,8 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase
       ctx.call(
               FailingServiceGrpc.getTerminallyFailingCallMethod(),
               ErrorMessage.newBuilder()
-                  .setKey(ctx.sideEffect(TypeTag.STRING_UTF8, () -> UUID.randomUUID().toString()))
+                  .setKey(
+                      ctx.sideEffect(CoreSerdes.STRING_UTF8, () -> UUID.randomUUID().toString()))
                   .setErrorMessage("internal_call")
                   .build())
           .await();
@@ -113,7 +114,7 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase
     final int successAttempt =
         restateContext()
             .sideEffect(
-                Integer.class,
+                CoreSerdes.INT,
                 () -> {
                   final int currentAttempt = this.eventualSuccessSideEffectCalls.incrementAndGet();
 

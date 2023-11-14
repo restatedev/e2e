@@ -4,6 +4,7 @@ import static dev.restate.e2e.services.counter.CounterProto.*;
 
 import com.google.protobuf.Empty;
 import dev.restate.sdk.blocking.RestateBlockingService;
+import dev.restate.sdk.core.CoreSerdes;
 import dev.restate.sdk.core.StateKey;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
@@ -14,7 +15,7 @@ public class CounterService extends CounterGrpc.CounterImplBase implements Resta
 
   private static final Logger logger = LogManager.getLogger(CounterService.class);
 
-  private static final StateKey<Long> COUNTER_KEY = StateKey.of("counter", Long.TYPE);
+  private static final StateKey<Long> COUNTER_KEY = StateKey.of("counter", CoreSerdes.LONG);
 
   @Override
   public void reset(CounterRequest request, StreamObserver<Empty> responseObserver) {
