@@ -18,7 +18,7 @@ import org.junit.jupiter.api.parallel.ExecutionMode
 // So the last execution will have 1 as result because the last side effect will get executed and
 // then the response gets send back immediately.
 @Tag("only-always-suspending")
-class JavaSideEffectTest : BaseSideEffectTest(1) {
+class JavaSideEffectTest : BaseSideEffectTest() {
   companion object {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension =
@@ -37,7 +37,7 @@ class JavaSideEffectTest : BaseSideEffectTest(1) {
 // suspension and a replay.
 // During the last replay no side effects will be executed anymore.
 @Tag("only-always-suspending")
-class NodeSideEffectTest : BaseSideEffectTest(0) {
+class NodeSideEffectTest : BaseSideEffectTest() {
   companion object {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension =
@@ -51,7 +51,7 @@ class NodeSideEffectTest : BaseSideEffectTest(0) {
   }
 }
 
-abstract class BaseSideEffectTest(private val sideEffectExecutionCountExpectedValue: Int) {
+abstract class BaseSideEffectTest {
   @DisplayName("Side effect should wait on acknowledgements")
   @Test
   @Execution(ExecutionMode.CONCURRENT)
@@ -60,6 +60,6 @@ abstract class BaseSideEffectTest(private val sideEffectExecutionCountExpectedVa
             sideEffectStub.invokeSideEffects(
                 SideEffectProto.InvokeSideEffectsRequest.newBuilder().build()))
         .extracting { it.nonDeterministicInvocationCount }
-        .isEqualTo(sideEffectExecutionCountExpectedValue)
+        .isEqualTo(0)
   }
 }
