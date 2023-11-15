@@ -39,12 +39,6 @@ protobuf {
         id("grpckt")
       }
       it.builtins { id("kotlin") }
-
-      // Generate descriptors
-      it.generateDescriptorSet = true
-      it.descriptorSetOptions.includeImports = true
-      it.descriptorSetOptions.path =
-          "${rootProject.projectDir}/.restate/descriptors/${project.name}.descriptor"
     }
   }
 }

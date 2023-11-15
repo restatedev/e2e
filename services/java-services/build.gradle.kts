@@ -1,12 +1,14 @@
+import com.google.protobuf.gradle.id
+import com.google.protobuf.gradle.protobuf
 import dev.restate.e2e.gradle.util.hostArchitecture
 import dev.restate.e2e.gradle.util.testBaseImage
 
 plugins {
   java
-  idea
+  application
+  alias(libs.plugins.protobuf)
   alias(libs.plugins.shadowJar)
   alias(libs.plugins.jib)
-  application
 }
 
 dependencies {
@@ -15,6 +17,7 @@ dependencies {
   implementation(libs.restate.sdk.jackson)
 
   implementation(project(":contracts"))
+  protobuf(project(":contracts"))
 
   implementation(libs.log4j.api)
   implementation(libs.log4j.core)
@@ -24,6 +27,22 @@ dependencies {
   implementation(platform(libs.jackson.bom))
   implementation(libs.jackson.core)
   implementation(libs.jackson.databind)
+}
+
+protobuf {
+  protoc {
+    // The artifact spec for the Protobuf Compiler
+    artifact = "com.google.protobuf:protoc:${libs.versions.protobuf.get()}"
+  }
+
+  plugins {
+    id("restate") {
+      artifact =
+          "dev.restate.sdk:protoc-gen-restate-java-blocking:${libs.versions.restate.get()}:all@jar"
+    }
+  }
+
+  generateProtoTasks { ofSourceSet("main").forEach { it.plugins { id("restate") } } }
 }
 
 jib {
