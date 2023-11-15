@@ -1,5 +1,4 @@
 FROM node:18 AS build
-ARG GH_PACKAGE_READ_ACCESS_TOKEN
 
 WORKDIR /usr/src/app
 COPY . .
