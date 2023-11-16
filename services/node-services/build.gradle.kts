@@ -18,22 +18,19 @@ tasks.register<Copy>("prepareDockerBuild") {
   }
 
   from(".") {
-    include("src/**")
-    into("src")
-  }
-  from(".") {
-    include("*.tgz")
+    include(
+        "src/**",
+        "*.tgz",
+        ".dockerignore",
+        ".eslintignore",
+        ".eslintrc.json",
+        "package.json",
+        "package-lock.json",
+        "tsconfig.json",
+        "Dockerfile")
     into(".")
   }
-  from(
-          ".dockerignore",
-          ".eslintignore",
-          ".eslintrc.json",
-          "package.json",
-          "package-lock.json",
-          "tsconfig.json",
-          "Dockerfile")
-      .into("${buildDir}/docker")
+  destinationDir = file("${buildDir}/docker")
 }
 
 tasks.create<DockerBuildImage>("dockerBuild") {
