@@ -45,9 +45,15 @@ import {
   CounterHandlerAPIRouter,
 } from "./handler_api";
 import { EventHandlerFQN, EventHandlerService } from "./event_handler";
-import { startEmbeddedHandlerServer } from "./embedded_handler_api";
+import {startEmbeddedHandlerServer} from "./embedded_handler_api";
 
-let serverBuilder = restate.createServer();
+let serverBuilder;
+export let handler: (event: any) => Promise<any>;
+if (process.env.AWS_LAMBDA_FUNCTION_NAME) {
+  serverBuilder = restate.createLambdaApiGatewayHandler();
+} else {
+  serverBuilder = restate.createServer();
+}
 
 const services = new Map<
   string,
@@ -181,14 +187,14 @@ const services = new Map<
 console.log("Known services: " + services.keys());
 
 if (
-  process.env.SERVICES === undefined &&
-  process.env.EMBEDDED_HANDLER_PORT === undefined
+  !process.env.SERVICES &&
+  !process.env.EMBEDDED_HANDLER_PORT
 ) {
   throw new Error("Cannot find SERVICES nor EMBEDDED_HANDLER_PORT env");
 }
 
 // If SERVICES env is set, start the restate services
-if (process.env.SERVICES !== undefined) {
+if (process.env.SERVICES) {
   const servicesEnv = process.env.SERVICES.split(",");
   console.log("Services to mount: " + servicesEnv);
   for (let service of servicesEnv) {
@@ -218,9 +224,13 @@ if (process.env.SERVICES !== undefined) {
     }
   }
 
-  serverBuilder.listen();
+  if ("handle" in serverBuilder) {
+    handler = serverBuilder.handle();
+  } else {
+    serverBuilder.listen()
+  }
 }
 
-if (process.env.EMBEDDED_HANDLER_PORT !== undefined) {
+if (process.env.EMBEDDED_HANDLER_PORT) {
   startEmbeddedHandlerServer(parseInt(process.env.EMBEDDED_HANDLER_PORT));
 }
