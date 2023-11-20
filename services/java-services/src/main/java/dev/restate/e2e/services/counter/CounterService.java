@@ -6,7 +6,7 @@ import com.google.protobuf.Empty;
 import dev.restate.sdk.blocking.RestateBlockingService;
 import dev.restate.sdk.core.CoreSerdes;
 import dev.restate.sdk.core.StateKey;
-import io.grpc.Status;
+import dev.restate.sdk.core.TerminalException;
 import io.grpc.stub.StreamObserver;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -57,7 +57,7 @@ public class CounterService extends CounterGrpc.CounterImplBase implements Resta
 
     logger.info("New counter value: {}", counter);
 
-    throw Status.INTERNAL.withDescription(request.getCounterName()).asRuntimeException();
+    throw new TerminalException(TerminalException.Code.INTERNAL, request.getCounterName());
   }
 
   @Override
