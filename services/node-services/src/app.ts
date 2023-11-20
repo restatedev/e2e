@@ -49,7 +49,7 @@ import {startEmbeddedHandlerServer} from "./embedded_handler_api";
 
 let serverBuilder;
 export let handler: (event: any) => Promise<any>;
-if (process.env.LAMBDA === "true") {
+if (process.env.AWS_LAMBDA_FUNCTION_NAME) {
   serverBuilder = restate.createLambdaApiGatewayHandler();
 } else {
   serverBuilder = restate.createServer();
