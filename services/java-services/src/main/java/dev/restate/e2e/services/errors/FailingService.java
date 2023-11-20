@@ -7,8 +7,7 @@ import dev.restate.e2e.services.utils.NumberSortHttpServerUtils;
 import dev.restate.sdk.blocking.Awakeable;
 import dev.restate.sdk.blocking.RestateBlockingService;
 import dev.restate.sdk.core.CoreSerdes;
-import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
+import dev.restate.sdk.core.TerminalException;
 import io.grpc.stub.StreamObserver;
 import java.util.Arrays;
 import java.util.UUID;
@@ -28,7 +27,7 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase
   public void terminallyFailingCall(ErrorMessage request, StreamObserver<Empty> responseObserver) {
     LOG.info("Invoked fail");
 
-    throw Status.INTERNAL.withDescription(request.getErrorMessage()).asRuntimeException();
+    throw new TerminalException(TerminalException.Code.INTERNAL, request.getErrorMessage());
   }
 
   @Override
@@ -68,12 +67,12 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase
               throw new RuntimeException(
                   "Something went wrong while trying to invoke the external http server", e);
             }
-            throw Status.INTERNAL.withDescription("external_call").asRuntimeException();
+            throw new TerminalException(TerminalException.Code.INTERNAL, "external_call");
           });
 
       awakeable.await();
-    } catch (StatusRuntimeException e) {
-      finalMessage = finalMessage + ":" + e.getStatus().getDescription();
+    } catch (TerminalException e) {
+      finalMessage = finalMessage + ":" + e.getMessage();
     }
 
     try {
@@ -85,8 +84,8 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase
                   .setErrorMessage("internal_call")
                   .build())
           .await();
-    } catch (StatusRuntimeException e) {
-      finalMessage = finalMessage + ":" + e.getStatus().getDescription();
+    } catch (TerminalException e) {
+      finalMessage = finalMessage + ":" + e.getMessage();
     }
 
     responseObserver.onNext(ErrorMessage.newBuilder().setErrorMessage(finalMessage).build());
@@ -137,7 +136,8 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase
     restateContext()
         .sideEffect(
             () -> {
-              throw Status.INTERNAL.withDescription(request.getErrorMessage()).asRuntimeException();
+              throw new TerminalException(
+                  TerminalException.Code.INTERNAL, request.getErrorMessage());
             });
 
     throw new IllegalStateException("Should not be reached.");
