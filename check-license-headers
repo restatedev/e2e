@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+exit_code=0
+for file in $(find contracts/src services/node-services/src services/java-services/src test-utils/src tests/src  -name "*.kt" -o -name "*.ts" -o -name "*.java" -o -name "*.proto"); do
+    if ! head -9 "$file" | tr -d '\n' | grep -q '^// Copyright (c) [0-9]\{4\}\(-[0-9]\{4\}\)\? - Restate Software, Inc., Restate GmbH//// This file is part of the Restate e2e tests,// which are released under the MIT license.//// You can find a copy of the license in file LICENSE in the root// directory of this repository or package, or at// https://github.com/restatedev/e2e/blob/main/LICENSE$'; then
+        echo "$file does not contain valid license header"
+        exit_code=1
+    fi
+done
+exit $exit_code
