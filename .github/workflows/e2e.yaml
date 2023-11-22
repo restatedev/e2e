@@ -80,6 +80,9 @@ jobs:
           ref: ${{ inputs.e2eRef || '' }}
           token: ${{ secrets.E2E_CONTENTS_READ_TOKEN || secrets.GITHUB_TOKEN  }}
 
+      - name: "Check license headers"
+        run: "./check-license-headers"
+
       # Setup Java
       - uses: actions/setup-java@v3
         with:
