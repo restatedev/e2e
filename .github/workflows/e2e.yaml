@@ -82,6 +82,7 @@ jobs:
 
       - name: "Check license headers"
         run: "./check-license-headers"
+        working-directory: e2e
 
       # Setup Java
       - uses: actions/setup-java@v3
