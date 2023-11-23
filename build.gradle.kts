@@ -9,21 +9,52 @@
 
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
+import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform.getCurrentArchitecture
 
 plugins {
   java
   alias(libs.plugins.spotless)
   kotlin("jvm") version "1.8.21" apply false
   kotlin("plugin.serialization") version "1.8.21" apply false
+  alias(libs.plugins.jib) apply false
 }
 
 val restateVersion = libs.versions.restate.get()
 
-val testReport =
-    tasks.register<TestReport>("testReport") {
-      destinationDirectory.set(file("$buildDir/reports/tests/test"))
-      testResults.setFrom(subprojects.mapNotNull { it.tasks.findByPath("test") })
+// Configuration of jib container images parameters
+
+fun testHostArchitecture(): String {
+  val currentArchitecture = getCurrentArchitecture()
+
+  return if (currentArchitecture.isAmd64) {
+    "amd64"
+  } else {
+    when (currentArchitecture.name) {
+      "arm-v8",
+      "aarch64",
+      "arm64",
+      "aarch_64" -> "arm64"
+      else ->
+          throw IllegalArgumentException("Not supported host architecture: $currentArchitecture")
     }
+  }
+}
+
+fun testBaseImage(): String {
+  return when (testHostArchitecture()) {
+    "arm64" ->
+        "eclipse-temurin:17-jre@sha256:61c5fee7a5c40a1ca93231a11b8caf47775f33e3438c56bf3a1ea58b7df1ee1b"
+    "amd64" ->
+        "eclipse-temurin:17-jre@sha256:ff7a89fe868ba504b09f93e3080ad30a75bd3d4e4e7b3e037e91705f8c6994b3"
+    else ->
+        throw IllegalArgumentException("No image for host architecture: ${testHostArchitecture()}")
+  }
+}
+
+ext {
+  set("testHostArchitecture", testHostArchitecture())
+  set("testBaseImage", testBaseImage())
+}
 
 allprojects {
   apply(plugin = "java")
@@ -44,12 +75,7 @@ allprojects {
     }
   }
 
-  java.targetCompatibility = JavaVersion.VERSION_11
-  java.sourceCompatibility = JavaVersion.VERSION_11
-
-  tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-    kotlinOptions.jvmTarget = JavaVersion.VERSION_11.toString()
-  }
+  java { toolchain { languageVersion = JavaLanguageVersion.of(11) } }
 }
 
 buildscript {
@@ -61,6 +87,12 @@ subprojects {
   apply(plugin = "java")
   apply(plugin = "kotlin")
   apply(plugin = "com.diffplug.spotless")
+
+  val testReport =
+      tasks.register<TestReport>("testReport") {
+        destinationDirectory.set(file("${layout.buildDirectory}/reports/tests/test"))
+        testResults.setFrom(subprojects.mapNotNull { it.tasks.findByPath("test") })
+      }
 
   tasks.withType<Test> {
     useJUnitPlatform()

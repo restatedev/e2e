@@ -19,15 +19,9 @@ include(
 
 dependencyResolutionManagement {
   repositories {
-    mavenLocal()
     mavenCentral()
-    maven {
-      url = uri("https://maven.pkg.github.com/restatedev/sdk-java")
-      credentials {
-        username = System.getenv("GH_PACKAGE_READ_ACCESS_USER")
-        password = System.getenv("GH_PACKAGE_READ_ACCESS_TOKEN")
-      }
-    }
+    // OSSRH Snapshots repo
+    maven { url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/") }
   }
 
   versionCatalogs {
@@ -46,11 +40,10 @@ dependencyResolutionManagement {
       version("errorprone", "2.18.0")
 
       // Libraries
-      library("restate-sdk-core", "dev.restate.sdk", "sdk-core").versionRef("restate")
-      library("restate-sdk-java-blocking", "dev.restate.sdk", "sdk-java-blocking")
-          .versionRef("restate")
-      library("restate-sdk-jackson", "dev.restate.sdk", "sdk-serde-jackson").versionRef("restate")
-      library("restate-sdk-http-vertx", "dev.restate.sdk", "sdk-http-vertx").versionRef("restate")
+      library("restate-sdk-core", "dev.restate", "sdk-core").versionRef("restate")
+      library("restate-sdk-java-blocking", "dev.restate", "sdk-java-blocking").versionRef("restate")
+      library("restate-sdk-jackson", "dev.restate", "sdk-serde-jackson").versionRef("restate")
+      library("restate-sdk-http-vertx", "dev.restate", "sdk-http-vertx").versionRef("restate")
 
       library("protoc", "com.google.protobuf", "protoc").versionRef("protobuf")
       library("protobuf-java", "com.google.protobuf", "protobuf-java").versionRef("protobuf")
@@ -102,10 +95,10 @@ dependencyResolutionManagement {
 if (!System.getenv("JAVA_SDK_LOCAL_BUILD").isNullOrEmpty()) {
   includeBuild("../sdk-java") {
     dependencySubstitution {
-      substitute(module("dev.restate.sdk:sdk-core")).using(project(":sdk-core"))
-      substitute(module("dev.restate.sdk:sdk-java-blocking")).using(project(":sdk-java-blocking"))
-      substitute(module("dev.restate.sdk:sdk-http-vertx")).using(project(":sdk-http-vertx"))
-      substitute(module("dev.restate.sdk:sdk-serde-jackson")).using(project(":sdk-serde-jackson"))
+      substitute(module("dev.restate:sdk-core")).using(project(":sdk-core"))
+      substitute(module("dev.restate:sdk-java-blocking")).using(project(":sdk-java-blocking"))
+      substitute(module("dev.restate:sdk-http-vertx")).using(project(":sdk-http-vertx"))
+      substitute(module("dev.restate:sdk-serde-jackson")).using(project(":sdk-serde-jackson"))
     }
   }
 }

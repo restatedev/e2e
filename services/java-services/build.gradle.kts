@@ -9,8 +9,6 @@
 
 import com.google.protobuf.gradle.id
 import com.google.protobuf.gradle.protobuf
-import dev.restate.e2e.gradle.util.hostArchitecture
-import dev.restate.e2e.gradle.util.testBaseImage
 
 plugins {
   java
@@ -47,7 +45,7 @@ protobuf {
   plugins {
     id("restate") {
       artifact =
-          "dev.restate.sdk:protoc-gen-restate-java-blocking:${libs.versions.restate.get()}:all@jar"
+          "dev.restate:protoc-gen-restate-java-blocking:${libs.versions.restate.get()}:all@jar"
     }
   }
 
@@ -56,12 +54,12 @@ protobuf {
 
 jib {
   to.image = "restatedev/e2e-java-services"
-  from.image = testBaseImage()
+  from.image = parent!!.parent!!.ext.get("testBaseImage").toString()
 
   from {
     platforms {
       platform {
-        architecture = hostArchitecture()
+        architecture = parent!!.parent!!.ext.get("testHostArchitecture").toString()
         os = "linux"
       }
     }
