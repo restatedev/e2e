@@ -7,9 +7,6 @@
 // directory of this repository or package, or at
 // https://github.com/restatedev/e2e/blob/main/LICENSE
 
-import dev.restate.e2e.gradle.util.hostArchitecture
-import dev.restate.e2e.gradle.util.testBaseImage
-
 plugins {
   java
   idea
@@ -34,12 +31,12 @@ dependencies {
 
 jib {
   to.image = "restatedev/e2e-http-server"
-  from.image = testBaseImage()
+  from.image = parent!!.parent!!.ext.get("testBaseImage").toString()
 
   from {
     platforms {
       platform {
-        architecture = hostArchitecture()
+        architecture = parent!!.parent!!.ext.get("testHostArchitecture").toString()
         os = "linux"
       }
     }

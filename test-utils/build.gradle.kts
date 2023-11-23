@@ -11,7 +11,6 @@ plugins {
   java
   kotlin("jvm")
   kotlin("plugin.serialization")
-  `maven-publish`
   id("com.github.jk1.dependency-license-report") version "2.1"
   id("org.jsonschema2pojo") version "1.2.1"
 }
@@ -60,8 +59,6 @@ sourceSets {
   }
 }
 
-java { withSourcesJar() }
-
 jsonSchema2Pojo {
   setSource(files("$projectDir/src/main/json"))
   targetPackage = "dev.restate.e2e.utils.config"
@@ -106,28 +103,6 @@ tasks {
   withType<Jar> { dependsOn(generateCode, generateJsonSchema2Pojo) }
 
   check { dependsOn(checkLicense) }
-}
-
-publishing {
-  repositories {
-    maven {
-      name = "GitHubPackages"
-      url = uri("https://maven.pkg.github.com/restatedev/e2e")
-      credentials {
-        username = System.getenv("GITHUB_ACTOR")
-        password = System.getenv("GITHUB_TOKEN")
-      }
-    }
-  }
-
-  publications {
-    register<MavenPublication>("maven") {
-      groupId = "dev.restate.testing"
-      artifactId = "e2e-utils"
-
-      from(components["java"])
-    }
-  }
 }
 
 licenseReport {
