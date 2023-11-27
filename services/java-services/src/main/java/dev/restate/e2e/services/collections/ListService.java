@@ -12,9 +12,9 @@ package dev.restate.e2e.services.collections;
 import com.google.protobuf.Empty;
 import dev.restate.e2e.services.collections.list.ListProto;
 import dev.restate.e2e.services.collections.list.ListServiceGrpc;
-import dev.restate.sdk.blocking.RestateBlockingService;
-import dev.restate.sdk.core.CoreSerdes;
-import dev.restate.sdk.core.StateKey;
+import dev.restate.sdk.RestateBlockingService;
+import dev.restate.sdk.common.CoreSerdes;
+import dev.restate.sdk.common.StateKey;
 import io.grpc.stub.StreamObserver;
 
 public class ListService extends ListServiceGrpc.ListServiceImplBase

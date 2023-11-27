@@ -39,7 +39,7 @@ tasks.register<Copy>("prepareDockerBuild") {
         "Dockerfile")
     into(".")
   }
-  destinationDir = file("${buildDir}/docker")
+  destinationDir = file("${layout.buildDirectory}/docker")
 }
 
 tasks.create<DockerBuildImage>("dockerBuild") {
