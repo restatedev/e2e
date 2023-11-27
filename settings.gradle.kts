@@ -40,8 +40,8 @@ dependencyResolutionManagement {
       version("errorprone", "2.18.0")
 
       // Libraries
-      library("restate-sdk-core", "dev.restate", "sdk-core").versionRef("restate")
-      library("restate-sdk-java-blocking", "dev.restate", "sdk-java-blocking").versionRef("restate")
+      library("restate-sdk-common", "dev.restate", "sdk-common").versionRef("restate")
+      library("restate-sdk-api", "dev.restate", "sdk-api").versionRef("restate")
       library("restate-sdk-jackson", "dev.restate", "sdk-serde-jackson").versionRef("restate")
       library("restate-sdk-http-vertx", "dev.restate", "sdk-http-vertx").versionRef("restate")
 

@@ -13,7 +13,7 @@ import com.google.protobuf.Empty;
 import dev.restate.e2e.services.counter.CounterGrpc;
 import dev.restate.e2e.services.counter.CounterProto;
 import dev.restate.generated.Event;
-import dev.restate.sdk.blocking.RestateBlockingService;
+import dev.restate.sdk.RestateBlockingService;
 import io.grpc.stub.StreamObserver;
 
 public class EventHandlerService extends EventHandlerGrpc.EventHandlerImplBase

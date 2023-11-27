@@ -50,7 +50,7 @@ dependencies {
 }
 
 val apiFile = "$projectDir/src/main/openapi/meta.json"
-val generatedDir = "$buildDir/generated"
+val generatedDir = layout.buildDirectory.dir("generated").get().asFile.absolutePath
 
 sourceSets {
   main {

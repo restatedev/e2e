@@ -47,7 +47,12 @@ tasks {
 
   fun baseRestateEnvironment(name: String) =
       mapOf(
-          "CONTAINER_LOGS_DIR" to "$buildDir/test-results/$name/container-logs",
+          "CONTAINER_LOGS_DIR" to
+              layout.buildDirectory
+                  .dir("test-results/$name/container-logs")
+                  .get()
+                  .asFile
+                  .absolutePath,
           // We don't need many partitions, fewer partitions will occupy less test resources
           "RESTATE_WORKER__PARTITIONS" to "10",
           "RESTATE_RUNTIME_CONTAINER" to

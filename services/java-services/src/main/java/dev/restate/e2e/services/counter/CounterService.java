@@ -12,10 +12,10 @@ package dev.restate.e2e.services.counter;
 import static dev.restate.e2e.services.counter.CounterProto.*;
 
 import com.google.protobuf.Empty;
-import dev.restate.sdk.blocking.RestateBlockingService;
-import dev.restate.sdk.core.CoreSerdes;
-import dev.restate.sdk.core.StateKey;
-import dev.restate.sdk.core.TerminalException;
+import dev.restate.sdk.RestateBlockingService;
+import dev.restate.sdk.common.CoreSerdes;
+import dev.restate.sdk.common.StateKey;
+import dev.restate.sdk.common.TerminalException;
 import io.grpc.stub.StreamObserver;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

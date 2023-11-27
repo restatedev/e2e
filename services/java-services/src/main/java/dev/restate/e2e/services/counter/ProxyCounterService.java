@@ -12,7 +12,7 @@ package dev.restate.e2e.services.counter;
 import static dev.restate.e2e.services.counter.CounterProto.CounterAddRequest;
 
 import com.google.protobuf.Empty;
-import dev.restate.sdk.blocking.RestateBlockingService;
+import dev.restate.sdk.RestateBlockingService;
 import io.grpc.stub.StreamObserver;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

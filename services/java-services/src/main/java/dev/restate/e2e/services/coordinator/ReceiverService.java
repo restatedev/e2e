@@ -12,9 +12,9 @@ package dev.restate.e2e.services.coordinator;
 import com.google.protobuf.Empty;
 import dev.restate.e2e.services.receiver.ReceiverGrpc;
 import dev.restate.e2e.services.receiver.ReceiverProto.*;
-import dev.restate.sdk.blocking.RestateBlockingService;
-import dev.restate.sdk.core.CoreSerdes;
-import dev.restate.sdk.core.StateKey;
+import dev.restate.sdk.RestateBlockingService;
+import dev.restate.sdk.common.CoreSerdes;
+import dev.restate.sdk.common.StateKey;
 import io.grpc.stub.StreamObserver;
 
 public class ReceiverService extends ReceiverGrpc.ReceiverImplBase

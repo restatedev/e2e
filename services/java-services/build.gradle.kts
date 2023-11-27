@@ -19,7 +19,7 @@ plugins {
 }
 
 dependencies {
-  implementation(libs.restate.sdk.java.blocking)
+  implementation(libs.restate.sdk.api)
   implementation(libs.restate.sdk.http.vertx)
   implementation(libs.restate.sdk.jackson)
 
@@ -44,8 +44,7 @@ protobuf {
 
   plugins {
     id("restate") {
-      artifact =
-          "dev.restate:protoc-gen-restate-java-blocking:${libs.versions.restate.get()}:all@jar"
+      artifact = "dev.restate:protoc-gen-restate:${libs.versions.restate.get()}:all@jar"
     }
   }
 

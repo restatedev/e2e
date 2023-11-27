@@ -9,8 +9,8 @@
 
 package dev.restate.e2e.services.sideeffect;
 
-import dev.restate.sdk.blocking.RestateBlockingService;
-import dev.restate.sdk.blocking.RestateContext;
+import dev.restate.sdk.RestateBlockingService;
+import dev.restate.sdk.RestateContext;
 import io.grpc.stub.StreamObserver;
 import java.util.concurrent.atomic.AtomicInteger;
 

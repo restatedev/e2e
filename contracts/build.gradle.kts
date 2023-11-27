@@ -25,7 +25,7 @@ dependencies {
   api(libs.grpc.protobuf)
   api(libs.grpc.kotlin.stub) { exclude("javax.annotation", "javax.annotation-api") }
 
-  protobuf(libs.restate.sdk.core)
+  protobuf(libs.restate.sdk.common)
 }
 
 protobuf {
