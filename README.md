@@ -10,14 +10,6 @@ E2E tests for Restate
 * `tests` contains the test code
 * `contracts` contains the different protobuf definitions, used by services and tests
 
-## Setup local env
-
-To run locally, you need to login to the container registry using podman/docker (the command is the same for both):
-
-```shell
-docker login ghcr.io --username $GH_PACKAGE_READ_ACCESS_USER --password $GH_PACKAGE_READ_ACCESS_TOKEN
-```
-
 ## Run tests
 
 To run tests, just execute:

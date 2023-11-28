@@ -91,13 +91,6 @@ jobs:
           node-version: "18.x"
           registry-url: 'https://registry.npmjs.org'
 
-      - name: Log in to the Container registry
-        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
-        with:
-          registry: ghcr.io
-          username: ${{ secrets.GH_PACKAGE_READ_ACCESS_USER }}
-          password: ${{ secrets.GH_PACKAGE_READ_ACCESS_TOKEN }}
-
       # Setup sdk-typescript snapshot if necessary
       # Due to https://github.com/actions/upload-artifact/issues/53
       # We must use download-artifact to get artifacts created during *this* workflow run, ie by workflow call
