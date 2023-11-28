@@ -46,10 +46,6 @@ on:
         description: 'e2e repo ref, for cross-repo workflow calls'
         required: true
         type: string
-    secrets:
-      E2E_CONTENTS_READ_TOKEN:
-        description: 'token to allow reading the contents of the e2e repo, for cross-repo workflow calls'
-        required: true
 
 jobs:
   build:
@@ -78,7 +74,6 @@ jobs:
           # if we are in a workflow_call, use the e2e branch from the workflow call (usually main)
           # otherwise, defer to the checkout actions default, which depends on the triggering event
           ref: ${{ inputs.e2eRef || '' }}
-          token: ${{ secrets.E2E_CONTENTS_READ_TOKEN || secrets.GITHUB_TOKEN  }}
 
       - name: "Check license headers"
         run: "./check-license-headers"
