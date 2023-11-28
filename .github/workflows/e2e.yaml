@@ -126,7 +126,6 @@ jobs:
           # if we are in a workflow_call, use the e2e branch from the workflow call (usually main)
           # otherwise, defer to the checkout actions default, which depends on the triggering event
           ref: ${{ inputs.sdkJavaCommit }}
-          token: ${{ secrets.SDK_JAVA_CONTENTS_READ_TOKEN || secrets.GITHUB_TOKEN  }}
           path: "sdk-java"
 
       # Setup restate snapshot if necessary
