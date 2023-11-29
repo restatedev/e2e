@@ -14,7 +14,7 @@ import dev.restate.e2e.services.errors.ErrorsProto.ErrorMessage;
 import dev.restate.e2e.services.errors.ErrorsProto.FailRequest;
 import dev.restate.e2e.services.utils.NumberSortHttpServerUtils;
 import dev.restate.sdk.Awakeable;
-import dev.restate.sdk.RestateBlockingService;
+import dev.restate.sdk.RestateService;
 import dev.restate.sdk.common.CoreSerdes;
 import dev.restate.sdk.common.TerminalException;
 import io.grpc.stub.StreamObserver;
@@ -25,7 +25,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class FailingService extends FailingServiceGrpc.FailingServiceImplBase
-    implements RestateBlockingService {
+    implements RestateService {
 
   private static final Logger LOG = LogManager.getLogger(FailingService.class);
 

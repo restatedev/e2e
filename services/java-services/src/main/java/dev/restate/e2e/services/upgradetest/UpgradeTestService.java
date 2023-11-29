@@ -16,14 +16,14 @@ import dev.restate.e2e.services.collections.list.ListProto;
 import dev.restate.e2e.services.collections.list.ListServiceGrpc;
 import dev.restate.e2e.services.upgradetest.UpgradeTestProto.Result;
 import dev.restate.sdk.Awakeable;
-import dev.restate.sdk.RestateBlockingService;
 import dev.restate.sdk.RestateContext;
+import dev.restate.sdk.RestateService;
 import dev.restate.sdk.common.CoreSerdes;
 import io.grpc.stub.StreamObserver;
 import java.util.Objects;
 
 public class UpgradeTestService extends UpgradeTestServiceGrpc.UpgradeTestServiceImplBase
-    implements RestateBlockingService {
+    implements RestateService {
 
   // Value should be either "v1" or "v2"
   private final String version =

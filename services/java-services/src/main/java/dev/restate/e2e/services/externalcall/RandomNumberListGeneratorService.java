@@ -15,7 +15,7 @@ import dev.restate.e2e.services.externalcall.RandomNumberListGeneratorProto.Gene
 import dev.restate.e2e.services.externalcall.RandomNumberListGeneratorProto.GenerateNumbersResponse;
 import dev.restate.e2e.services.utils.NumberSortHttpServerUtils;
 import dev.restate.sdk.Awakeable;
-import dev.restate.sdk.RestateBlockingService;
+import dev.restate.sdk.RestateService;
 import dev.restate.sdk.common.Serde;
 import dev.restate.sdk.serde.jackson.JacksonSerdes;
 import io.grpc.stub.StreamObserver;
@@ -27,7 +27,7 @@ import org.apache.logging.log4j.Logger;
 
 public class RandomNumberListGeneratorService
     extends RandomNumberListGeneratorGrpc.RandomNumberListGeneratorImplBase
-    implements RestateBlockingService {
+    implements RestateService {
 
   private static final Logger LOG = LogManager.getLogger(RandomNumberListGeneratorService.class);
 
