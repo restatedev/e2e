@@ -9,8 +9,10 @@
 
 package dev.restate.e2e.runtime
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.rpc.Code
+import dev.restate.admin.api.ServiceApi
+import dev.restate.admin.client.ApiClient
+import dev.restate.admin.model.ModifyServiceRequest
 import dev.restate.e2e.Containers
 import dev.restate.e2e.services.counter.CounterGrpc
 import dev.restate.e2e.services.counter.CounterGrpc.CounterBlockingStub
@@ -19,12 +21,9 @@ import dev.restate.e2e.services.counter.ProxyCounterGrpc.ProxyCounterBlockingStu
 import dev.restate.e2e.services.counter.counterAddRequest
 import dev.restate.e2e.services.counter.counterRequest
 import dev.restate.e2e.utils.*
-import dev.restate.e2e.utils.meta.client.ServicesClient
-import dev.restate.e2e.utils.meta.models.ModifyServiceRequest
 import io.grpc.StatusRuntimeException
 import java.net.URL
 import java.util.UUID
-import okhttp3.OkHttpClient
 import org.assertj.core.api.Assertions.*
 import org.assertj.core.api.InstanceOfAssertFactories.type
 import org.awaitility.kotlin.await
@@ -50,7 +49,7 @@ class PrivateServiceTest {
       @InjectBlockingStub counterClient: CounterBlockingStub,
       @InjectBlockingStub proxyCounterClient: ProxyCounterBlockingStub
   ) {
-    val client = ServicesClient(ObjectMapper(), metaURL.toString(), OkHttpClient())
+    val client = ServiceApi(ApiClient().setHost(metaURL.host).setPort(metaURL.port))
     val counterId = UUID.randomUUID().toString()
 
     counterClient.add(
@@ -60,12 +59,7 @@ class PrivateServiceTest {
         })
 
     // Make the service private
-    assertThat(
-            client
-                .modifyService(ModifyServiceRequest(public = false), CounterGrpc.SERVICE_NAME)
-                .statusCode)
-        .isGreaterThanOrEqualTo(200)
-        .isLessThan(300)
+    client.modifyService(CounterGrpc.SERVICE_NAME, ModifyServiceRequest()._public(false))
 
     // Wait for the service to be private
     await untilAsserted
@@ -83,12 +77,7 @@ class PrivateServiceTest {
         })
 
     // Make the service public again
-    assertThat(
-            client
-                .modifyService(ModifyServiceRequest(public = true), CounterGrpc.SERVICE_NAME)
-                .statusCode)
-        .isGreaterThanOrEqualTo(200)
-        .isLessThan(300)
+    client.modifyService(CounterGrpc.SERVICE_NAME, ModifyServiceRequest()._public(true))
 
     // Wait to get the correct count
     await untilAsserted

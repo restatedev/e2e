@@ -9,7 +9,9 @@
 
 package dev.restate.e2e.runtime
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import dev.restate.admin.api.ServiceEndpointApi
+import dev.restate.admin.client.ApiClient
+import dev.restate.admin.model.RegisterServiceEndpointRequest
 import dev.restate.e2e.Containers
 import dev.restate.e2e.services.collections.list.ListProto
 import dev.restate.e2e.services.collections.list.ListServiceGrpc
@@ -19,13 +21,10 @@ import dev.restate.e2e.services.proxy.ProxyServiceGrpc
 import dev.restate.e2e.services.proxy.ProxyServiceGrpc.ProxyServiceBlockingStub
 import dev.restate.e2e.services.proxy.request
 import dev.restate.e2e.utils.*
-import dev.restate.e2e.utils.meta.client.EndpointsClient
-import dev.restate.e2e.utils.meta.models.RegisterServiceEndpointRequest
 import dev.restate.generated.IngressGrpc.IngressBlockingStub
 import dev.restate.generated.invokeRequest
 import java.net.URL
 import java.util.*
-import okhttp3.OkHttpClient
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
@@ -49,14 +48,11 @@ class RetryOnUnknownServiceTest {
     }
 
     fun registerListService(metaURL: URL) {
-      val client = EndpointsClient(ObjectMapper(), metaURL.toString(), OkHttpClient())
-      val registrationResult =
-          client.createServiceEndpoint(
-              RegisterServiceEndpointRequest(
-                  uri = "http://${Containers.NODE_COLLECTIONS_SERVICE_SPEC.hostName}:8080/",
-                  additionalHeaders = null,
-                  force = false))
-      assertThat(registrationResult.statusCode).isGreaterThanOrEqualTo(200).isLessThan(300)
+      val client = ServiceEndpointApi(ApiClient().setHost(metaURL.host).setPort(metaURL.port))
+      client.createServiceEndpoint(
+          RegisterServiceEndpointRequest()
+              .uri("http://${Containers.NODE_COLLECTIONS_SERVICE_SPEC.hostName}:8080/")
+              .force(false))
     }
   }
 

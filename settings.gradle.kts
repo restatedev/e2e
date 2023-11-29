@@ -41,6 +41,7 @@ dependencyResolutionManagement {
 
       // Libraries
       library("restate-sdk-common", "dev.restate", "sdk-common").versionRef("restate")
+      library("restate-admin", "dev.restate", "admin-client").versionRef("restate")
       library("restate-sdk-api", "dev.restate", "sdk-api").versionRef("restate")
       library("restate-sdk-jackson", "dev.restate", "sdk-serde-jackson").versionRef("restate")
       library("restate-sdk-http-vertx", "dev.restate", "sdk-http-vertx").versionRef("restate")
@@ -95,6 +96,7 @@ dependencyResolutionManagement {
 if (!System.getenv("JAVA_SDK_LOCAL_BUILD").isNullOrEmpty()) {
   includeBuild("../sdk-java") {
     dependencySubstitution {
+      substitute(module("dev.restate:admin-client")).using(project(":admin-client"))
       substitute(module("dev.restate:sdk-common")).using(project(":sdk-common"))
       substitute(module("dev.restate:sdk-api")).using(project(":sdk-api"))
       substitute(module("dev.restate:sdk-http-vertx")).using(project(":sdk-http-vertx"))
