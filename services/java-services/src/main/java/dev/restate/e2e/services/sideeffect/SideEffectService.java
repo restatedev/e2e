@@ -9,13 +9,12 @@
 
 package dev.restate.e2e.services.sideeffect;
 
-import dev.restate.sdk.RestateBlockingService;
 import dev.restate.sdk.RestateContext;
+import dev.restate.sdk.RestateService;
 import io.grpc.stub.StreamObserver;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class SideEffectService extends SideEffectGrpc.SideEffectImplBase
-    implements RestateBlockingService {
+public class SideEffectService extends SideEffectGrpc.SideEffectImplBase implements RestateService {
 
   @Override
   public void invokeSideEffects(

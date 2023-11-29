@@ -12,7 +12,7 @@ package dev.restate.e2e.services.counter;
 import com.google.protobuf.Empty;
 import dev.restate.e2e.services.singletoncounter.SingletonCounterGrpc;
 import dev.restate.e2e.services.singletoncounter.SingletonCounterProto.CounterNumber;
-import dev.restate.sdk.RestateBlockingService;
+import dev.restate.sdk.RestateService;
 import dev.restate.sdk.common.CoreSerdes;
 import dev.restate.sdk.common.StateKey;
 import io.grpc.stub.StreamObserver;
@@ -20,7 +20,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class SingletonCounterService extends SingletonCounterGrpc.SingletonCounterImplBase
-    implements RestateBlockingService {
+    implements RestateService {
 
   private static final Logger logger = LogManager.getLogger(SingletonCounterService.class);
 

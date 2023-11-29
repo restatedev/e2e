@@ -12,7 +12,7 @@ package dev.restate.e2e.services.counter;
 import static dev.restate.e2e.services.counter.CounterProto.*;
 
 import com.google.protobuf.Empty;
-import dev.restate.sdk.RestateBlockingService;
+import dev.restate.sdk.RestateService;
 import dev.restate.sdk.common.CoreSerdes;
 import dev.restate.sdk.common.StateKey;
 import dev.restate.sdk.common.TerminalException;
@@ -20,7 +20,7 @@ import io.grpc.stub.StreamObserver;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class CounterService extends CounterGrpc.CounterImplBase implements RestateBlockingService {
+public class CounterService extends CounterGrpc.CounterImplBase implements RestateService {
 
   private static final Logger logger = LogManager.getLogger(CounterService.class);
 

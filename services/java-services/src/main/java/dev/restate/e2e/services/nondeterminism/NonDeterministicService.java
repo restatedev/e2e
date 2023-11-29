@@ -13,7 +13,7 @@ import com.google.protobuf.Empty;
 import dev.restate.e2e.services.counter.CounterGrpc;
 import dev.restate.e2e.services.counter.CounterProto.CounterAddRequest;
 import dev.restate.e2e.services.counter.CounterProto.CounterRequest;
-import dev.restate.sdk.RestateBlockingService;
+import dev.restate.sdk.RestateService;
 import dev.restate.sdk.common.CoreSerdes;
 import dev.restate.sdk.common.StateKey;
 import io.grpc.stub.StreamObserver;
@@ -22,8 +22,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class NonDeterministicService
-    extends NonDeterministicServiceGrpc.NonDeterministicServiceImplBase
-    implements RestateBlockingService {
+    extends NonDeterministicServiceGrpc.NonDeterministicServiceImplBase implements RestateService {
 
   private final Map<String, Integer> invocationCounts = new ConcurrentHashMap<>();
   private final StateKey<String> STATE_A = StateKey.of("a", CoreSerdes.STRING_UTF8);

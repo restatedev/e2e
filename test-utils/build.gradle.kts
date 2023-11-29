@@ -110,11 +110,6 @@ licenseReport {
 
   excludeBoms = true
 
-  excludes =
-      arrayOf(
-          "dev.restate.sdk:.*", // Our own dependency has no license yet
-      )
-
   allowedLicensesFile = file("$rootDir/config/allowed-licenses.json")
   filters =
       arrayOf(
