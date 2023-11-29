@@ -95,8 +95,8 @@ dependencyResolutionManagement {
 if (!System.getenv("JAVA_SDK_LOCAL_BUILD").isNullOrEmpty()) {
   includeBuild("../sdk-java") {
     dependencySubstitution {
-      substitute(module("dev.restate:sdk-core")).using(project(":sdk-core"))
-      substitute(module("dev.restate:sdk-java-blocking")).using(project(":sdk-java-blocking"))
+      substitute(module("dev.restate:sdk-common")).using(project(":sdk-common"))
+      substitute(module("dev.restate:sdk-api")).using(project(":sdk-api"))
       substitute(module("dev.restate:sdk-http-vertx")).using(project(":sdk-http-vertx"))
       substitute(module("dev.restate:sdk-serde-jackson")).using(project(":sdk-serde-jackson"))
     }
