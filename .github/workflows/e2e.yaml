@@ -160,7 +160,7 @@ jobs:
         env:
           E2E_IMAGE_PULL_POLICY: always
           E2E_VERIFICATION_SEED: ${{ github.run_id }}
-          RESTATE_RUNTIME_CONTAINER: ${{ inputs.restateCommit != '' && 'localhost:5000/restatedev/restate:latest' || '' }}
+          RESTATE_CONTAINER_IMAGE: ${{ inputs.restateCommit != '' && 'localhost:5000/restatedev/restate:latest' || '' }}
           JAVA_SDK_LOCAL_BUILD: ${{ inputs.sdkJavaCommit != '' && 'true' || '' }}
         with:
           arguments: -Djib.console=plain check

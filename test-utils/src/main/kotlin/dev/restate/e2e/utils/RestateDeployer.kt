@@ -44,7 +44,7 @@ private constructor(
     serviceSpecs: List<ServiceSpec>,
     private val additionalContainers: Map<String, GenericContainer<*>>,
     private val runtimeContainerEnvs: Map<String, String>,
-    private val runtimeContainerName: String,
+    private val restateContainerImage: String,
     private val enableTracesExport: Boolean,
     private val configSchema: RestateConfigSchema?
 ) : AutoCloseable, ExtensionContext.Store.CloseableResource {
@@ -72,8 +72,8 @@ private constructor(
   }
 
   companion object {
-    private const val RESTATE_RUNTIME_CONTAINER_ENV = "RESTATE_RUNTIME_CONTAINER"
-    private const val DEFAULT_RUNTIME_CONTAINER = "ghcr.io/restatedev/restate"
+    private const val RESTATE_CONTAINER_IMAGE_ENV = "RESTATE_CONTAINER_IMAGE"
+    private const val DEFAULT_RESTATE_CONTAINER_IMAGE = "ghcr.io/restatedev/restate"
 
     private const val CONTAINER_LOGS_DIR_ENV = "CONTAINER_LOGS_DIR"
 
@@ -123,7 +123,7 @@ private constructor(
   private val network = Network.newNetwork()
 
   private val proxyContainer = ProxyContainer(ToxiproxyContainer("ghcr.io/shopify/toxiproxy:2.5.0"))
-  private val runtimeContainer = GenericContainer(DockerImageName.parse(runtimeContainerName))
+  private val runtimeContainer = GenericContainer(DockerImageName.parse(restateContainerImage))
   private val deployedContainers: Map<String, ContainerHandle> =
       mapOf(
           RESTATE_RUNTIME to
@@ -146,8 +146,8 @@ private constructor(
       private var serviceEndpoints: MutableList<ServiceSpec> = mutableListOf(),
       private var additionalContainers: MutableMap<String, GenericContainer<*>> = mutableMapOf(),
       private var runtimeContainerEnvs: MutableMap<String, String> = mutableMapOf(),
-      private var runtimeContainerImage: String =
-          System.getenv(RESTATE_RUNTIME_CONTAINER_ENV) ?: DEFAULT_RUNTIME_CONTAINER,
+      private var restateContainerImage: String =
+          System.getenv(RESTATE_CONTAINER_IMAGE_ENV) ?: DEFAULT_RESTATE_CONTAINER_IMAGE,
       private var invokerRetryPolicy: RetryPolicy? = null,
       private var enableTracesExport: Boolean = true,
       private var configSchema: RestateConfigSchema? = null,
@@ -172,7 +172,7 @@ private constructor(
     }
 
     fun restateContainerImage(runtimeContainer: String) = apply {
-      this.runtimeContainerImage = runtimeContainer
+      this.restateContainerImage = runtimeContainer
     }
 
     /** Add a container that will be added within the same network of functions and runtime. */
@@ -201,8 +201,7 @@ private constructor(
           if (this.loadEnvs) {
             System.getenv().filterKeys {
               (it.uppercase().startsWith("RESTATE_") &&
-                  it.uppercase() != "RESTATE_RUNTIME_CONTAINER") ||
-                  it.uppercase().startsWith("RUST_")
+                  it.uppercase() != "RESTATE_CONTAINER_IMAGE") || it.uppercase().startsWith("RUST_")
             }
           } else {
             emptyMap()
@@ -215,7 +214,7 @@ private constructor(
           loadedRuntimeContainerEnvs +
               this.runtimeContainerEnvs +
               (invokerRetryPolicy?.toInvokerSetupEnv() ?: emptyMap()),
-          runtimeContainerImage,
+          restateContainerImage,
           enableTracesExport,
           configSchema)
     }
@@ -298,7 +297,7 @@ private constructor(
       logger.debug("Started container {} with image {}", containerHost, container.dockerImageName)
     }
 
-    logger.debug("Starting runtime container '{}'", runtimeContainerName)
+    logger.debug("Starting runtime container '{}'", restateContainerImage)
 
     // Configure runtime container
     runtimeContainer

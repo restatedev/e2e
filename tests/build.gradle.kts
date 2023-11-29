@@ -55,10 +55,10 @@ tasks {
                   .absolutePath,
           // We don't need many partitions, fewer partitions will occupy less test resources
           "RESTATE_WORKER__PARTITIONS" to "10",
-          "RESTATE_RUNTIME_CONTAINER" to
-              (if (System.getenv("RESTATE_RUNTIME_CONTAINER").isNullOrEmpty())
+          "RESTATE_CONTAINER_IMAGE" to
+              (if (System.getenv("RESTATE_CONTAINER_IMAGE").isNullOrEmpty())
                   "ghcr.io/restatedev/restate:main"
-              else System.getenv("RESTATE_RUNTIME_CONTAINER")),
+              else System.getenv("RESTATE_CONTAINER_IMAGE")),
           "RUST_LOG" to (System.getenv("RUST_LOG") ?: defaultLog),
           "RUST_BACKTRACE" to "full")
 
