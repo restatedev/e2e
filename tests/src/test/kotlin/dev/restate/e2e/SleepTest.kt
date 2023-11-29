@@ -43,7 +43,6 @@ class JavaSimpleSleepTest : BaseSimpleSleepTest() {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .withEnv(Containers.getRestateEnvironment())
                 .withServiceEndpoint(Containers.JAVA_COORDINATOR_SERVICE_SPEC)
                 .build())
   }
@@ -57,7 +56,6 @@ class NodeSimpleSleepTest : BaseSimpleSleepTest() {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .withEnv(Containers.getRestateEnvironment())
                 .withServiceEndpoint(Containers.NODE_COORDINATOR_SERVICE_SPEC)
                 .build())
   }
@@ -123,7 +121,6 @@ class JavaSleepWithFailuresTest : BaseSleepWithFailuresTest() {
     @RegisterExtension
     val deployerExt: RestateDeployerForEachExtension = RestateDeployerForEachExtension {
       RestateDeployer.Builder()
-          .withEnv(Containers.getRestateEnvironment())
           .withServiceEndpoint(
               Containers.JAVA_COORDINATOR_SERVICE_SPEC.copy(hostName = COORDINATOR_HOSTNAME))
           .build()
@@ -137,7 +134,6 @@ class NodeSleepWithFailuresTest : BaseSleepWithFailuresTest() {
     @RegisterExtension
     val deployerExt: RestateDeployerForEachExtension = RestateDeployerForEachExtension {
       RestateDeployer.Builder()
-          .withEnv(Containers.getRestateEnvironment())
           .withServiceEndpoint(
               Containers.NODE_COORDINATOR_SERVICE_SPEC.copy(
                   hostName = COORDINATOR_HOSTNAME,

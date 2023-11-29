@@ -31,7 +31,6 @@ class JavaServiceToServiceCallTest : BaseServiceToServiceCallTest() {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .withEnv(Containers.getRestateEnvironment())
                 .withServiceEndpoint(Containers.JAVA_COORDINATOR_SERVICE_SPEC)
                 .build())
   }
@@ -44,7 +43,6 @@ class NodeServiceToServiceCallTest : BaseServiceToServiceCallTest() {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .withEnv(Containers.getRestateEnvironment())
                 .withServiceEndpoint(Containers.NODE_COORDINATOR_SERVICE_SPEC)
                 .build())
   }
@@ -57,7 +55,6 @@ class JavaCoordinatorWithNodeReceiverServiceToServiceCallTest : BaseServiceToSer
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .withEnv(Containers.getRestateEnvironment())
                 .withServiceEndpoint(
                     javaServicesContainer("java-coordinator", CoordinatorGrpc.SERVICE_NAME))
                 .withServiceEndpoint(
@@ -73,7 +70,6 @@ class NodeCoordinatorWithJavaReceiverServiceToServiceCallTest : BaseServiceToSer
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .withEnv(Containers.getRestateEnvironment())
                 .withServiceEndpoint(
                     nodeServicesContainer("node-coordinator", CoordinatorGrpc.SERVICE_NAME))
                 .withServiceEndpoint(

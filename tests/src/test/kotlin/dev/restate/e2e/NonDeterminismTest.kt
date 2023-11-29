@@ -39,7 +39,6 @@ class JavaNonDeterminismTest : NonDeterminismTest() {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .withEnv(Containers.getRestateEnvironment())
                 .withInvokerRetryPolicy(RestateDeployer.RetryPolicy.None)
                 .withServiceEndpoint(
                     Containers.javaServicesContainer(
@@ -57,7 +56,6 @@ class NodeNonDeterminismTest : NonDeterminismTest() {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .withEnv(Containers.getRestateEnvironment())
                 // Disable the retries so we get the error propagated back
                 .withInvokerRetryPolicy(RestateDeployer.RetryPolicy.None)
                 .withServiceEndpoint(

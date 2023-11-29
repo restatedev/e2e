@@ -38,7 +38,6 @@ class KillInvocationTest {
     @RegisterExtension
     val deployerExt: RestateDeployerForEachExtension = RestateDeployerForEachExtension {
       RestateDeployer.Builder()
-          .withEnv(Containers.getRestateEnvironment())
           .withServiceEndpoint(
               Containers.nodeServicesContainer(
                   "services", CounterGrpc.SERVICE_NAME, AwakeableHolderServiceGrpc.SERVICE_NAME))

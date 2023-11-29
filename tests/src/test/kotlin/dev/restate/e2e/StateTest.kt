@@ -35,7 +35,6 @@ class JavaStateTest : BaseStateTest() {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .withEnv(Containers.getRestateEnvironment())
                 .withServiceEndpoint(Containers.JAVA_COUNTER_SERVICE_SPEC)
                 .build())
   }
@@ -50,7 +49,6 @@ class NodeStateTest : BaseStateTest() {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .withEnv(Containers.getRestateEnvironment())
                 .withServiceEndpoint(Containers.NODE_COUNTER_SERVICE_SPEC)
                 .build())
   }

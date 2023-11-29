@@ -34,7 +34,6 @@ class InvokeOrderingTest {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .withEnv(Containers.getRestateEnvironment())
                 .withServiceEndpoint(Containers.JAVA_COORDINATOR_SERVICE_SPEC)
                 .withServiceEndpoint(Containers.JAVA_COLLECTIONS_SERVICE_SPEC)
                 .build())

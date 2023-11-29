@@ -26,7 +26,6 @@ class JavaAwakeableTest : BaseAwakeableTest() {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .withEnv(Containers.getRestateEnvironment())
                 .withServiceEndpoint(Containers.JAVA_EXTERNALCALL_SERVICE_SPEC)
                 .withContainer(Containers.INT_SORTER_HTTP_SERVER_CONTAINER_SPEC)
                 .build())
@@ -40,7 +39,6 @@ class NodeAwakeableTest : BaseAwakeableTest() {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .withEnv(Containers.getRestateEnvironment())
                 .withServiceEndpoint(Containers.NODE_EXTERNALCALL_SERVICE_SPEC)
                 .withContainer(Containers.INT_SORTER_HTTP_SERVER_CONTAINER_SPEC)
                 .build())
@@ -53,7 +51,6 @@ class NodeWithBase64CompletionAwakeableTest : BaseAwakeableTest() {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .withEnv(Containers.getRestateEnvironment())
                 .withServiceEndpoint(Containers.NODE_EXTERNALCALL_SERVICE_SPEC)
                 .withContainer(
                     Containers.INT_SORTER_HTTP_SERVER_HOSTNAME to
