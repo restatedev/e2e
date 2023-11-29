@@ -35,13 +35,6 @@ object Containers {
   val INT_SORTER_HTTP_SERVER_CONTAINER_SPEC =
       INT_SORTER_HTTP_SERVER_HOSTNAME to intSorterHttpServerContainer()
 
-  fun getRestateEnvironment(): Map<String, String> {
-    return System.getenv().filterKeys {
-      (it.uppercase().startsWith("RESTATE_") && it.uppercase() != "RESTATE_RUNTIME_CONTAINER") ||
-          it.uppercase().startsWith("RUST_")
-    }
-  }
-
   // -- Java containers
 
   fun javaServicesContainer(hostName: String, vararg services: String): ServiceSpec.Builder {

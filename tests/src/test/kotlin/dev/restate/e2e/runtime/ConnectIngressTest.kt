@@ -36,7 +36,6 @@ class ConnectIngressTest {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .withEnv(Containers.getRestateEnvironment())
                 .withServiceEndpoint(Containers.JAVA_COUNTER_SERVICE_SPEC)
                 .build())
 

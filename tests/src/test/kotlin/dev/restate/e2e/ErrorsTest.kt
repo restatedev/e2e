@@ -39,7 +39,6 @@ class JavaErrorsTest : BaseErrorsTest() {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .withEnv(Containers.getRestateEnvironment())
                 .withServiceEndpoint(Containers.JAVA_ERRORS_SERVICE_SPEC)
                 .withServiceEndpoint(Containers.JAVA_EXTERNALCALL_SERVICE_SPEC)
                 .withServiceEndpoint(Containers.JAVA_COUNTER_SERVICE_SPEC)
@@ -67,7 +66,6 @@ class NodeErrorsTest : BaseErrorsTest() {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .withEnv(Containers.getRestateEnvironment())
                 .withServiceEndpoint(Containers.NODE_ERRORS_SERVICE_SPEC)
                 .withServiceEndpoint(Containers.NODE_COUNTER_SERVICE_SPEC)
                 .build())

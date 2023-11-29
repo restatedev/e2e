@@ -42,7 +42,6 @@ class UpgradeServiceTest {
     @RegisterExtension
     val deployerExt: RestateDeployerForEachExtension = RestateDeployerForEachExtension {
       RestateDeployer.Builder()
-          .withEnv(Containers.getRestateEnvironment())
           .withServiceEndpoint(
               Containers.javaServicesContainer(
                       "version1", UpgradeTestServiceGrpc.SERVICE_NAME, ListServiceGrpc.SERVICE_NAME)

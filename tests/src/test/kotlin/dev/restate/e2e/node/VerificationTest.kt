@@ -44,10 +44,7 @@ class VerificationTest {
     @JvmStatic
     @RegisterExtension
     val deployerExt: RestateDeployerForEachExtension = RestateDeployerForEachExtension {
-      RestateDeployer.Builder()
-          .withEnv(Containers.getRestateEnvironment())
-          .withServiceEndpoint(Containers.VERIFICATION_SERVICE_SPEC)
-          .build()
+      RestateDeployer.Builder().withServiceEndpoint(Containers.VERIFICATION_SERVICE_SPEC).build()
     }
 
     private const val E2E_VERIFICATION_SEED_ENV = "E2E_VERIFICATION_SEED"

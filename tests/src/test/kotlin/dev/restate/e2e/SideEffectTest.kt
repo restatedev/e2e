@@ -33,7 +33,6 @@ class JavaSideEffectTest : BaseSideEffectTest() {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .withEnv(Containers.getRestateEnvironment())
                 .withServiceEndpoint(
                     Containers.javaServicesContainer(
                         "java-side-effect", SideEffectGrpc.SERVICE_NAME))
@@ -52,7 +51,6 @@ class NodeSideEffectTest : BaseSideEffectTest() {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .withEnv(Containers.getRestateEnvironment())
                 .withServiceEndpoint(
                     Containers.nodeServicesContainer(
                         "node-side-effect", SideEffectGrpc.SERVICE_NAME))

@@ -35,7 +35,6 @@ class HandlerApiTest {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .withEnv(Containers.getRestateEnvironment())
                 .withServiceEndpoint(Containers.NODE_HANDLER_API_ECHO_TEST_SERVICE_SPEC)
                 .build())
 

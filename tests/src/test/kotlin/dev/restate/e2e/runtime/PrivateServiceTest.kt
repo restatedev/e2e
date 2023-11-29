@@ -40,7 +40,6 @@ class PrivateServiceTest {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .withEnv(Containers.getRestateEnvironment())
                 .withServiceEndpoint(Containers.NODE_COUNTER_SERVICE_SPEC)
                 .build())
   }

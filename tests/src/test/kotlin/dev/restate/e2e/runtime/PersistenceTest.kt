@@ -24,10 +24,7 @@ class PersistenceTest {
     @JvmStatic
     @RegisterExtension
     val deployerExt: RestateDeployerForEachExtension = RestateDeployerForEachExtension {
-      RestateDeployer.Builder()
-          .withEnv(Containers.getRestateEnvironment())
-          .withServiceEndpoint(Containers.NODE_COUNTER_SERVICE_SPEC)
-          .build()
+      RestateDeployer.Builder().withServiceEndpoint(Containers.NODE_COUNTER_SERVICE_SPEC).build()
     }
   }
 

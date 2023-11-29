@@ -35,7 +35,6 @@ class EmbeddedHandlerApiTest {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .withEnv(Containers.getRestateEnvironment())
                 .withContainer(EMBEDDED_HANDLER_SERVER_CONTAINER_SPEC)
                 .withContainer(Containers.INT_SORTER_HTTP_SERVER_CONTAINER_SPEC)
                 .withServiceEndpoint(

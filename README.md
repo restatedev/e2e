@@ -88,7 +88,7 @@ You can include `gradle :services:node-services:installLocalSdkTypescript` in th
 
 ### How to test Restate runtime changes
 
-You can manually build a docker image in the restate project using `just docker`. Then set the environment variable `RESTATE_RUNTIME_CONTAINER` with the tag of the newly created image (printed at the end of the docker build log).
+You can manually build a docker image in the restate project using `just docker`. Then set the environment variable `RESTATE_CONTAINER_IMAGE` with the tag of the newly created image (printed at the end of the docker build log).
 
 ### Retain runtime state after test
 

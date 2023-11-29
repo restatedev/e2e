@@ -33,7 +33,6 @@ class AwaitTimeoutTest {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .withEnv(Containers.getRestateEnvironment())
                 .withServiceEndpoint(Containers.JAVA_COORDINATOR_SERVICE_SPEC)
                 .build())
   }

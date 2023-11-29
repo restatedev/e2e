@@ -31,7 +31,6 @@ class JavaSampleWorkflowTest : BaseSampleWorkflowTest() {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .withEnv(Containers.getRestateEnvironment())
                 .withServiceEndpoint(Containers.JAVA_COORDINATOR_SERVICE_SPEC)
                 .build())
   }
@@ -44,7 +43,6 @@ class NodeSampleWorkflowTest : BaseSampleWorkflowTest() {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .withEnv(Containers.getRestateEnvironment())
                 .withServiceEndpoint(Containers.NODE_COORDINATOR_SERVICE_SPEC)
                 .build())
   }

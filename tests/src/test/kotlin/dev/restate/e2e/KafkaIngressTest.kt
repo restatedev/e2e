@@ -61,7 +61,6 @@ class JavaKafkaIngressTest : BaseKafkaIngressTest() {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .withEnv(Containers.getRestateEnvironment())
                 .withServiceEndpoint(
                     Containers.javaServicesContainer(
                         "java-counter", CounterGrpc.SERVICE_NAME, EventHandlerGrpc.SERVICE_NAME))
@@ -77,7 +76,6 @@ class NodeKafkaIngressTest : BaseKafkaIngressTest() {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .withEnv(Containers.getRestateEnvironment())
                 .withServiceEndpoint(
                     Containers.nodeServicesContainer(
                         "node-counter", CounterGrpc.SERVICE_NAME, EventHandlerGrpc.SERVICE_NAME))
@@ -153,7 +151,6 @@ class NodeHandlerAPIKafkaIngressTest {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .withEnv(Containers.getRestateEnvironment())
                 .withServiceEndpoint(
                     Containers.nodeServicesContainer(
                         "node-counter", Containers.HANDLER_API_COUNTER_SERVICE_NAME))
