@@ -13,6 +13,7 @@ import dev.restate.e2e.Containers
 import dev.restate.e2e.services.counter.CounterGrpc
 import dev.restate.e2e.services.counter.CounterProto.CounterAddRequest
 import dev.restate.e2e.utils.*
+import java.util.concurrent.TimeUnit
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.extension.RegisterExtension
@@ -28,6 +29,7 @@ class PersistenceTest {
     }
   }
 
+  @Timeout(value = 30, unit = TimeUnit.SECONDS)
   @Test
   fun startAndStopRuntimeRetainsTheState(
       @InjectBlockingStub counterClient: CounterGrpc.CounterBlockingStub,
@@ -49,6 +51,7 @@ class PersistenceTest {
     assertThat(res2.newValue).isEqualTo(3)
   }
 
+  @Timeout(value = 30, unit = TimeUnit.SECONDS)
   @Test
   fun startAndKillRuntimeRetainsTheState(
       @InjectBlockingStub counterClient: CounterGrpc.CounterBlockingStub,
