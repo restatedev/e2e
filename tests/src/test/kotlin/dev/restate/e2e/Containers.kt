@@ -20,7 +20,7 @@ import dev.restate.e2e.services.receiver.ReceiverGrpc
 import dev.restate.e2e.services.singletoncounter.SingletonCounterGrpc
 import dev.restate.e2e.services.verification.interpreter.CommandInterpreterGrpc
 import dev.restate.e2e.services.verification.verifier.CommandVerifierGrpc
-import dev.restate.e2e.utils.ServiceSpec
+import dev.restate.e2e.utils.ServiceDeployer
 import org.testcontainers.containers.GenericContainer
 
 object Containers {
@@ -37,11 +37,11 @@ object Containers {
 
   // -- Java containers
 
-  fun javaServicesContainer(hostName: String, vararg services: String): ServiceSpec.Builder {
+  fun javaServicesContainer(hostName: String, vararg services: String): ServiceDeployer.Builder {
     assert(services.isNotEmpty())
-    return ServiceSpec.builder("restatedev/e2e-java-services")
+    return ServiceDeployer.builder("restatedev/e2e-java-services")
         .withEnv("SERVICES", services.joinToString(","))
-        .withHostName(hostName)
+        .withName(hostName)
   }
 
   val JAVA_COLLECTIONS_SERVICE_SPEC =
@@ -74,12 +74,12 @@ object Containers {
 
   // -- Node containers
 
-  fun nodeServicesContainer(hostName: String, vararg services: String): ServiceSpec.Builder {
+  fun nodeServicesContainer(hostName: String, vararg services: String): ServiceDeployer.Builder {
     assert(services.isNotEmpty())
-    return ServiceSpec.builder("restatedev/e2e-node-services")
+    return ServiceDeployer.builder("restatedev/e2e-node-services")
         .withEnv("SERVICES", services.joinToString(","))
         .withEnv("RESTATE_DEBUG_LOGGING", "JOURNAL")
-        .withHostName(hostName)
+        .withName(hostName)
   }
 
   val NODE_COUNTER_SERVICE_SPEC =

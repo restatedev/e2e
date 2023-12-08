@@ -122,7 +122,7 @@ class JavaSleepWithFailuresTest : BaseSleepWithFailuresTest() {
     val deployerExt: RestateDeployerForEachExtension = RestateDeployerForEachExtension {
       RestateDeployer.Builder()
           .withServiceEndpoint(
-              Containers.JAVA_COORDINATOR_SERVICE_SPEC.copy(hostName = COORDINATOR_HOSTNAME))
+              Containers.JAVA_COORDINATOR_SERVICE_SPEC.copy(name = COORDINATOR_HOSTNAME))
           .build()
     }
   }
@@ -136,7 +136,7 @@ class NodeSleepWithFailuresTest : BaseSleepWithFailuresTest() {
       RestateDeployer.Builder()
           .withServiceEndpoint(
               Containers.NODE_COORDINATOR_SERVICE_SPEC.copy(
-                  hostName = COORDINATOR_HOSTNAME,
+                  name = COORDINATOR_HOSTNAME,
               ))
           .build()
     }

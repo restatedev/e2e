@@ -40,13 +40,13 @@ import org.testcontainers.utility.DockerImageName
 
 class RestateDeployer
 private constructor(
-    runtimeDeployments: Int,
-    serviceSpecs: List<ServiceSpec>,
-    private val additionalContainers: Map<String, GenericContainer<*>>,
-    private val runtimeContainerEnvs: Map<String, String>,
-    private val restateContainerImage: String,
-    private val enableTracesExport: Boolean,
-    private val configSchema: RestateConfigSchema?
+  runtimeDeployments: Int,
+  serviceDeployers: List<ServiceDeployer>,
+  private val additionalContainers: Map<String, GenericContainer<*>>,
+  private val runtimeContainerEnvs: Map<String, String>,
+  private val restateContainerImage: String,
+  private val enableTracesExport: Boolean,
+  private val configSchema: RestateConfigSchema?
 ) : AutoCloseable, ExtensionContext.Store.CloseableResource {
 
   // Perhaps at some point we could autogenerate these from the openapi doc and also remove the need
@@ -119,7 +119,7 @@ private constructor(
   }
 
   private val serviceContainers =
-      serviceSpecs.associate { spec -> spec.hostName to (spec to spec.toContainer()) }
+      serviceDeployers.associate { spec -> spec.name to (spec to spec.toContainer()) }
   private val network = Network.newNetwork()
 
   private val proxyContainer = ProxyContainer(ToxiproxyContainer("ghcr.io/shopify/toxiproxy:2.5.0"))
@@ -142,29 +142,29 @@ private constructor(
   }
 
   data class Builder(
-      private var runtimeDeployments: Int = 1,
-      private var serviceEndpoints: MutableList<ServiceSpec> = mutableListOf(),
-      private var additionalContainers: MutableMap<String, GenericContainer<*>> = mutableMapOf(),
-      private var runtimeContainerEnvs: MutableMap<String, String> = mutableMapOf(),
-      private var restateContainerImage: String =
+    private var runtimeDeployments: Int = 1,
+    private var serviceEndpoints: MutableList<ServiceDeployer> = mutableListOf(),
+    private var additionalContainers: MutableMap<String, GenericContainer<*>> = mutableMapOf(),
+    private var runtimeContainerEnvs: MutableMap<String, String> = mutableMapOf(),
+    private var restateContainerImage: String =
           System.getenv(RESTATE_CONTAINER_IMAGE_ENV) ?: DEFAULT_RESTATE_CONTAINER_IMAGE,
-      private var invokerRetryPolicy: RetryPolicy? = null,
-      private var enableTracesExport: Boolean = true,
-      private var configSchema: RestateConfigSchema? = null,
-      private var loadEnvs: Boolean = true
+    private var invokerRetryPolicy: RetryPolicy? = null,
+    private var enableTracesExport: Boolean = true,
+    private var configSchema: RestateConfigSchema? = null,
+    private var loadEnvs: Boolean = true
   ) {
 
-    fun withServiceEndpoint(serviceSpec: ServiceSpec) = apply {
-      this.serviceEndpoints.add(serviceSpec)
+    fun withServiceEndpoint(serviceDeployer: ServiceDeployer) = apply {
+      this.serviceEndpoints.add(serviceDeployer)
     }
 
-    fun withServiceEndpoint(serviceSpecBuilder: ServiceSpec.Builder) = apply {
-      this.serviceEndpoints.add(serviceSpecBuilder.build())
+    fun withServiceEndpoint(serviceDeployerBuilder: ServiceDeployer.Builder) = apply {
+      this.serviceEndpoints.add(serviceDeployerBuilder.build())
     }
 
     /** Add a service with default configuration. */
     fun withServiceEndpoint(containerImageName: String) = apply {
-      this.withServiceEndpoint(ServiceSpec.builder(containerImageName))
+      this.withServiceEndpoint(ServiceDeployer.builder(containerImageName))
     }
 
     fun runtimeDeployments(runtimeDeployments: Int) = apply {
@@ -383,7 +383,7 @@ private constructor(
     logger.debug("Runtime META and Ingress healthy")
   }
 
-  fun discoverServiceEndpoint(client: EndpointsClient, spec: ServiceSpec) {
+  fun discoverServiceEndpoint(client: EndpointsClient, spec: ServiceDeployer) {
     val url = spec.getEndpointUrl()
     if (spec.skipRegistration) {
       logger.debug("Skipping registration for endpoint {}", url)

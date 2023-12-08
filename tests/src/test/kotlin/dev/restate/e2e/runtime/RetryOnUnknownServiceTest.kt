@@ -53,7 +53,7 @@ class RetryOnUnknownServiceTest {
       val registrationResult =
           client.createServiceEndpoint(
               RegisterServiceEndpointRequest(
-                  uri = "http://${Containers.NODE_COLLECTIONS_SERVICE_SPEC.hostName}:8080/",
+                  uri = "http://${Containers.NODE_COLLECTIONS_SERVICE_SPEC.name}:8080/",
                   additionalHeaders = null,
                   force = false))
       assertThat(registrationResult.statusCode).isGreaterThanOrEqualTo(200).isLessThan(300)

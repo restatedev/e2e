@@ -11,18 +11,23 @@ package dev.restate.e2e.utils
 
 import java.net.URL
 import org.testcontainers.containers.GenericContainer
-import org.testcontainers.lifecycle.Startable
 import org.testcontainers.utility.DockerImageName
 
+data class ServiceProjectSpec(
+  internal val lambdaArchiveLocation: String,
+  internal val containerImage: String,
+)
+
 /** Definition of a service to deploy. */
-data class ServiceSpec(
-    internal val containerImage: String,
-    val hostName: String,
-    internal val envs: Map<String, String>,
-    internal val port: Int,
-    internal val registrationOptions: RegistrationOptions,
-    internal val skipRegistration: Boolean,
-    internal val dependencies: List<Startable>,
+data class ServiceDeployer(
+  /**
+   * This is going to be the hostname in testcontainers, the lambda name suffix in lambda
+   */
+  val name: String,
+  internal val serviceProjectSpec: ServiceProjectSpec,
+  internal val envs: Map<String, String>,
+  internal val registrationOptions: RegistrationOptions,
+  internal val skipRegistration: Boolean,
 ) {
 
   data class RegistrationOptions(
@@ -31,32 +36,27 @@ data class ServiceSpec(
 
   companion object {
     @JvmStatic
-    fun builder(containerImage: String): Builder {
-      return Builder(containerImage)
+    fun builder(serviceProjectSpec: ServiceProjectSpec): Builder {
+      return Builder(serviceProjectSpec)
     }
   }
 
   data class Builder(
-      private var containerImage: String,
-      private var hostName: String =
-          containerImage
+      private var serviceProjectSpec: ServiceProjectSpec,
+      private var name: String =
+          serviceProjectSpec.containerImage
               .trim()
               .split(Regex.fromLiteral("/"))
               .last()
               .split(Regex.fromLiteral(":"))
               .first(),
       private var envs: MutableMap<String, String> = mutableMapOf(),
-      private var port: Int = 8080,
       private var registrationOptions: RegistrationOptions = RegistrationOptions(),
       private var skipRegistration: Boolean = false,
-      private var dependencies: MutableList<Startable> = mutableListOf(),
   ) {
-    fun withHostName(hostName: String) = apply { this.hostName = hostName }
+    fun withName(hostName: String) = apply { this.name = hostName }
 
     fun withEnv(key: String, value: String) = apply { this.envs[key] = value }
-
-    /// Note: the port is not exposed!
-    fun withPort(port: Int) = apply { this.port = port }
 
     fun withEnvs(envs: Map<String, String>) = apply { this.envs.putAll(envs) }
 
@@ -66,36 +66,30 @@ data class ServiceSpec(
 
     fun skipRegistration() = apply { this.skipRegistration = true }
 
-    fun dependsOn(container: Startable) = apply { this.dependencies.add(container) }
-
     fun build() =
-        ServiceSpec(
-            containerImage,
-            hostName,
-            envs,
-            port,
-            registrationOptions,
-            skipRegistration,
-            dependencies)
+        ServiceDeployer(
+          name,
+          serviceProjectSpec,
+          envs,
+          registrationOptions,
+          skipRegistration
+        )
   }
 
   fun toBuilder(): Builder {
     return Builder(
-        containerImage,
-        hostName,
-        envs = envs.toMutableMap(),
-        port,
-        dependencies = dependencies.toMutableList())
+      serviceProjectSpec,
+      name,
+        envs = envs.toMutableMap())
   }
 
   internal fun toContainer(): GenericContainer<*> {
-    return GenericContainer(DockerImageName.parse(containerImage))
-        .withEnv("PORT", port.toString())
+    return GenericContainer(DockerImageName.parse(serviceProjectSpec.containerImage))
+        .withEnv("PORT", 8080.toString())
         .withEnv(envs)
-        .dependsOn(dependencies)
   }
 
   internal fun getEndpointUrl(): URL {
-    return URL("http", this.hostName, this.port, "/")
+    return URL("http", this.name, 8080, "/")
   }
 }

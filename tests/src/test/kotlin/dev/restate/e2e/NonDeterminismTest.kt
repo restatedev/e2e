@@ -16,7 +16,7 @@ import dev.restate.e2e.services.counter.CounterProto
 import dev.restate.e2e.services.nondeterminism.NonDeterminismProto.NonDeterministicRequest
 import dev.restate.e2e.services.nondeterminism.NonDeterministicServiceGrpc
 import dev.restate.e2e.utils.*
-import dev.restate.e2e.utils.ServiceSpec.*
+import dev.restate.e2e.utils.ServiceDeployer.*
 import io.grpc.*
 import io.grpc.stub.ClientCalls
 import java.util.*
