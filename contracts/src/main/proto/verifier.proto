@@ -13,6 +13,7 @@ option java_package = "dev.restate.e2e.services.verification.verifier";
 option java_outer_classname = "VerifierProto";
 
 import "dev/restate/ext.proto";
+import "google/protobuf/empty.proto";
 import "interpreter.proto";
 
 package verifier;
@@ -20,7 +21,7 @@ package verifier;
 service CommandVerifier {
   option (dev.restate.ext.service_type) = KEYED;
 
-  rpc Execute(ExecuteRequest) returns (Empty) {};
+  rpc Execute(ExecuteRequest) returns (google.protobuf.Empty) {};
 
   rpc Verify(VerificationRequest) returns (VerificationResponse) {};
 
@@ -30,13 +31,14 @@ service CommandVerifier {
 }
 
 message ExecuteRequest {
-  interpreter.TestParams params = 1 [(dev.restate.ext.field) = KEY];
+  // "{width}-{depth}-{max_sleep_millis}-{seed}"
+  string params = 1 [(dev.restate.ext.field) = KEY];
 }
 
-message Empty {}
 
 message VerificationRequest {
-  interpreter.TestParams params = 1 [(dev.restate.ext.field) = KEY];
+  // "{width}-{depth}-{max_sleep_millis}-{seed}"
+  string params = 1 [(dev.restate.ext.field) = KEY];
 }
 
 message VerificationResponse {
@@ -44,7 +46,8 @@ message VerificationResponse {
 }
 
 message ClearRequest {
-  interpreter.TestParams params = 1 [(dev.restate.ext.field) = KEY];
+  // "{width}-{depth}-{max_sleep_millis}-{seed}"
+  string params = 1 [(dev.restate.ext.field) = KEY];
 }
 
 message ClearResponse {
@@ -52,7 +55,8 @@ message ClearResponse {
 }
 
 message InspectRequest {
-  interpreter.TestParams params = 1 [(dev.restate.ext.field) = KEY];
+  // "{width}-{depth}-{max_sleep_millis}-{seed}"
+  string params = 1 [(dev.restate.ext.field) = KEY];
 }
 
 message InspectResponse {

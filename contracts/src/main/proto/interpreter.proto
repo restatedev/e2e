@@ -13,6 +13,7 @@ option java_package = "dev.restate.e2e.services.verification.interpreter";
 option java_outer_classname = "InterpreterProto";
 
 import "dev/restate/ext.proto";
+import "google/protobuf/empty.proto";
 
 package interpreter;
 
@@ -20,42 +21,30 @@ service CommandInterpreter {
 
   option (dev.restate.ext.service_type) = KEYED;
 
-  rpc Call(CallRequest) returns (Empty) {}
+  rpc Call(CallRequest) returns (google.protobuf.Empty) {}
 
-  rpc BackgroundCall(BackgroundCallRequest) returns (Empty) {}
+  rpc BackgroundCall(BackgroundCallRequest) returns (google.protobuf.Empty) {}
 
   rpc Verify(VerificationRequest) returns (VerificationResult) {};
 
-  rpc Clear(ClearRequest) returns (Empty) {};
-}
-
-message Empty {}
-
-message TestParams {
-  string seed = 1;
-  int32 width = 2;
-  int32 depth = 3;
-  optional int32 max_sleep_millis = 4;
-}
-
-message Key {
-  TestParams params = 1;
-  // target is an arbitrary integer allowing us to select different service keys
-  int32 target = 2;
+  rpc Clear(ClearRequest) returns (google.protobuf.Empty) {};
 }
 
 message CallRequest {
-  Key key = 1 [(dev.restate.ext.field) = KEY];
+  // "{target}-{width}-{depth}-{max_sleep_millis}-{seed}"
+  string key = 1 [(dev.restate.ext.field) = KEY];
   Commands commands = 3;
 }
 
 message BackgroundCallRequest {
-  Key key = 1 [(dev.restate.ext.field) = KEY];
+  // "{target}-{width}-{depth}-{max_sleep_millis}-{seed}"
+  string key = 1 [(dev.restate.ext.field) = KEY];
   Commands commands = 2;
 }
 
 message VerificationRequest {
-  Key key = 2 [(dev.restate.ext.field) = KEY];
+  // "{target}-{width}-{depth}-{max_sleep_millis}-{seed}"
+  string key = 1 [(dev.restate.ext.field) = KEY];
   int64 expected = 3;
 }
 
@@ -65,7 +54,8 @@ message VerificationResult {
 }
 
 message ClearRequest {
-  Key key = 1 [(dev.restate.ext.field) = KEY];
+  // "{target}-{width}-{depth}-{max_sleep_millis}-{seed}"
+  string key = 1 [(dev.restate.ext.field) = KEY];
 }
 
 // Commands - a sequence of commands for the service to interpret. Each command corresponds to a

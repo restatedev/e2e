@@ -12,7 +12,6 @@ import {
   ClearResponse,
   CommandVerifier,
   DeepPartial,
-  Empty,
   ExecuteRequest,
   InspectRequest,
   InspectResponse,
@@ -22,7 +21,7 @@ import {
 } from "./generated/verifier";
 import {
   CallRequest,
-  ClearRequest as InterpeterClearRequest,
+  ClearRequest as InterpreterClearRequest,
   Command,
   CommandInterpreterClientImpl,
   Commands,
@@ -30,8 +29,37 @@ import {
 } from "./generated/interpreter";
 import seedrandom from "seedrandom";
 import { useContext, TerminalError } from "@restatedev/restate-sdk";
+import { Empty } from "./generated/google/protobuf/empty";
 
 const DEFAULT_MAX_SLEEP = 32768;
+
+// "{width}-{depth}-{max_sleep_millis}-{seed}"
+export function parseTestParams(key: string): {
+  width: number;
+  depth: number;
+  maxSleepMillis: number;
+  seed: string;
+} {
+  const regex = /^(\d*)-(\d*)-(\d*)-(.*)$/gm;
+  const match = key.match(regex)!!;
+  return {
+    width: parseInt(match[1]),
+    depth: parseInt(match[2]),
+    maxSleepMillis: parseInt(match[3]),
+    seed: match[4],
+  };
+}
+
+// "{target}-{width}-{depth}-{max_sleep_millis}-{seed}"
+export function writeInterpreterParams(params: {
+  target: number;
+  width: number;
+  depth: number;
+  maxSleepMillis: number;
+  seed: string;
+}): string {
+  return `${params.target}-${params.width}-${params.depth}-${params.maxSleepMillis}-${params.seed}`;
+}
 
 export class CommandBuilder {
   random: () => number; // return a random float
@@ -243,6 +271,7 @@ export class CommandVerifierService implements CommandVerifier {
       throw new TerminalError("No params in ExecuteRequest");
     }
     const ctx = useContext(this);
+    const params = parseTestParams(request.params);
 
     // we've already been called with these parameters; don't kick off the job a second time
     if (await ctx.get("started")) {
@@ -252,17 +281,17 @@ export class CommandVerifierService implements CommandVerifier {
     }
 
     const client = new CommandInterpreterClientImpl(ctx);
-    const builder = new CommandBuilder(
-      seedrandom(request.params.seed),
-      request.params.width
-    );
+    const builder = new CommandBuilder(seedrandom(params.seed), params.width);
     const { target, commands } = builder.buildCommands(
-      request.params.maxSleepMillis || DEFAULT_MAX_SLEEP,
-      request.params.depth
+      params.maxSleepMillis || DEFAULT_MAX_SLEEP,
+      params.depth
     );
 
     await client.call(
-      CallRequest.create({ key: { params: request.params, target }, commands })
+      CallRequest.create({
+        key: writeInterpreterParams({ ...params, target }),
+        commands,
+      })
     );
 
     return Empty.create({});
@@ -273,14 +302,13 @@ export class CommandVerifierService implements CommandVerifier {
       throw new TerminalError("No params in VerificationRequest");
     }
     const ctx = useContext(this);
+    const params = parseTestParams(request.params);
+
     const client = new CommandInterpreterClientImpl(ctx);
-    const builder = new CommandBuilder(
-      seedrandom(request.params.seed),
-      request.params.width
-    );
+    const builder = new CommandBuilder(seedrandom(params.seed), params.width);
     const { target, commands } = builder.buildCommands(
-      request.params.maxSleepMillis || DEFAULT_MAX_SLEEP,
-      request.params.depth
+      params.maxSleepMillis || DEFAULT_MAX_SLEEP,
+      params.depth
     );
     const m = new Map<number, number>();
     this.simulateCommands(m, target, commands);
@@ -290,10 +318,7 @@ export class CommandVerifierService implements CommandVerifier {
       Array.from(m).map(async ([key, value]): Promise<void> => {
         const resp = await client.verify(
           InterpreterVerificationRequest.create({
-            key: {
-              params: request.params,
-              target: key,
-            },
+            key: writeInterpreterParams({ ...params, target: key }),
             expected: value,
           })
         );
@@ -318,18 +343,17 @@ export class CommandVerifierService implements CommandVerifier {
       throw new TerminalError("No params in ClearRequest");
     }
     const ctx = useContext(this);
+    const params = parseTestParams(request.params);
+
     // clear the idempotent flag, given that we can now execute again
     if (await ctx.get("started")) {
       ctx.clear("started");
     }
     const client = new CommandInterpreterClientImpl(ctx);
-    const builder = new CommandBuilder(
-      seedrandom(request.params.seed),
-      request.params.width
-    );
+    const builder = new CommandBuilder(seedrandom(params.seed), params.width);
     const { target, commands } = builder.buildCommands(
-      request.params.maxSleepMillis || DEFAULT_MAX_SLEEP,
-      request.params.depth
+      params.maxSleepMillis || DEFAULT_MAX_SLEEP,
+      params.depth
     );
     const m = new Map<number, number>();
     this.simulateCommands(m, target, commands);
@@ -337,11 +361,8 @@ export class CommandVerifierService implements CommandVerifier {
     await Promise.all(
       Array.from(m.keys()).map(async (key): Promise<void> => {
         await client.clear(
-          InterpeterClearRequest.create({
-            key: {
-              params: request.params,
-              target: key,
-            },
+          InterpreterClearRequest.create({
+            key: writeInterpreterParams({ ...params, target: key }),
           })
         );
       })
@@ -354,16 +375,15 @@ export class CommandVerifierService implements CommandVerifier {
     if (!request.params) {
       throw new TerminalError("No params in InspectRequest");
     }
-    const builder = new CommandBuilder(
-      seedrandom(request.params.seed),
-      request.params.width
-    );
+    const params = parseTestParams(request.params);
+
+    const builder = new CommandBuilder(seedrandom(params.seed), params.width);
     const { target, commands } = builder.buildCommands(
-      request.params.maxSleepMillis || DEFAULT_MAX_SLEEP,
-      request.params.depth
+      params.maxSleepMillis || DEFAULT_MAX_SLEEP,
+      params.depth
     );
     return InspectResponse.create({
-      call: { key: { params: request.params, target }, commands },
+      call: { key: writeInterpreterParams({ ...params, target }), commands },
     });
   }
 }

@@ -19,16 +19,33 @@ import {
   CommandInterpreter,
   CommandInterpreterClientImpl,
   Commands,
-  Empty,
-  Key,
   protobufPackage,
-  TestParams,
   VerificationRequest,
   VerificationResult,
 } from "./generated/interpreter";
+import { Empty } from "./generated/google/protobuf/empty";
 
 export const CommandInterpreterServiceFQN =
   protobufPackage + ".CommandInterpreter";
+
+// "{target}-{width}-{depth}-{max_sleep_millis}-{seed}"
+export function parseInterpreterParams(key: string): {
+  target: number;
+  width: number;
+  depth: number;
+  maxSleepMillis: number;
+  seed: string;
+} {
+  const regex = /^(\d*)-(\d*)-(\d*)-(\d*)-(.*)$/gm;
+  const match = key.match(regex)!!;
+  return {
+    target: parseInt(match[1]),
+    width: parseInt(match[2]),
+    depth: parseInt(match[3]),
+    maxSleepMillis: parseInt(match[4]),
+    seed: match[5],
+  };
+}
 
 export class CommandInterpreterService implements CommandInterpreter {
   async call(request: CallRequest): Promise<Empty> {
@@ -40,7 +57,7 @@ export class CommandInterpreterService implements CommandInterpreter {
   }
 
   async eitherCall(
-    key: Key | undefined,
+    key: string | undefined,
     commands: Commands | undefined
   ): Promise<Empty> {
     if (!commands?.command) {
@@ -48,9 +65,6 @@ export class CommandInterpreterService implements CommandInterpreter {
     }
     if (!key) {
       throw new Error("CallRequest with no key");
-    }
-    if (!key.params) {
-      throw new Error("CallRequest with no test parameters");
     }
     const ctx = useContext(this);
     const client = new CommandInterpreterClientImpl(ctx);
@@ -65,7 +79,7 @@ export class CommandInterpreterService implements CommandInterpreter {
           await this._syncCall(
             ctx,
             client,
-            key.params,
+            key,
             c.syncCall as Command_SyncCall
           );
           break;
@@ -74,7 +88,7 @@ export class CommandInterpreterService implements CommandInterpreter {
             ctx,
             client,
             pending_calls,
-            key.params,
+            key,
             c.asyncCall as Command_AsyncCall
           );
           break;
@@ -89,7 +103,7 @@ export class CommandInterpreterService implements CommandInterpreter {
           await this._backgroundCall(
             ctx,
             client,
-            key.params,
+            key,
             c.backgroundCall as Command_BackgroundCall
           );
           break;
@@ -113,12 +127,12 @@ export class CommandInterpreterService implements CommandInterpreter {
   async _syncCall(
     ctx: RestateContext,
     client: CommandInterpreterClientImpl,
-    params: TestParams,
+    key: string,
     request: Command_SyncCall
   ): Promise<void> {
     await client.call(
       CallRequest.create({
-        key: { params, target: request.target },
+        key,
         commands: request.commands,
       })
     );
@@ -128,14 +142,14 @@ export class CommandInterpreterService implements CommandInterpreter {
     ctx: RestateContext,
     client: CommandInterpreterClientImpl,
     pending_calls: Map<number, Promise<Empty>>,
-    params: TestParams,
+    key: string,
     request: Command_AsyncCall
   ) {
     pending_calls.set(
       request.callId,
       client.call(
         CallRequest.create({
-          key: { params, target: request.target },
+          key,
           commands: request.commands,
         })
       )
@@ -158,13 +172,13 @@ export class CommandInterpreterService implements CommandInterpreter {
   async _backgroundCall(
     ctx: RestateContext,
     client: CommandInterpreterClientImpl,
-    params: TestParams,
+    key: string,
     request: Command_BackgroundCall
   ): Promise<void> {
     return ctx.oneWayCall(() =>
       client.backgroundCall(
         BackgroundCallRequest.create({
-          key: { params, target: request.target },
+          key,
           commands: request.commands,
         })
       )

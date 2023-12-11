@@ -54,7 +54,7 @@ import {
   CounterHandlerAPIRouter,
 } from "./handler_api";
 import { EventHandlerFQN, EventHandlerService } from "./event_handler";
-import {startEmbeddedHandlerServer} from "./embedded_handler_api";
+import { startEmbeddedHandlerServer } from "./embedded_handler_api";
 
 let serverBuilder;
 export let handler: (event: any) => Promise<any>;
@@ -195,10 +195,7 @@ const services = new Map<
 ]);
 console.log("Known services: " + services.keys());
 
-if (
-  !process.env.SERVICES &&
-  !process.env.EMBEDDED_HANDLER_PORT
-) {
+if (!process.env.SERVICES && !process.env.EMBEDDED_HANDLER_PORT) {
   throw new Error("Cannot find SERVICES nor EMBEDDED_HANDLER_PORT env");
 }
 
@@ -236,7 +233,7 @@ if (process.env.SERVICES) {
   if ("handle" in serverBuilder) {
     handler = serverBuilder.handle();
   } else {
-    serverBuilder.listen()
+    serverBuilder.listen();
   }
 }
 
