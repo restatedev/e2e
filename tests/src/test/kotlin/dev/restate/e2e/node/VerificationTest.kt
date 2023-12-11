@@ -15,7 +15,6 @@ import dev.restate.e2e.services.verification.interpreter.CommandInterpreterGrpc.
 import dev.restate.e2e.services.verification.interpreter.CommandKt.asyncCall
 import dev.restate.e2e.services.verification.interpreter.CommandKt.asyncCallAwait
 import dev.restate.e2e.services.verification.interpreter.CommandKt.sleep
-import dev.restate.e2e.services.verification.interpreter.InterpreterProto.TestParams
 import dev.restate.e2e.services.verification.verifier.CommandVerifierGrpc.CommandVerifierBlockingStub
 import dev.restate.e2e.services.verification.verifier.clearRequest
 import dev.restate.e2e.services.verification.verifier.executeRequest
@@ -63,7 +62,7 @@ class VerificationTest {
     private val POLL_INTERVAL = 500.milliseconds.toJavaDuration()
     private val MAX_POLL_TIME = 2.minutes.toJavaDuration()
 
-    fun CommandVerifierBlockingStub.awaitVerify(testParams: TestParams): Unit =
+    fun CommandVerifierBlockingStub.awaitVerify(testParams: String): Unit =
         await
             .pollInterval(POLL_INTERVAL)
             .atMost(MAX_POLL_TIME)
@@ -166,10 +165,8 @@ class VerificationTest {
   fun unawaitedSelfCall(@InjectBlockingStub interpreter: CommandInterpreterBlockingStub) {
     interpreter.call(
         callRequest {
-          key = key {
-            params = testParams {}
-            target = 1
-          }
+          // "{target}-{width}-{depth}-{max_sleep_millis}-{seed}"
+          key = "1-3-14-35000-abc"
           commands = commands {
             command.addAll(
                 listOf(
@@ -196,18 +193,14 @@ class VerificationTest {
         })
   }
 
-  private fun testParams(): TestParams {
+  private fun testParams(): String {
     var testSeed = System.getenv(E2E_VERIFICATION_SEED_ENV)
     if (testSeed.isNullOrEmpty()) {
       testSeed = generateAlphanumericString(16)
     }
-
     logger.info("Using seed {}", testSeed)
-    return dev.restate.e2e.services.verification.interpreter.testParams {
-      seed = testSeed
-      width = 3
-      depth = 14
-      maxSleepMillis = 5.seconds.inWholeMilliseconds.toInt()
-    }
+
+    // "{width}-{depth}-{max_sleep_millis}-{seed}"
+    return "3-14-${5.seconds.inWholeMilliseconds.toInt()}-$testSeed"
   }
 }
