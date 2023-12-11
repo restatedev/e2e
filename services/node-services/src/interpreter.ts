@@ -28,23 +28,33 @@ import { Empty } from "./generated/google/protobuf/empty";
 export const CommandInterpreterServiceFQN =
   protobufPackage + ".CommandInterpreter";
 
-// "{target}-{width}-{depth}-{max_sleep_millis}-{seed}"
-export function parseInterpreterParams(key: string): {
+type InterpreterKey = {
   target: number;
   width: number;
   depth: number;
   maxSleepMillis: number;
   seed: string;
-} {
-  const regex = /^(\d*)-(\d*)-(\d*)-(\d*)-(.*)$/gm;
-  const match = key.match(regex)!!;
-  return {
-    target: parseInt(match[1]),
-    width: parseInt(match[2]),
-    depth: parseInt(match[3]),
-    maxSleepMillis: parseInt(match[4]),
-    seed: match[5],
-  };
+};
+
+// "{target}-{width}-{depth}-{max_sleep_millis}-{seed}"
+const interpreterKeyRegex = /^(\d*)-(\d*)-(\d*)-(\d*)-(.*)$/gm;
+
+export function parseInterpreterKey(key: string): InterpreterKey {
+  const match = interpreterKeyRegex.exec(key);
+  if (match) {
+    return {
+      target: parseInt(match[1]),
+      width: parseInt(match[2]),
+      depth: parseInt(match[3]),
+      maxSleepMillis: parseInt(match[4]),
+      seed: match[5],
+    };
+  }
+  throw new Error("Unexpected interpreter key");
+}
+
+export function writeInterpreterKey(params: InterpreterKey): string {
+  return `${params.target}-${params.width}-${params.depth}-${params.maxSleepMillis}-${params.seed}`;
 }
 
 export class CommandInterpreterService implements CommandInterpreter {
@@ -69,6 +79,7 @@ export class CommandInterpreterService implements CommandInterpreter {
     const ctx = useContext(this);
     const client = new CommandInterpreterClientImpl(ctx);
     const pending_calls = new Map<number, Promise<Empty>>();
+    const params = parseInterpreterKey(key);
 
     for (const c of commands.command) {
       switch (true) {
@@ -79,7 +90,7 @@ export class CommandInterpreterService implements CommandInterpreter {
           await this._syncCall(
             ctx,
             client,
-            key,
+            params,
             c.syncCall as Command_SyncCall
           );
           break;
@@ -88,7 +99,7 @@ export class CommandInterpreterService implements CommandInterpreter {
             ctx,
             client,
             pending_calls,
-            key,
+            params,
             c.asyncCall as Command_AsyncCall
           );
           break;
@@ -103,7 +114,7 @@ export class CommandInterpreterService implements CommandInterpreter {
           await this._backgroundCall(
             ctx,
             client,
-            key,
+            params,
             c.backgroundCall as Command_BackgroundCall
           );
           break;
@@ -127,12 +138,12 @@ export class CommandInterpreterService implements CommandInterpreter {
   async _syncCall(
     ctx: RestateContext,
     client: CommandInterpreterClientImpl,
-    key: string,
+    key: InterpreterKey,
     request: Command_SyncCall
   ): Promise<void> {
     await client.call(
       CallRequest.create({
-        key,
+        key: writeInterpreterKey({ ...key, target: request.target }),
         commands: request.commands,
       })
     );
@@ -142,14 +153,14 @@ export class CommandInterpreterService implements CommandInterpreter {
     ctx: RestateContext,
     client: CommandInterpreterClientImpl,
     pending_calls: Map<number, Promise<Empty>>,
-    key: string,
+    key: InterpreterKey,
     request: Command_AsyncCall
   ) {
     pending_calls.set(
       request.callId,
       client.call(
         CallRequest.create({
-          key,
+          key: writeInterpreterKey({ ...key, target: request.target }),
           commands: request.commands,
         })
       )
@@ -172,13 +183,13 @@ export class CommandInterpreterService implements CommandInterpreter {
   async _backgroundCall(
     ctx: RestateContext,
     client: CommandInterpreterClientImpl,
-    key: string,
+    key: InterpreterKey,
     request: Command_BackgroundCall
   ): Promise<void> {
     return ctx.oneWayCall(() =>
       client.backgroundCall(
         BackgroundCallRequest.create({
-          key,
+          key: writeInterpreterKey({ ...key, target: request.target }),
           commands: request.commands,
         })
       )

@@ -30,35 +30,29 @@ import {
 import seedrandom from "seedrandom";
 import { useContext, TerminalError } from "@restatedev/restate-sdk";
 import { Empty } from "./generated/google/protobuf/empty";
+import { writeInterpreterKey } from "./interpreter";
 
 const DEFAULT_MAX_SLEEP = 32768;
 
 // "{width}-{depth}-{max_sleep_millis}-{seed}"
+const testParamsRegex = /^(\d*)-(\d*)-(\d*)-(.*)$/gm;
+
 export function parseTestParams(key: string): {
   width: number;
   depth: number;
   maxSleepMillis: number;
   seed: string;
 } {
-  const regex = /^(\d*)-(\d*)-(\d*)-(.*)$/gm;
-  const match = key.match(regex)!!;
-  return {
-    width: parseInt(match[1]),
-    depth: parseInt(match[2]),
-    maxSleepMillis: parseInt(match[3]),
-    seed: match[4],
-  };
-}
-
-// "{target}-{width}-{depth}-{max_sleep_millis}-{seed}"
-export function writeInterpreterParams(params: {
-  target: number;
-  width: number;
-  depth: number;
-  maxSleepMillis: number;
-  seed: string;
-}): string {
-  return `${params.target}-${params.width}-${params.depth}-${params.maxSleepMillis}-${params.seed}`;
+  const match = testParamsRegex.exec(key);
+  if (match) {
+    return {
+      width: parseInt(match[1]),
+      depth: parseInt(match[2]),
+      maxSleepMillis: parseInt(match[3]),
+      seed: match[4],
+    };
+  }
+  throw new Error("Unexpected test params");
 }
 
 export class CommandBuilder {
@@ -289,7 +283,7 @@ export class CommandVerifierService implements CommandVerifier {
 
     await client.call(
       CallRequest.create({
-        key: writeInterpreterParams({ ...params, target }),
+        key: writeInterpreterKey({ ...params, target }),
         commands,
       })
     );
@@ -318,7 +312,7 @@ export class CommandVerifierService implements CommandVerifier {
       Array.from(m).map(async ([key, value]): Promise<void> => {
         const resp = await client.verify(
           InterpreterVerificationRequest.create({
-            key: writeInterpreterParams({ ...params, target: key }),
+            key: writeInterpreterKey({ ...params, target: key }),
             expected: value,
           })
         );
@@ -362,7 +356,7 @@ export class CommandVerifierService implements CommandVerifier {
       Array.from(m.keys()).map(async (key): Promise<void> => {
         await client.clear(
           InterpreterClearRequest.create({
-            key: writeInterpreterParams({ ...params, target: key }),
+            key: writeInterpreterKey({ ...params, target: key }),
           })
         );
       })
@@ -383,7 +377,7 @@ export class CommandVerifierService implements CommandVerifier {
       params.depth
     );
     return InspectResponse.create({
-      call: { key: writeInterpreterParams({ ...params, target }), commands },
+      call: { key: writeInterpreterKey({ ...params, target }), commands },
     });
   }
 }

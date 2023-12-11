@@ -166,7 +166,7 @@ class VerificationTest {
     interpreter.call(
         callRequest {
           // "{target}-{width}-{depth}-{max_sleep_millis}-{seed}"
-          key = "1-1-1-1-abc"
+          key = "1-3-14-35000-abc"
           commands = commands {
             command.addAll(
                 listOf(
@@ -198,9 +198,9 @@ class VerificationTest {
     if (testSeed.isNullOrEmpty()) {
       testSeed = generateAlphanumericString(16)
     }
+    logger.info("Using seed {}", testSeed)
 
     // "{width}-{depth}-{max_sleep_millis}-{seed}"
-    logger.info("Using seed {}", testSeed)
     return "3-14-${5.seconds.inWholeMilliseconds.toInt()}-$testSeed"
   }
 }
