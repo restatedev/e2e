@@ -3,4 +3,4 @@
 # If you use protoc instead, you can ignore (or delete) this file
 version: v1
 deps:
-  - buf.build/restatedev/proto
+  - buf.build/restatedev/proto:0.6.0
