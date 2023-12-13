@@ -1,0 +1,31 @@
+// Copyright (c) 2023 - Restate Software, Inc., Restate GmbH
+//
+// This file is part of the Restate e2e tests,
+// which are released under the MIT license.
+//
+// You can find a copy of the license in file LICENSE in the root
+// directory of this repository or package, or at
+// https://github.com/restatedev/e2e/blob/main/LICENSE
+
+syntax = "proto3";
+
+option java_package = "dev.restate.e2e.services.killtest";
+option java_outer_classname = "KillTestProto";
+
+import "google/protobuf/empty.proto";
+import "dev/restate/ext.proto";
+
+package kill_test;
+
+service KillTestService {
+  option (dev.restate.ext.service_type) = UNKEYED;
+
+  rpc StartCallTree(google.protobuf.Empty) returns (google.protobuf.Empty);
+}
+
+service KillSingletonService {
+  option (dev.restate.ext.service_type) = SINGLETON;
+
+  rpc RecursiveCall(google.protobuf.Empty) returns (google.protobuf.Empty);
+  rpc IsUnlocked(google.protobuf.Empty) returns (google.protobuf.Empty);
+}

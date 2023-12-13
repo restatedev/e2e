@@ -10,20 +10,20 @@
 package dev.restate.e2e.runtime
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.google.protobuf.Empty
 import dev.restate.e2e.Containers
 import dev.restate.e2e.services.awakeableholder.AwakeableHolderServiceGrpc
 import dev.restate.e2e.services.awakeableholder.AwakeableHolderServiceGrpc.AwakeableHolderServiceBlockingStub
 import dev.restate.e2e.services.awakeableholder.hasAwakeableRequest
 import dev.restate.e2e.services.awakeableholder.unlockRequest
-import dev.restate.e2e.services.counter.CounterGrpc
-import dev.restate.e2e.services.counter.CounterGrpc.CounterBlockingStub
-import dev.restate.e2e.services.counter.counterRequest
+import dev.restate.e2e.services.killtest.KillSingletonServiceGrpc
+import dev.restate.e2e.services.killtest.KillSingletonServiceGrpc.KillSingletonServiceBlockingStub
+import dev.restate.e2e.services.killtest.KillTestServiceGrpc
 import dev.restate.e2e.utils.*
 import dev.restate.e2e.utils.meta.client.InvocationsClient
-import dev.restate.generated.IngressGrpc.IngressBlockingStub
+import dev.restate.generated.IngressGrpc
 import dev.restate.generated.invokeRequest
 import java.net.URL
-import java.util.*
 import okhttp3.OkHttpClient
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
@@ -40,50 +40,48 @@ class KillInvocationTest {
       RestateDeployer.Builder()
           .withServiceEndpoint(
               Containers.nodeServicesContainer(
-                  "services", CounterGrpc.SERVICE_NAME, AwakeableHolderServiceGrpc.SERVICE_NAME))
+                  "services",
+                  KillTestServiceGrpc.SERVICE_NAME,
+                  KillSingletonServiceGrpc.SERVICE_NAME,
+                  AwakeableHolderServiceGrpc.SERVICE_NAME))
           .build()
     }
   }
 
   @Test
   fun kill(
-      @InjectBlockingStub ingressClient: IngressBlockingStub,
-      @InjectBlockingStub counterClient: CounterBlockingStub,
+      @InjectBlockingStub ingressClient: IngressGrpc.IngressBlockingStub,
+      @InjectBlockingStub singletonService: KillSingletonServiceBlockingStub,
       @InjectBlockingStub awakeableHolderClient: AwakeableHolderServiceBlockingStub,
       @InjectMetaURL metaURL: URL
   ) {
-    val counter = UUID.randomUUID().toString()
-    val counterRequest = counterRequest { counterName = counter }
-
     val id =
         ingressClient
             .invoke(
                 invokeRequest {
-                  service = CounterGrpc.SERVICE_NAME
-                  method = CounterGrpc.getInfiniteIncrementLoopMethod().bareMethodName!!
-                  pb = counterRequest.toByteString()
+                  service = KillTestServiceGrpc.SERVICE_NAME
+                  method = KillTestServiceGrpc.getStartCallTreeMethod().bareMethodName!!
+                  pb = Empty.getDefaultInstance().toByteString()
                 })
             .id
 
     // Await until AwakeableHolder has an awakeable and then complete it.
-    //  With this synchronization point we make sure the invocation has started before killing it.
+    // With this synchronization point we make sure the call tree has been built before killing it.
     await untilCallTo
         {
-          awakeableHolderClient.hasAwakeable(hasAwakeableRequest { name = counter })
+          awakeableHolderClient.hasAwakeable(hasAwakeableRequest { name = "kill" })
         } matches
         { result ->
           result!!.hasAwakeable
         }
-    awakeableHolderClient.unlock(unlockRequest { name = counter })
+    awakeableHolderClient.unlock(unlockRequest { name = "kill" })
 
     // Kill the invocation
     val client = InvocationsClient(ObjectMapper(), metaURL.toString(), OkHttpClient())
     val response = client.cancelInvocation(id)
     assertThat(response.statusCode).isGreaterThanOrEqualTo(200).isLessThan(300)
 
-    // Now let's invoke the greeter on the same key.
-    // At some point we should get an answer because the service is unlocked by the kill
-    // We increment of 1 before entering the awakeable lock
-    assertThat(counterClient.get(counterRequest).value).isGreaterThanOrEqualTo(1)
+    // Check that the singleton service is unlocked after killing the call tree
+    singletonService.isUnlocked(Empty.getDefaultInstance())
   }
 }

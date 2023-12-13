@@ -22,6 +22,7 @@ import { protoMetadata as proxyProtoMetadata } from "./generated/proxy";
 import { protoMetadata as rngProtoMetadata } from "./generated/rng";
 import { protoMetadata as awakeableHolderProtoMetadata } from "./generated/awakeable_holder";
 import { protoMetadata as eventHandlerProtoMetadata } from "./generated/event_handler";
+import { protoMetadata as killTestProtoMetadata } from "./generated/kill_test";
 import { CounterService, CounterServiceFQN } from "./counter";
 import { ListService, ListServiceFQN } from "./collections";
 import { FailingService, FailingServiceFQN } from "./errors";
@@ -55,6 +56,7 @@ import {
 } from "./handler_api";
 import { EventHandlerFQN, EventHandlerService } from "./event_handler";
 import { startEmbeddedHandlerServer } from "./embedded_handler_api";
+import { KillSingletonServiceFQN, KillTestService, KillTestServiceFQN, KillSingletonService } from "./kill_test";
 
 let serverBuilder;
 export let handler: (event: any) => Promise<any>;
@@ -192,6 +194,22 @@ const services = new Map<
       instance: new EventHandlerService(),
     },
   ],
+  [
+    KillTestServiceFQN,
+    {
+      descriptor: killTestProtoMetadata,
+      service: "KillTestService",
+      instance: new KillTestService(),
+    }
+  ],
+  [
+    KillSingletonServiceFQN,
+    {
+      descriptor: killTestProtoMetadata,
+      service: "KillSingletonService",
+      instance: new KillSingletonService(),
+    }
+  ]
 ]);
 console.log("Known services: " + services.keys());
 
