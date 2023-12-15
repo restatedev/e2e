@@ -41,7 +41,7 @@ export class AwakeableHolderService implements IAwakeableHolderService {
     const ctx = restate.useContext(this);
 
     return {
-      hasAwakeable: (await ctx.get<string>(ID_KEY)) !== undefined,
+      hasAwakeable: (await ctx.get<string>(ID_KEY)) !== null,
     };
   }
 

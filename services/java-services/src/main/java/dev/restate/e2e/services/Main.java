@@ -81,6 +81,14 @@ public class Main {
         case EventHandlerGrpc.SERVICE_NAME:
           restateHttpEndpointBuilder.withService(new EventHandlerService());
           break;
+        case dev.restate.e2e.services.canceltest.CancelTestServiceGrpc.SERVICE_NAME:
+          restateHttpEndpointBuilder.withService(
+              new dev.restate.e2e.services.canceltest.CancelTestService());
+          break;
+        case dev.restate.e2e.services.canceltest.BlockingServiceGrpc.SERVICE_NAME:
+          restateHttpEndpointBuilder.withService(
+              new dev.restate.e2e.services.canceltest.BlockingService());
+          break;
       }
     }
 
