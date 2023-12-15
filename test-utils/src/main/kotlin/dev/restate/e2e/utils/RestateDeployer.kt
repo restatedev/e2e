@@ -12,11 +12,11 @@ package dev.restate.e2e.utils
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
-import dev.restate.admin.api.ServiceEndpointApi
+import dev.restate.admin.api.DeploymentApi
 import dev.restate.admin.client.ApiClient
 import dev.restate.admin.client.ApiException
-import dev.restate.admin.model.RegisterServiceEndpointRequest
-import dev.restate.admin.model.RegisterServiceEndpointRequestAnyOf
+import dev.restate.admin.model.RegisterDeploymentRequest
+import dev.restate.admin.model.RegisterDeploymentRequestAnyOf
 import dev.restate.e2e.utils.config.IngressOptions
 import dev.restate.e2e.utils.config.RestateConfigSchema
 import io.grpc.ManagedChannel
@@ -243,11 +243,11 @@ private constructor(
 
     // Let's execute service discovery to register the services
     val client =
-        ServiceEndpointApi(
+        DeploymentApi(
             ApiClient()
                 .setHost("localhost")
                 .setPort(getContainerPort(RESTATE_RUNTIME, RUNTIME_META_ENDPOINT_PORT)))
-    serviceContainers.values.forEach { (spec, _) -> discoverServiceEndpoint(client, spec) }
+    serviceContainers.values.forEach { (spec, _) -> discoverDeployment(client, spec) }
 
     // Log environment
     writeEnvironmentReport(testReportDir)
@@ -385,7 +385,7 @@ private constructor(
     logger.debug("Runtime META and Ingress healthy")
   }
 
-  fun discoverServiceEndpoint(client: ServiceEndpointApi, spec: ServiceSpec) {
+  fun discoverDeployment(client: DeploymentApi, spec: ServiceSpec) {
     val url = spec.getEndpointUrl()
     if (spec.skipRegistration) {
       logger.debug("Skipping registration for endpoint {}", url)
@@ -393,9 +393,9 @@ private constructor(
     }
 
     val request =
-        RegisterServiceEndpointRequest(RegisterServiceEndpointRequestAnyOf().uri(url.toString()))
+        RegisterDeploymentRequest(RegisterDeploymentRequestAnyOf().uri(url.toString()).force(false))
     try {
-      val response = client.createServiceEndpoint(request)
+      val response = client.createDeployment(request)
       logger.debug("Successfully executed discovery for endpoint {}. Result: {}", url, response)
     } catch (e: ApiException) {
       fail(

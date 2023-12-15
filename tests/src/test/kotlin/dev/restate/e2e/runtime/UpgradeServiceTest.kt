@@ -10,9 +10,10 @@
 package dev.restate.e2e.runtime
 
 import com.google.protobuf.Empty
-import dev.restate.admin.api.ServiceEndpointApi
+import dev.restate.admin.api.DeploymentApi
 import dev.restate.admin.client.ApiClient
-import dev.restate.admin.model.RegisterServiceEndpointRequest
+import dev.restate.admin.model.RegisterDeploymentRequest
+import dev.restate.admin.model.RegisterDeploymentRequestAnyOf
 import dev.restate.e2e.Containers
 import dev.restate.e2e.services.awakeableholder.AwakeableHolderServiceGrpc
 import dev.restate.e2e.services.awakeableholder.hasAwakeableRequest
@@ -55,9 +56,10 @@ class UpgradeServiceTest {
     }
 
     fun registerService2(metaURL: URL) {
-      val client = ServiceEndpointApi(ApiClient().setHost(metaURL.host).setPort(metaURL.port))
-      client.createServiceEndpoint(
-          RegisterServiceEndpointRequest().uri("http://version2:8080/").force(false))
+      val client = DeploymentApi(ApiClient().setHost(metaURL.host).setPort(metaURL.port))
+      client.createDeployment(
+          RegisterDeploymentRequest(
+              RegisterDeploymentRequestAnyOf().uri("http://version2:8080/").force(false)))
     }
   }
 

@@ -9,9 +9,10 @@
 
 package dev.restate.e2e.runtime
 
-import dev.restate.admin.api.ServiceEndpointApi
+import dev.restate.admin.api.DeploymentApi
 import dev.restate.admin.client.ApiClient
-import dev.restate.admin.model.RegisterServiceEndpointRequest
+import dev.restate.admin.model.RegisterDeploymentRequest
+import dev.restate.admin.model.RegisterDeploymentRequestAnyOf
 import dev.restate.e2e.Containers
 import dev.restate.e2e.services.collections.list.ListProto
 import dev.restate.e2e.services.collections.list.ListServiceGrpc
@@ -48,11 +49,12 @@ class RetryOnUnknownServiceTest {
     }
 
     fun registerListService(metaURL: URL) {
-      val client = ServiceEndpointApi(ApiClient().setHost(metaURL.host).setPort(metaURL.port))
-      client.createServiceEndpoint(
-          RegisterServiceEndpointRequest()
-              .uri("http://${Containers.NODE_COLLECTIONS_SERVICE_SPEC.hostName}:8080/")
-              .force(false))
+      val client = DeploymentApi(ApiClient().setHost(metaURL.host).setPort(metaURL.port))
+      client.createDeployment(
+          RegisterDeploymentRequest(
+              RegisterDeploymentRequestAnyOf()
+                  .uri("http://${Containers.NODE_COLLECTIONS_SERVICE_SPEC.hostName}:8080/")
+                  .force(false)))
     }
   }
 
