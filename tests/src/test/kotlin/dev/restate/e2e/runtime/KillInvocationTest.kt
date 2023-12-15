@@ -12,6 +12,7 @@ package dev.restate.e2e.runtime
 import com.google.protobuf.Empty
 import dev.restate.admin.api.InvocationApi
 import dev.restate.admin.client.ApiClient
+import dev.restate.admin.model.TerminationMode
 import dev.restate.e2e.Containers
 import dev.restate.e2e.services.awakeableholder.AwakeableHolderServiceGrpc
 import dev.restate.e2e.services.awakeableholder.AwakeableHolderServiceGrpc.AwakeableHolderServiceBlockingStub
@@ -76,7 +77,7 @@ class KillInvocationTest {
 
     // Kill the invocation
     val client = InvocationApi(ApiClient().setHost(metaURL.host).setPort(metaURL.port))
-    client.cancelInvocation(id)
+    client.terminateInvocation(id, TerminationMode.KILL)
 
     // Check that the singleton service is unlocked after killing the call tree
     singletonService.isUnlocked(Empty.getDefaultInstance())
