@@ -20,14 +20,9 @@ data class ServiceSpec(
     val hostName: String,
     internal val envs: Map<String, String>,
     internal val port: Int,
-    internal val registrationOptions: RegistrationOptions,
     internal val skipRegistration: Boolean,
     internal val dependencies: List<Startable>,
 ) {
-
-  data class RegistrationOptions(
-      val additionalHeaders: Map<String, String> = mapOf(),
-  )
 
   companion object {
     @JvmStatic
@@ -47,7 +42,6 @@ data class ServiceSpec(
               .first(),
       private var envs: MutableMap<String, String> = mutableMapOf(),
       private var port: Int = 8080,
-      private var registrationOptions: RegistrationOptions = RegistrationOptions(),
       private var skipRegistration: Boolean = false,
       private var dependencies: MutableList<Startable> = mutableListOf(),
   ) {
@@ -60,23 +54,11 @@ data class ServiceSpec(
 
     fun withEnvs(envs: Map<String, String>) = apply { this.envs.putAll(envs) }
 
-    fun withRegistrationOptions(registrationOptions: RegistrationOptions) = apply {
-      this.registrationOptions = registrationOptions
-    }
-
     fun skipRegistration() = apply { this.skipRegistration = true }
 
     fun dependsOn(container: Startable) = apply { this.dependencies.add(container) }
 
-    fun build() =
-        ServiceSpec(
-            containerImage,
-            hostName,
-            envs,
-            port,
-            registrationOptions,
-            skipRegistration,
-            dependencies)
+    fun build() = ServiceSpec(containerImage, hostName, envs, port, skipRegistration, dependencies)
   }
 
   fun toBuilder(): Builder {

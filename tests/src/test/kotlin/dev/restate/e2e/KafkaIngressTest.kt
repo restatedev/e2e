@@ -9,22 +9,21 @@
 
 package dev.restate.e2e
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import dev.restate.admin.api.SubscriptionApi
+import dev.restate.admin.client.ApiClient
+import dev.restate.admin.model.CreateSubscriptionRequest
 import dev.restate.e2e.services.counter.CounterGrpc
 import dev.restate.e2e.services.counter.CounterGrpc.CounterBlockingStub
 import dev.restate.e2e.services.counter.counterRequest
 import dev.restate.e2e.services.eventhandler.EventHandlerGrpc
 import dev.restate.e2e.utils.*
 import dev.restate.e2e.utils.config.*
-import dev.restate.e2e.utils.meta.client.SubscriptionsClient
-import dev.restate.e2e.utils.meta.models.CreateSubscriptionRequest
 import io.grpc.MethodDescriptor
 import java.net.URI
 import java.net.URL
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.util.*
-import okhttp3.OkHttpClient
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.Producer
 import org.apache.kafka.clients.producer.ProducerRecord
@@ -120,15 +119,12 @@ abstract class BaseKafkaIngressTest {
 
     // Create subscription
     val subscriptionsClient =
-        SubscriptionsClient(ObjectMapper(), metaURL.toString(), OkHttpClient())
-    assertThat(
-            subscriptionsClient.createSubscription(
-                CreateSubscriptionRequest(
-                    source = "kafka://my-cluster/$topic",
-                    sink = "service://${methodDescriptor.fullMethodName}",
-                    options = mapOf("auto.offset.reset" to "earliest"))))
-        .extracting { it.statusCode }
-        .isEqualTo(201)
+        SubscriptionApi(ApiClient().setHost(metaURL.host).setPort(metaURL.port))
+    subscriptionsClient.createSubscription(
+        CreateSubscriptionRequest()
+            .source("kafka://my-cluster/$topic")
+            .sink("service://${methodDescriptor.fullMethodName}")
+            .options(mapOf("auto.offset.reset" to "earliest")))
 
     // Produce message to kafka
     produceMessageToKafka("PLAINTEXT://localhost:$kafkaPort", topic, counter, listOf("1", "2", "3"))
@@ -169,15 +165,12 @@ class NodeHandlerAPIKafkaIngressTest {
 
     // Create subscription
     val subscriptionsClient =
-        SubscriptionsClient(ObjectMapper(), metaURL.toString(), OkHttpClient())
-    assertThat(
-            subscriptionsClient.createSubscription(
-                CreateSubscriptionRequest(
-                    source = "kafka://my-cluster/$COUNTER_TOPIC",
-                    sink = "service://${Containers.HANDLER_API_COUNTER_SERVICE_NAME}/handleEvent",
-                    options = mapOf("auto.offset.reset" to "earliest"))))
-        .extracting { it.statusCode }
-        .isEqualTo(201)
+        SubscriptionApi(ApiClient().setHost(metaURL.host).setPort(metaURL.port))
+    subscriptionsClient.createSubscription(
+        CreateSubscriptionRequest()
+            .source("kafka://my-cluster/$COUNTER_TOPIC")
+            .sink("service://${Containers.HANDLER_API_COUNTER_SERVICE_NAME}/handleEvent")
+            .options(mapOf("auto.offset.reset" to "earliest")))
 
     // Produce message to kafka
     produceMessageToKafka(

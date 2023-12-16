@@ -9,8 +9,11 @@
 
 package dev.restate.e2e.runtime
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.protobuf.Empty
+import dev.restate.admin.api.DeploymentApi
+import dev.restate.admin.client.ApiClient
+import dev.restate.admin.model.RegisterDeploymentRequest
+import dev.restate.admin.model.RegisterDeploymentRequestAnyOf
 import dev.restate.e2e.Containers
 import dev.restate.e2e.services.awakeableholder.AwakeableHolderServiceGrpc
 import dev.restate.e2e.services.awakeableholder.hasAwakeableRequest
@@ -19,13 +22,9 @@ import dev.restate.e2e.services.collections.list.ListProto
 import dev.restate.e2e.services.collections.list.ListServiceGrpc
 import dev.restate.e2e.services.upgradetest.UpgradeTestServiceGrpc
 import dev.restate.e2e.utils.*
-import dev.restate.e2e.utils.meta.client.EndpointsClient
-import dev.restate.e2e.utils.meta.models.RegisterServiceEndpointRequest
 import dev.restate.generated.IngressGrpc
 import dev.restate.generated.invokeRequest
 import java.net.URL
-import java.util.*
-import okhttp3.OkHttpClient
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
@@ -57,12 +56,10 @@ class UpgradeServiceTest {
     }
 
     fun registerService2(metaURL: URL) {
-      val client = EndpointsClient(ObjectMapper(), metaURL.toString(), OkHttpClient())
-      val registrationResult =
-          client.createServiceEndpoint(
-              RegisterServiceEndpointRequest(
-                  uri = "http://version2:8080/", additionalHeaders = null, force = false))
-      assertThat(registrationResult.statusCode).isGreaterThanOrEqualTo(200).isLessThan(300)
+      val client = DeploymentApi(ApiClient().setHost(metaURL.host).setPort(metaURL.port))
+      client.createDeployment(
+          RegisterDeploymentRequest(
+              RegisterDeploymentRequestAnyOf().uri("http://version2:8080/").force(false)))
     }
   }
 

@@ -12,10 +12,13 @@ package dev.restate.e2e.utils
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
+import dev.restate.admin.api.DeploymentApi
+import dev.restate.admin.client.ApiClient
+import dev.restate.admin.client.ApiException
+import dev.restate.admin.model.RegisterDeploymentRequest
+import dev.restate.admin.model.RegisterDeploymentRequestAnyOf
 import dev.restate.e2e.utils.config.IngressOptions
 import dev.restate.e2e.utils.config.RestateConfigSchema
-import dev.restate.e2e.utils.meta.client.EndpointsClient
-import dev.restate.e2e.utils.meta.models.RegisterServiceEndpointRequest
 import io.grpc.ManagedChannel
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder
 import java.io.File
@@ -25,7 +28,6 @@ import java.nio.file.Path
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.time.Duration.Companion.seconds
-import okhttp3.OkHttpClient
 import org.apache.logging.log4j.LogManager
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.api.fail
@@ -241,11 +243,11 @@ private constructor(
 
     // Let's execute service discovery to register the services
     val client =
-        EndpointsClient(
-            ObjectMapper(),
-            "http://localhost:${getContainerPort(RESTATE_RUNTIME, RUNTIME_META_ENDPOINT_PORT)}",
-            OkHttpClient())
-    serviceContainers.values.forEach { (spec, _) -> discoverServiceEndpoint(client, spec) }
+        DeploymentApi(
+            ApiClient()
+                .setHost("localhost")
+                .setPort(getContainerPort(RESTATE_RUNTIME, RUNTIME_META_ENDPOINT_PORT)))
+    serviceContainers.values.forEach { (spec, _) -> discoverDeployment(client, spec) }
 
     // Log environment
     writeEnvironmentReport(testReportDir)
@@ -383,7 +385,7 @@ private constructor(
     logger.debug("Runtime META and Ingress healthy")
   }
 
-  fun discoverServiceEndpoint(client: EndpointsClient, spec: ServiceSpec) {
+  fun discoverDeployment(client: DeploymentApi, spec: ServiceSpec) {
     val url = spec.getEndpointUrl()
     if (spec.skipRegistration) {
       logger.debug("Skipping registration for endpoint {}", url)
@@ -391,20 +393,15 @@ private constructor(
     }
 
     val request =
-        RegisterServiceEndpointRequest(
-            uri = url.toString(),
-            additionalHeaders = spec.registrationOptions.additionalHeaders,
-            force = false)
-
-    val response = client.createServiceEndpoint(request)
-
-    if (response.statusCode !in 200..299) {
+        RegisterDeploymentRequest(RegisterDeploymentRequestAnyOf().uri(url.toString()).force(false))
+    try {
+      val response = client.createDeployment(request)
+      logger.debug("Successfully executed discovery for endpoint {}. Result: {}", url, response)
+    } catch (e: ApiException) {
       fail(
-          "Error when discovering endpoint $url, " +
-              "got status code ${response.statusCode} with body: ${response.data?.toPrettyString()}")
+          "Error when discovering endpoint $url, got status code ${e.code} with body: ${e.responseBody}",
+          e)
     }
-
-    logger.debug("Successfully executed discovery for endpoint {}. Result: {}", url, response.data)
   }
 
   private fun writeEnvironmentReport(testReportDir: String) {

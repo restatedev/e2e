@@ -17,6 +17,8 @@ dependencies {
   testImplementation(project(":test-utils"))
   testImplementation(project(":contracts"))
 
+  testImplementation(libs.restate.admin)
+
   testImplementation(libs.junit.all)
   testImplementation(libs.assertj)
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.1")

@@ -9,8 +9,9 @@
 
 package dev.restate.e2e.runtime
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.protobuf.Empty
+import dev.restate.admin.api.InvocationApi
+import dev.restate.admin.client.ApiClient
 import dev.restate.e2e.Containers
 import dev.restate.e2e.services.awakeableholder.AwakeableHolderServiceGrpc
 import dev.restate.e2e.services.awakeableholder.AwakeableHolderServiceGrpc.AwakeableHolderServiceBlockingStub
@@ -20,12 +21,9 @@ import dev.restate.e2e.services.killtest.KillSingletonServiceGrpc
 import dev.restate.e2e.services.killtest.KillSingletonServiceGrpc.KillSingletonServiceBlockingStub
 import dev.restate.e2e.services.killtest.KillTestServiceGrpc
 import dev.restate.e2e.utils.*
-import dev.restate.e2e.utils.meta.client.InvocationsClient
 import dev.restate.generated.IngressGrpc
 import dev.restate.generated.invokeRequest
 import java.net.URL
-import okhttp3.OkHttpClient
-import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
@@ -77,9 +75,8 @@ class KillInvocationTest {
     awakeableHolderClient.unlock(unlockRequest { name = "kill" })
 
     // Kill the invocation
-    val client = InvocationsClient(ObjectMapper(), metaURL.toString(), OkHttpClient())
-    val response = client.cancelInvocation(id)
-    assertThat(response.statusCode).isGreaterThanOrEqualTo(200).isLessThan(300)
+    val client = InvocationApi(ApiClient().setHost(metaURL.host).setPort(metaURL.port))
+    client.cancelInvocation(id)
 
     // Check that the singleton service is unlocked after killing the call tree
     singletonService.isUnlocked(Empty.getDefaultInstance())
