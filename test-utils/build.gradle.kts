@@ -11,7 +11,6 @@ plugins {
   java
   kotlin("jvm")
   kotlin("plugin.serialization")
-  id("com.github.jk1.dependency-license-report") version "2.1"
   id("org.jsonschema2pojo") version "1.2.1"
 }
 
@@ -60,18 +59,4 @@ tasks {
   withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> { dependsOn(generateJsonSchema2Pojo) }
   withType<JavaCompile> { dependsOn(generateJsonSchema2Pojo) }
   withType<Jar> { dependsOn(generateJsonSchema2Pojo) }
-
-  check { dependsOn(checkLicense) }
-}
-
-licenseReport {
-  renderers = arrayOf(com.github.jk1.license.render.CsvReportRenderer())
-
-  excludeBoms = true
-
-  allowedLicensesFile = file("$rootDir/config/allowed-licenses.json")
-  filters =
-      arrayOf(
-          com.github.jk1.license.filter.LicenseBundleNormalizer(
-              "$rootDir/config/license-normalizer-bundle.json", true))
 }
