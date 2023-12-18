@@ -69,6 +69,12 @@ licenseReport {
 
   excludeBoms = true
 
+  excludes =
+      arrayOf(
+          "dev.restate:.*", // Our own dependencies imported through JAVA_SDK_LOCAL_BUILD won't have
+          // a license
+      )
+
   allowedLicensesFile = file("$rootDir/config/allowed-licenses.json")
   filters =
       arrayOf(
