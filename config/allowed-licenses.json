@@ -26,6 +26,9 @@
     },
     {
       "moduleName": "com.squareup.okio:okio"
+    },
+    {
+      "moduleName": "org.jetbrains.kotlin:kotlin-stdlib-common"
     }
   ]
 }
