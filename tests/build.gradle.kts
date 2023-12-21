@@ -94,10 +94,7 @@ tasks {
             mapOf(
                 "RESTATE_WORKER__PARTITIONS" to "1",
                 "RESTATE_TOKIO_RUNTIME__WORKER_THREADS" to "1",
-                // temporary fix for unblocking https://github.com/restatedev/restate/pull/1009,
-                // should be reverted once we have
-                // fixed https://github.com/restatedev/restate/issues/1013
-                "RESTATE_TOKIO_RUNTIME__MAX_BLOCKING_THREADS" to "2",
+                "RESTATE_TOKIO_RUNTIME__MAX_BLOCKING_THREADS" to "1",
             )
 
     useJUnitPlatform {
