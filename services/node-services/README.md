@@ -14,10 +14,19 @@ To build:
 $ npm run build
 ```
 
-To build the docker image:
+## Build and push the docker image:
+A node services Docker image is used by the verification tests in Kubernetes.
 
 ```shell
-$ gradle :services:node-services:dockerBuild
+$ docker build --platform linux/arm64,linux/amd64 -t ghcr.io/restatedev/e2e-node-services --push .
+```
+
+## Update the Lambda function
+A node services Lambda is used by the Lambda verification tests.
+
+```shell
+npm run bundle
+aws lambda update-function-code --function-name 'arn:aws:lambda:eu-central-1:663487780041:function:e2e-node-services' --zip-file fileb://dist/index.zip
 ```
 
 ## Run proto code generation
