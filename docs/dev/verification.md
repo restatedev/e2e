@@ -41,10 +41,11 @@ cargo run
 ```
 Then start a `node-services` container:
 ```bash
-SERVICES=verifier.CommandVerifier,interpreter.CommandInterpreter PORT=9080 docker run --network=host -e SERVICES ghcr.io/restatedev/e2e-node-services:latest
+SERVICES=verifier.CommandVerifier,interpreter.CommandInterpreter PORT=9080 docker run -p 9080:9080 -e SERVICES ghcr.io/restatedev/e2e-node-services:latest
 # or using a local version:
 cd services/node-services
 npm link ../../../sdk-typescript # optionally, link to a local typescript sdk where `npm run build` has been run
+npm run build
 SERVICES=verifier.CommandVerifier,interpreter.CommandInterpreter npm run app
 ```
 
@@ -56,12 +57,12 @@ $ curl 127.0.0.1:9070/endpoints -H 'content-type: application/json' -d '{"uri": 
 
 Then execute a test with a given seed and set of parameters:
 ```bash
-# these parameters match the tests in VerificationTest.kt
-$ curl -s 127.0.0.1:8080/verifier.CommandVerifier/Execute --json '{"params": {"seed": "my-seed", "width": 3, "depth": 14, "max_sleep_millis": 5000}}'
+# these parameters match the tests in VerificationTest.kt. <width>-<depth>-<sleep>-<seed>
+$ curl -s 127.0.0.1:8080/verifier.CommandVerifier/Execute --json '{"params": "3-14-5000-my-seed"}'
 {}
 # When this returns, the sync portion of the test is done, but async tasks are likely still executing
 # Wait for output to stop in the Restate service
-$ curl -s 127.0.0.1:8080/verifier.CommandVerifier/Verify --json '{"params": {"seed": "my-seed", "width": 3, "depth": 14, "max_sleep_millis": 5000}}'
+$ curl -s 127.0.0.1:8080/verifier.CommandVerifier/Verify --json '{"params": "3-14-5000-my-seed"}'
 {"counters":{"84":2,"27":1,"30":1,"91":1,"23":1}}
 # A failed output looks like this:
 {"code":"internal","message":"[verifier.CommandVerifier-EQoIbXktc2VlZDEQAxgOIIgn-0188f6f65119797daf85039e6d67c941] [Verify]  Uncaught exception for invocation id: Incorrect value for target 14: expected 1, got 0"}
@@ -77,7 +78,7 @@ failure, something that reproduces rarely, or perhaps something related to the t
 
 One thing that might help is saving the command tree locally:
 ```bash
-curl -s 127.0.0.1:8080/verifier.CommandVerifier/Inspect --json '{"params": {"seed": "my-seed", "width": 3, "depth": 14, "max_sleep_millis": 5000}}' | jq '.call'  > call.json
+curl -s 127.0.0.1:8080/verifier.CommandVerifier/Inspect --json '{"params": "3-14-5000-my-seed"}' | jq '.call'  > call.json
 # You can execute a saved command tree directly, but this is *not* idempotent, so make sure to wipe Restate as needed
 curl -s 127.0.0.1:8080/interpreter.CommandInterpreter/Call --json @call.json
 ```

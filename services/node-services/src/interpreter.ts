@@ -37,7 +37,7 @@ type InterpreterKey = {
 };
 
 // "{target}-{width}-{depth}-{max_sleep_millis}-{seed}"
-const interpreterKeyRegex = /^(\d*)-(\d*)-(\d*)-(\d*)-(.*)$/gm;
+const interpreterKeyRegex = /^(\d*)-(\d*)-(\d*)-(\d*)-(.*)$/m;
 
 export function parseInterpreterKey(key: string): InterpreterKey {
   const match = interpreterKeyRegex.exec(key);
