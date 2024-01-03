@@ -35,7 +35,7 @@ import { writeInterpreterKey } from "./interpreter";
 const DEFAULT_MAX_SLEEP = 32768;
 
 // "{width}-{depth}-{max_sleep_millis}-{seed}"
-const testParamsRegex = /^(\d*)-(\d*)-(\d*)-(.*)$/gm;
+const testParamsRegex = /^(\d*)-(\d*)-(\d*)-(.*)$/m;
 
 export function parseTestParams(key: string): {
   width: number;
