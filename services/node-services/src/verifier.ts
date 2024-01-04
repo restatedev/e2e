@@ -299,13 +299,18 @@ export class CommandVerifierService implements CommandVerifier {
     const params = parseTestParams(request.params);
 
     const client = new CommandInterpreterClientImpl(ctx);
-    const builder = new CommandBuilder(seedrandom(params.seed), params.width);
-    const { target, commands } = builder.buildCommands(
-      params.maxSleepMillis || DEFAULT_MAX_SLEEP,
-      params.depth
-    );
-    const m = new Map<number, number>();
-    this.simulateCommands(m, target, commands);
+    // use side effect as this is quite cpu intensive and we may resume a few times
+    const m = await ctx.sideEffect(async () => {
+      const builder = new CommandBuilder(seedrandom(params.seed), params.width);
+      const { target, commands } = builder.buildCommands(
+        params.maxSleepMillis || DEFAULT_MAX_SLEEP,
+        params.depth
+      );
+
+      const m = new Map<number, number>();
+      this.simulateCommands(m, target, commands);
+      return Array.from(m);
+    });
 
     // fire off all the verification requests and see if any come back wrong
     await Promise.all(
@@ -344,16 +349,22 @@ export class CommandVerifierService implements CommandVerifier {
       ctx.clear("started");
     }
     const client = new CommandInterpreterClientImpl(ctx);
-    const builder = new CommandBuilder(seedrandom(params.seed), params.width);
-    const { target, commands } = builder.buildCommands(
-      params.maxSleepMillis || DEFAULT_MAX_SLEEP,
-      params.depth
-    );
-    const m = new Map<number, number>();
-    this.simulateCommands(m, target, commands);
+
+    // use side effect as this is quite cpu intensive and we may resume a few times
+    const keys = await ctx.sideEffect(async () => {
+      const builder = new CommandBuilder(seedrandom(params.seed), params.width);
+      const { target, commands } = builder.buildCommands(
+        params.maxSleepMillis || DEFAULT_MAX_SLEEP,
+        params.depth
+      );
+
+      const m = new Map<number, number>();
+      this.simulateCommands(m, target, commands);
+      return Array.from(m.keys());
+    });
 
     await Promise.all(
-      Array.from(m.keys()).map(async (key): Promise<void> => {
+      keys.map(async (key): Promise<void> => {
         await client.clear(
           InterpreterClearRequest.create({
             key: writeInterpreterKey({ ...params, target: key }),
@@ -362,7 +373,7 @@ export class CommandVerifierService implements CommandVerifier {
       })
     );
 
-    return ClearResponse.create({ targets: Array.from(m.keys()) });
+    return ClearResponse.create({ targets: keys });
   }
 
   async inspect(request: InspectRequest): Promise<InspectResponse> {
