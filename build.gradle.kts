@@ -79,10 +79,8 @@ allprojects {
     }
   }
 
-  java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-  }
+  // Configure the java toolchain to use. If not found, it will be downloaded automatically
+  java { toolchain { languageVersion = JavaLanguageVersion.of(11) } }
 }
 
 buildscript {

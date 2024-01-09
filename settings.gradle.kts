@@ -9,6 +9,8 @@
 
 rootProject.name = "restate-e2e"
 
+plugins { id("org.gradle.toolchains.foojay-resolver-convention") version "0.7.0" }
+
 include(
     "contracts",
     "services:java-services",
