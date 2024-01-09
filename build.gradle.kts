@@ -13,10 +13,14 @@ import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform.getCurr
 
 plugins {
   java
-  alias(libs.plugins.spotless)
+
+  // Declare plugins used by subprojects
+  id("com.diffplug.spotless") version "6.22.0" apply false
   kotlin("jvm") version "1.9.22" apply false
   kotlin("plugin.serialization") version "1.9.22" apply false
-  alias(libs.plugins.jib) apply false
+  id("com.google.cloud.tools.jib") version "3.2.1" apply false
+  id("net.ltgt.errorprone") version "3.1.0" apply false
+  id("com.google.protobuf") version "0.9.4" apply false
 }
 
 val restateVersion = libs.versions.restate.get()

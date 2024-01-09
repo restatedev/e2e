@@ -9,10 +9,8 @@
 
 plugins {
   java
-  idea
-  alias(libs.plugins.shadowJar)
-  alias(libs.plugins.errorprone)
-  alias(libs.plugins.jib)
+  id("net.ltgt.errorprone")
+  id("com.google.cloud.tools.jib")
 }
 
 dependencies {
@@ -43,7 +41,6 @@ jib {
   }
 }
 
-// Use gradle shadowJar to build the fat jar
 tasks.jar {
   manifest { attributes["Main-Class"] = "dev.restate.e2e.testing.externalhttpserver.Main" }
 }
