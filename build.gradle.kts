@@ -95,15 +95,8 @@ subprojects {
   apply(plugin = "kotlin")
   apply(plugin = "com.diffplug.spotless")
 
-  val testReport =
-      tasks.register<TestReport>("testReport") {
-        destinationDirectory.set(layout.buildDirectory.dir("reports/tests/test"))
-        testResults.setFrom(subprojects.mapNotNull { it.tasks.findByPath("test") })
-      }
-
   tasks.withType<Test> {
     useJUnitPlatform()
-    finalizedBy(testReport)
     testLogging {
       events(
           TestLogEvent.PASSED,
