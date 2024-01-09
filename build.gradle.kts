@@ -14,8 +14,8 @@ import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform.getCurr
 plugins {
   java
   alias(libs.plugins.spotless)
-  kotlin("jvm") version "1.8.21" apply false
-  kotlin("plugin.serialization") version "1.8.21" apply false
+  kotlin("jvm") version "1.9.22" apply false
+  kotlin("plugin.serialization") version "1.9.22" apply false
   alias(libs.plugins.jib) apply false
 }
 
