@@ -73,66 +73,71 @@ tasks {
     }
   }
 
-  register<Test>("testAlwaysSuspending") {
-    environment =
-        environment +
-            baseRestateEnvironment(name) +
-            mapOf("RESTATE_WORKER__INVOKER__INACTIVITY_TIMEOUT" to "0s")
+  val testAlwaysSuspending by
+      registering(Test::class) {
+        environment =
+            environment +
+                baseRestateEnvironment(name) +
+                mapOf("RESTATE_WORKER__INVOKER__INACTIVITY_TIMEOUT" to "0s")
 
-    useJUnitPlatform {
-      // Run all the tests with always-suspending or only-always-suspending tag
-      includeTags("always-suspending | only-always-suspending")
-    }
-    // Increase a bit the default timeout
-    systemProperties["junit.jupiter.execution.timeout.testable.method.default"] = "30 s"
-  }
+        useJUnitPlatform {
+          // Run all the tests with always-suspending or only-always-suspending tag
+          includeTags("always-suspending | only-always-suspending")
+        }
+        // Increase a bit the default timeout
+        systemProperties["junit.jupiter.execution.timeout.testable.method.default"] = "30 s"
+      }
 
-  register<Test>("testSingleThreadSinglePartition") {
-    environment =
-        environment +
-            baseRestateEnvironment(name) +
-            mapOf(
-                "RESTATE_WORKER__PARTITIONS" to "1",
-                "RESTATE_TOKIO_RUNTIME__WORKER_THREADS" to "1",
-                "RESTATE_TOKIO_RUNTIME__MAX_BLOCKING_THREADS" to "1",
-            )
+  val testSingleThreadSinglePartition by
+      registering(Test::class) {
+        environment =
+            environment +
+                baseRestateEnvironment(name) +
+                mapOf(
+                    "RESTATE_WORKER__PARTITIONS" to "1",
+                    "RESTATE_TOKIO_RUNTIME__WORKER_THREADS" to "1",
+                    "RESTATE_TOKIO_RUNTIME__MAX_BLOCKING_THREADS" to "1",
+                )
 
-    useJUnitPlatform {
-      // Run all the tests with either no tags, or always-suspending tag
-      includeTags("none() | always-suspending")
-    }
-    // Increase a bit the default timeout
-    systemProperties["junit.jupiter.execution.timeout.testable.method.default"] = "30 s"
-  }
+        useJUnitPlatform {
+          // Run all the tests with either no tags, or always-suspending tag
+          includeTags("none() | always-suspending")
+        }
+        // Increase a bit the default timeout
+        systemProperties["junit.jupiter.execution.timeout.testable.method.default"] = "30 s"
+      }
 
-  register<Test>("testLazyState") {
-    environment =
-        environment +
-            baseRestateEnvironment(name) +
-            mapOf(
-                "RESTATE_WORKER__INVOKER__DISABLE_EAGER_STATE" to "true",
-            )
+  val testLazyState by
+      registering(Test::class) {
+        environment =
+            environment +
+                baseRestateEnvironment(name) +
+                mapOf(
+                    "RESTATE_WORKER__INVOKER__DISABLE_EAGER_STATE" to "true",
+                )
 
-    useJUnitPlatform {
-      // Run all the tests with either no tags, or always-suspending tag
-      includeTags("lazy-state")
-    }
-  }
+        useJUnitPlatform {
+          // Run all the tests with either no tags, or always-suspending tag
+          includeTags("lazy-state")
+        }
+      }
 
-  register<Test>("testPersistedTimers") {
-    environment =
-        environment +
-            baseRestateEnvironment(name) +
-            mapOf("RESTATE_WORKER__TIMERS__NUM_TIMERS_IN_MEMORY_LIMIT" to "1")
+  val testPersistedTimers by
+      registering(Test::class) {
+        environment =
+            environment +
+                baseRestateEnvironment(name) +
+                mapOf("RESTATE_WORKER__TIMERS__NUM_TIMERS_IN_MEMORY_LIMIT" to "1")
 
-    useJUnitPlatform {
-      // Run all the tests with always-suspending or only-always-suspending tag
-      includeTags("timers")
-    }
-    // Increase a bit the default timeout
-    systemProperties["junit.jupiter.execution.timeout.testable.method.default"] = "20 s"
-  }
+        useJUnitPlatform {
+          // Run all the tests with always-suspending or only-always-suspending tag
+          includeTags("timers")
+        }
+        // Increase a bit the default timeout
+        systemProperties["junit.jupiter.execution.timeout.testable.method.default"] = "20 s"
+      }
 
+  // Common configuration for all test tasks
   withType<Test>().configureEach {
     dependsOn(":services:http-server:jibDockerBuild")
     dependsOn(":services:java-services:jibDockerBuild")
@@ -140,11 +145,11 @@ tasks {
 
     maxParallelForks = 3
   }
-}
 
-tasks.named("check") {
-  dependsOn("testAlwaysSuspending")
-  dependsOn("testSingleThreadSinglePartition")
-  dependsOn("testPersistedTimers")
-  dependsOn("testLazyState")
+  check {
+    dependsOn(testAlwaysSuspending)
+    dependsOn(testSingleThreadSinglePartition)
+    dependsOn(testPersistedTimers)
+    dependsOn(testLazyState)
+  }
 }

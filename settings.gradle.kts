@@ -9,6 +9,8 @@
 
 rootProject.name = "restate-e2e"
 
+plugins { id("org.gradle.toolchains.foojay-resolver-convention") version "0.7.0" }
+
 include(
     "contracts",
     "services:java-services",
@@ -80,14 +82,6 @@ dependencyResolutionManagement {
       library("awaitility", "org.awaitility", "awaitility-kotlin").versionRef("awaitility")
 
       library("errorprone", "com.google.errorprone", "error_prone_core").versionRef("errorprone")
-
-      // Plugins
-      plugin("spotless", "com.diffplug.spotless").version("6.22.0")
-      plugin("protobuf", "com.google.protobuf").version("0.9.4")
-      plugin("test-logger", "com.adarshr.test-logger").version("4.0.0")
-      plugin("errorprone", "net.ltgt.errorprone").version("3.1.0")
-      plugin("shadowJar", "com.github.johnrengelman.shadow").version("7.1.2")
-      plugin("jib", "com.google.cloud.tools.jib").version("3.2.1")
     }
   }
 }

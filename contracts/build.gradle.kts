@@ -13,7 +13,7 @@ import com.google.protobuf.gradle.protobuf
 plugins {
   java
   kotlin("jvm")
-  alias(libs.plugins.protobuf)
+  id("com.google.protobuf")
 }
 
 dependencies {
