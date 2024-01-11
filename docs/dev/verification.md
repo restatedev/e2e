@@ -73,7 +73,7 @@ To understand a failed test, you first need its full set of parameters. The seed
 For the other parameters, look at what created the job. In the e2e tests, the parameters are as above, width 3 depth 14 max_sleep_millis 5000.
 In the long running tests, we currently use width 4, depth 14, and default max_sleep_millis.
 
-The next thing you can try is running the same parameters a few times locally. This helps determine if this is a easily reproducible
+The next thing you can try is running the same parameters a few times locally. This helps determine if this is an easily reproducible
 failure, something that reproduces rarely, or perhaps something related to the test infra that led to a timeout that wasn't due to the test.
 
 One thing that might help is saving the command tree locally:
