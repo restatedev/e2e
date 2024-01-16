@@ -106,8 +106,7 @@ jobs:
         if: ${{ inputs.sdkTypescriptCommit != '' && github.event_name == 'workflow_dispatch' }}
         uses: dawidd6/action-download-artifact@v2
         with:
-          github_token: ${{ secrets.SDK_TYPESCRIPT_ACTION_READ_TOKEN || secrets.GITHUB_TOKEN }}
-          workflow: 58374855
+          workflow: test.yml
           repo: restatedev/sdk-typescript
           commit: ${{ inputs.sdkTypescriptCommit }}
           name: restatedev-restate-sdk
@@ -143,9 +142,8 @@ jobs:
         if: ${{ inputs.restateCommit != '' && github.event_name == 'workflow_dispatch' }}
         uses: dawidd6/action-download-artifact@v2
         with:
-          github_token: ${{ secrets.RESTATE_ACTION_READ_TOKEN || secrets.GITHUB_TOKEN }}
           repo: restatedev/restate
-          workflow: 44673365
+          workflow: docker.yml
           commit: ${{ inputs.restateCommit }}
           name: restate.tar
 
