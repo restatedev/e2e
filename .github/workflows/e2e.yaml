@@ -107,6 +107,7 @@ jobs:
         uses: dawidd6/action-download-artifact@v2
         with:
           github_token: ${{ secrets.SDK_TYPESCRIPT_ACTION_READ_TOKEN || secrets.GITHUB_TOKEN }}
+          workflow: 58374855
           repo: restatedev/sdk-typescript
           commit: ${{ inputs.sdkTypescriptCommit }}
           name: restatedev-restate-sdk
@@ -144,6 +145,7 @@ jobs:
         with:
           github_token: ${{ secrets.RESTATE_ACTION_READ_TOKEN || secrets.GITHUB_TOKEN }}
           repo: restatedev/restate
+          workflow: 44673365
           commit: ${{ inputs.restateCommit }}
           name: restate.tar
 
