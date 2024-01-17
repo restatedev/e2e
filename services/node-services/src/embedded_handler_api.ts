@@ -101,19 +101,15 @@ app.post("/consecutive_side_effects", async (req: Request, res: Response) => {
 
   const result = await rs.invoke(id, {}, async (ctx: restate.RpcContext) => {
     let invocationCount = 0;
-    const p1 = ctx.sideEffect<void>(async () => {
+    await ctx.sideEffect<void>(async () => {
       invocationCount++;
     });
-    const p2 = ctx.sideEffect<void>(async () => {
+    await ctx.sideEffect<void>(async () => {
       invocationCount++;
     });
-    const p3 = ctx.sideEffect<void>(async () => {
+    await ctx.sideEffect<void>(async () => {
       invocationCount++;
     });
-
-    await p1;
-    await p2;
-    await p3;
 
     return { invocationCount };
   });
