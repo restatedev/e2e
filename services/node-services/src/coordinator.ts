@@ -35,8 +35,7 @@ export class CoordinatorService implements Coordinator {
 
     const ctx = restate.useContext(this);
 
-    // Promise.all is not deterministic wrt failures, but this is fine as sleep never fails
-    await Promise.all(request.timer.map((value) => ctx.sleep(value.millis)));
+    await restate.CombineablePromise.all(request.timer.map((value) => ctx.sleep(value.millis)));
 
     return {};
   }
