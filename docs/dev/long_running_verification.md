@@ -96,27 +96,26 @@ these around or making them searchable; it just stores a rolling window of recen
 care about logs from hours ago, relating to very specific invocations. Fortunately we are using fluent-bit to send logs
 to AWS OpenSearch.
 
-## OpenSearch logs
-To use OpenSearch, go to https://d-99671f0c4b.awsapps.com/start#/ and click 'Opensearch service' to log in.
-In the left menu bar, go to Dashboards and then to the Long Running Test dashboard. This will show logs for all
-the components in EKS that relate to the tests. By default this is focussed on the `restate` namespace, but you can change
-this to `restate-chaos`
+## Grafana dashboard
+We have a dashboard at https://g-3236efe954.grafana-workspace.eu-central-1.amazonaws.com/d/l1GdA1yVk/long-running-verification-tests?orgId=1 which tracks the memory and cpu usage of the verification pods and the restate pod. 
+This can be very helpful in discovering performance degradations and memory leaks. 
 
-All logs should be indexed with the field `test_job` which will match the job name, which is also the test seed. This field
-is extracted via lua code running in the fluent bit log capture pods - it is extracted out of the service key which is emitted
-in all sdk loglines and many runtime ones. By filtering for this field using `+Add filter`, a good picture of what happened
-and when can be determined. Armed with much more specific timestamps, we can also search for all logs in that time,
-and try and spot any other errors that might not have had the right log metadata to contain the `test_job` field.
+This grafana instance is managed by AWS, and is backed by an AWS managed Prometheus instance. 
+A prometheus server in the cluster scrapes metrics from a `node-exporter` on each node, and these are then sent to the AWS Prometheus cluster.
 
+The Grafana dashboard also shows the logs from the Restate and verification pods.
+Note that in the Lambda environments there is no verification pod running and, therefore, there are no metrics and logs for it.
+In order to investigate an occurring problem you can filter the logs by a time range during which a test failure happened.
 The logs will rarely be a good substitute for a local reproduction, but trying to spot error messages can be a useful hint.
 
-## Grafana dashboard
-We have a dashboard at https://g-3236efe954.grafana-workspace.eu-central-1.amazonaws.com/d/l1GdA1yVk/long-running-verification-tests?orgId=1
-which tracks the memory and cpu usage of the verification pods and the restate pod. This can be very helpful in discovering
-performance degradations and memory leaks.
+You can choose between the different test environment via the `environment` variable.
 
-This grafana instance is managed by AWS, and is backed by an AWS managed Prometheus instance. A prometheus server in
-the cluster scrapes metrics from a `node-exporter` on each node, and these are then sent to the AWS Prometheus cluster.
+### Adding new environments
+
+In order to add a new environment you need to add a new Loki datasource with the name `restate(-.*)?`.
+The name should be the same as the K8s namespace of the environment.
+Once you have added the new Loki datasource, you should see the new environment in the dropdown menu in the dashboard.
+The reason why the valid environment values are not directly queried from Prometheus is because we want to be able to select a different Loki datasource for each environment.
 
 ## #dev-alerts
 There is a slack channel #dev-alerts which uses Prometheus metrics to alert whenever there are Job failures in either
