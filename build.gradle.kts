@@ -13,10 +13,14 @@ import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform.getCurr
 
 plugins {
   java
-  alias(libs.plugins.spotless)
-  kotlin("jvm") version "1.8.21" apply false
-  kotlin("plugin.serialization") version "1.8.21" apply false
-  alias(libs.plugins.jib) apply false
+
+  // Declare plugins used by subprojects
+  id("com.diffplug.spotless") version "6.22.0" apply false
+  kotlin("jvm") version "1.9.22" apply false
+  kotlin("plugin.serialization") version "1.9.22" apply false
+  id("com.google.cloud.tools.jib") version "3.2.1" apply false
+  id("net.ltgt.errorprone") version "3.1.0" apply false
+  id("com.google.protobuf") version "0.9.4" apply false
 }
 
 val restateVersion = libs.versions.restate.get()
@@ -75,6 +79,7 @@ allprojects {
     }
   }
 
+  // Configure the java toolchain to use. If not found, it will be downloaded automatically
   java { toolchain { languageVersion = JavaLanguageVersion.of(11) } }
 }
 
@@ -88,15 +93,8 @@ subprojects {
   apply(plugin = "kotlin")
   apply(plugin = "com.diffplug.spotless")
 
-  val testReport =
-      tasks.register<TestReport>("testReport") {
-        destinationDirectory.set(layout.buildDirectory.dir("reports/tests/test"))
-        testResults.setFrom(subprojects.mapNotNull { it.tasks.findByPath("test") })
-      }
-
   tasks.withType<Test> {
     useJUnitPlatform()
-    finalizedBy(testReport)
     testLogging {
       events(
           TestLogEvent.PASSED,

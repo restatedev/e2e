@@ -14,6 +14,11 @@ plugins {
   id("com.github.node-gradle.node") version "4.0.0"
 }
 
+tasks.register("updateRestateDependency") {
+  mustRunAfter("npmInstall")
+  doLast { exec { commandLine("npm", "update", "@restatedev/restate-sdk") } }
+}
+
 tasks.register("generateProto") {
   mustRunAfter("npmInstall")
   dependsOn("npm_run_proto")
@@ -24,6 +29,8 @@ tasks.register<Copy>("prepareDockerBuild") {
 
   if (!System.getenv("SDK_TYPESCRIPT_LOCAL_BUILD").isNullOrEmpty()) {
     dependsOn("installLocalSdkTypescript")
+  } else {
+    dependsOn("updateRestateDependency")
   }
 
   from(".") {

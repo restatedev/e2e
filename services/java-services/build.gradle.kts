@@ -13,9 +13,8 @@ import com.google.protobuf.gradle.protobuf
 plugins {
   java
   application
-  alias(libs.plugins.protobuf)
-  alias(libs.plugins.shadowJar)
-  alias(libs.plugins.jib)
+  id("com.google.protobuf")
+  id("com.google.cloud.tools.jib")
 }
 
 dependencies {
@@ -65,7 +64,6 @@ jib {
   }
 }
 
-// Use gradle shadowJar to build the fat jar
 tasks.jar { manifest { attributes["Main-Class"] = "dev.restate.e2e.services.Main" } }
 
 application { mainClass.set("dev.restate.e2e.services.Main") }
