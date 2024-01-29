@@ -81,6 +81,7 @@ private constructor(
 
     private const val IMAGE_PULL_POLICY_ENV = "E2E_IMAGE_PULL_POLICY"
     private const val ALWAYS_PULL = "always"
+    private const val CACHED_PULL = "cached"
 
     private const val MOUNT_STATE_DIRECTORY_ENV = "E2E_MOUNT_STATE_DIRECTORY"
 
@@ -346,8 +347,11 @@ private constructor(
       runtimeContainer.withEnv("RESTATE_CONFIG", "/config.yaml")
     }
 
-    if (System.getenv(IMAGE_PULL_POLICY_ENV) == ALWAYS_PULL) {
+    val pullPolicy = System.getenv(IMAGE_PULL_POLICY_ENV)
+    if (pullPolicy == null || pullPolicy == ALWAYS_PULL) {
       runtimeContainer.withImagePullPolicy(PullPolicy.alwaysPull())
+    } else if (pullPolicy == CACHED_PULL) {
+      runtimeContainer.withImagePullPolicy(PullPolicy.defaultPolicy())
     }
 
     runtimeContainer.start()
