@@ -20,6 +20,9 @@ gradle build
 
 This will populate your local image registry with the various service containers, required for testing, and then execute the tests.
 
+In the default configuration, testcontainers will try to pull the Restate container frequently during tests.
+To prevent this behavior, e.g. when working offline, set the environment variable `E2E_IMAGE_PULL_POLICY=cached` to use the image available in the local container registry.
+
 ### Tests
 
 Source code of test runners is located in the [Tests project](tests), in particular:
