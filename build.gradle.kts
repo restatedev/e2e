@@ -7,8 +7,6 @@
 // directory of this repository or package, or at
 // https://github.com/restatedev/e2e/blob/main/LICENSE
 
-import org.gradle.api.tasks.testing.logging.TestExceptionFormat
-import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform.getCurrentArchitecture
 
 plugins {
@@ -93,18 +91,7 @@ subprojects {
   apply(plugin = "kotlin")
   apply(plugin = "com.diffplug.spotless")
 
-  tasks.withType<Test> {
-    useJUnitPlatform()
-    testLogging {
-      events(
-          TestLogEvent.PASSED,
-          TestLogEvent.SKIPPED,
-          TestLogEvent.FAILED,
-          TestLogEvent.STANDARD_ERROR,
-          TestLogEvent.STANDARD_OUT)
-      exceptionFormat = TestExceptionFormat.FULL
-    }
-  }
+  tasks.withType<Test> { useJUnitPlatform() }
 
   configurations.all {
     // This disables caching for -SNAPSHOT dependencies
