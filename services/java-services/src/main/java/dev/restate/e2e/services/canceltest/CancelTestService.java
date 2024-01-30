@@ -15,7 +15,8 @@ import dev.restate.sdk.common.StateKey;
 import dev.restate.sdk.common.TerminalException;
 
 public class CancelTestService extends CancelTestServiceRestate.CancelTestServiceRestateImplBase {
-  private static StateKey<Boolean> CANCELED_STATE = StateKey.of("canceled", CoreSerdes.BOOLEAN);
+  private static StateKey<Boolean> CANCELED_STATE =
+      StateKey.of("canceled", CoreSerdes.JSON_BOOLEAN);
 
   @Override
   public void startTest(RestateContext ctx, CancelTestProto.BlockingRequest request)

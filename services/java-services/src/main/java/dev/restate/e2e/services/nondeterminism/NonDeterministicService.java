@@ -14,7 +14,6 @@ import dev.restate.e2e.services.counter.CounterGrpc;
 import dev.restate.e2e.services.counter.CounterProto.CounterAddRequest;
 import dev.restate.e2e.services.counter.CounterProto.CounterRequest;
 import dev.restate.sdk.RestateService;
-import dev.restate.sdk.common.CoreSerdes;
 import dev.restate.sdk.common.StateKey;
 import io.grpc.stub.StreamObserver;
 import java.time.Duration;
@@ -25,8 +24,8 @@ public class NonDeterministicService
     extends NonDeterministicServiceGrpc.NonDeterministicServiceImplBase implements RestateService {
 
   private final Map<String, Integer> invocationCounts = new ConcurrentHashMap<>();
-  private final StateKey<String> STATE_A = StateKey.of("a", CoreSerdes.STRING_UTF8);
-  private final StateKey<String> STATE_B = StateKey.of("b", CoreSerdes.STRING_UTF8);
+  private final StateKey<String> STATE_A = StateKey.string("a");
+  private final StateKey<String> STATE_B = StateKey.string("b");
 
   @Override
   public void leftSleepRightCall(

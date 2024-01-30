@@ -49,7 +49,7 @@ public class CoordinatorService extends CoordinatorRestate.CoordinatorRestateImp
 
   @Override
   public ProxyResponse proxy(RestateContext context) {
-    String key = context.sideEffect(CoreSerdes.STRING_UTF8, () -> UUID.randomUUID().toString());
+    String key = context.sideEffect(CoreSerdes.JSON_STRING, () -> UUID.randomUUID().toString());
 
     var pong =
         ReceiverRestate.newClient().ping(PingRequest.newBuilder().setKey(key).build()).await();
@@ -66,7 +66,7 @@ public class CoordinatorService extends CoordinatorRestate.CoordinatorRestateImp
     context.sleep(java.time.Duration.ofMillis(request.getSleepDuration().getMillis()));
 
     var receiverUUID =
-        context.sideEffect(CoreSerdes.STRING_UTF8, () -> UUID.randomUUID().toString());
+        context.sideEffect(CoreSerdes.JSON_STRING, () -> UUID.randomUUID().toString());
     var receiverClient = ReceiverRestate.newClient();
 
     LOG.info("Send fire and forget call to {}", ReceiverGrpc.getServiceDescriptor().getName());

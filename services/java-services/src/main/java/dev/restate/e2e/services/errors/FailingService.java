@@ -48,7 +48,7 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase
     ctx.call(
             FailingServiceGrpc.getTerminallyFailingCallMethod(),
             request.toBuilder()
-                .setKey(ctx.sideEffect(CoreSerdes.STRING_UTF8, () -> UUID.randomUUID().toString()))
+                .setKey(ctx.sideEffect(CoreSerdes.JSON_STRING, () -> UUID.randomUUID().toString()))
                 .build())
         .await();
 
@@ -64,7 +64,7 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase
 
     String finalMessage = "begin";
 
-    Awakeable<byte[]> awakeable = ctx.awakeable(CoreSerdes.BYTES);
+    Awakeable<byte[]> awakeable = ctx.awakeable(CoreSerdes.RAW);
 
     try {
       ctx.sideEffect(
@@ -89,7 +89,7 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase
               FailingServiceGrpc.getTerminallyFailingCallMethod(),
               ErrorMessage.newBuilder()
                   .setKey(
-                      ctx.sideEffect(CoreSerdes.STRING_UTF8, () -> UUID.randomUUID().toString()))
+                      ctx.sideEffect(CoreSerdes.JSON_STRING, () -> UUID.randomUUID().toString()))
                   .setErrorMessage("internal_call")
                   .build())
           .await();
@@ -122,7 +122,7 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase
     final int successAttempt =
         restateContext()
             .sideEffect(
-                CoreSerdes.INT,
+                CoreSerdes.JSON_INT,
                 () -> {
                   final int currentAttempt = this.eventualSuccessSideEffectCalls.incrementAndGet();
 

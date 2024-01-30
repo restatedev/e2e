@@ -26,7 +26,7 @@ public class BlockingService extends BlockingServiceRestate.BlockingServiceResta
     final AwakeableHolderServiceRestate.AwakeableHolderServiceRestateClient client =
         AwakeableHolderServiceRestate.newClient(context);
 
-    Awakeable<String> awakeable = context.awakeable(CoreSerdes.STRING_UTF8);
+    Awakeable<String> awakeable = context.awakeable(CoreSerdes.JSON_STRING);
     client
         .hold(
             AwakeableHolderProto.HoldRequest.newBuilder()
@@ -44,7 +44,7 @@ public class BlockingService extends BlockingServiceRestate.BlockingServiceResta
         context.sleep(Duration.ofDays(1024));
         break;
       case AWAKEABLE:
-        Awakeable<String> uncompletable = context.awakeable(CoreSerdes.STRING_UTF8);
+        Awakeable<String> uncompletable = context.awakeable(CoreSerdes.JSON_STRING);
         uncompletable.await();
         break;
       default:

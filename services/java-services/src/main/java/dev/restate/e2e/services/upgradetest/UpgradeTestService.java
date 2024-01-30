@@ -46,7 +46,7 @@ public class UpgradeTestService extends UpgradeTestServiceGrpc.UpgradeTestServic
 
     // In v1 case we create an awakeable, we ask the AwakeableHolderService to hold it, and then we
     // await on it
-    Awakeable<String> awakeable = ctx.awakeable(CoreSerdes.STRING_UTF8);
+    Awakeable<String> awakeable = ctx.awakeable(CoreSerdes.JSON_STRING);
     ctx.oneWayCall(
         AwakeableHolderServiceGrpc.getHoldMethod(),
         AwakeableHolderProto.HoldRequest.newBuilder()
