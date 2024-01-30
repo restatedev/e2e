@@ -24,7 +24,7 @@ public class CounterService extends CounterGrpc.CounterImplBase implements Resta
 
   private static final Logger logger = LogManager.getLogger(CounterService.class);
 
-  private static final StateKey<Long> COUNTER_KEY = StateKey.of("counter", CoreSerdes.LONG);
+  private static final StateKey<Long> COUNTER_KEY = StateKey.of("counter", CoreSerdes.JSON_LONG);
 
   @Override
   public void reset(CounterRequest request, StreamObserver<Empty> responseObserver) {

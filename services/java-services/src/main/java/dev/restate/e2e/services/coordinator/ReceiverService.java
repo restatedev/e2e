@@ -13,13 +13,12 @@ import com.google.protobuf.Empty;
 import dev.restate.e2e.services.receiver.ReceiverGrpc;
 import dev.restate.e2e.services.receiver.ReceiverProto.*;
 import dev.restate.sdk.RestateService;
-import dev.restate.sdk.common.CoreSerdes;
 import dev.restate.sdk.common.StateKey;
 import io.grpc.stub.StreamObserver;
 
 public class ReceiverService extends ReceiverGrpc.ReceiverImplBase implements RestateService {
 
-  public static final StateKey<String> STATE_KEY = StateKey.of("my-state", CoreSerdes.STRING_UTF8);
+  public static final StateKey<String> STATE_KEY = StateKey.string("my-state");
 
   @Override
   public void ping(PingRequest request, StreamObserver<Pong> responseObserver) {

@@ -24,7 +24,7 @@ public class SingletonCounterService extends SingletonCounterGrpc.SingletonCount
 
   private static final Logger logger = LogManager.getLogger(SingletonCounterService.class);
 
-  private static final StateKey<Long> COUNTER_KEY = StateKey.of("counter", CoreSerdes.LONG);
+  private static final StateKey<Long> COUNTER_KEY = StateKey.of("counter", CoreSerdes.JSON_LONG);
 
   @Override
   public void reset(Empty request, StreamObserver<Empty> responseObserver) {
