@@ -22,6 +22,7 @@ import {
 import { ReceiverClientImpl } from "./generated/receiver";
 import { Empty } from "./generated/google/protobuf/empty";
 import { v4 as uuidv4 } from "uuid";
+import { TimeoutError } from "@restatedev/restate-sdk/dist/types/errors";
 
 export const CoordinatorServiceFQN = protobufPackage + ".Coordinator";
 
@@ -77,8 +78,19 @@ export class CoordinatorService implements Coordinator {
     return { responseValue: response.value };
   }
 
-  async timeout(): Promise<TimeoutResponse> {
-    throw new Error("Method not implemented.");
+  async timeout(request: Duration): Promise<TimeoutResponse> {
+    const ctx = restate.useContext(this);
+    let timeoutOccurred = false;
+
+    try {
+      await ctx.awakeable<string>().promise.orTimeout(request.millis);
+    } catch (e) {
+      if (e instanceof TimeoutError) {
+        timeoutOccurred = true;
+      }
+    }
+
+    return { timeoutOccurred };
   }
 
   invokeSequentially(): Promise<Empty> {
