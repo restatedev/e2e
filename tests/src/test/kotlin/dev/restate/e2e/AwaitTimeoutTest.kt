@@ -14,6 +14,7 @@ import dev.restate.e2e.services.coordinator.CoordinatorProto
 import dev.restate.e2e.utils.InjectBlockingStub
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
+import java.time.Duration
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Tag
@@ -21,17 +22,16 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
-import java.time.Duration
 
 @Tag("always-suspending")
 class JavaAwaitTimeoutTest : BaseAwaitTimeoutTest() {
   companion object {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension =
-      RestateDeployerExtension(
-        RestateDeployer.Builder()
-          .withServiceEndpoint(Containers.JAVA_COORDINATOR_SERVICE_SPEC)
-          .build())
+        RestateDeployerExtension(
+            RestateDeployer.Builder()
+                .withServiceEndpoint(Containers.JAVA_COORDINATOR_SERVICE_SPEC)
+                .build())
   }
 }
 
@@ -40,10 +40,10 @@ class NodeAwaitTimeoutTest : BaseAwaitTimeoutTest() {
   companion object {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension =
-      RestateDeployerExtension(
-        RestateDeployer.Builder()
-          .withServiceEndpoint(Containers.NODE_COORDINATOR_SERVICE_SPEC)
-          .build())
+        RestateDeployerExtension(
+            RestateDeployer.Builder()
+                .withServiceEndpoint(Containers.NODE_COORDINATOR_SERVICE_SPEC)
+                .build())
   }
 }
 
