@@ -10,13 +10,13 @@
 import * as restate from "@restatedev/restate-sdk";
 
 import {
-    CancelTestService as ICancelTestService,
-    BlockingService as IBlockingService,
-    protobufPackage,
-    BlockingServiceClientImpl,
-    Response,
-    BlockingOperation,
-    BlockingRequest,
+  CancelTestService as ICancelTestService,
+  BlockingService as IBlockingService,
+  protobufPackage,
+  BlockingServiceClientImpl,
+  Response,
+  BlockingOperation,
+  BlockingRequest,
 } from "./generated/cancel_test";
 import { Empty } from "./generated/google/protobuf/empty";
 import { AwakeableHolderServiceClientImpl } from "./generated/awakeable_holder";
@@ -25,62 +25,64 @@ export const CancelTestServiceFQN = protobufPackage + ".CancelTestService";
 export const BlockingServiceFQN = protobufPackage + ".BlockingService";
 
 export class CancelTestService implements ICancelTestService {
-    async verifyTest(request: Empty): Promise<Response> {
-        const ctx = restate.useContext(this);
-        const isCanceled = await ctx.get<boolean>("canceled") ?? false;
+  async verifyTest(request: Empty): Promise<Response> {
+    const ctx = restate.useContext(this);
+    const isCanceled = (await ctx.get<boolean>("canceled")) ?? false;
 
-        return { isCanceled: isCanceled };
+    return { isCanceled: isCanceled };
+  }
+
+  async startTest(request: BlockingRequest): Promise<Empty> {
+    const ctx = restate.useContext(this);
+    const client = new BlockingServiceClientImpl(ctx);
+
+    try {
+      await client.block(request);
+    } catch (e) {
+      if (
+        e instanceof restate.TerminalError &&
+        (e as restate.TerminalError).code === restate.ErrorCodes.CANCELLED
+      ) {
+        ctx.set("canceled", true);
+      } else {
+        throw e;
+      }
     }
 
-    async startTest(request: BlockingRequest): Promise<Empty> {
-        const ctx = restate.useContext(this);
-        const client = new BlockingServiceClientImpl(ctx);
-
-        try {
-            await client.block(request);
-        } catch (e) {
-            if (e instanceof restate.TerminalError && (e as restate.TerminalError).code === restate.ErrorCodes.CANCELLED) {
-                ctx.set("canceled", true);
-            } else {
-                throw e;
-            }
-        }
-
-        return {};
-    }
-
+    return {};
+  }
 }
 
 export class BlockingService implements IBlockingService {
-    async block(request: BlockingRequest): Promise<Empty> {
-        const ctx = restate.useContext(this);
-        const client = new AwakeableHolderServiceClientImpl(ctx);
-        const self = new BlockingServiceClientImpl(ctx);
+  async block(request: BlockingRequest): Promise<Empty> {
+    const ctx = restate.useContext(this);
+    const client = new AwakeableHolderServiceClientImpl(ctx);
+    const self = new BlockingServiceClientImpl(ctx);
 
-        const { id, promise } = ctx.awakeable();
-        client.hold({ name: "cancel", id })
-        await promise;
+    const { id, promise } = ctx.awakeable();
+    client.hold({ name: "cancel", id });
+    await promise;
 
-        switch (request.operation) {
-            case BlockingOperation.CALL: {
-                await self.block(request);
-                break;
-            }
-            case BlockingOperation.SLEEP: {
-                await ctx.sleep(1_000_000_000);
-                break;
-            }
-            case BlockingOperation.AWAKEABLE: {
-                const { id: _, promise: uncompletable_promise } = ctx.awakeable();
-                await uncompletable_promise;
-                break;
-            }
-        }
-
-        return {};
+    switch (request.operation) {
+      case BlockingOperation.CALL: {
+        await self.block(request);
+        break;
+      }
+      case BlockingOperation.SLEEP: {
+        await ctx.sleep(1_000_000_000);
+        break;
+      }
+      case BlockingOperation.AWAKEABLE: {
+        const { id: _, promise: uncompletable_promise } = ctx.awakeable();
+        await uncompletable_promise;
+        break;
+      }
     }
 
-    async isUnlocked(request: Empty): Promise<Empty> {
-        return {};
-    }
+    return {};
+  }
+
+  async isUnlocked(request: Empty): Promise<Empty> {
+    return {};
+  }
 }

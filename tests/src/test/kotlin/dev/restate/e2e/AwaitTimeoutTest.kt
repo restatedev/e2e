@@ -7,9 +7,8 @@
 // directory of this repository or package, or at
 // https://github.com/restatedev/e2e/blob/main/LICENSE
 
-package dev.restate.e2e.java
+package dev.restate.e2e
 
-import dev.restate.e2e.Containers
 import dev.restate.e2e.services.coordinator.CoordinatorGrpc.CoordinatorBlockingStub
 import dev.restate.e2e.services.coordinator.CoordinatorProto
 import dev.restate.e2e.utils.InjectBlockingStub
@@ -24,10 +23,8 @@ import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 
-// Only a Java test because the typescript SDK is still lacking this feature:
-// https://github.com/restatedev/sdk-typescript/issues/21
 @Tag("always-suspending")
-class AwaitTimeoutTest {
+class JavaAwaitTimeoutTest : BaseAwaitTimeoutTest() {
   companion object {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension =
@@ -36,6 +33,24 @@ class AwaitTimeoutTest {
                 .withServiceEndpoint(Containers.JAVA_COORDINATOR_SERVICE_SPEC)
                 .build())
   }
+}
+
+@Tag("always-suspending")
+class NodeAwaitTimeoutTest : BaseAwaitTimeoutTest() {
+  companion object {
+    @RegisterExtension
+    val deployerExt: RestateDeployerExtension =
+        RestateDeployerExtension(
+            RestateDeployer.Builder()
+                .withServiceEndpoint(Containers.NODE_COORDINATOR_SERVICE_SPEC)
+                .build())
+  }
+}
+
+// Only a Java test because the typescript SDK is still lacking this feature:
+// https://github.com/restatedev/sdk-typescript/issues/21
+@Tag("always-suspending")
+abstract class BaseAwaitTimeoutTest {
 
   @Test
   @DisplayName("Test Awaitable#await(Duration)")

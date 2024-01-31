@@ -57,8 +57,18 @@ import {
 } from "./handler_api";
 import { EventHandlerFQN, EventHandlerService } from "./event_handler";
 import { startEmbeddedHandlerServer } from "./embedded_handler_api";
-import { KillSingletonServiceFQN, KillTestService, KillTestServiceFQN, KillSingletonService } from "./kill_test";
-import { BlockingServiceFQN, CancelTestService, CancelTestServiceFQN, BlockingService } from "./cancel_test";
+import {
+  KillSingletonServiceFQN,
+  KillTestService,
+  KillTestServiceFQN,
+  KillSingletonService,
+} from "./kill_test";
+import {
+  BlockingServiceFQN,
+  CancelTestService,
+  CancelTestServiceFQN,
+  BlockingService,
+} from "./cancel_test";
 
 let serverBuilder;
 export let handler: (event: any) => Promise<any>;
@@ -202,7 +212,7 @@ const services = new Map<
       descriptor: killTestProtoMetadata,
       service: "KillTestService",
       instance: new KillTestService(),
-    }
+    },
   ],
   [
     KillSingletonServiceFQN,
@@ -210,7 +220,7 @@ const services = new Map<
       descriptor: killTestProtoMetadata,
       service: "KillSingletonService",
       instance: new KillSingletonService(),
-    }
+    },
   ],
   [
     CancelTestServiceFQN,
@@ -218,7 +228,7 @@ const services = new Map<
       descriptor: cancelTestProtoMetadata,
       service: "CancelTestService",
       instance: new CancelTestService(),
-    }
+    },
   ],
   [
     BlockingServiceFQN,
@@ -226,7 +236,7 @@ const services = new Map<
       descriptor: cancelTestProtoMetadata,
       service: "BlockingService",
       instance: new BlockingService(),
-    }
+    },
   ],
 ]);
 console.log("Known services: " + services.keys());
