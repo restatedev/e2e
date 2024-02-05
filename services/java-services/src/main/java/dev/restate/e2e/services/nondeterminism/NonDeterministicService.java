@@ -13,6 +13,7 @@ import com.google.protobuf.Empty;
 import dev.restate.e2e.services.counter.CounterGrpc;
 import dev.restate.e2e.services.counter.CounterProto.CounterAddRequest;
 import dev.restate.e2e.services.counter.CounterProto.CounterRequest;
+import dev.restate.sdk.KeyedContext;
 import dev.restate.sdk.RestateService;
 import dev.restate.sdk.common.StateKey;
 import io.grpc.stub.StreamObserver;
@@ -31,9 +32,9 @@ public class NonDeterministicService
   public void leftSleepRightCall(
       NonDeterminismProto.NonDeterministicRequest request, StreamObserver<Empty> responseObserver) {
     if (doLeftAction(request)) {
-      restateContext().sleep(Duration.ofMillis(100));
+      KeyedContext.current().sleep(Duration.ofMillis(100));
     } else {
-      restateContext()
+      KeyedContext.current()
           .call(
               CounterGrpc.getGetMethod(), CounterRequest.newBuilder().setCounterName("abc").build())
           .await();
@@ -45,12 +46,12 @@ public class NonDeterministicService
   public void callDifferentMethod(
       NonDeterminismProto.NonDeterministicRequest request, StreamObserver<Empty> responseObserver) {
     if (doLeftAction(request)) {
-      restateContext()
+      KeyedContext.current()
           .call(
               CounterGrpc.getGetMethod(), CounterRequest.newBuilder().setCounterName("abc").build())
           .await();
     } else {
-      restateContext()
+      KeyedContext.current()
           .call(
               CounterGrpc.getResetMethod(),
               CounterRequest.newBuilder().setCounterName("abc").build())
@@ -63,17 +64,17 @@ public class NonDeterministicService
   public void backgroundInvokeWithDifferentTargets(
       NonDeterminismProto.NonDeterministicRequest request, StreamObserver<Empty> responseObserver) {
     if (doLeftAction(request)) {
-      restateContext()
+      KeyedContext.current()
           .oneWayCall(
               CounterGrpc.getGetMethod(),
               CounterRequest.newBuilder().setCounterName("abc").build());
     } else {
-      restateContext()
+      KeyedContext.current()
           .oneWayCall(
               CounterGrpc.getResetMethod(),
               CounterRequest.newBuilder().setCounterName("abc").build());
     }
-    restateContext().sleep(Duration.ofMillis(100));
+    KeyedContext.current().sleep(Duration.ofMillis(100));
     incrementCounterAndEnd(request, responseObserver);
   }
 
@@ -81,11 +82,11 @@ public class NonDeterministicService
   public void setDifferentKey(
       NonDeterminismProto.NonDeterministicRequest request, StreamObserver<Empty> responseObserver) {
     if (doLeftAction(request)) {
-      restateContext().set(STATE_A, "my-state");
+      KeyedContext.current().set(STATE_A, "my-state");
     } else {
-      restateContext().set(STATE_B, "my-state");
+      KeyedContext.current().set(STATE_B, "my-state");
     }
-    restateContext().sleep(Duration.ofMillis(100));
+    KeyedContext.current().sleep(Duration.ofMillis(100));
     incrementCounterAndEnd(request, responseObserver);
   }
 
@@ -95,7 +96,7 @@ public class NonDeterministicService
 
   private void incrementCounterAndEnd(
       NonDeterminismProto.NonDeterministicRequest request, StreamObserver<Empty> responseObserver) {
-    restateContext()
+    KeyedContext.current()
         .oneWayCall(
             CounterGrpc.getAddMethod(),
             CounterAddRequest.newBuilder().setCounterName(request.getKey()).setValue(1).build());
