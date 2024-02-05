@@ -12,6 +12,7 @@ package dev.restate.e2e.services.counter;
 import static dev.restate.e2e.services.counter.CounterProto.*;
 
 import com.google.protobuf.Empty;
+import dev.restate.sdk.KeyedContext;
 import dev.restate.sdk.RestateService;
 import dev.restate.sdk.common.CoreSerdes;
 import dev.restate.sdk.common.StateKey;
@@ -28,7 +29,7 @@ public class CounterService extends CounterGrpc.CounterImplBase implements Resta
 
   @Override
   public void reset(CounterRequest request, StreamObserver<Empty> responseObserver) {
-    var ctx = restateContext();
+    var ctx = KeyedContext.current();
 
     logger.info("Counter '{}' cleaned up", request.getCounterName());
 
@@ -40,7 +41,7 @@ public class CounterService extends CounterGrpc.CounterImplBase implements Resta
 
   @Override
   public void add(CounterAddRequest request, StreamObserver<Empty> responseObserver) {
-    var ctx = restateContext();
+    var ctx = KeyedContext.current();
 
     long counter = ctx.get(COUNTER_KEY).orElse(0L);
     logger.info("Old counter '{}' value: {}", request.getCounterName(), counter);
@@ -56,7 +57,7 @@ public class CounterService extends CounterGrpc.CounterImplBase implements Resta
 
   @Override
   public void addThenFail(CounterAddRequest request, StreamObserver<Empty> responseObserver) {
-    var ctx = restateContext();
+    var ctx = KeyedContext.current();
 
     long counter = ctx.get(COUNTER_KEY).orElse(0L);
     logger.info("Old counter value: {}", counter);
@@ -71,7 +72,7 @@ public class CounterService extends CounterGrpc.CounterImplBase implements Resta
 
   @Override
   public void get(CounterRequest request, StreamObserver<GetResponse> responseObserver) {
-    var ctx = restateContext();
+    var ctx = KeyedContext.current();
 
     long counter = ctx.get(COUNTER_KEY).orElse(0L);
     logger.info("Get counter '{}' value: {}", request.getCounterName(), counter);
@@ -85,7 +86,7 @@ public class CounterService extends CounterGrpc.CounterImplBase implements Resta
   @Override
   public void getAndAdd(
       CounterAddRequest request, StreamObserver<CounterUpdateResult> responseObserver) {
-    var ctx = restateContext();
+    var ctx = KeyedContext.current();
 
     long oldCount = ctx.get(COUNTER_KEY).orElse(0L);
     long newCount = oldCount + request.getValue();
@@ -101,7 +102,7 @@ public class CounterService extends CounterGrpc.CounterImplBase implements Resta
 
   @Override
   public void handleEvent(UpdateCounterEvent request, StreamObserver<Empty> responseObserver) {
-    var ctx = restateContext();
+    var ctx = KeyedContext.current();
 
     long counter = ctx.get(COUNTER_KEY).orElse(0L);
     logger.info("Old counter '{}' value: {}", request.getCounterName(), counter);

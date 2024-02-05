@@ -12,6 +12,7 @@ package dev.restate.e2e.services.coordinator;
 import com.google.protobuf.Empty;
 import dev.restate.e2e.services.receiver.ReceiverGrpc;
 import dev.restate.e2e.services.receiver.ReceiverProto.*;
+import dev.restate.sdk.KeyedContext;
 import dev.restate.sdk.RestateService;
 import dev.restate.sdk.common.StateKey;
 import io.grpc.stub.StreamObserver;
@@ -28,7 +29,7 @@ public class ReceiverService extends ReceiverGrpc.ReceiverImplBase implements Re
 
   @Override
   public void setValue(SetValueRequest request, StreamObserver<Empty> responseObserver) {
-    restateContext().set(STATE_KEY, request.getValue());
+    KeyedContext.current().set(STATE_KEY, request.getValue());
 
     responseObserver.onNext(Empty.getDefaultInstance());
     responseObserver.onCompleted();
@@ -36,7 +37,7 @@ public class ReceiverService extends ReceiverGrpc.ReceiverImplBase implements Re
 
   @Override
   public void getValue(GetValueRequest request, StreamObserver<GetValueResponse> responseObserver) {
-    var state = restateContext().get(STATE_KEY).orElse("");
+    var state = KeyedContext.current().get(STATE_KEY).orElse("");
 
     responseObserver.onNext(GetValueResponse.newBuilder().setValue(state).build());
     responseObserver.onCompleted();

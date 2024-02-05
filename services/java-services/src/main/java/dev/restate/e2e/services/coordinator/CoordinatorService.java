@@ -19,7 +19,7 @@ import dev.restate.e2e.services.receiver.ReceiverProto.PingRequest;
 import dev.restate.e2e.services.receiver.ReceiverProto.SetValueRequest;
 import dev.restate.e2e.services.receiver.ReceiverRestate;
 import dev.restate.sdk.Awaitable;
-import dev.restate.sdk.RestateContext;
+import dev.restate.sdk.UnkeyedContext;
 import dev.restate.sdk.common.CoreSerdes;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,12 +33,12 @@ public class CoordinatorService extends CoordinatorRestate.CoordinatorRestateImp
   private static final Logger LOG = LogManager.getLogger(CoordinatorService.class);
 
   @Override
-  public void sleep(RestateContext context, Duration request) {
+  public void sleep(UnkeyedContext context, Duration request) {
     manyTimers(context, ManyTimersRequest.newBuilder().addTimer(request).build());
   }
 
   @Override
-  public void manyTimers(RestateContext context, ManyTimersRequest request) {
+  public void manyTimers(UnkeyedContext context, ManyTimersRequest request) {
     LOG.info("many timers {}", request.getTimerList());
 
     awaitableAll(
@@ -48,17 +48,19 @@ public class CoordinatorService extends CoordinatorRestate.CoordinatorRestateImp
   }
 
   @Override
-  public ProxyResponse proxy(RestateContext context) {
+  public ProxyResponse proxy(UnkeyedContext context) {
     String key = context.sideEffect(CoreSerdes.JSON_STRING, () -> UUID.randomUUID().toString());
 
     var pong =
-        ReceiverRestate.newClient().ping(PingRequest.newBuilder().setKey(key).build()).await();
+        ReceiverRestate.newClient(context)
+            .ping(PingRequest.newBuilder().setKey(key).build())
+            .await();
 
     return ProxyResponse.newBuilder().setMessage(pong.getMessage()).build();
   }
 
   @Override
-  public ComplexResponse complex(RestateContext context, ComplexRequest request) {
+  public ComplexResponse complex(UnkeyedContext context, ComplexRequest request) {
     LOG.info(
         "Starting complex coordination by sleeping for {} ms",
         request.getSleepDuration().getMillis());
@@ -67,7 +69,7 @@ public class CoordinatorService extends CoordinatorRestate.CoordinatorRestateImp
 
     var receiverUUID =
         context.sideEffect(CoreSerdes.JSON_STRING, () -> UUID.randomUUID().toString());
-    var receiverClient = ReceiverRestate.newClient();
+    var receiverClient = ReceiverRestate.newClient(context);
 
     LOG.info("Send fire and forget call to {}", ReceiverGrpc.getServiceDescriptor().getName());
     // services should be invoked in the same order they were called. This means that
@@ -91,7 +93,7 @@ public class CoordinatorService extends CoordinatorRestate.CoordinatorRestateImp
   }
 
   @Override
-  public TimeoutResponse timeout(RestateContext context, Duration request) {
+  public TimeoutResponse timeout(UnkeyedContext context, Duration request) {
     var timeoutOccurred = false;
 
     var awakeable = context.awakeable(CoreSerdes.VOID);
@@ -105,10 +107,10 @@ public class CoordinatorService extends CoordinatorRestate.CoordinatorRestateImp
   }
 
   @Override
-  public void invokeSequentially(RestateContext context, InvokeSequentiallyRequest request) {
+  public void invokeSequentially(UnkeyedContext context, InvokeSequentiallyRequest request) {
     List<Awaitable<?>> collectedAwaitables = new ArrayList<>();
 
-    var listClient = ListServiceRestate.newClient();
+    var listClient = ListServiceRestate.newClient(context);
     for (int i = 0; i < request.getExecuteAsBackgroundCallCount(); i++) {
       var appendRequest =
           AppendRequest.newBuilder()

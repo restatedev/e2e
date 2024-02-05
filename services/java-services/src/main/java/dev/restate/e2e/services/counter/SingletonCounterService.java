@@ -12,6 +12,7 @@ package dev.restate.e2e.services.counter;
 import com.google.protobuf.Empty;
 import dev.restate.e2e.services.singletoncounter.SingletonCounterGrpc;
 import dev.restate.e2e.services.singletoncounter.SingletonCounterProto.CounterNumber;
+import dev.restate.sdk.KeyedContext;
 import dev.restate.sdk.RestateService;
 import dev.restate.sdk.common.CoreSerdes;
 import dev.restate.sdk.common.StateKey;
@@ -28,7 +29,7 @@ public class SingletonCounterService extends SingletonCounterGrpc.SingletonCount
 
   @Override
   public void reset(Empty request, StreamObserver<Empty> responseObserver) {
-    var ctx = restateContext();
+    var ctx = KeyedContext.current();
 
     logger.info("Counter cleaned up");
 
@@ -40,7 +41,7 @@ public class SingletonCounterService extends SingletonCounterGrpc.SingletonCount
 
   @Override
   public void add(CounterNumber request, StreamObserver<Empty> responseObserver) {
-    var ctx = restateContext();
+    var ctx = KeyedContext.current();
 
     long counter = ctx.get(COUNTER_KEY).orElse(0L);
     logger.info("Old counter value: {}", counter);
@@ -56,7 +57,7 @@ public class SingletonCounterService extends SingletonCounterGrpc.SingletonCount
 
   @Override
   public void get(Empty request, StreamObserver<CounterNumber> responseObserver) {
-    var ctx = restateContext();
+    var ctx = KeyedContext.current();
 
     CounterNumber result =
         CounterNumber.newBuilder().setValue(ctx.get(COUNTER_KEY).orElse(0L)).build();

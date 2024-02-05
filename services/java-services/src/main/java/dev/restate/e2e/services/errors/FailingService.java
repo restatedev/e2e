@@ -14,6 +14,7 @@ import dev.restate.e2e.services.errors.ErrorsProto.ErrorMessage;
 import dev.restate.e2e.services.errors.ErrorsProto.FailRequest;
 import dev.restate.e2e.services.utils.NumberSortHttpServerUtils;
 import dev.restate.sdk.Awakeable;
+import dev.restate.sdk.KeyedContext;
 import dev.restate.sdk.RestateService;
 import dev.restate.sdk.common.CoreSerdes;
 import dev.restate.sdk.common.TerminalException;
@@ -42,7 +43,7 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase
   @Override
   public void callTerminallyFailingCall(
       ErrorMessage request, StreamObserver<ErrorMessage> responseObserver) {
-    var ctx = restateContext();
+    var ctx = KeyedContext.current();
     LOG.info("Invoked failAndHandle");
 
     ctx.call(
@@ -60,7 +61,7 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase
       FailRequest request, StreamObserver<ErrorMessage> responseObserver) {
     LOG.info("Invoked invokeExternalAndHandleFailure");
 
-    var ctx = restateContext();
+    var ctx = KeyedContext.current();
 
     String finalMessage = "begin";
 
@@ -120,7 +121,7 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase
   public void failingSideEffectWithEventualSuccess(
       ErrorsProto.Request request, StreamObserver<ErrorsProto.AttemptResponse> responseObserver) {
     final int successAttempt =
-        restateContext()
+        KeyedContext.current()
             .sideEffect(
                 CoreSerdes.JSON_INT,
                 () -> {
@@ -142,7 +143,7 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase
   @Override
   public void terminallyFailingSideEffect(
       ErrorMessage request, StreamObserver<Empty> responseObserver) {
-    restateContext()
+    KeyedContext.current()
         .sideEffect(
             () -> {
               throw new TerminalException(

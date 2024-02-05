@@ -12,14 +12,14 @@ package dev.restate.e2e.services.canceltest;
 import dev.restate.e2e.services.awakeableholder.AwakeableHolderProto;
 import dev.restate.e2e.services.awakeableholder.AwakeableHolderServiceRestate;
 import dev.restate.sdk.Awakeable;
-import dev.restate.sdk.RestateContext;
+import dev.restate.sdk.KeyedContext;
 import dev.restate.sdk.common.CoreSerdes;
 import dev.restate.sdk.common.TerminalException;
 import java.time.Duration;
 
 public class BlockingService extends BlockingServiceRestate.BlockingServiceRestateImplBase {
   @Override
-  public void block(RestateContext context, CancelTestProto.BlockingRequest request)
+  public void block(KeyedContext context, CancelTestProto.BlockingRequest request)
       throws TerminalException {
     final BlockingServiceRestate.BlockingServiceRestateClient self =
         BlockingServiceRestate.newClient(context);
@@ -53,7 +53,7 @@ public class BlockingService extends BlockingServiceRestate.BlockingServiceResta
   }
 
   @Override
-  public void isUnlocked(RestateContext context) throws TerminalException {
+  public void isUnlocked(KeyedContext context) throws TerminalException {
     // no-op
   }
 }

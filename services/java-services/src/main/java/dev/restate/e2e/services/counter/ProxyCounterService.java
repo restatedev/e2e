@@ -11,25 +11,19 @@ package dev.restate.e2e.services.counter;
 
 import static dev.restate.e2e.services.counter.CounterProto.CounterAddRequest;
 
-import com.google.protobuf.Empty;
-import dev.restate.sdk.RestateService;
-import io.grpc.stub.StreamObserver;
+import dev.restate.sdk.UnkeyedContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class ProxyCounterService extends ProxyCounterGrpc.ProxyCounterImplBase
-    implements RestateService {
+public class ProxyCounterService extends ProxyCounterRestate.ProxyCounterRestateImplBase {
 
   private static final Logger logger = LogManager.getLogger(ProxyCounterService.class);
 
   @Override
-  public void addInBackground(CounterAddRequest request, StreamObserver<Empty> responseObserver) {
+  public void addInBackground(UnkeyedContext context, CounterAddRequest request) {
     logger.info("addInBackground invoked {}", request);
 
     // Increment the counter
-    restateContext().oneWayCall(CounterGrpc.getAddMethod(), request);
-
-    responseObserver.onNext(Empty.getDefaultInstance());
-    responseObserver.onCompleted();
+    context.oneWayCall(CounterGrpc.getAddMethod(), request);
   }
 }

@@ -15,10 +15,9 @@ import dev.restate.e2e.services.externalcall.RandomNumberListGeneratorProto.Gene
 import dev.restate.e2e.services.externalcall.RandomNumberListGeneratorProto.GenerateNumbersResponse;
 import dev.restate.e2e.services.utils.NumberSortHttpServerUtils;
 import dev.restate.sdk.Awakeable;
-import dev.restate.sdk.RestateService;
+import dev.restate.sdk.UnkeyedContext;
 import dev.restate.sdk.common.Serde;
 import dev.restate.sdk.serde.jackson.JacksonSerdes;
-import io.grpc.stub.StreamObserver;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -26,8 +25,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class RandomNumberListGeneratorService
-    extends RandomNumberListGeneratorGrpc.RandomNumberListGeneratorImplBase
-    implements RestateService {
+    extends RandomNumberListGeneratorRestate.RandomNumberListGeneratorRestateImplBase {
 
   private static final Logger LOG = LogManager.getLogger(RandomNumberListGeneratorService.class);
 
@@ -36,8 +34,8 @@ public class RandomNumberListGeneratorService
       JacksonSerdes.of(jsonObjectMapper, new TypeReference<>() {});
 
   @Override
-  public void generateNumbers(
-      GenerateNumbersRequest request, StreamObserver<GenerateNumbersResponse> responseObserver) {
+  public GenerateNumbersResponse generateNumbers(
+      UnkeyedContext ctx, GenerateNumbersRequest request) {
     LOG.info("Received request " + request);
 
     List<Integer> numbers = new ArrayList<>(request.getItemsNumber());
@@ -46,8 +44,6 @@ public class RandomNumberListGeneratorService
     for (int i = 0; i < request.getItemsNumber(); i++) {
       numbers.add(random.nextInt());
     }
-
-    var ctx = restateContext();
 
     Awakeable<List<Integer>> awakeable = ctx.awakeable(INT_LIST_SERDE);
 
@@ -63,8 +59,6 @@ public class RandomNumberListGeneratorService
 
     List<Integer> sortedNumbers = awakeable.await();
 
-    responseObserver.onNext(
-        GenerateNumbersResponse.newBuilder().addAllNumbers(sortedNumbers).build());
-    responseObserver.onCompleted();
+    return GenerateNumbersResponse.newBuilder().addAllNumbers(sortedNumbers).build();
   }
 }
