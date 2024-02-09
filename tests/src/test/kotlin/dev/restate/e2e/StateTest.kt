@@ -9,13 +9,22 @@
 
 package dev.restate.e2e
 
+import dev.restate.e2e.Containers.javaServicesContainer
+import dev.restate.e2e.services.collections.map.MapServiceGrpc
+import dev.restate.e2e.services.collections.map.MapServiceGrpc.MapServiceBlockingStub
+import dev.restate.e2e.services.collections.map.clearAllRequest
+import dev.restate.e2e.services.collections.map.getRequest
+import dev.restate.e2e.services.collections.map.setRequest
+import dev.restate.e2e.services.counter.CounterGrpc
 import dev.restate.e2e.services.counter.CounterGrpc.CounterBlockingStub
 import dev.restate.e2e.services.counter.CounterProto
 import dev.restate.e2e.services.counter.CounterProto.CounterAddRequest
 import dev.restate.e2e.services.counter.ProxyCounterGrpc
+import dev.restate.e2e.services.singletoncounter.SingletonCounterGrpc
 import dev.restate.e2e.utils.InjectBlockingStub
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
+import java.util.UUID
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
@@ -35,7 +44,13 @@ class JavaStateTest : BaseStateTest() {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .withServiceEndpoint(Containers.JAVA_COUNTER_SERVICE_SPEC)
+                .withServiceEndpoint(
+                    javaServicesContainer(
+                        "java-counter",
+                        CounterGrpc.SERVICE_NAME,
+                        ProxyCounterGrpc.SERVICE_NAME,
+                        SingletonCounterGrpc.SERVICE_NAME,
+                        MapServiceGrpc.SERVICE_NAME))
                 .build())
   }
 }
@@ -49,7 +64,13 @@ class NodeStateTest : BaseStateTest() {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .withServiceEndpoint(Containers.NODE_COUNTER_SERVICE_SPEC)
+                .withServiceEndpoint(
+                    Containers.nodeServicesContainer(
+                            "node-counter",
+                            CounterGrpc.SERVICE_NAME,
+                            ProxyCounterGrpc.SERVICE_NAME,
+                            MapServiceGrpc.SERVICE_NAME)
+                        .build())
                 .build())
   }
 }
@@ -101,5 +122,67 @@ abstract class BaseStateTest {
         { num ->
           num!!.value == 3L
         }
+  }
+
+  @Test
+  @Execution(ExecutionMode.CONCURRENT)
+  fun listStateAndClearAll(@InjectBlockingStub mapService: MapServiceBlockingStub) {
+    val mapName = UUID.randomUUID().toString()
+
+    mapService.set(
+        setRequest {
+          this.mapName = mapName
+          this.key = "my-key-0"
+          this.value = "my-value-0"
+        })
+    mapService.set(
+        setRequest {
+          this.mapName = mapName
+          this.key = "my-key-1"
+          this.value = "my-value-1"
+        })
+
+    // Set state to another map
+    mapService.set(
+        setRequest {
+          this.mapName = mapName + "1"
+          this.key = "my-key-2"
+          this.value = "my-value-2"
+        })
+
+    // Clear all
+    val clearResponse = mapService.clearAll(clearAllRequest { this.mapName = mapName })
+    assertThat(clearResponse.keysList).containsExactlyInAnyOrder("my-key-0", "my-key-1")
+
+    // Check keys are not available
+    assertThat(
+            mapService
+                .get(
+                    getRequest {
+                      this.mapName = mapName
+                      key = "my-key-0"
+                    })
+                .value)
+        .isEmpty()
+    assertThat(
+            mapService
+                .get(
+                    getRequest {
+                      this.mapName = mapName
+                      key = "my-key-1"
+                    })
+                .value)
+        .isEmpty()
+
+    // Check the other service instance was left untouched
+    assertThat(
+            mapService
+                .get(
+                    getRequest {
+                      this.mapName = mapName + "1"
+                      this.key = "my-key-2"
+                    })
+                .value)
+        .isEqualTo("my-value-2")
   }
 }

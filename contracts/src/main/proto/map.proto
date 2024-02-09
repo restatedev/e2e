@@ -1,0 +1,50 @@
+// Copyright (c) 2023 - Restate Software, Inc., Restate GmbH
+//
+// This file is part of the Restate e2e tests,
+// which are released under the MIT license.
+//
+// You can find a copy of the license in file LICENSE in the root
+// directory of this repository or package, or at
+// https://github.com/restatedev/e2e/blob/main/LICENSE
+
+syntax = "proto3";
+
+option java_package = "dev.restate.e2e.services.collections.map";
+option java_outer_classname = "MapProto";
+
+import "google/protobuf/empty.proto";
+import "dev/restate/ext.proto";
+
+package map;
+
+service MapService {
+  option (dev.restate.ext.service_type) = KEYED;
+
+  rpc Set(SetRequest) returns (google.protobuf.Empty);
+  rpc Get(GetRequest) returns (GetResponse);
+  rpc ClearAll(ClearAllRequest) returns (ClearAllResponse);
+}
+
+message SetRequest {
+  string map_name = 1 [(dev.restate.ext.field) = KEY];
+  string key = 2;
+  string value = 3;
+}
+
+message GetRequest {
+  string map_name = 1 [(dev.restate.ext.field) = KEY];
+  string key = 2;
+}
+
+message GetResponse {
+  string value = 1;
+}
+
+
+message ClearAllRequest {
+  string map_name = 1 [(dev.restate.ext.field) = KEY];
+}
+
+message ClearAllResponse {
+  repeated string keys = 2;
+}
