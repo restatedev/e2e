@@ -13,6 +13,7 @@ import { protoMetadata as counterProtoMetadata } from "./generated/counter";
 import { protoMetadata as coordinatorProtoMetadata } from "./generated/coordinator";
 import { protoMetadata as receiverProtoMetadata } from "./generated/receiver";
 import { protoMetadata as listProtoMetadata } from "./generated/list";
+import { protoMetadata as mapProtoMetadata } from "./generated/map";
 import { protoMetadata as errorsProtoMetadata } from "./generated/errors";
 import { protoMetadata as nonDeterminismProtoMetadata } from "./generated/non_determinism";
 import { protoMetadata as verifierProtoMetadata } from "./generated/verifier";
@@ -25,7 +26,8 @@ import { protoMetadata as eventHandlerProtoMetadata } from "./generated/event_ha
 import { protoMetadata as killTestProtoMetadata } from "./generated/kill_test";
 import { protoMetadata as cancelTestProtoMetadata } from "./generated/cancel_test";
 import { CounterService, CounterServiceFQN } from "./counter";
-import { ListService, ListServiceFQN } from "./collections";
+import { ListService, ListServiceFQN } from "./list";
+import { MapService, MapServiceFQN } from "./map";
 import { FailingService, FailingServiceFQN } from "./errors";
 import { ProxyCounterService, ProxyCounterServiceFQN } from "./proxy_counter";
 import { CoordinatorService, CoordinatorServiceFQN } from "./coordinator";
@@ -236,6 +238,14 @@ const services = new Map<
       descriptor: cancelTestProtoMetadata,
       service: "BlockingService",
       instance: new BlockingService(),
+    },
+  ],
+  [
+    MapServiceFQN,
+    {
+      descriptor: mapProtoMetadata,
+      service: "MapService",
+      instance: new MapService(),
     },
   ],
 ]);

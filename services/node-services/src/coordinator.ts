@@ -36,7 +36,9 @@ export class CoordinatorService implements Coordinator {
 
     const ctx = restate.useContext(this);
 
-    await restate.CombineablePromise.all(request.timer.map((value) => ctx.sleep(value.millis)));
+    await restate.CombineablePromise.all(
+      request.timer.map((value) => ctx.sleep(value.millis))
+    );
 
     return {};
   }

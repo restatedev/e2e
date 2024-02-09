@@ -9,8 +9,14 @@
 
 package dev.restate.e2e.services;
 
+import dev.restate.e2e.services.canceltest.BlockingService;
+import dev.restate.e2e.services.canceltest.BlockingServiceGrpc;
+import dev.restate.e2e.services.canceltest.CancelTestService;
+import dev.restate.e2e.services.canceltest.CancelTestServiceGrpc;
 import dev.restate.e2e.services.collections.ListService;
+import dev.restate.e2e.services.collections.MapService;
 import dev.restate.e2e.services.collections.list.ListServiceGrpc;
+import dev.restate.e2e.services.collections.map.MapServiceGrpc;
 import dev.restate.e2e.services.coordinator.CoordinatorGrpc;
 import dev.restate.e2e.services.coordinator.CoordinatorService;
 import dev.restate.e2e.services.coordinator.ReceiverService;
@@ -81,13 +87,13 @@ public class Main {
         case EventHandlerGrpc.SERVICE_NAME:
           restateHttpEndpointBuilder.withService(new EventHandlerService());
           break;
-        case dev.restate.e2e.services.canceltest.CancelTestServiceGrpc.SERVICE_NAME:
-          restateHttpEndpointBuilder.withService(
-              new dev.restate.e2e.services.canceltest.CancelTestService());
+        case CancelTestServiceGrpc.SERVICE_NAME:
+          restateHttpEndpointBuilder.withService(new CancelTestService());
           break;
-        case dev.restate.e2e.services.canceltest.BlockingServiceGrpc.SERVICE_NAME:
-          restateHttpEndpointBuilder.withService(
-              new dev.restate.e2e.services.canceltest.BlockingService());
+        case BlockingServiceGrpc.SERVICE_NAME:
+          restateHttpEndpointBuilder.withService(new BlockingService());
+        case MapServiceGrpc.SERVICE_NAME:
+          restateHttpEndpointBuilder.withService(new MapService());
           break;
       }
     }
