@@ -21,6 +21,7 @@ import dev.restate.e2e.services.singletoncounter.SingletonCounterGrpc
 import dev.restate.e2e.services.verification.interpreter.CommandInterpreterGrpc
 import dev.restate.e2e.services.verification.verifier.CommandVerifierGrpc
 import dev.restate.e2e.utils.ServiceSpec
+import my.restate.e2e.services.WorkflowAPIBlockAndWaitServiceAdapter
 import org.testcontainers.containers.GenericContainer
 
 object Containers {
@@ -70,6 +71,10 @@ object Containers {
       javaServicesContainer("java-errors", FailingServiceGrpc.SERVICE_NAME)
           .withEnv(
               "HTTP_SERVER_ADDRESS", "http://${INT_SORTER_HTTP_SERVER_CONTAINER_SPEC.first}:8080")
+          .build()
+
+  val JAVA_WORKFLOW_SERVICE_SPEC =
+      javaServicesContainer("java-workflow", WorkflowAPIBlockAndWaitServiceAdapter.SERVICE_NAME)
           .build()
 
   // -- Node containers

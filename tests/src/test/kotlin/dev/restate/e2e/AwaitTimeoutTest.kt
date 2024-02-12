@@ -47,8 +47,6 @@ class NodeAwaitTimeoutTest : BaseAwaitTimeoutTest() {
   }
 }
 
-// Only a Java test because the typescript SDK is still lacking this feature:
-// https://github.com/restatedev/sdk-typescript/issues/21
 @Tag("always-suspending")
 abstract class BaseAwaitTimeoutTest {
 

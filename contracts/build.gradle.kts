@@ -17,6 +17,8 @@ plugins {
 }
 
 dependencies {
+  annotationProcessor(libs.restate.sdk.api.gen)
+
   compileOnly(libs.javax.annotation.api)
 
   api(libs.protobuf.java)
@@ -26,6 +28,9 @@ dependencies {
   api(libs.grpc.kotlin.stub) { exclude("javax.annotation", "javax.annotation-api") }
 
   protobuf(libs.restate.sdk.common)
+
+  api(libs.restate.sdk.workflow.api)
+  api(libs.restate.sdk.jackson)
 }
 
 protobuf {

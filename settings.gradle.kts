@@ -45,8 +45,10 @@ dependencyResolutionManagement {
       library("restate-sdk-common", "dev.restate", "sdk-common").versionRef("restate")
       library("restate-admin", "dev.restate", "admin-client").versionRef("restate")
       library("restate-sdk-api", "dev.restate", "sdk-api").versionRef("restate")
+      library("restate-sdk-api-gen", "dev.restate", "sdk-api-gen").versionRef("restate")
       library("restate-sdk-jackson", "dev.restate", "sdk-serde-jackson").versionRef("restate")
       library("restate-sdk-http-vertx", "dev.restate", "sdk-http-vertx").versionRef("restate")
+      library("restate-sdk-workflow-api", "dev.restate", "sdk-workflow-api").versionRef("restate")
 
       library("protoc", "com.google.protobuf", "protoc").versionRef("protobuf")
       library("protobuf-java", "com.google.protobuf", "protobuf-java").versionRef("protobuf")
@@ -93,6 +95,8 @@ if (!System.getenv("JAVA_SDK_LOCAL_BUILD").isNullOrEmpty()) {
       substitute(module("dev.restate:admin-client")).using(project(":admin-client"))
       substitute(module("dev.restate:sdk-common")).using(project(":sdk-common"))
       substitute(module("dev.restate:sdk-api")).using(project(":sdk-api"))
+      substitute(module("dev.restate:sdk-api-gen")).using(project(":sdk-api-gen"))
+      substitute(module("dev.restate:sdk-workflow-api")).using(project(":sdk-workflow-api"))
       substitute(module("dev.restate:sdk-http-vertx")).using(project(":sdk-http-vertx"))
       substitute(module("dev.restate:sdk-serde-jackson")).using(project(":sdk-serde-jackson"))
     }
