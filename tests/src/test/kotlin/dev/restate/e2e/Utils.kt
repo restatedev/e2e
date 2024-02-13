@@ -16,6 +16,7 @@ import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.nio.charset.StandardCharsets
+import org.assertj.core.api.Assertions.assertThat
 
 object Utils {
 
@@ -40,5 +41,20 @@ object Utils {
             .POST(jacksonBodyPublisher(reqBody))
             .build()
     return httpClient.send(req, jacksonBodyHandler())
+  }
+
+  fun doJsonRequestToService(
+      restateEndpoint: String,
+      service: String,
+      method: String,
+      reqBody: Any
+  ): JsonNode {
+    val res = postJsonRequest("${restateEndpoint}${service}/${method}", reqBody)
+    assertThat(res.statusCode()).isEqualTo(200)
+    assertThat(res.headers().firstValue("content-type"))
+        .get()
+        .asString()
+        .contains("application/json")
+    return res.body()
   }
 }

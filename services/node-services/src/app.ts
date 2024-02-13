@@ -71,6 +71,10 @@ import {
   CancelTestServiceFQN,
   BlockingService,
 } from "./cancel_test";
+import {
+  WorkflowAPIBlockAndWait,
+  WorkflowAPIBlockAndWaitFQN,
+} from "./workflow";
 
 let serverBuilder;
 export let handler: (event: any) => Promise<any>;
@@ -82,7 +86,7 @@ if (process.env.AWS_LAMBDA_FUNCTION_NAME) {
 
 const services = new Map<
   string,
-  restate.ServiceOpts | { router: any } | { keyedRouter: any }
+  restate.ServiceOpts | { router: any } | { keyedRouter: any } | { bundle: any }
 >([
   [
     CounterServiceFQN,
@@ -248,6 +252,12 @@ const services = new Map<
       instance: new MapService(),
     },
   ],
+  [
+    WorkflowAPIBlockAndWaitFQN,
+    {
+      bundle: WorkflowAPIBlockAndWait,
+    },
+  ],
 ]);
 console.log("Known services: " + services.keys());
 
@@ -269,19 +279,24 @@ if (process.env.SERVICES) {
       serverBuilder = serverBuilder.bindService(
         foundService as restate.ServiceOpts
       );
-    } else if (
-      (foundService as restate.UnKeyedRouter<any>).router !== undefined
-    ) {
+    } else if ((foundService as { router: any }).router !== undefined) {
       console.log("Mounting router " + service);
       serverBuilder = serverBuilder.bindRouter(
         service,
         (foundService as { router: any }).router
       );
-    } else {
+    } else if (
+      (foundService as { keyedRouter: any }).keyedRouter !== undefined
+    ) {
       console.log("Mounting keyed router " + service);
       serverBuilder = serverBuilder.bindKeyedRouter(
         service,
         (foundService as { keyedRouter: any }).keyedRouter
+      );
+    } else {
+      console.log("Mounting bundle " + service);
+      serverBuilder = serverBuilder.bind(
+        (foundService as { bundle: any }).bundle
       );
     }
   }

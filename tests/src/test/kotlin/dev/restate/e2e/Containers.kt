@@ -21,6 +21,7 @@ import dev.restate.e2e.services.singletoncounter.SingletonCounterGrpc
 import dev.restate.e2e.services.verification.interpreter.CommandInterpreterGrpc
 import dev.restate.e2e.services.verification.verifier.CommandVerifierGrpc
 import dev.restate.e2e.utils.ServiceSpec
+import my.restate.e2e.services.WorkflowAPIBlockAndWaitServiceAdapter
 import org.testcontainers.containers.GenericContainer
 
 object Containers {
@@ -72,6 +73,10 @@ object Containers {
               "HTTP_SERVER_ADDRESS", "http://${INT_SORTER_HTTP_SERVER_CONTAINER_SPEC.first}:8080")
           .build()
 
+  val JAVA_WORKFLOW_SERVICE_SPEC =
+      javaServicesContainer("java-workflow", WorkflowAPIBlockAndWaitServiceAdapter.SERVICE_NAME)
+          .build()
+
   // -- Node containers
 
   fun nodeServicesContainer(hostName: String, vararg services: String): ServiceSpec.Builder {
@@ -111,6 +116,10 @@ object Containers {
 
   val NODE_HANDLER_API_ECHO_TEST_SERVICE_SPEC =
       nodeServicesContainer("node-proxy", HANDLER_API_ECHO_TEST_SERVICE_NAME).build()
+
+  const val WORKFLOW_API_BLOCK_AND_WAIT_SERVICE_NAME = "WorkflowAPIBlockAndWait"
+  val NODE_WORKFLOW_SERVICE_SPEC =
+      nodeServicesContainer("node-workflow", WORKFLOW_API_BLOCK_AND_WAIT_SERVICE_NAME).build()
 
   const val EMBEDDED_HANDLER_SERVER_HOSTNAME = "node-embedded-handler"
   const val EMBEDDED_HANDLER_SERVER_PORT = 8080

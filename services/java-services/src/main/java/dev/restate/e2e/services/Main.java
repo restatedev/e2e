@@ -39,6 +39,8 @@ import dev.restate.e2e.services.upgradetest.UpgradeTestService;
 import dev.restate.e2e.services.upgradetest.UpgradeTestServiceGrpc;
 import dev.restate.sdk.http.vertx.RestateHttpEndpointBuilder;
 import java.util.Objects;
+import my.restate.e2e.services.WorkflowAPIBlockAndWaitImpl;
+import my.restate.e2e.services.WorkflowAPIBlockAndWaitServiceAdapter;
 
 public class Main {
 
@@ -49,8 +51,9 @@ public class Main {
             "SERVICES env variable needs to specify which service to run.");
 
     RestateHttpEndpointBuilder restateHttpEndpointBuilder = RestateHttpEndpointBuilder.builder();
-    for (String service : env.split(",")) {
-      switch (service.trim()) {
+    for (String svc : env.split(",")) {
+      String fqsn = svc.trim();
+      switch (fqsn) {
         case ListServiceGrpc.SERVICE_NAME:
           restateHttpEndpointBuilder.withService(new ListService());
           break;
@@ -94,6 +97,10 @@ public class Main {
           restateHttpEndpointBuilder.withService(new BlockingService());
         case MapServiceGrpc.SERVICE_NAME:
           restateHttpEndpointBuilder.withService(new MapService());
+          break;
+        case WorkflowAPIBlockAndWaitServiceAdapter.SERVICE_NAME:
+          restateHttpEndpointBuilder.with(
+              new WorkflowAPIBlockAndWaitImpl(), new WorkflowAPIBlockAndWaitServiceAdapter());
           break;
       }
     }
