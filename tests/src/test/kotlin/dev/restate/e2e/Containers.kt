@@ -117,6 +117,10 @@ object Containers {
   val NODE_HANDLER_API_ECHO_TEST_SERVICE_SPEC =
       nodeServicesContainer("node-proxy", HANDLER_API_ECHO_TEST_SERVICE_NAME).build()
 
+  const val WORKFLOW_API_BLOCK_AND_WAIT_SERVICE_NAME = "WorkflowAPIBlockAndWait"
+  val NODE_WORKFLOW_SERVICE_SPEC =
+      nodeServicesContainer("node-workflow", WORKFLOW_API_BLOCK_AND_WAIT_SERVICE_NAME).build()
+
   const val EMBEDDED_HANDLER_SERVER_HOSTNAME = "node-embedded-handler"
   const val EMBEDDED_HANDLER_SERVER_PORT = 8080
 
