@@ -28,7 +28,11 @@ import {
   VerificationRequest as InterpreterVerificationRequest,
 } from "./generated/interpreter";
 import seedrandom from "seedrandom";
-import { useContext, TerminalError } from "@restatedev/restate-sdk";
+import {
+  useContext,
+  TerminalError,
+  useKeyedContext,
+} from "@restatedev/restate-sdk";
 import { Empty } from "./generated/google/protobuf/empty";
 import { writeInterpreterKey } from "./interpreter";
 
@@ -264,7 +268,7 @@ export class CommandVerifierService implements CommandVerifier {
     if (!request.params) {
       throw new TerminalError("No params in ExecuteRequest");
     }
-    const ctx = useContext(this);
+    const ctx = useKeyedContext(this);
     const params = parseTestParams(request.params);
 
     // we've already been called with these parameters; don't kick off the job a second time
@@ -274,7 +278,7 @@ export class CommandVerifierService implements CommandVerifier {
       await ctx.set("started", true);
     }
 
-    const client = new CommandInterpreterClientImpl(ctx);
+    const client = new CommandInterpreterClientImpl(ctx.grpcChannel());
     const builder = new CommandBuilder(seedrandom(params.seed), params.width);
     const { target, commands } = builder.buildCommands(
       params.maxSleepMillis || DEFAULT_MAX_SLEEP,
@@ -298,7 +302,7 @@ export class CommandVerifierService implements CommandVerifier {
     const ctx = useContext(this);
     const params = parseTestParams(request.params);
 
-    const client = new CommandInterpreterClientImpl(ctx);
+    const client = new CommandInterpreterClientImpl(ctx.grpcChannel());
     // use side effect as this is quite cpu intensive and we may resume a few times
     const m = await ctx.sideEffect(async () => {
       const builder = new CommandBuilder(seedrandom(params.seed), params.width);
@@ -341,14 +345,14 @@ export class CommandVerifierService implements CommandVerifier {
     if (!request.params) {
       throw new TerminalError("No params in ClearRequest");
     }
-    const ctx = useContext(this);
+    const ctx = useKeyedContext(this);
     const params = parseTestParams(request.params);
 
     // clear the idempotent flag, given that we can now execute again
     if (await ctx.get("started")) {
       ctx.clear("started");
     }
-    const client = new CommandInterpreterClientImpl(ctx);
+    const client = new CommandInterpreterClientImpl(ctx.grpcChannel());
 
     // use side effect as this is quite cpu intensive and we may resume a few times
     const keys = await ctx.sideEffect(async () => {

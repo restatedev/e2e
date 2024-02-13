@@ -38,7 +38,7 @@ export class FailingService implements IFailingService {
   ): Promise<ErrorMessage> {
     const ctx = restate.useContext(this);
 
-    const failingService = new FailingServiceClientImpl(ctx);
+    const failingService = new FailingServiceClientImpl(ctx.grpcChannel());
 
     await failingService.terminallyFailingCall(
       ErrorMessage.create({

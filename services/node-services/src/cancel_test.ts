@@ -26,15 +26,15 @@ export const BlockingServiceFQN = protobufPackage + ".BlockingService";
 
 export class CancelTestService implements ICancelTestService {
   async verifyTest(request: Empty): Promise<Response> {
-    const ctx = restate.useContext(this);
+    const ctx = restate.useKeyedContext(this);
     const isCanceled = (await ctx.get<boolean>("canceled")) ?? false;
 
     return { isCanceled: isCanceled };
   }
 
   async startTest(request: BlockingRequest): Promise<Empty> {
-    const ctx = restate.useContext(this);
-    const client = new BlockingServiceClientImpl(ctx);
+    const ctx = restate.useKeyedContext(this);
+    const client = new BlockingServiceClientImpl(ctx.grpcChannel());
 
     try {
       await client.block(request);
@@ -55,9 +55,9 @@ export class CancelTestService implements ICancelTestService {
 
 export class BlockingService implements IBlockingService {
   async block(request: BlockingRequest): Promise<Empty> {
-    const ctx = restate.useContext(this);
-    const client = new AwakeableHolderServiceClientImpl(ctx);
-    const self = new BlockingServiceClientImpl(ctx);
+    const ctx = restate.useKeyedContext(this);
+    const client = new AwakeableHolderServiceClientImpl(ctx.grpcChannel());
+    const self = new BlockingServiceClientImpl(ctx.grpcChannel());
 
     const { id, promise } = ctx.awakeable();
     client.hold({ name: "cancel", id });

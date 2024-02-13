@@ -21,11 +21,11 @@ export const ProxyCounterServiceFQN = protobufPackage + ".ProxyCounter";
 
 export class ProxyCounterService implements IProxyCounter {
   async addInBackground(request: CounterAddRequest): Promise<Empty> {
-    console.log("addInBackground " + JSON.stringify(request));
     const ctx = restate.useContext(this);
+    ctx.console.log("addInBackground " + JSON.stringify(request));
 
-    const productServiceClient = new CounterClientImpl(ctx);
-    await ctx.oneWayCall(() => productServiceClient.add(request));
+    const productServiceClient = new CounterClientImpl(ctx.grpcChannel());
+    await ctx.grpcChannel().oneWayCall(() => productServiceClient.add(request));
 
     return {};
   }

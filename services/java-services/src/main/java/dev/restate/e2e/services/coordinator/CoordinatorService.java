@@ -19,7 +19,7 @@ import dev.restate.e2e.services.receiver.ReceiverProto.PingRequest;
 import dev.restate.e2e.services.receiver.ReceiverProto.SetValueRequest;
 import dev.restate.e2e.services.receiver.ReceiverRestate;
 import dev.restate.sdk.Awaitable;
-import dev.restate.sdk.UnkeyedContext;
+import dev.restate.sdk.Context;
 import dev.restate.sdk.common.CoreSerdes;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,12 +33,12 @@ public class CoordinatorService extends CoordinatorRestate.CoordinatorRestateImp
   private static final Logger LOG = LogManager.getLogger(CoordinatorService.class);
 
   @Override
-  public void sleep(UnkeyedContext context, Duration request) {
+  public void sleep(Context context, Duration request) {
     manyTimers(context, ManyTimersRequest.newBuilder().addTimer(request).build());
   }
 
   @Override
-  public void manyTimers(UnkeyedContext context, ManyTimersRequest request) {
+  public void manyTimers(Context context, ManyTimersRequest request) {
     LOG.info("many timers {}", request.getTimerList());
 
     awaitableAll(
@@ -48,7 +48,7 @@ public class CoordinatorService extends CoordinatorRestate.CoordinatorRestateImp
   }
 
   @Override
-  public ProxyResponse proxy(UnkeyedContext context) {
+  public ProxyResponse proxy(Context context) {
     String key = context.sideEffect(CoreSerdes.JSON_STRING, () -> UUID.randomUUID().toString());
 
     var pong =
@@ -60,7 +60,7 @@ public class CoordinatorService extends CoordinatorRestate.CoordinatorRestateImp
   }
 
   @Override
-  public ComplexResponse complex(UnkeyedContext context, ComplexRequest request) {
+  public ComplexResponse complex(Context context, ComplexRequest request) {
     LOG.info(
         "Starting complex coordination by sleeping for {} ms",
         request.getSleepDuration().getMillis());
@@ -93,7 +93,7 @@ public class CoordinatorService extends CoordinatorRestate.CoordinatorRestateImp
   }
 
   @Override
-  public TimeoutResponse timeout(UnkeyedContext context, Duration request) {
+  public TimeoutResponse timeout(Context context, Duration request) {
     var timeoutOccurred = false;
 
     var awakeable = context.awakeable(CoreSerdes.VOID);
@@ -107,7 +107,7 @@ public class CoordinatorService extends CoordinatorRestate.CoordinatorRestateImp
   }
 
   @Override
-  public void invokeSequentially(UnkeyedContext context, InvokeSequentiallyRequest request) {
+  public void invokeSequentially(Context context, InvokeSequentiallyRequest request) {
     List<Awaitable<?>> collectedAwaitables = new ArrayList<>();
 
     var listClient = ListServiceRestate.newClient(context);

@@ -32,7 +32,7 @@ export class ReceiverService implements Receiver {
 
   async setValue(request: SetValueRequest): Promise<Empty> {
     console.log("setValue: " + request);
-    const ctx = restate.useContext(this);
+    const ctx = restate.useKeyedContext(this);
 
     ctx.set(STATE_KEY, request.value);
 
@@ -41,7 +41,7 @@ export class ReceiverService implements Receiver {
 
   async getValue(request: GetValueRequest): Promise<GetValueResponse> {
     console.log(`getValue: ${request}`);
-    const ctx = restate.useContext(this);
+    const ctx = restate.useKeyedContext(this);
 
     const value = (await ctx.get<string>(STATE_KEY)) || "";
 

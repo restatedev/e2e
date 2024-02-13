@@ -31,7 +31,9 @@ export class KillTestService implements IKillTestService {
   // startCallTree --> recursiveCall --> recursiveCall:inboxed
   async startCallTree(request: Empty): Promise<Empty> {
     const ctx = restate.useContext(this);
-    const singletonClient = new KillSingletonServiceClientImpl(ctx);
+    const singletonClient = new KillSingletonServiceClientImpl(
+      ctx.grpcChannel()
+    );
 
     await singletonClient.recursiveCall(Empty.create({}));
 
@@ -42,8 +44,10 @@ export class KillTestService implements IKillTestService {
 export class KillSingletonService implements IKillSingletonService {
   async recursiveCall(request: Empty): Promise<Empty> {
     const ctx = restate.useContext(this);
-    const selfClient = new KillSingletonServiceClientImpl(ctx);
-    const awakeableClient = new AwakeableHolderServiceClientImpl(ctx);
+    const selfClient = new KillSingletonServiceClientImpl(ctx.grpcChannel());
+    const awakeableClient = new AwakeableHolderServiceClientImpl(
+      ctx.grpcChannel()
+    );
 
     const { id, promise } = ctx.awakeable();
     awakeableClient.hold({

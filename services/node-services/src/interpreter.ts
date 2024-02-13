@@ -7,7 +7,7 @@
 // directory of this repository or package, or at
 // https://github.com/restatedev/e2e/blob/main/LICENSE
 
-import { RestateContext, useContext } from "@restatedev/restate-sdk";
+import { KeyedContext, useKeyedContext } from "@restatedev/restate-sdk";
 import {
   BackgroundCallRequest,
   CallRequest,
@@ -76,8 +76,8 @@ export class CommandInterpreterService implements CommandInterpreter {
     if (!key) {
       throw new Error("CallRequest with no key");
     }
-    const ctx = useContext(this);
-    const client = new CommandInterpreterClientImpl(ctx);
+    const ctx = useKeyedContext(this);
+    const client = new CommandInterpreterClientImpl(ctx.grpcChannel());
     const pending_calls = new Map<number, Promise<Empty>>();
     const params = parseInterpreterKey(key);
 
@@ -130,13 +130,13 @@ export class CommandInterpreterService implements CommandInterpreter {
     return Empty.create({});
   }
 
-  async _increment(ctx: RestateContext): Promise<void> {
+  async _increment(ctx: KeyedContext): Promise<void> {
     const counter = (await ctx.get<number>("counter")) || 0;
     return ctx.set("counter", counter + 1);
   }
 
   async _syncCall(
-    ctx: RestateContext,
+    _ctx: KeyedContext,
     client: CommandInterpreterClientImpl,
     key: InterpreterKey,
     request: Command_SyncCall
@@ -150,7 +150,7 @@ export class CommandInterpreterService implements CommandInterpreter {
   }
 
   _asyncCall(
-    ctx: RestateContext,
+    ctx: KeyedContext,
     client: CommandInterpreterClientImpl,
     pending_calls: Map<number, Promise<Empty>>,
     key: InterpreterKey,
@@ -168,7 +168,7 @@ export class CommandInterpreterService implements CommandInterpreter {
   }
 
   async _asyncCallAwait(
-    ctx: RestateContext,
+    ctx: KeyedContext,
     pending_calls: Map<number, Promise<Empty>>,
     request: Command_AsyncCallAwait
   ): Promise<void> {
@@ -181,12 +181,12 @@ export class CommandInterpreterService implements CommandInterpreter {
   }
 
   async _backgroundCall(
-    ctx: RestateContext,
+    ctx: KeyedContext,
     client: CommandInterpreterClientImpl,
     key: InterpreterKey,
     request: Command_BackgroundCall
   ): Promise<void> {
-    return ctx.oneWayCall(() =>
+    return ctx.grpcChannel().oneWayCall(() =>
       client.backgroundCall(
         BackgroundCallRequest.create({
           key: writeInterpreterKey({ ...key, target: request.target }),
@@ -196,12 +196,12 @@ export class CommandInterpreterService implements CommandInterpreter {
     );
   }
 
-  async _sleep(ctx: RestateContext, request: Command_Sleep): Promise<void> {
+  async _sleep(ctx: KeyedContext, request: Command_Sleep): Promise<void> {
     return ctx.sleep(request.milliseconds);
   }
 
   async verify(request: VerificationRequest): Promise<VerificationResult> {
-    const ctx = useContext(this);
+    const ctx = useKeyedContext(this);
     return VerificationResult.create({
       expected: request.expected,
       actual: (await ctx.get<number>("counter")) || 0,
@@ -209,9 +209,9 @@ export class CommandInterpreterService implements CommandInterpreter {
   }
 
   async clear(): Promise<Empty> {
-    const ctx = useContext(this);
+    const ctx = useKeyedContext(this);
 
-    await ctx.clear("counter");
+    ctx.clear("counter");
 
     return Empty.create({});
   }

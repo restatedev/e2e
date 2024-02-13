@@ -11,7 +11,7 @@ package dev.restate.e2e.services.counter;
 
 import static dev.restate.e2e.services.counter.CounterProto.CounterAddRequest;
 
-import dev.restate.sdk.UnkeyedContext;
+import dev.restate.sdk.Context;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -20,7 +20,7 @@ public class ProxyCounterService extends ProxyCounterRestate.ProxyCounterRestate
   private static final Logger logger = LogManager.getLogger(ProxyCounterService.class);
 
   @Override
-  public void addInBackground(UnkeyedContext context, CounterAddRequest request) {
+  public void addInBackground(Context context, CounterAddRequest request) {
     logger.info("addInBackground invoked {}", request);
 
     // Increment the counter

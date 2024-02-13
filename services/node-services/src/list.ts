@@ -25,7 +25,7 @@ export const ListServiceFQN = protobufPackage + ".ListService";
 export class ListService implements IListService {
   async append(request: AppendRequest): Promise<Empty> {
     console.log("append: " + JSON.stringify(request));
-    const ctx = restate.useContext(this);
+    const ctx = restate.useKeyedContext(this);
 
     const list = (await ctx.get<List>(LIST_KEY)) ?? List.create({});
     list.values.push(request.value);
@@ -36,7 +36,7 @@ export class ListService implements IListService {
 
   async clear(request: Request): Promise<List> {
     console.log("clear: " + JSON.stringify(request));
-    const ctx = restate.useContext(this);
+    const ctx = restate.useKeyedContext(this);
 
     const list = (await ctx.get<List>(LIST_KEY)) ?? List.create({});
     ctx.clear(LIST_KEY);
@@ -46,7 +46,7 @@ export class ListService implements IListService {
 
   async get(request: Request): Promise<List> {
     console.log("get: " + JSON.stringify(request));
-    const ctx = restate.useContext(this);
+    const ctx = restate.useKeyedContext(this);
 
     return (await ctx.get<List>(LIST_KEY)) ?? List.create({});
   }

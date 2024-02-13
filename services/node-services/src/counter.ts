@@ -28,7 +28,7 @@ export const CounterServiceFQN = protobufPackage + ".Counter";
 export class CounterService implements Counter {
   async reset(request: CounterRequest): Promise<Empty> {
     console.log("reset: " + JSON.stringify(request));
-    const ctx = restate.useContext(this);
+    const ctx = restate.useKeyedContext(this);
 
     ctx.clear(COUNTER_KEY);
 
@@ -37,7 +37,7 @@ export class CounterService implements Counter {
 
   async add(request: CounterAddRequest): Promise<Empty> {
     console.log("add: " + JSON.stringify(request));
-    const ctx = restate.useContext(this);
+    const ctx = restate.useKeyedContext(this);
 
     const value = (await ctx.get<number>(COUNTER_KEY)) || 0;
     ctx.set(COUNTER_KEY, value + request.value);
@@ -53,7 +53,7 @@ export class CounterService implements Counter {
 
   async get(request: CounterRequest): Promise<GetResponse> {
     console.log("get: " + JSON.stringify(request));
-    const ctx = restate.useContext(this);
+    const ctx = restate.useKeyedContext(this);
 
     const value = (await ctx.get<number>(COUNTER_KEY)) || 0;
 
@@ -62,7 +62,7 @@ export class CounterService implements Counter {
 
   async getAndAdd(request: CounterAddRequest): Promise<CounterUpdateResult> {
     console.log("getAndAdd: " + JSON.stringify(request));
-    const ctx = restate.useContext(this);
+    const ctx = restate.useKeyedContext(this);
 
     const oldValue = (await ctx.get<number>(COUNTER_KEY)) || 0;
     const newValue = oldValue + request.value;
@@ -73,13 +73,15 @@ export class CounterService implements Counter {
 
   async infiniteIncrementLoop(request: CounterRequest): Promise<Empty> {
     console.log("infiniteIncrementLoop: " + JSON.stringify(request));
-    const ctx = restate.useContext(this);
+    const ctx = restate.useKeyedContext(this);
 
     let counter = 1;
     ctx.set(COUNTER_KEY, counter);
 
     // Wait for the sync with the test runner
-    const awakeableHolderClient = new AwakeableHolderServiceClientImpl(ctx);
+    const awakeableHolderClient = new AwakeableHolderServiceClientImpl(
+      ctx.grpcChannel()
+    );
     const { id, promise } = ctx.awakeable();
     awakeableHolderClient.hold({
       name: request.counterName,
@@ -98,7 +100,7 @@ export class CounterService implements Counter {
 
   async handleEvent(request: UpdateCounterEvent): Promise<Empty> {
     console.log("handleEvent: " + JSON.stringify(request));
-    const ctx = restate.useContext(this);
+    const ctx = restate.useKeyedContext(this);
 
     const value = (await ctx.get<number>(COUNTER_KEY)) || 0;
     ctx.set(COUNTER_KEY, value + parseInt(request.payload.toString()));

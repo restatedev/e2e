@@ -26,7 +26,7 @@ app.post("/increment_counter_test", async (req: Request, res: Response) => {
   const result = await rs.invoke(
     id,
     input,
-    async (ctx: restate.RpcContext, input: string) => {
+    async (ctx: restate.Context, input: string) => {
       const { newCounter } = await ctx.rpc(CounterAPI).add(input, { value: 1 });
       return newCounter;
     }
@@ -39,14 +39,10 @@ app.post(
   "/one_way_increment_counter_test",
   async (req: Request, res: Response) => {
     const { id, input } = req.body;
-    await rs.invoke(
-      id,
-      input,
-      async (ctx: restate.RpcContext, input: string) => {
-        ctx.send(CounterAPI).add(input, { value: 1 });
-        return {};
-      }
-    );
+    await rs.invoke(id, input, async (ctx: restate.Context, input: string) => {
+      ctx.send(CounterAPI).add(input, { value: 1 });
+      return {};
+    });
     res.json({});
   }
 );
@@ -55,14 +51,10 @@ app.post(
   "/delayed_increment_counter_test",
   async (req: Request, res: Response) => {
     const { id, input } = req.body;
-    await rs.invoke(
-      id,
-      input,
-      async (ctx: restate.RpcContext, input: string) => {
-        ctx.sendDelayed(CounterAPI, 100).add(input, { value: 1 });
-        return {};
-      }
-    );
+    await rs.invoke(id, input, async (ctx: restate.Context, input: string) => {
+      ctx.sendDelayed(CounterAPI, 100).add(input, { value: 1 });
+      return {};
+    });
     res.json({});
   }
 );
@@ -73,7 +65,7 @@ app.post("/side_effect_and_awakeable", async (req: Request, res: Response) => {
   const result = await rs.invoke(
     id,
     itemsNumber,
-    async (ctx: restate.RpcContext, itemsNumber: number) => {
+    async (ctx: restate.Context, itemsNumber: number) => {
       const numbersToSort = Array(itemsNumber)
         .fill(undefined)
         .map(() => itemsNumber * Math.random());
@@ -99,7 +91,7 @@ app.post("/side_effect_and_awakeable", async (req: Request, res: Response) => {
 app.post("/consecutive_side_effects", async (req: Request, res: Response) => {
   const { id } = req.body;
 
-  const result = await rs.invoke(id, {}, async (ctx: restate.RpcContext) => {
+  const result = await rs.invoke(id, {}, async (ctx: restate.Context) => {
     let invocationCount = 0;
     await ctx.sideEffect<void>(async () => {
       invocationCount++;
