@@ -27,7 +27,7 @@ export const AwakeableHolderServiceFQN =
 export class AwakeableHolderService implements IAwakeableHolderService {
   async hold(request: HoldRequest): Promise<Empty> {
     console.log("hold: " + JSON.stringify(request));
-    const ctx = restate.useContext(this);
+    const ctx = restate.useKeyedContext(this);
 
     ctx.set(ID_KEY, request.id);
 
@@ -38,7 +38,7 @@ export class AwakeableHolderService implements IAwakeableHolderService {
     request: HasAwakeableRequest
   ): Promise<HasAwakeableResponse> {
     console.log("hasAwakeable: " + JSON.stringify(request));
-    const ctx = restate.useContext(this);
+    const ctx = restate.useKeyedContext(this);
 
     return {
       hasAwakeable: (await ctx.get<string>(ID_KEY)) !== null,
@@ -47,7 +47,7 @@ export class AwakeableHolderService implements IAwakeableHolderService {
 
   async unlock(request: UnlockRequest): Promise<Empty> {
     console.log("unlock: " + JSON.stringify(request));
-    const ctx = restate.useContext(this);
+    const ctx = restate.useKeyedContext(this);
 
     const id = await ctx.get<string>(ID_KEY);
     if (id === null || id === undefined) {

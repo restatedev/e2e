@@ -46,7 +46,7 @@ export class CoordinatorService implements Coordinator {
   async proxy(): Promise<ProxyResponse> {
     console.log("proxy");
     const ctx = restate.useContext(this);
-    const receiverClient = new ReceiverClientImpl(ctx);
+    const receiverClient = new ReceiverClientImpl(ctx.grpcChannel());
 
     const uuid = await ctx.sideEffect(async () => uuidv4());
 
@@ -58,7 +58,7 @@ export class CoordinatorService implements Coordinator {
   async complex(request: ComplexRequest): Promise<ComplexResponse> {
     console.log("complex: ", request);
     const ctx = restate.useContext(this);
-    const receiverClient = new ReceiverClientImpl(ctx);
+    const receiverClient = new ReceiverClientImpl(ctx.grpcChannel());
 
     const sleepDuration = request.sleepDuration?.millis;
     if (sleepDuration == undefined) {
@@ -72,9 +72,11 @@ export class CoordinatorService implements Coordinator {
     // background calls as well as request-response calls have an absolute ordering that is defined
     // by their call order. In this concrete case, setValue is guaranteed to be executed before
     // getValue.
-    await ctx.oneWayCall(() =>
-      receiverClient.setValue({ key, value: request.requestValue })
-    );
+    await ctx
+      .grpcChannel()
+      .oneWayCall(() =>
+        receiverClient.setValue({ key, value: request.requestValue })
+      );
     const response = await receiverClient.getValue({ key });
 
     return { responseValue: response.value };

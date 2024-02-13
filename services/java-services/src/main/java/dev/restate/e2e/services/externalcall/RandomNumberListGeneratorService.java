@@ -15,7 +15,7 @@ import dev.restate.e2e.services.externalcall.RandomNumberListGeneratorProto.Gene
 import dev.restate.e2e.services.externalcall.RandomNumberListGeneratorProto.GenerateNumbersResponse;
 import dev.restate.e2e.services.utils.NumberSortHttpServerUtils;
 import dev.restate.sdk.Awakeable;
-import dev.restate.sdk.UnkeyedContext;
+import dev.restate.sdk.Context;
 import dev.restate.sdk.common.Serde;
 import dev.restate.sdk.serde.jackson.JacksonSerdes;
 import java.util.ArrayList;
@@ -34,8 +34,7 @@ public class RandomNumberListGeneratorService
       JacksonSerdes.of(jsonObjectMapper, new TypeReference<>() {});
 
   @Override
-  public GenerateNumbersResponse generateNumbers(
-      UnkeyedContext ctx, GenerateNumbersRequest request) {
+  public GenerateNumbersResponse generateNumbers(Context ctx, GenerateNumbersRequest request) {
     LOG.info("Received request " + request);
 
     List<Integer> numbers = new ArrayList<>(request.getItemsNumber());

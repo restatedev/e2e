@@ -36,7 +36,7 @@ export const NonDeterministicServiceFQN =
 export class NonDeterministicService implements INonDeterministicService {
   async leftSleepRightCall(request: NonDeterministicRequest): Promise<Empty> {
     const ctx = restate.useContext(this);
-    const counterClient = new CounterClientImpl(ctx);
+    const counterClient = new CounterClientImpl(ctx.grpcChannel());
 
     if (doLeftAction(request)) {
       await ctx.sleep(100);
@@ -48,7 +48,7 @@ export class NonDeterministicService implements INonDeterministicService {
   }
   async callDifferentMethod(request: NonDeterministicRequest): Promise<Empty> {
     const ctx = restate.useContext(this);
-    const counterClient = new CounterClientImpl(ctx);
+    const counterClient = new CounterClientImpl(ctx.grpcChannel());
 
     if (doLeftAction(request)) {
       await counterClient.get(CounterRequest.create({ counterName: "abc" }));
@@ -62,23 +62,27 @@ export class NonDeterministicService implements INonDeterministicService {
     request: NonDeterministicRequest
   ): Promise<Empty> {
     const ctx = restate.useContext(this);
-    const counterClient = new CounterClientImpl(ctx);
+    const counterClient = new CounterClientImpl(ctx.grpcChannel());
 
     if (doLeftAction(request)) {
-      await ctx.oneWayCall(() =>
-        counterClient.get(CounterRequest.create({ counterName: "abc" }))
-      );
+      await ctx
+        .grpcChannel()
+        .oneWayCall(() =>
+          counterClient.get(CounterRequest.create({ counterName: "abc" }))
+        );
     } else {
-      await ctx.oneWayCall(() =>
-        counterClient.reset(CounterRequest.create({ counterName: "abc" }))
-      );
+      await ctx
+        .grpcChannel()
+        .oneWayCall(() =>
+          counterClient.reset(CounterRequest.create({ counterName: "abc" }))
+        );
     }
 
     await ctx.sleep(100);
     return await this.incrementCounterAndEnd(request);
   }
   async setDifferentKey(request: NonDeterministicRequest): Promise<Empty> {
-    const ctx = restate.useContext(this);
+    const ctx = restate.useKeyedContext(this);
 
     if (doLeftAction(request)) {
       ctx.set("a", "my-state");
@@ -90,7 +94,7 @@ export class NonDeterministicService implements INonDeterministicService {
     return await this.incrementCounterAndEnd(request);
   }
   async setDifferentValue(request: NonDeterministicRequest): Promise<Empty> {
-    const ctx = restate.useContext(this);
+    const ctx = restate.useKeyedContext(this);
     ctx.set("a", uuidv4());
     await ctx.sleep(100);
     return await this.incrementCounterAndEnd(request);
@@ -100,13 +104,15 @@ export class NonDeterministicService implements INonDeterministicService {
     request: NonDeterministicRequest
   ): Promise<Empty> {
     const ctx = restate.useContext(this);
-    const counterClient = new CounterClientImpl(ctx);
+    const counterClient = new CounterClientImpl(ctx.grpcChannel());
 
-    await ctx.oneWayCall(() =>
-      counterClient.add(
-        CounterAddRequest.create({ counterName: request.key, value: 1 })
-      )
-    );
+    await ctx
+      .grpcChannel()
+      .oneWayCall(() =>
+        counterClient.add(
+          CounterAddRequest.create({ counterName: request.key, value: 1 })
+        )
+      );
 
     return Empty.create({});
   }

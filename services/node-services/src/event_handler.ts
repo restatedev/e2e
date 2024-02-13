@@ -21,8 +21,8 @@ export class EventHandlerService implements EventHandler {
     console.log("handleEvent: " + JSON.stringify(event));
     const ctx = restate.useContext(this);
 
-    const counterClient = new CounterClientImpl(ctx);
-    await ctx.oneWayCall(() =>
+    const counterClient = new CounterClientImpl(ctx.grpcChannel());
+    await ctx.grpcChannel().oneWayCall(() =>
       counterClient.add({
         counterName: event.key.toString(),
         value: parseInt(event.payload.toString()),

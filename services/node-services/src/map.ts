@@ -24,7 +24,7 @@ export const MapServiceFQN = protobufPackage + ".MapService";
 
 export class MapService implements IMapService {
   async clearAll(): Promise<ClearAllResponse> {
-    const ctx = restate.useContext(this);
+    const ctx = restate.useKeyedContext(this);
 
     const keys = await ctx.stateKeys();
     ctx.clearAll();
@@ -33,7 +33,7 @@ export class MapService implements IMapService {
   }
 
   async get(request: GetRequest): Promise<GetResponse> {
-    const ctx = restate.useContext(this);
+    const ctx = restate.useKeyedContext(this);
 
     const value = (await ctx.get<string>(request.key)) || "";
 
@@ -41,7 +41,7 @@ export class MapService implements IMapService {
   }
 
   async set(request: SetRequest): Promise<Empty> {
-    const ctx = restate.useContext(this);
+    const ctx = restate.useKeyedContext(this);
 
     ctx.set(request.key, request.value);
 
