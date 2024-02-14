@@ -19,6 +19,7 @@ data class ServiceSpec(
     internal val containerImage: String,
     val hostName: String,
     internal val envs: Map<String, String>,
+    val services: Set<String>,
     internal val port: Int,
     internal val skipRegistration: Boolean,
     internal val dependencies: List<Startable>,
@@ -44,6 +45,7 @@ data class ServiceSpec(
       private var port: Int = 8080,
       private var skipRegistration: Boolean = false,
       private var dependencies: MutableList<Startable> = mutableListOf(),
+      private var services: MutableSet<String> = mutableSetOf(),
   ) {
     fun withHostName(hostName: String) = apply { this.hostName = hostName }
 
@@ -54,11 +56,14 @@ data class ServiceSpec(
 
     fun withEnvs(envs: Map<String, String>) = apply { this.envs.putAll(envs) }
 
+    fun withServices(vararg services: String) = apply { this.services.addAll(services) }
+
     fun skipRegistration() = apply { this.skipRegistration = true }
 
     fun dependsOn(container: Startable) = apply { this.dependencies.add(container) }
 
-    fun build() = ServiceSpec(containerImage, hostName, envs, port, skipRegistration, dependencies)
+    fun build() =
+        ServiceSpec(containerImage, hostName, envs, services, port, skipRegistration, dependencies)
   }
 
   fun toBuilder(): Builder {
@@ -67,13 +72,14 @@ data class ServiceSpec(
         hostName,
         envs = envs.toMutableMap(),
         port,
-        dependencies = dependencies.toMutableList())
+        dependencies = dependencies.toMutableList(),
+        services = services.toMutableSet())
   }
 
   internal fun toContainer(): GenericContainer<*> {
     return GenericContainer(DockerImageName.parse(containerImage))
         .withEnv("PORT", port.toString())
-        .withEnv(envs)
+        .withEnv(envs + ("SERVICES" to services.joinToString(",")))
         .dependsOn(dependencies)
   }
 

@@ -41,7 +41,7 @@ object Containers {
   fun javaServicesContainer(hostName: String, vararg services: String): ServiceSpec.Builder {
     assert(services.isNotEmpty())
     return ServiceSpec.builder("restatedev/e2e-java-services")
-        .withEnv("SERVICES", services.joinToString(","))
+        .withServices(*services)
         .withHostName(hostName)
   }
 
@@ -82,7 +82,7 @@ object Containers {
   fun nodeServicesContainer(hostName: String, vararg services: String): ServiceSpec.Builder {
     assert(services.isNotEmpty())
     return ServiceSpec.builder("restatedev/e2e-node-services")
-        .withEnv("SERVICES", services.joinToString(","))
+        .withServices(*services)
         .withEnv("RESTATE_DEBUG_LOGGING", "JOURNAL")
         .withHostName(hostName)
   }

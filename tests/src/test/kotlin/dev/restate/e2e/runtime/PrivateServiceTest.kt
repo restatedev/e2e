@@ -24,11 +24,13 @@ import dev.restate.e2e.utils.*
 import io.grpc.StatusRuntimeException
 import java.net.URL
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 import org.assertj.core.api.Assertions.*
 import org.assertj.core.api.InstanceOfAssertFactories.type
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.extension.RegisterExtension
 
 /** Test supporting private services */
@@ -43,6 +45,7 @@ class PrivateServiceTest {
                 .build())
   }
 
+  @Timeout(value = 30, unit = TimeUnit.SECONDS)
   @Test
   fun privateService(
       @InjectMetaURL metaURL: URL,
@@ -80,7 +83,9 @@ class PrivateServiceTest {
     client.modifyService(CounterGrpc.SERVICE_NAME, ModifyServiceRequest()._public(true))
 
     // Wait to get the correct count
-    await untilAsserted
+    await.ignoreExceptionsMatching { e ->
+      (e is StatusRuntimeException) && e.status.code.value() == Code.PERMISSION_DENIED_VALUE
+    } untilAsserted
         {
           assertThat(counterClient.get(counterRequest { counterName = counterId }))
               .returns(2L, GetResponse::getValue)

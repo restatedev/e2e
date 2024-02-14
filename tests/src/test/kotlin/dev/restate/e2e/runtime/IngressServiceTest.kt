@@ -10,17 +10,12 @@
 package dev.restate.e2e.runtime
 
 import dev.restate.e2e.Containers
-import dev.restate.e2e.Utils.jacksonBodyHandler
-import dev.restate.e2e.Utils.jacksonBodyPublisher
 import dev.restate.e2e.services.counter.CounterGrpc
 import dev.restate.e2e.services.counter.CounterGrpc.CounterBlockingStub
 import dev.restate.e2e.services.counter.CounterProto.*
 import dev.restate.e2e.services.counter.counterAddRequest
 import dev.restate.e2e.services.counter.counterRequest
-import dev.restate.e2e.utils.InjectBlockingStub
-import dev.restate.e2e.utils.InjectGrpcIngressURL
-import dev.restate.e2e.utils.RestateDeployer
-import dev.restate.e2e.utils.RestateDeployerExtension
+import dev.restate.e2e.utils.*
 import dev.restate.generated.IngressGrpc.IngressBlockingStub
 import dev.restate.generated.invokeRequest
 import io.grpc.Metadata
@@ -67,7 +62,7 @@ class IngressServiceTest {
     val req =
         HttpRequest.newBuilder(URI.create("${httpEndpointURL}dev.restate.Ingress/Invoke"))
             .POST(
-                jacksonBodyPublisher(
+                JsonUtils.jacksonBodyPublisher(
                     mapOf(
                         "service" to CounterGrpc.SERVICE_NAME,
                         "method" to CounterGrpc.getAddMethod().bareMethodName,
@@ -75,7 +70,7 @@ class IngressServiceTest {
             .headers("Content-Type", "application/json")
             .build()
 
-    val response = client.send(req, jacksonBodyHandler())
+    val response = client.send(req, JsonUtils.jacksonBodyHandler())
 
     assertThat(response.statusCode()).isEqualTo(200)
     assertThat(response.headers().firstValue("content-type"))

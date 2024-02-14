@@ -15,7 +15,6 @@ import dev.restate.e2e.Containers.EMBEDDED_HANDLER_SERVER_HOSTNAME
 import dev.restate.e2e.Containers.EMBEDDED_HANDLER_SERVER_PORT
 import dev.restate.e2e.Containers.HANDLER_API_COUNTER_SERVICE_NAME
 import dev.restate.e2e.Containers.nodeServicesContainer
-import dev.restate.e2e.Utils.postJsonRequest
 import dev.restate.e2e.utils.*
 import java.net.URL
 import java.util.UUID
@@ -55,7 +54,7 @@ class EmbeddedHandlerApiTest {
 
     for (i in 0..2) {
       val response =
-          postJsonRequest(
+          JsonUtils.postJsonRequest(
               "http://localhost:${embeddedHandlerServerPort}/increment_counter_test",
               mapOf("id" to operationUuid, "input" to counterUuid))
       assertThat(response.statusCode()).isEqualTo(200)
@@ -64,7 +63,7 @@ class EmbeddedHandlerApiTest {
     }
 
     val response =
-        postJsonRequest(
+        JsonUtils.postJsonRequest(
             "${httpEndpointURL}$HANDLER_API_COUNTER_SERVICE_NAME/get", mapOf("key" to counterUuid))
     assertThat(response.statusCode()).isEqualTo(200)
     assertThat(response.body().get("response").get("counter").asInt()).isEqualTo(1)
@@ -100,12 +99,11 @@ class EmbeddedHandlerApiTest {
       @InjectContainerPort(
           hostName = EMBEDDED_HANDLER_SERVER_HOSTNAME, port = EMBEDDED_HANDLER_SERVER_PORT)
       embeddedHandlerServerPort: Int,
-      @InjectGrpcIngressURL httpEndpointURL: URL
   ) {
     val operationUuid = UUID.randomUUID().toString()
 
     val response =
-        postJsonRequest(
+        JsonUtils.postJsonRequest(
             "http://localhost:${embeddedHandlerServerPort}/side_effect_and_awakeable",
             mapOf("id" to operationUuid, "itemsNumber" to 10))
     assertThat(response.statusCode()).isEqualTo(200)
@@ -122,12 +120,11 @@ class EmbeddedHandlerApiTest {
       @InjectContainerPort(
           hostName = EMBEDDED_HANDLER_SERVER_HOSTNAME, port = EMBEDDED_HANDLER_SERVER_PORT)
       embeddedHandlerServerPort: Int,
-      @InjectGrpcIngressURL httpEndpointURL: URL
   ) {
     val operationUuid = UUID.randomUUID().toString()
 
     val response =
-        postJsonRequest(
+        JsonUtils.postJsonRequest(
             "http://localhost:${embeddedHandlerServerPort}/consecutive_side_effects",
             mapOf("id" to operationUuid))
     assertThat(response.statusCode()).isEqualTo(200)
@@ -144,7 +141,7 @@ class EmbeddedHandlerApiTest {
 
     for (i in 0..2) {
       val response =
-          postJsonRequest(
+          JsonUtils.postJsonRequest(
               "http://localhost:${embeddedHandlerServerPort}/${path}",
               mapOf("id" to operationUuid, "input" to counterUuid))
       assertThat(response.statusCode()).isEqualTo(200)
@@ -153,7 +150,7 @@ class EmbeddedHandlerApiTest {
     await untilAsserted
         {
           val response =
-              postJsonRequest(
+              JsonUtils.postJsonRequest(
                   "${httpEndpointURL}$HANDLER_API_COUNTER_SERVICE_NAME/get",
                   mapOf("key" to counterUuid))
           assertThat(response.statusCode()).isEqualTo(200)

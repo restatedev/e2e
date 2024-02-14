@@ -185,11 +185,11 @@ class NodeHandlerAPIKafkaIngressTest {
               HttpRequest.newBuilder(
                       URI.create(
                           "${httpEndpointURL}${Containers.HANDLER_API_COUNTER_SERVICE_NAME}/get"))
-                  .POST(Utils.jacksonBodyPublisher(mapOf("key" to counter)))
+                  .POST(JsonUtils.jacksonBodyPublisher(mapOf("key" to counter)))
                   .headers("Content-Type", "application/json")
                   .build()
 
-          val response = client.send(req, Utils.jacksonBodyHandler())
+          val response = client.send(req, JsonUtils.jacksonBodyHandler())
 
           assertThat(response.statusCode()).isEqualTo(200)
           assertThat(response.headers().firstValue("content-type"))
