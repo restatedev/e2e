@@ -76,13 +76,9 @@ import {
   WorkflowAPIBlockAndWaitFQN,
 } from "./workflow";
 
-let serverBuilder;
 export let handler: (event: any) => Promise<any>;
-if (process.env.AWS_LAMBDA_FUNCTION_NAME) {
-  serverBuilder = restate.createLambdaApiGatewayHandler();
-} else {
-  serverBuilder = restate.createServer();
-}
+
+const serverBuilder = restate.endpoint();
 
 const services = new Map<
   string,
@@ -276,12 +272,12 @@ if (process.env.SERVICES) {
       throw new Error("Unknown service '" + service + "'");
     } else if ((foundService as restate.ServiceOpts).descriptor !== undefined) {
       console.log("Mounting " + service);
-      serverBuilder = serverBuilder.bindService(
+      serverBuilder.bindService(
         foundService as restate.ServiceOpts
       );
     } else if ((foundService as { router: any }).router !== undefined) {
       console.log("Mounting router " + service);
-      serverBuilder = serverBuilder.bindRouter(
+      serverBuilder.bindRouter(
         service,
         (foundService as { router: any }).router
       );
@@ -289,25 +285,26 @@ if (process.env.SERVICES) {
       (foundService as { keyedRouter: any }).keyedRouter !== undefined
     ) {
       console.log("Mounting keyed router " + service);
-      serverBuilder = serverBuilder.bindKeyedRouter(
+      serverBuilder.bindKeyedRouter(
         service,
         (foundService as { keyedRouter: any }).keyedRouter
       );
     } else {
       console.log("Mounting bundle " + service);
-      serverBuilder = serverBuilder.bind(
+      serverBuilder.bind(
         (foundService as { bundle: any }).bundle
       );
     }
   }
 
-  if ("handle" in serverBuilder) {
-    handler = serverBuilder.handle();
+  if (process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    handler = serverBuilder.lambdaHandler();
   } else {
     serverBuilder.listen();
   }
 }
 
+
 if (process.env.EMBEDDED_HANDLER_PORT) {
   startEmbeddedHandlerServer(parseInt(process.env.EMBEDDED_HANDLER_PORT));
-}
+} 
