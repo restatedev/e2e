@@ -9,15 +9,13 @@
 
 package my.restate.e2e.services;
 
-import dev.restate.sdk.annotation.Service;
-import dev.restate.sdk.annotation.ServiceType;
 import dev.restate.sdk.annotation.Shared;
 import dev.restate.sdk.annotation.Workflow;
 import dev.restate.sdk.common.StateKey;
 import dev.restate.sdk.workflow.WorkflowContext;
 import dev.restate.sdk.workflow.WorkflowSharedContext;
 
-@Service(ServiceType.WORKFLOW)
+@Workflow
 public interface WorkflowAPIBlockAndWait {
 
   @Workflow

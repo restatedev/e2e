@@ -9,7 +9,7 @@
 
 package dev.restate.e2e.services.canceltest;
 
-import dev.restate.sdk.KeyedContext;
+import dev.restate.sdk.ObjectContext;
 import dev.restate.sdk.common.CoreSerdes;
 import dev.restate.sdk.common.StateKey;
 import dev.restate.sdk.common.TerminalException;
@@ -19,7 +19,7 @@ public class CancelTestService extends CancelTestServiceRestate.CancelTestServic
       StateKey.of("canceled", CoreSerdes.JSON_BOOLEAN);
 
   @Override
-  public void startTest(KeyedContext ctx, CancelTestProto.BlockingRequest request)
+  public void startTest(ObjectContext ctx, CancelTestProto.BlockingRequest request)
       throws TerminalException {
     BlockingServiceRestate.BlockingServiceRestateClient client =
         BlockingServiceRestate.newClient(ctx);
@@ -36,7 +36,7 @@ public class CancelTestService extends CancelTestServiceRestate.CancelTestServic
   }
 
   @Override
-  public CancelTestProto.Response verifyTest(KeyedContext context) throws TerminalException {
+  public CancelTestProto.Response verifyTest(ObjectContext context) throws TerminalException {
     return CancelTestProto.Response.newBuilder()
         .setIsCanceled(context.get(CANCELED_STATE).orElse(false))
         .build();

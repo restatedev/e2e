@@ -21,7 +21,9 @@ import dev.restate.e2e.services.singletoncounter.SingletonCounterGrpc
 import dev.restate.e2e.services.verification.interpreter.CommandInterpreterGrpc
 import dev.restate.e2e.services.verification.verifier.CommandVerifierGrpc
 import dev.restate.e2e.utils.ServiceSpec
-import my.restate.e2e.services.WorkflowAPIBlockAndWaitServiceAdapter
+import my.restate.e2e.services.CoordinatorClient
+import my.restate.e2e.services.ReceiverClient
+import my.restate.e2e.services.WorkflowAPIBlockAndWaitClient
 import org.testcontainers.containers.GenericContainer
 
 object Containers {
@@ -58,7 +60,11 @@ object Containers {
 
   val JAVA_COORDINATOR_SERVICE_SPEC =
       javaServicesContainer(
-              "java-coordinator", CoordinatorGrpc.SERVICE_NAME, ReceiverGrpc.SERVICE_NAME)
+              "java-coordinator",
+              CoordinatorGrpc.SERVICE_NAME,
+              ReceiverGrpc.SERVICE_NAME,
+              CoordinatorClient.COMPONENT_NAME,
+              ReceiverClient.COMPONENT_NAME)
           .build()
 
   val JAVA_EXTERNALCALL_SERVICE_SPEC =
@@ -74,8 +80,7 @@ object Containers {
           .build()
 
   val JAVA_WORKFLOW_SERVICE_SPEC =
-      javaServicesContainer("java-workflow", WorkflowAPIBlockAndWaitServiceAdapter.SERVICE_NAME)
-          .build()
+      javaServicesContainer("java-workflow", WorkflowAPIBlockAndWaitClient.WORKFLOW_NAME).build()
 
   // -- Node containers
 

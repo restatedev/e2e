@@ -9,18 +9,18 @@
 
 package dev.restate.e2e.services.sideeffect;
 
-import dev.restate.sdk.KeyedContext;
-import dev.restate.sdk.RestateService;
+import dev.restate.sdk.Component;
+import dev.restate.sdk.ObjectContext;
 import io.grpc.stub.StreamObserver;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class SideEffectService extends SideEffectGrpc.SideEffectImplBase implements RestateService {
+public class SideEffectService extends SideEffectGrpc.SideEffectImplBase implements Component {
 
   @Override
   public void invokeSideEffects(
       SideEffectProto.InvokeSideEffectsRequest request,
       StreamObserver<SideEffectProto.InvokeSideEffectsResult> responseObserver) {
-    KeyedContext ctx = KeyedContext.current();
+    ObjectContext ctx = ObjectContext.current();
 
     AtomicInteger invokedSideEffects = new AtomicInteger(0);
 

@@ -39,8 +39,7 @@ import dev.restate.e2e.services.upgradetest.UpgradeTestService;
 import dev.restate.e2e.services.upgradetest.UpgradeTestServiceGrpc;
 import dev.restate.sdk.http.vertx.RestateHttpEndpointBuilder;
 import java.util.Objects;
-import my.restate.e2e.services.WorkflowAPIBlockAndWaitImpl;
-import my.restate.e2e.services.WorkflowAPIBlockAndWaitServiceAdapter;
+import my.restate.e2e.services.*;
 
 public class Main {
 
@@ -98,9 +97,20 @@ public class Main {
         case MapServiceGrpc.SERVICE_NAME:
           restateHttpEndpointBuilder.withService(new MapService());
           break;
-        case WorkflowAPIBlockAndWaitServiceAdapter.SERVICE_NAME:
-          restateHttpEndpointBuilder.with(
-              new WorkflowAPIBlockAndWaitImpl(), new WorkflowAPIBlockAndWaitServiceAdapter());
+        case WorkflowAPIBlockAndWaitClient.WORKFLOW_NAME:
+          restateHttpEndpointBuilder.with(new WorkflowAPIBlockAndWaitImpl());
+          break;
+        case CoordinatorClient.COMPONENT_NAME:
+          restateHttpEndpointBuilder.with(new CoordinatorImpl());
+          break;
+        case ReceiverClient.COMPONENT_NAME:
+          restateHttpEndpointBuilder.with(new ReceiverImpl());
+          break;
+        case CancelTestRunnerClient.COMPONENT_NAME:
+          restateHttpEndpointBuilder.with(new CancelTestImpl.RunnerImpl());
+          break;
+        case CancelTestBlockingServiceClient.COMPONENT_NAME:
+          restateHttpEndpointBuilder.with(new CancelTestImpl.BlockingService());
           break;
       }
     }

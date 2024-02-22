@@ -20,7 +20,7 @@ import io.grpc.Channel
 import java.net.URL
 import java.util.*
 import my.restate.e2e.services.WorkflowAPIBlockAndWait
-import my.restate.e2e.services.WorkflowAPIBlockAndWaitExternalClient
+import my.restate.e2e.services.WorkflowAPIBlockAndWaitClient
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
@@ -48,7 +48,8 @@ class JavaWorkflowAPITest {
   @DisplayName("Set and resolve durable promise leads to completion")
   @Execution(ExecutionMode.CONCURRENT)
   fun setAndResolve(@InjectChannel restateChannel: Channel) {
-    val client = WorkflowAPIBlockAndWaitExternalClient(restateChannel, UUID.randomUUID().toString())
+    val client =
+        WorkflowAPIBlockAndWaitClient.fromIngress(restateChannel, UUID.randomUUID().toString())
     assertThat(client.submit("Francesco")).isEqualTo(WorkflowExecutionState.STARTED)
 
     // Wait state is set
@@ -75,7 +76,8 @@ class JavaWorkflowAPITest {
   @DisplayName("Workflow cannot be submitted more than once")
   @Execution(ExecutionMode.CONCURRENT)
   fun manySubmit(@InjectChannel restateChannel: Channel) {
-    val client = WorkflowAPIBlockAndWaitExternalClient(restateChannel, UUID.randomUUID().toString())
+    val client =
+        WorkflowAPIBlockAndWaitClient.fromIngress(restateChannel, UUID.randomUUID().toString())
     assertThat(client.submit("Francesco")).isEqualTo(WorkflowExecutionState.STARTED)
     assertThat(client.submit("Francesco")).isEqualTo(WorkflowExecutionState.ALREADY_STARTED)
   }

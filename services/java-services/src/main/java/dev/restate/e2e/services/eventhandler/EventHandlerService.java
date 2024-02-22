@@ -12,12 +12,12 @@ package dev.restate.e2e.services.eventhandler;
 import dev.restate.e2e.services.counter.CounterProto.CounterAddRequest;
 import dev.restate.e2e.services.counter.CounterRestate;
 import dev.restate.generated.Event;
-import dev.restate.sdk.KeyedContext;
+import dev.restate.sdk.ObjectContext;
 
 public class EventHandlerService extends EventHandlerRestate.EventHandlerRestateImplBase {
 
   @Override
-  public void handle(KeyedContext ctx, Event event) {
+  public void handle(ObjectContext ctx, Event event) {
     CounterRestate.newClient(ctx)
         .oneWay()
         .add(
