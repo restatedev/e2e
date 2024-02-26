@@ -102,7 +102,7 @@ class NodeWorkflowAPITest {
             doWorkflowRequest(
                     httpEndpointURL,
                     Containers.WORKFLOW_API_BLOCK_AND_WAIT_SERVICE_NAME,
-                    "start",
+                    "submit",
                     workflowId,
                     "input" to "Francesco")
                 .asText())
@@ -155,7 +155,7 @@ class NodeWorkflowAPITest {
             doWorkflowRequest(
                     httpEndpointURL,
                     Containers.WORKFLOW_API_BLOCK_AND_WAIT_SERVICE_NAME,
-                    "start",
+                    "submit",
                     workflowId,
                     "input" to "Francesco")
                 .asText())
@@ -171,7 +171,7 @@ class NodeWorkflowAPITest {
             doWorkflowRequest(
                     httpEndpointURL,
                     Containers.WORKFLOW_API_BLOCK_AND_WAIT_SERVICE_NAME,
-                    "start",
+                    "submit",
                     workflowId,
                     "input" to "Francesco")
                 .asText())
@@ -180,7 +180,7 @@ class NodeWorkflowAPITest {
             doWorkflowRequest(
                     httpEndpointURL,
                     Containers.WORKFLOW_API_BLOCK_AND_WAIT_SERVICE_NAME,
-                    "start",
+                    "submit",
                     workflowId,
                     "input" to "Francesco")
                 .asText())
