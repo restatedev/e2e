@@ -23,7 +23,7 @@ export const WorkflowAPIBlockAndWait = restate.workflow.workflow(
 
       // Wait on unblock
       const p = ctx.promise<string>(MY_DURABLE_PROMISE);
-      const output = await p.promise();
+      const output = await p;
 
       // Check peek works
       ctx.console.assert((await p.peek()) == output);
