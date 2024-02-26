@@ -9,27 +9,27 @@
 
 package dev.restate.e2e
 
-import com.google.protobuf.Empty
 import dev.restate.admin.api.InvocationApi
 import dev.restate.admin.client.ApiClient
 import dev.restate.admin.model.TerminationMode
-import dev.restate.e2e.services.awakeableholder.AwakeableHolderServiceGrpc
-import dev.restate.e2e.services.awakeableholder.hasAwakeableRequest
-import dev.restate.e2e.services.awakeableholder.unlockRequest
-import dev.restate.e2e.services.canceltest.*
-import dev.restate.e2e.services.canceltest.CancelTestProto.BlockingOperation
-import dev.restate.e2e.utils.*
-import dev.restate.generated.IngressGrpc.IngressBlockingStub
-import dev.restate.generated.invokeRequest
-import io.grpc.Channel
+import dev.restate.e2e.utils.InjectIngressClient
+import dev.restate.e2e.utils.InjectMetaURL
+import dev.restate.e2e.utils.RestateDeployer
+import dev.restate.e2e.utils.RestateDeployerExtension
+import dev.restate.sdk.client.IngressClient
 import java.net.URL
+import java.util.*
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
+import my.restate.e2e.services.AwakeableHolderClient
+import my.restate.e2e.services.CancelTest
+import my.restate.e2e.services.CancelTestBlockingServiceClient
+import my.restate.e2e.services.CancelTestRunnerClient
 import org.awaitility.kotlin.await
-import org.awaitility.kotlin.matches
-import org.awaitility.kotlin.untilCallTo
+import org.awaitility.kotlin.until
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
@@ -43,81 +43,65 @@ class JavaCancelInvocationTest : BaseCancelInvocationTest() {
                 .withServiceEndpoint(
                     Containers.javaServicesContainer(
                         "java-cancel-invocation",
-                        CancelTestServiceGrpc.SERVICE_NAME,
-                        BlockingServiceGrpc.SERVICE_NAME))
-                .withServiceEndpoint(
-                    Containers.nodeServicesContainer(
-                        "awakeable-holder", AwakeableHolderServiceGrpc.SERVICE_NAME))
+                        CancelTestRunnerClient.COMPONENT_NAME,
+                        CancelTestBlockingServiceClient.COMPONENT_NAME,
+                        AwakeableHolderClient.COMPONENT_NAME))
                 .build())
   }
 }
 
+@Disabled("node-services is not ready with the new interfaces")
 class NodeCancelInvocationTest : BaseCancelInvocationTest() {
   companion object {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .withServiceEndpoint(
-                    Containers.nodeServicesContainer(
-                        "node-cancel-invocation",
-                        CancelTestServiceGrpc.SERVICE_NAME,
-                        BlockingServiceGrpc.SERVICE_NAME,
-                        AwakeableHolderServiceGrpc.SERVICE_NAME))
+                // TODO update once we convert the node tests
+                //                .withServiceEndpoint(
+                //                    Containers.nodeServicesContainer(
+                //                        "node-cancel-invocation",
+                //
+                //
+                // CancelTestServiceGrpc.SERVICE_NAME,
+                //                                                BlockingServiceGrpc.SERVICE_NAME,
+                //
+                // AwakeableHolderServiceGrpc.SERVICE_NAME
+                //                    ))
                 .build())
   }
 }
 
 abstract class BaseCancelInvocationTest {
   @ParameterizedTest(name = "cancel blocked invocation on {0}")
-  @EnumSource(
-      value = BlockingOperation::class, names = ["UNRECOGNIZED"], mode = EnumSource.Mode.EXCLUDE)
+  @EnumSource(value = CancelTest.BlockingOperation::class)
   fun cancelInvocation(
-      blockingOperation: BlockingOperation,
-      @InjectBlockingStub ingressClient: IngressBlockingStub,
-      @InjectChannel channel: Channel,
-      @InjectBlockingStub blockingServiceClient: BlockingServiceGrpc.BlockingServiceBlockingStub,
-      @InjectBlockingStub
-      awakeableHolderClient: AwakeableHolderServiceGrpc.AwakeableHolderServiceBlockingStub,
+      blockingOperation: CancelTest.BlockingOperation,
+      @InjectIngressClient ingressClient: IngressClient,
       @InjectMetaURL metaURL: URL,
   ) {
-    val request = blockingRequest { operation = blockingOperation }
+    val key = UUID.randomUUID().toString()
+    val cancelTestClient = CancelTestRunnerClient.fromIngress(ingressClient, key)
+    val blockingServiceClient = CancelTestBlockingServiceClient.fromIngress(ingressClient, key)
 
-    val id =
-        ingressClient
-            .invoke(
-                invokeRequest {
-                  service = CancelTestServiceGrpc.SERVICE_NAME
-                  method = CancelTestServiceGrpc.getStartTestMethod().bareMethodName!!
-                  pb = request.toByteString()
-                })
-            .id
+    val id = cancelTestClient.send().startTest(blockingOperation)
 
-    await untilCallTo
-        {
-          awakeableHolderClient.hasAwakeable(hasAwakeableRequest { name = "cancel" })
-        } matches
-        { result ->
-          result!!.hasAwakeable
-        }
+    val awakeableHolderClient = AwakeableHolderClient.fromIngress(ingressClient, "cancel")
 
-    awakeableHolderClient.unlock(unlockRequest { name = "cancel" })
+    await until { awakeableHolderClient.hasAwakeable() }
+
+    awakeableHolderClient.unlock("cancel")
 
     val client = InvocationApi(ApiClient().setHost(metaURL.host).setPort(metaURL.port))
-    val cancelTestClient = CancelTestServiceGrpcKt.CancelTestServiceCoroutineStub(channel)
 
     // The termination signal might arrive before the blocking call to the cancel singleton was
     // made, so we need to retry.
     await.ignoreException(TimeoutCancellationException::class.java).until {
       client.terminateInvocation(id, TerminationMode.CANCEL)
-      runBlocking {
-        withTimeout(1.seconds) {
-          cancelTestClient.verifyTest(Empty.getDefaultInstance()).isCanceled
-        }
-      }
+      runBlocking { withTimeout(1.seconds) { cancelTestClient.verifyTest() } }
     }
 
     // Check that the singleton service is unlocked
-    blockingServiceClient.isUnlocked(Empty.getDefaultInstance())
+    blockingServiceClient.isUnlocked()
   }
 }

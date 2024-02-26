@@ -14,7 +14,7 @@ plugins { id("org.gradle.toolchains.foojay-resolver-convention") version "0.7.0"
 include(
     "contracts",
     "services:java-services",
-    "services:node-services",
+    //    "services:node-services",
     "services:http-server",
     "test-utils",
     "tests")
@@ -29,8 +29,6 @@ dependencyResolutionManagement {
   versionCatalogs {
     create("libs") {
       version("protobuf", "3.24.3")
-      version("grpc", "1.58.0")
-      version("grpckt", "1.4.0")
       version("log4j", "2.19.0")
       version("jackson", "2.15.2")
 
@@ -53,17 +51,10 @@ dependencyResolutionManagement {
       library("protoc", "com.google.protobuf", "protoc").versionRef("protobuf")
       library("protobuf-java", "com.google.protobuf", "protobuf-java").versionRef("protobuf")
       library("protobuf-kotlin", "com.google.protobuf", "protobuf-kotlin").versionRef("protobuf")
-      library("grpc-stub", "io.grpc", "grpc-stub").versionRef("grpc")
-      library("grpc-protobuf", "io.grpc", "grpc-protobuf").versionRef("grpc")
-      library("grpc-netty-shaded", "io.grpc", "grpc-netty-shaded").versionRef("grpc")
-      library("grpc-kotlin-stub", "io.grpc", "grpc-kotlin-stub").versionRef("grpckt")
 
       library("log4j-api", "org.apache.logging.log4j", "log4j-api").versionRef("log4j")
       library("log4j-core", "org.apache.logging.log4j", "log4j-core").versionRef("log4j")
       library("log4j-slf4j", "org.apache.logging.log4j", "log4j-slf4j-impl").versionRef("log4j")
-
-      // Replace javax.annotations-api with tomcat annotations
-      library("javax-annotation-api", "org.apache.tomcat", "annotations-api").version("6.0.53")
 
       library("jackson-bom", "com.fasterxml.jackson", "jackson-bom").versionRef("jackson")
       library("jackson-core", "com.fasterxml.jackson.core", "jackson-core").withoutVersion()

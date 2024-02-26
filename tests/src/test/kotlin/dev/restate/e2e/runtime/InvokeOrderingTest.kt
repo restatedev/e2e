@@ -10,15 +10,15 @@
 package dev.restate.e2e.runtime
 
 import dev.restate.e2e.Containers
-import dev.restate.e2e.services.collections.list.ListProto.Request
-import dev.restate.e2e.services.collections.list.ListServiceGrpc.ListServiceBlockingStub
-import dev.restate.e2e.services.coordinator.CoordinatorGrpc.CoordinatorBlockingStub
-import dev.restate.e2e.services.coordinator.CoordinatorProto.InvokeSequentiallyRequest
-import dev.restate.e2e.utils.InjectBlockingStub
+import dev.restate.e2e.utils.InjectIngressClient
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
+import dev.restate.sdk.client.IngressClient
 import java.util.UUID
 import java.util.stream.Stream
+import my.restate.e2e.services.CoordinatorClient
+import my.restate.e2e.services.CoordinatorInvokeSequentiallyRequest
+import my.restate.e2e.services.ListObjectClient
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.api.parallel.Execution
@@ -56,19 +56,14 @@ class InvokeOrderingTest {
   @Execution(ExecutionMode.CONCURRENT)
   fun ordering(
       ordering: BooleanArray,
-      @InjectBlockingStub coordinatorClient: CoordinatorBlockingStub,
-      @InjectBlockingStub listClient: ListServiceBlockingStub
+      @InjectIngressClient ingressClient: IngressClient,
   ) {
     val listName = UUID.randomUUID().toString()
 
-    coordinatorClient.invokeSequentially(
-        InvokeSequentiallyRequest.newBuilder()
-            .addAllExecuteAsBackgroundCall(ordering.asIterable())
-            .setListName(listName)
-            .build())
+    CoordinatorClient.fromIngress(ingressClient)
+        .invokeSequentially(CoordinatorInvokeSequentiallyRequest(ordering.asList(), listName))
 
-    val listClientRequest = Request.newBuilder().setListName(listName).build()
-
-    assertThat(listClient.clear(listClientRequest).valuesList).containsExactly("0", "1", "2")
+    assertThat(ListObjectClient.fromIngress(ingressClient, listName).clear())
+        .containsExactly("0", "1", "2")
   }
 }

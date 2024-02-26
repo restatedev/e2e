@@ -14,18 +14,17 @@ import dev.restate.admin.client.ApiClient
 import dev.restate.admin.model.RegisterDeploymentRequest
 import dev.restate.admin.model.RegisterDeploymentRequestAnyOf
 import dev.restate.e2e.Containers
-import dev.restate.e2e.services.collections.list.ListProto
-import dev.restate.e2e.services.collections.list.ListServiceGrpc
-import dev.restate.e2e.services.collections.list.ListServiceGrpc.ListServiceBlockingStub
-import dev.restate.e2e.services.collections.list.appendRequest
-import dev.restate.e2e.services.proxy.ProxyServiceGrpc
-import dev.restate.e2e.services.proxy.ProxyServiceGrpc.ProxyServiceBlockingStub
-import dev.restate.e2e.services.proxy.request
-import dev.restate.e2e.utils.*
-import dev.restate.generated.IngressGrpc.IngressBlockingStub
-import dev.restate.generated.invokeRequest
+import dev.restate.e2e.utils.InjectIngressClient
+import dev.restate.e2e.utils.InjectMetaURL
+import dev.restate.e2e.utils.RestateDeployer
+import dev.restate.e2e.utils.RestateDeployerForEachExtension
+import dev.restate.sdk.client.IngressClient
+import dev.restate.sdk.common.CoreSerdes
 import java.net.URL
 import java.util.*
+import my.restate.e2e.services.ListObjectClient
+import my.restate.e2e.services.VirtualObjectProxy
+import my.restate.e2e.services.VirtualObjectProxyClient
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
@@ -42,9 +41,12 @@ class RetryOnUnknownServiceTest {
     @RegisterExtension
     val deployerExt: RestateDeployerForEachExtension = RestateDeployerForEachExtension {
       RestateDeployer.Builder()
-          .withServiceEndpoint(Containers.NODE_PROXY_SERVICE_SPEC)
           .withServiceEndpoint(
-              Containers.NODE_COLLECTIONS_SERVICE_SPEC.copy(skipRegistration = true))
+              Containers.javaServicesContainer(
+                      "java-proxy", VirtualObjectProxyClient.COMPONENT_NAME)
+                  .build())
+          .withServiceEndpoint(
+              Containers.JAVA_COLLECTIONS_SERVICE_SPEC.copy(skipRegistration = true))
           .build()
     }
 
@@ -53,76 +55,55 @@ class RetryOnUnknownServiceTest {
       client.createDeployment(
           RegisterDeploymentRequest(
               RegisterDeploymentRequestAnyOf()
-                  .uri("http://${Containers.NODE_COLLECTIONS_SERVICE_SPEC.hostName}:8080/")
+                  .uri("http://${Containers.JAVA_COLLECTIONS_SERVICE_SPEC.hostName}:8080/")
                   .force(false)))
     }
   }
 
   @Test
   fun retryOnUnknownServiceUsingCall(
-      @InjectBlockingStub ingressClient: IngressBlockingStub,
-      @InjectBlockingStub proxyServiceGrpc: ProxyServiceBlockingStub,
-      @InjectBlockingStub listClient: ListServiceBlockingStub,
+      @InjectIngressClient ingressClient: IngressClient,
       @InjectMetaURL metaURL: URL
   ) {
-    retryOnUnknownTest(
-        ingressClient,
-        proxyServiceGrpc,
-        listClient,
-        metaURL,
-        ProxyServiceGrpc.getCallMethod().bareMethodName!!)
+    retryOnUnknownTest(ingressClient, metaURL) {
+      VirtualObjectProxyClient.fromIngress(ingressClient).send().call(it)
+    }
   }
 
   @Test
   fun retryOnUnknownServiceUsingOneWayCall(
-      @InjectBlockingStub ingressClient: IngressBlockingStub,
-      @InjectBlockingStub proxyServiceGrpc: ProxyServiceBlockingStub,
-      @InjectBlockingStub listClient: ListServiceBlockingStub,
+      @InjectIngressClient ingressClient: IngressClient,
       @InjectMetaURL metaURL: URL
   ) {
-    retryOnUnknownTest(
-        ingressClient,
-        proxyServiceGrpc,
-        listClient,
-        metaURL,
-        ProxyServiceGrpc.getOneWayCallMethod().bareMethodName!!)
+    retryOnUnknownTest(ingressClient, metaURL) {
+      VirtualObjectProxyClient.fromIngress(ingressClient).send().oneWayCall(it)
+    }
   }
 
   private fun retryOnUnknownTest(
-      ingressClient: IngressBlockingStub,
-      proxyServiceGrpc: ProxyServiceBlockingStub,
-      listClient: ListServiceBlockingStub,
+      @InjectIngressClient ingressClient: IngressClient,
       metaURL: URL,
-      methodName: String
+      action: (VirtualObjectProxy.Request) -> Unit
   ) {
     val list = UUID.randomUUID().toString()
     val valueToAppend = "a"
-    val request = request {
-      serviceName = ListServiceGrpc.SERVICE_NAME
-      serviceMethod = ListServiceGrpc.getAppendMethod().bareMethodName!!
-      message =
-          appendRequest {
-                listName = list
-                value = valueToAppend
-              }
-              .toByteString()
-    }
+    val request =
+        VirtualObjectProxy.Request(
+            ListObjectClient.COMPONENT_NAME,
+            list,
+            "append",
+            CoreSerdes.JSON_STRING.serialize(valueToAppend))
 
     // We invoke the AwakeableGuardedProxyService through the ingress service
-    ingressClient.invoke(
-        invokeRequest {
-          service = ProxyServiceGrpc.SERVICE_NAME
-          method = methodName
-          pb = request.toByteString()
-        })
+    action(request)
 
     // Await until we got a try count of 2
     await untilCallTo
         {
-          proxyServiceGrpc.getRetryCount(request)
+          VirtualObjectProxyClient.fromIngress(ingressClient).getRetryCount(request)
         } matches
         { result ->
-          result!!.count >= 2
+          result!! >= 2
         }
 
     // Register list service
@@ -131,10 +112,7 @@ class RetryOnUnknownServiceTest {
     // Let's wait for the list service to contain "a" once
     await untilAsserted
         {
-          assertThat(
-                  listClient
-                      .get(ListProto.Request.newBuilder().setListName(list).build())
-                      .valuesList)
+          assertThat(ListObjectClient.fromIngress(ingressClient, list).get())
               .containsOnlyOnce(valueToAppend)
         }
   }

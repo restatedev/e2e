@@ -8,4 +8,4 @@ The Java services can be run via:
 SERVICES=<COMMA_SEPARATED_LIST_OF_SERVICES> gradle run 
 ```
 
-For the list of supported services see [here](src/main/java/dev/restate/e2e/services/Main.java).
+For the list of supported services see [here](src/main/java/my/restate/e2e/services/Main.java).

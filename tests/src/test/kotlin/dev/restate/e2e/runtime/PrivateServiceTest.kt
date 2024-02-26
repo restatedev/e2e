@@ -9,23 +9,22 @@
 
 package dev.restate.e2e.runtime
 
-import com.google.rpc.Code
-import dev.restate.admin.api.ServiceApi
+import dev.restate.admin.api.ComponentApi
 import dev.restate.admin.client.ApiClient
-import dev.restate.admin.model.ModifyServiceRequest
+import dev.restate.admin.model.ModifyComponentRequest
 import dev.restate.e2e.Containers
-import dev.restate.e2e.services.counter.CounterGrpc
-import dev.restate.e2e.services.counter.CounterGrpc.CounterBlockingStub
-import dev.restate.e2e.services.counter.CounterProto.GetResponse
-import dev.restate.e2e.services.counter.ProxyCounterGrpc.ProxyCounterBlockingStub
-import dev.restate.e2e.services.counter.counterAddRequest
-import dev.restate.e2e.services.counter.counterRequest
-import dev.restate.e2e.utils.*
-import io.grpc.StatusRuntimeException
+import dev.restate.e2e.utils.InjectIngressClient
+import dev.restate.e2e.utils.InjectMetaURL
+import dev.restate.e2e.utils.RestateDeployer
+import dev.restate.e2e.utils.RestateDeployerExtension
+import dev.restate.sdk.client.IngressClient
 import java.net.URL
-import java.util.UUID
-import org.assertj.core.api.Assertions.*
-import org.assertj.core.api.InstanceOfAssertFactories.type
+import java.util.*
+import my.restate.e2e.services.CounterClient
+import my.restate.e2e.services.ProxyCounter
+import my.restate.e2e.services.ProxyCounterClient
+import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
 import org.junit.jupiter.api.Test
@@ -39,51 +38,37 @@ class PrivateServiceTest {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .withServiceEndpoint(Containers.NODE_COUNTER_SERVICE_SPEC)
+                .withServiceEndpoint(Containers.JAVA_COUNTER_SERVICE_SPEC)
                 .build())
   }
 
   @Test
   fun privateService(
       @InjectMetaURL metaURL: URL,
-      @InjectBlockingStub counterClient: CounterBlockingStub,
-      @InjectBlockingStub proxyCounterClient: ProxyCounterBlockingStub
+      @InjectIngressClient ingressClient: IngressClient,
   ) {
-    val client = ServiceApi(ApiClient().setHost(metaURL.host).setPort(metaURL.port))
+    val adminComponentClient = ComponentApi(ApiClient().setHost(metaURL.host).setPort(metaURL.port))
     val counterId = UUID.randomUUID().toString()
+    val counterClient = CounterClient.fromIngress(ingressClient, counterId)
 
-    counterClient.add(
-        counterAddRequest {
-          counterName = counterId
-          value = 1
-        })
+    counterClient.add(1)
 
     // Make the service private
-    client.modifyService(CounterGrpc.SERVICE_NAME, ModifyServiceRequest()._public(false))
+    adminComponentClient.modifyComponent(
+        CounterClient.COMPONENT_NAME, ModifyComponentRequest()._public(false))
 
     // Wait for the service to be private
-    await untilAsserted
-        {
-          assertThatThrownBy { counterClient.get(counterRequest { counterName = counterId }) }
-              .asInstanceOf(type(StatusRuntimeException::class.java))
-              .returns(Code.PERMISSION_DENIED_VALUE) { it.status.code.value() }
-        }
+    await untilAsserted { assertThatThrownBy { counterClient.get() }.hasMessageContaining("400") }
 
     // Send a request through the proxy client
-    proxyCounterClient.addInBackground(
-        counterAddRequest {
-          counterName = counterId
-          value = 1
-        })
+    ProxyCounterClient.fromIngress(ingressClient)
+        .addInBackground(ProxyCounter.AddRequest(counterId, 1))
 
     // Make the service public again
-    client.modifyService(CounterGrpc.SERVICE_NAME, ModifyServiceRequest()._public(true))
+    adminComponentClient.modifyComponent(
+        CounterClient.COMPONENT_NAME, ModifyComponentRequest()._public(true))
 
     // Wait to get the correct count
-    await untilAsserted
-        {
-          assertThat(counterClient.get(counterRequest { counterName = counterId }))
-              .returns(2L, GetResponse::getValue)
-        }
+    await untilAsserted { assertThat(counterClient.get()).isEqualTo(2L) }
   }
 }

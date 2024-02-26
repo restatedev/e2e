@@ -19,8 +19,6 @@ import dev.restate.admin.model.RegisterDeploymentRequest
 import dev.restate.admin.model.RegisterDeploymentRequestAnyOf
 import dev.restate.e2e.utils.config.IngressOptions
 import dev.restate.e2e.utils.config.RestateConfigSchema
-import io.grpc.ManagedChannel
-import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder
 import java.io.File
 import java.lang.reflect.Method
 import java.net.URI
@@ -228,7 +226,7 @@ private constructor(
     val ingressPort =
         URI(
                 "http",
-                configSchema?.worker?.ingressGrpc?.bindAddress ?: IngressOptions().bindAddress,
+                configSchema?.worker?.ingress?.bindAddress ?: IngressOptions().bindAddress,
                 "/",
                 null,
                 null)
@@ -305,15 +303,14 @@ private constructor(
     // Configure runtime container
     runtimeContainer
         // We expose these ports only to enable port checks
-        .withExposedPorts(RUNTIME_GRPC_INGRESS_ENDPOINT_PORT, RUNTIME_META_ENDPOINT_PORT)
+        .withExposedPorts(RUNTIME_INGRESS_ENDPOINT_PORT, RUNTIME_META_ENDPOINT_PORT)
         .dependsOn(serviceContainers.values.map { it.second })
         .dependsOn(additionalContainers.values)
         .withEnv(runtimeContainerEnvs)
         // These envs should not be overriden by additionalEnv
         .withEnv("RESTATE_META__REST_ADDRESS", "0.0.0.0:${RUNTIME_META_ENDPOINT_PORT}")
         .withEnv(
-            "RESTATE_WORKER__INGRESS_GRPC__BIND_ADDRESS",
-            "0.0.0.0:${RUNTIME_GRPC_INGRESS_ENDPOINT_PORT}")
+            "RESTATE_WORKER__INGRESS__BIND_ADDRESS", "0.0.0.0:${RUNTIME_INGRESS_ENDPOINT_PORT}")
         .withNetwork(network)
         .withNetworkAliases(RESTATE_RUNTIME)
         .withLogConsumer(ContainerLogger(testReportDir, "restate-runtime"))
@@ -367,11 +364,11 @@ private constructor(
 
     // Proxy runtime ports
     proxyContainer.mapPort(RESTATE_RUNTIME, RUNTIME_META_ENDPOINT_PORT)
-    proxyContainer.mapPort(RESTATE_RUNTIME, RUNTIME_GRPC_INGRESS_ENDPOINT_PORT)
+    proxyContainer.mapPort(RESTATE_RUNTIME, RUNTIME_INGRESS_ENDPOINT_PORT)
 
     logger.debug(
         "Toxiproxy started. gRPC ingress port: {}. Meta REST API port: {}",
-        proxyContainer.getMappedPort(RESTATE_RUNTIME, RUNTIME_GRPC_INGRESS_ENDPOINT_PORT),
+        proxyContainer.getMappedPort(RESTATE_RUNTIME, RUNTIME_INGRESS_ENDPOINT_PORT),
         proxyContainer.getMappedPort(RESTATE_RUNTIME, RUNTIME_META_ENDPOINT_PORT))
   }
 
@@ -382,9 +379,9 @@ private constructor(
         RUNTIME_META_ENDPOINT_PORT,
     )
     proxyContainer.waitHttp(
-        Wait.forHttp("/grpc.health.v1.Health/Check"),
+        Wait.forHttp("/restate/health"),
         RESTATE_RUNTIME,
-        RUNTIME_GRPC_INGRESS_ENDPOINT_PORT,
+        RUNTIME_INGRESS_ENDPOINT_PORT,
     )
     logger.debug("Runtime META and Ingress healthy")
   }
@@ -451,15 +448,6 @@ private constructor(
     teardownServices()
     teardownProxy()
     network!!.close()
-  }
-
-  internal fun createRuntimeChannel(): ManagedChannel {
-    return getContainerPort(RESTATE_RUNTIME, RUNTIME_GRPC_INGRESS_ENDPOINT_PORT).let { port ->
-      NettyChannelBuilder.forAddress("127.0.0.1", port)
-          .disableServiceConfigLookUp()
-          .usePlaintext()
-          .build()
-    }
   }
 
   internal fun getContainerPort(hostName: String, port: Int): Int {

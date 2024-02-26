@@ -10,25 +10,17 @@
 package dev.restate.e2e
 
 import dev.restate.e2e.Containers.javaServicesContainer
-import dev.restate.e2e.services.collections.map.MapServiceGrpc
-import dev.restate.e2e.services.collections.map.MapServiceGrpc.MapServiceBlockingStub
-import dev.restate.e2e.services.collections.map.clearAllRequest
-import dev.restate.e2e.services.collections.map.getRequest
-import dev.restate.e2e.services.collections.map.setRequest
-import dev.restate.e2e.services.counter.CounterGrpc
-import dev.restate.e2e.services.counter.CounterGrpc.CounterBlockingStub
-import dev.restate.e2e.services.counter.CounterProto
-import dev.restate.e2e.services.counter.CounterProto.CounterAddRequest
-import dev.restate.e2e.services.counter.ProxyCounterGrpc
-import dev.restate.e2e.services.singletoncounter.SingletonCounterGrpc
-import dev.restate.e2e.utils.InjectBlockingStub
+import dev.restate.e2e.utils.InjectIngressClient
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
-import java.util.UUID
+import dev.restate.sdk.client.IngressClient
+import java.util.*
+import my.restate.e2e.services.*
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
@@ -47,16 +39,16 @@ class JavaStateTest : BaseStateTest() {
                 .withServiceEndpoint(
                     javaServicesContainer(
                         "java-counter",
-                        CounterGrpc.SERVICE_NAME,
-                        ProxyCounterGrpc.SERVICE_NAME,
-                        SingletonCounterGrpc.SERVICE_NAME,
-                        MapServiceGrpc.SERVICE_NAME))
+                        CounterClient.COMPONENT_NAME,
+                        ProxyCounterClient.COMPONENT_NAME,
+                        MapObjectClient.COMPONENT_NAME))
                 .build())
   }
 }
 
 @Tag("always-suspending")
 @Tag("lazy-state")
+@Disabled("node-services is not ready with the new interfaces")
 class NodeStateTest : BaseStateTest() {
 
   companion object {
@@ -64,13 +56,18 @@ class NodeStateTest : BaseStateTest() {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                .withServiceEndpoint(
-                    Containers.nodeServicesContainer(
-                            "node-counter",
-                            CounterGrpc.SERVICE_NAME,
-                            ProxyCounterGrpc.SERVICE_NAME,
-                            MapServiceGrpc.SERVICE_NAME)
-                        .build())
+                // TODO
+                //                .withServiceEndpoint(
+                //                    Containers.nodeServicesContainer(
+                //                            "node-counter",
+                //
+                //                                                        CounterGrpc.SERVICE_NAME,
+                //
+                // ProxyCounterGrpc.SERVICE_NAME,
+                //
+                // MapServiceGrpc.SERVICE_NAME
+                //                        )
+                //                        .build())
                 .build())
   }
 }
@@ -79,110 +76,63 @@ abstract class BaseStateTest {
 
   @Test
   @Execution(ExecutionMode.CONCURRENT)
-  fun add(@InjectBlockingStub counterClient: CounterBlockingStub) {
-    counterClient.add(
-        CounterAddRequest.newBuilder().setCounterName("noReturnValue").setValue(1).build())
+  fun add(@InjectIngressClient ingressClient: IngressClient) {
+    CounterClient.fromIngress(ingressClient, "noReturnValue").add(1)
   }
 
   @Test
   @Execution(ExecutionMode.CONCURRENT)
-  fun getAndSet(@InjectBlockingStub counterClient: CounterBlockingStub) {
-    val res1 =
-        counterClient.getAndAdd(
-            CounterAddRequest.newBuilder().setCounterName("my-key").setValue(1).build())
+  fun getAndSet(@InjectIngressClient ingressClient: IngressClient) {
+    val counterClient = CounterClient.fromIngress(ingressClient, "getAndSet")
+    val res1 = counterClient.getAndAdd(1)
     assertThat(res1.oldValue).isEqualTo(0)
     assertThat(res1.newValue).isEqualTo(1)
 
-    val res2 =
-        counterClient.getAndAdd(
-            CounterAddRequest.newBuilder().setCounterName("my-key").setValue(2).build())
+    val res2 = counterClient.getAndAdd(2)
     assertThat(res2.oldValue).isEqualTo(1)
     assertThat(res2.newValue).isEqualTo(3)
   }
 
   @Test
   @Execution(ExecutionMode.CONCURRENT)
-  fun setStateViaOneWayCallFromAnotherService(
-      @InjectBlockingStub proxyCounter: ProxyCounterGrpc.ProxyCounterBlockingStub,
-      @InjectBlockingStub counterClient: CounterBlockingStub
-  ) {
+  fun setStateViaOneWayCallFromAnotherService(@InjectIngressClient ingressClient: IngressClient) {
     val counterName = "setStateViaOneWayCallFromAnotherService"
-    val counterRequest =
-        CounterAddRequest.newBuilder().setCounterName(counterName).setValue(1).build()
+    val proxyCounter = ProxyCounterClient.fromIngress(ingressClient)
 
-    proxyCounter.addInBackground(counterRequest)
-    proxyCounter.addInBackground(counterRequest)
-    proxyCounter.addInBackground(counterRequest)
+    proxyCounter.addInBackground(ProxyCounter.AddRequest(counterName, 1))
+    proxyCounter.addInBackground(ProxyCounter.AddRequest(counterName, 1))
+    proxyCounter.addInBackground(ProxyCounter.AddRequest(counterName, 1))
 
     await untilCallTo
         {
-          counterClient.get(
-              CounterProto.CounterRequest.newBuilder().setCounterName(counterName).build())
+          CounterClient.fromIngress(ingressClient, counterName).get()
         } matches
         { num ->
-          num!!.value == 3L
+          num!! == 3L
         }
   }
 
   @Test
   @Execution(ExecutionMode.CONCURRENT)
-  fun listStateAndClearAll(@InjectBlockingStub mapService: MapServiceBlockingStub) {
+  fun listStateAndClearAll(@InjectIngressClient ingressClient: IngressClient) {
     val mapName = UUID.randomUUID().toString()
+    val mapObj = MapObjectClient.fromIngress(ingressClient, mapName)
+    val anotherMapObj = MapObjectClient.fromIngress(ingressClient, mapName + "1")
 
-    mapService.set(
-        setRequest {
-          this.mapName = mapName
-          this.key = "my-key-0"
-          this.value = "my-value-0"
-        })
-    mapService.set(
-        setRequest {
-          this.mapName = mapName
-          this.key = "my-key-1"
-          this.value = "my-value-1"
-        })
+    mapObj.set(MapObject.Entry("my-key-0", "my-value-0"))
+    mapObj.set(MapObject.Entry("my-key-1", "my-value-1"))
 
     // Set state to another map
-    mapService.set(
-        setRequest {
-          this.mapName = mapName + "1"
-          this.key = "my-key-2"
-          this.value = "my-value-2"
-        })
+    anotherMapObj.set(MapObject.Entry("my-key-2", "my-value-2"))
 
     // Clear all
-    val clearResponse = mapService.clearAll(clearAllRequest { this.mapName = mapName })
-    assertThat(clearResponse.keysList).containsExactlyInAnyOrder("my-key-0", "my-key-1")
+    assertThat(mapObj.clearAll()).containsExactlyInAnyOrder("my-key-0", "my-key-1")
 
     // Check keys are not available
-    assertThat(
-            mapService
-                .get(
-                    getRequest {
-                      this.mapName = mapName
-                      key = "my-key-0"
-                    })
-                .value)
-        .isEmpty()
-    assertThat(
-            mapService
-                .get(
-                    getRequest {
-                      this.mapName = mapName
-                      key = "my-key-1"
-                    })
-                .value)
-        .isEmpty()
+    assertThat(mapObj.get("my-key-0")).isEmpty()
+    assertThat(mapObj.get("my-key-1")).isEmpty()
 
     // Check the other service instance was left untouched
-    assertThat(
-            mapService
-                .get(
-                    getRequest {
-                      this.mapName = mapName + "1"
-                      this.key = "my-key-2"
-                    })
-                .value)
-        .isEqualTo("my-value-2")
+    assertThat(anotherMapObj.get("my-key-2")).isEqualTo("my-value-2")
   }
 }

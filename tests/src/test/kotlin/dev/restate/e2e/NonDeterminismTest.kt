@@ -9,28 +9,23 @@
 
 package dev.restate.e2e
 
-import com.google.protobuf.Empty
-import dev.restate.e2e.services.counter.CounterGrpc
-import dev.restate.e2e.services.counter.CounterGrpc.CounterBlockingStub
-import dev.restate.e2e.services.counter.CounterProto
-import dev.restate.e2e.services.nondeterminism.NonDeterminismProto.NonDeterministicRequest
-import dev.restate.e2e.services.nondeterminism.NonDeterministicServiceGrpc
-import dev.restate.e2e.utils.*
-import dev.restate.e2e.utils.ServiceSpec.*
-import io.grpc.*
-import io.grpc.stub.ClientCalls
-import java.util.*
-import java.util.stream.Stream
+import dev.restate.e2e.utils.InjectIngressClient
+import dev.restate.e2e.utils.RestateDeployer
+import dev.restate.e2e.utils.RestateDeployerExtension
+import dev.restate.sdk.client.IngressClient
+import dev.restate.sdk.common.CoreSerdes
+import dev.restate.sdk.common.Target
+import my.restate.e2e.services.CounterClient
+import my.restate.e2e.services.NonDeterministicClient
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.InstanceOfAssertFactories
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.Arguments
-import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.ValueSource
 
 @Tag("only-always-suspending")
 class JavaNonDeterminismTest : NonDeterminismTest() {
@@ -43,13 +38,14 @@ class JavaNonDeterminismTest : NonDeterminismTest() {
                 .withServiceEndpoint(
                     Containers.javaServicesContainer(
                         "java-non-determinism",
-                        NonDeterministicServiceGrpc.SERVICE_NAME,
-                        CounterGrpc.SERVICE_NAME))
+                        NonDeterministicClient.COMPONENT_NAME,
+                        CounterClient.COMPONENT_NAME))
                 .build())
   }
 }
 
 @Tag("only-always-suspending")
+@Disabled("node-services is not ready with the new interfaces")
 class NodeNonDeterminismTest : NonDeterminismTest() {
   companion object {
     @RegisterExtension
@@ -58,57 +54,39 @@ class NodeNonDeterminismTest : NonDeterminismTest() {
             RestateDeployer.Builder()
                 // Disable the retries so we get the error propagated back
                 .withInvokerRetryPolicy(RestateDeployer.RetryPolicy.None)
-                .withServiceEndpoint(
-                    Containers.nodeServicesContainer(
-                        "node-non-determinism",
-                        NonDeterministicServiceGrpc.SERVICE_NAME,
-                        CounterGrpc.SERVICE_NAME))
+                // TODO update once we convert this test
+                //                .withServiceEndpoint(
+                //                    Containers.nodeServicesContainer(
+                //                        "node-non-determinism",
+                //                      NonDeterministicServiceGrpc.SERVICE_NAME,
+                //                        CounterGrpc.SERVICE_NAME
+                //                    ))
                 .build())
   }
 }
 
 /** Test non-determinism/journal mismatch checks in the SDKs. */
 abstract class NonDeterminismTest {
-  companion object {
-    @JvmStatic
-    fun method(): Stream<Arguments> {
-      return NonDeterministicServiceGrpc.getServiceDescriptor().methods.stream().map {
-        Arguments.of(it.bareMethodName, it)
-      }
-    }
-  }
-
   @ParameterizedTest(name = "{0}")
-  @MethodSource
+  @ValueSource(
+      strings =
+          [
+              "leftSleepRightCall",
+              "callDifferentMethod",
+              "backgroundInvokeWithDifferentTargets",
+              "setDifferentKey"])
   @Execution(ExecutionMode.CONCURRENT)
-  fun method(
-      methodName: String,
-      methodDescriptor: MethodDescriptor<NonDeterministicRequest, Empty>,
-      @InjectChannel channel: ManagedChannel,
-      @InjectBlockingStub counterService: CounterBlockingStub
-  ) {
-    val counterName = UUID.randomUUID().toString()
-
+  fun method(handlerName: String, @InjectIngressClient ingressClient: IngressClient) {
     Assertions.assertThatThrownBy {
-          ClientCalls.blockingUnaryCall(
-              channel,
-              methodDescriptor,
-              CallOptions.DEFAULT,
-              NonDeterministicRequest.newBuilder().setKey(counterName).build())
+          ingressClient.call(
+              Target.virtualObject(NonDeterministicClient.COMPONENT_NAME, handlerName, handlerName),
+              CoreSerdes.VOID,
+              CoreSerdes.VOID,
+              null)
         }
-        .asInstanceOf(InstanceOfAssertFactories.type(StatusRuntimeException::class.java))
-        .extracting(StatusRuntimeException::getStatus)
-        .extracting(Status::getCode)
-        // SDKs might return different error codes, because the gRPC error space doesn't have a
-        // journal mismatch error type defined, and the service-protocol doesn't strictly enforce
-        // the usage of JOURNAL_MISMATCH error code.
-        .isIn(Status.Code.INTERNAL, Status.Code.UNKNOWN)
+        .isNotNull()
 
     // Assert the counter was not incremented
-    assertThat(
-            counterService
-                .get(CounterProto.CounterRequest.newBuilder().setCounterName(methodName).build())
-                .value)
-        .isZero()
+    assertThat(CounterClient.fromIngress(ingressClient, handlerName).get()).isZero()
   }
 }

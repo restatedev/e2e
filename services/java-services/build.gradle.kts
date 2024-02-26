@@ -7,13 +7,9 @@
 // directory of this repository or package, or at
 // https://github.com/restatedev/e2e/blob/main/LICENSE
 
-import com.google.protobuf.gradle.id
-import com.google.protobuf.gradle.protobuf
-
 plugins {
   java
   application
-  id("com.google.protobuf")
   id("com.google.cloud.tools.jib")
 }
 
@@ -23,31 +19,13 @@ dependencies {
   implementation(libs.restate.sdk.jackson)
 
   implementation(project(":contracts"))
-  protobuf(project(":contracts"))
 
   implementation(libs.log4j.api)
   implementation(libs.log4j.core)
 
-  implementation(libs.grpc.netty.shaded)
-
   implementation(platform(libs.jackson.bom))
   implementation(libs.jackson.core)
   implementation(libs.jackson.databind)
-}
-
-protobuf {
-  protoc {
-    // The artifact spec for the Protobuf Compiler
-    artifact = "com.google.protobuf:protoc:${libs.versions.protobuf.get()}"
-  }
-
-  plugins {
-    id("restate") {
-      artifact = "dev.restate:protoc-gen-restate:${libs.versions.restate.get()}:all@jar"
-    }
-  }
-
-  generateProtoTasks { ofSourceSet("main").forEach { it.plugins { id("restate") } } }
 }
 
 jib {
@@ -64,6 +42,6 @@ jib {
   }
 }
 
-tasks.jar { manifest { attributes["Main-Class"] = "dev.restate.e2e.services.Main" } }
+tasks.jar { manifest { attributes["Main-Class"] = "my.restate.e2e.services.Main" } }
 
-application { mainClass.set("dev.restate.e2e.services.Main") }
+application { mainClass.set("my.restate.e2e.services.Main") }

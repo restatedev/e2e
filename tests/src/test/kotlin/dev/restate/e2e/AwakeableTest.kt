@@ -9,12 +9,13 @@
 
 package dev.restate.e2e
 
-import dev.restate.e2e.services.externalcall.RandomNumberListGeneratorGrpc.RandomNumberListGeneratorBlockingStub
-import dev.restate.e2e.services.externalcall.RandomNumberListGeneratorProto.GenerateNumbersRequest
-import dev.restate.e2e.utils.InjectBlockingStub
+import dev.restate.e2e.utils.InjectIngressClient
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
+import dev.restate.sdk.client.IngressClient
+import my.restate.e2e.services.RandomNumberListGeneratorClient
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
@@ -33,6 +34,7 @@ class JavaAwakeableTest : BaseAwakeableTest() {
 }
 
 @Tag("always-suspending")
+@Disabled("node-services is not ready with the new interfaces")
 class NodeAwakeableTest : BaseAwakeableTest() {
   companion object {
     @RegisterExtension
@@ -45,31 +47,11 @@ class NodeAwakeableTest : BaseAwakeableTest() {
   }
 }
 
-class NodeWithBase64CompletionAwakeableTest : BaseAwakeableTest() {
-  companion object {
-    @RegisterExtension
-    val deployerExt: RestateDeployerExtension =
-        RestateDeployerExtension(
-            RestateDeployer.Builder()
-                .withServiceEndpoint(Containers.NODE_EXTERNALCALL_SERVICE_SPEC)
-                .withContainer(
-                    Containers.INT_SORTER_HTTP_SERVER_HOSTNAME to
-                        Containers.intSorterHttpServerContainer()
-                            .withEnv("ENCODE_RESULT_AS_BASE64", "true"))
-                .build())
-  }
-}
-
 abstract class BaseAwakeableTest {
 
   @Test
-  fun generate(
-      @InjectBlockingStub randomNumberListGenerator: RandomNumberListGeneratorBlockingStub
-  ) {
-    assertThat(
-            randomNumberListGenerator
-                .generateNumbers(GenerateNumbersRequest.newBuilder().setItemsNumber(10).build())
-                .numbersList)
+  fun generate(@InjectIngressClient ingressClient: IngressClient) {
+    assertThat(RandomNumberListGeneratorClient.fromIngress(ingressClient).generateNumbers(10))
         .isSorted
         .hasSize(10)
   }

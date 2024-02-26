@@ -9,21 +9,8 @@
 
 package dev.restate.e2e
 
-import dev.restate.e2e.services.collections.list.ListServiceGrpc
-import dev.restate.e2e.services.coordinator.CoordinatorGrpc
-import dev.restate.e2e.services.counter.CounterGrpc
-import dev.restate.e2e.services.counter.ProxyCounterGrpc
-import dev.restate.e2e.services.errors.FailingServiceGrpc
-import dev.restate.e2e.services.externalcall.RandomNumberListGeneratorGrpc
-import dev.restate.e2e.services.proxy.ProxyServiceGrpc
-import dev.restate.e2e.services.receiver.ReceiverGrpc
-import dev.restate.e2e.services.singletoncounter.SingletonCounterGrpc
-import dev.restate.e2e.services.verification.interpreter.CommandInterpreterGrpc
-import dev.restate.e2e.services.verification.verifier.CommandVerifierGrpc
 import dev.restate.e2e.utils.ServiceSpec
-import my.restate.e2e.services.CoordinatorClient
-import my.restate.e2e.services.ReceiverClient
-import my.restate.e2e.services.WorkflowAPIBlockAndWaitClient
+import my.restate.e2e.services.*
 import org.testcontainers.containers.GenericContainer
 
 object Containers {
@@ -48,33 +35,26 @@ object Containers {
   }
 
   val JAVA_COLLECTIONS_SERVICE_SPEC =
-      javaServicesContainer("java-collections", ListServiceGrpc.SERVICE_NAME).build()
+      javaServicesContainer("java-collections", ListObjectClient.COMPONENT_NAME).build()
 
   val JAVA_COUNTER_SERVICE_SPEC =
       javaServicesContainer(
-              "java-counter",
-              CounterGrpc.SERVICE_NAME,
-              ProxyCounterGrpc.SERVICE_NAME,
-              SingletonCounterGrpc.SERVICE_NAME)
+              "java-counter", CounterClient.COMPONENT_NAME, ProxyCounterClient.COMPONENT_NAME)
           .build()
 
   val JAVA_COORDINATOR_SERVICE_SPEC =
       javaServicesContainer(
-              "java-coordinator",
-              CoordinatorGrpc.SERVICE_NAME,
-              ReceiverGrpc.SERVICE_NAME,
-              CoordinatorClient.COMPONENT_NAME,
-              ReceiverClient.COMPONENT_NAME)
+              "java-coordinator", CoordinatorClient.COMPONENT_NAME, ReceiverClient.COMPONENT_NAME)
           .build()
 
   val JAVA_EXTERNALCALL_SERVICE_SPEC =
-      javaServicesContainer("java-externalcall", RandomNumberListGeneratorGrpc.SERVICE_NAME)
+      javaServicesContainer("java-externalcall", RandomNumberListGeneratorClient.COMPONENT_NAME)
           .withEnv(
               "HTTP_SERVER_ADDRESS", "http://${INT_SORTER_HTTP_SERVER_CONTAINER_SPEC.first}:8080")
           .build()
 
   val JAVA_ERRORS_SERVICE_SPEC =
-      javaServicesContainer("java-errors", FailingServiceGrpc.SERVICE_NAME)
+      javaServicesContainer("java-errors", FailingClient.COMPONENT_NAME)
           .withEnv(
               "HTTP_SERVER_ADDRESS", "http://${INT_SORTER_HTTP_SERVER_CONTAINER_SPEC.first}:8080")
           .build()
@@ -83,6 +63,8 @@ object Containers {
       javaServicesContainer("java-workflow", WorkflowAPIBlockAndWaitClient.WORKFLOW_NAME).build()
 
   // -- Node containers
+
+  // TODO double check service names!
 
   fun nodeServicesContainer(hostName: String, vararg services: String): ServiceSpec.Builder {
     assert(services.isNotEmpty())
@@ -93,38 +75,33 @@ object Containers {
   }
 
   val NODE_COUNTER_SERVICE_SPEC =
-      nodeServicesContainer("node-counter", CounterGrpc.SERVICE_NAME, ProxyCounterGrpc.SERVICE_NAME)
+      nodeServicesContainer(
+              "node-counter", CounterClient.COMPONENT_NAME, ProxyCounterClient.COMPONENT_NAME)
           .build()
 
   val NODE_COORDINATOR_SERVICE_SPEC =
       nodeServicesContainer(
-              "node-coordinator", CoordinatorGrpc.SERVICE_NAME, ReceiverGrpc.SERVICE_NAME)
+              "node-coordinator",
+              CoordinatorClient.COMPONENT_NAME,
+              ReceiverClient.COMPONENT_NAME,
+              CoordinatorClient.COMPONENT_NAME)
           .build()
 
   val NODE_COLLECTIONS_SERVICE_SPEC =
-      nodeServicesContainer("node-collections", ListServiceGrpc.SERVICE_NAME).build()
+      nodeServicesContainer("node-collections", ListObjectClient.COMPONENT_NAME).build()
 
   val NODE_EXTERNALCALL_SERVICE_SPEC =
-      nodeServicesContainer("node-externalcall", RandomNumberListGeneratorGrpc.SERVICE_NAME)
+      nodeServicesContainer("node-externalcall", RandomNumberListGeneratorClient.COMPONENT_NAME)
           .withEnv(
               "HTTP_SERVER_ADDRESS", "http://${INT_SORTER_HTTP_SERVER_CONTAINER_SPEC.first}:8080")
           .build()
 
   val NODE_ERRORS_SERVICE_SPEC =
-      nodeServicesContainer("node-errors", FailingServiceGrpc.SERVICE_NAME).build()
+      nodeServicesContainer("node-errors", FailingClient.COMPONENT_NAME).build()
 
-  val NODE_PROXY_SERVICE_SPEC =
-      nodeServicesContainer("node-proxy", ProxyServiceGrpc.SERVICE_NAME).build()
-
-  const val HANDLER_API_ECHO_TEST_SERVICE_NAME = "handlerapi.HandlerAPIEchoTest"
-  const val HANDLER_API_COUNTER_SERVICE_NAME = "handlerapi.Counter"
-
-  val NODE_HANDLER_API_ECHO_TEST_SERVICE_SPEC =
-      nodeServicesContainer("node-proxy", HANDLER_API_ECHO_TEST_SERVICE_NAME).build()
-
-  const val WORKFLOW_API_BLOCK_AND_WAIT_SERVICE_NAME = "WorkflowAPIBlockAndWait"
+  const val WORKFLOW_API_BLOCK_AND_WAIT_COMPONENT_NAME = "WorkflowAPIBlockAndWait"
   val NODE_WORKFLOW_SERVICE_SPEC =
-      nodeServicesContainer("node-workflow", WORKFLOW_API_BLOCK_AND_WAIT_SERVICE_NAME).build()
+      nodeServicesContainer("node-workflow", WORKFLOW_API_BLOCK_AND_WAIT_COMPONENT_NAME).build()
 
   const val EMBEDDED_HANDLER_SERVER_HOSTNAME = "node-embedded-handler"
   const val EMBEDDED_HANDLER_SERVER_PORT = 8080
@@ -143,10 +120,12 @@ object Containers {
 
   const val VERIFICATION_SERVICE_HOSTNAME = "restate-verification"
 
-  val VERIFICATION_SERVICE_SPEC =
-      nodeServicesContainer(
-              VERIFICATION_SERVICE_HOSTNAME,
-              CommandVerifierGrpc.SERVICE_NAME,
-              CommandInterpreterGrpc.SERVICE_NAME)
-          .build()
+  // TODO update once we convert the node tests
+  //  val VERIFICATION_SERVICE_SPEC =
+  //      nodeServicesContainer(
+  //              VERIFICATION_SERVICE_HOSTNAME,
+  //                            CommandVerifierGrpc.COMPONENT_NAME,
+  //                            CommandInterpreterGrpc.COMPONENT_NAME
+  //          )
+  //          .build()
 }

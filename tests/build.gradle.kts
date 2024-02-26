@@ -141,7 +141,7 @@ tasks {
   withType<Test>().configureEach {
     dependsOn(":services:http-server:jibDockerBuild")
     dependsOn(":services:java-services:jibDockerBuild")
-    dependsOn(":services:node-services:dockerBuild")
+    //    dependsOn(":services:node-services:dockerBuild")
 
     maxParallelForks = 3
   }
