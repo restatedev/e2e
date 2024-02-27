@@ -48,13 +48,14 @@ class RetryOnUnknownServiceTest {
           .build()
     }
 
-    fun registerListService(metaURL: URL) {
+    fun registerListService(metaURL: URL, ingressURL: URL) {
       val client = DeploymentApi(ApiClient().setHost(metaURL.host).setPort(metaURL.port))
       client.createDeployment(
           RegisterDeploymentRequest(
               RegisterDeploymentRequestAnyOf()
                   .uri("http://${Containers.NODE_COLLECTIONS_SERVICE_SPEC.hostName}:8080/")
                   .force(false)))
+      waitForServicesBeingAvailable(Containers.NODE_COLLECTIONS_SERVICE_SPEC.services, ingressURL)
     }
   }
 
@@ -63,13 +64,15 @@ class RetryOnUnknownServiceTest {
       @InjectBlockingStub ingressClient: IngressBlockingStub,
       @InjectBlockingStub proxyServiceGrpc: ProxyServiceBlockingStub,
       @InjectBlockingStub listClient: ListServiceBlockingStub,
-      @InjectMetaURL metaURL: URL
+      @InjectMetaURL metaURL: URL,
+      @InjectGrpcIngressURL ingressURL: URL,
   ) {
     retryOnUnknownTest(
         ingressClient,
         proxyServiceGrpc,
         listClient,
         metaURL,
+        ingressURL,
         ProxyServiceGrpc.getCallMethod().bareMethodName!!)
   }
 
@@ -78,13 +81,15 @@ class RetryOnUnknownServiceTest {
       @InjectBlockingStub ingressClient: IngressBlockingStub,
       @InjectBlockingStub proxyServiceGrpc: ProxyServiceBlockingStub,
       @InjectBlockingStub listClient: ListServiceBlockingStub,
-      @InjectMetaURL metaURL: URL
+      @InjectMetaURL metaURL: URL,
+      @InjectGrpcIngressURL ingressURL: URL,
   ) {
     retryOnUnknownTest(
         ingressClient,
         proxyServiceGrpc,
         listClient,
         metaURL,
+        ingressURL,
         ProxyServiceGrpc.getOneWayCallMethod().bareMethodName!!)
   }
 
@@ -93,6 +98,7 @@ class RetryOnUnknownServiceTest {
       proxyServiceGrpc: ProxyServiceBlockingStub,
       listClient: ListServiceBlockingStub,
       metaURL: URL,
+      ingressURL: URL,
       methodName: String
   ) {
     val list = UUID.randomUUID().toString()
@@ -126,7 +132,7 @@ class RetryOnUnknownServiceTest {
         }
 
     // Register list service
-    registerListService(metaURL)
+    registerListService(metaURL, ingressURL)
 
     // Let's wait for the list service to contain "a" once
     await untilAsserted

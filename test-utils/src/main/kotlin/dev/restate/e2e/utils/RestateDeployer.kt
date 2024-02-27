@@ -24,6 +24,7 @@ import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder
 import java.io.File
 import java.lang.reflect.Method
 import java.net.URI
+import java.net.URL
 import java.nio.file.Path
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -86,6 +87,8 @@ private constructor(
     private const val MOUNT_STATE_DIRECTORY_ENV = "E2E_MOUNT_STATE_DIRECTORY"
 
     private const val RESTATE_URI_ENV = "RESTATE_URI"
+
+    const val HEALTH_CHECK_SERVICE = "grpc.health.v1.Health/Check"
 
     private val logger = LogManager.getLogger(RestateDeployer::class.java)
 
@@ -250,6 +253,8 @@ private constructor(
                 .setPort(getContainerPort(RESTATE_RUNTIME, RUNTIME_META_ENDPOINT_PORT)))
     serviceContainers.values.forEach { (spec, _) -> discoverDeployment(client, spec) }
 
+    waitForServicesBeingAvailable()
+
     // Log environment
     writeEnvironmentReport(testReportDir)
   }
@@ -382,11 +387,26 @@ private constructor(
         RUNTIME_META_ENDPOINT_PORT,
     )
     proxyContainer.waitHttp(
-        Wait.forHttp("/grpc.health.v1.Health/Check"),
+        Wait.forHttp("/${HEALTH_CHECK_SERVICE}"),
         RESTATE_RUNTIME,
         RUNTIME_GRPC_INGRESS_ENDPOINT_PORT,
     )
     logger.debug("Runtime META and Ingress healthy")
+  }
+
+  private fun waitForServicesBeingAvailable() {
+    val adminUrl =
+        URL(
+            "http",
+            "127.0.0.1",
+            getContainerPort(RESTATE_RUNTIME, RUNTIME_GRPC_INGRESS_ENDPOINT_PORT),
+            "")
+
+    for ((spec, _) in serviceContainers.values) {
+      if (!spec.skipRegistration) {
+        waitForServicesBeingAvailable(spec.services, adminUrl)
+      }
+    }
   }
 
   fun discoverDeployment(client: DeploymentApi, spec: ServiceSpec) {

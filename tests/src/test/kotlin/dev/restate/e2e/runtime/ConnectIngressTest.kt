@@ -11,10 +11,9 @@ package dev.restate.e2e.runtime
 
 import com.fasterxml.jackson.databind.node.JsonNodeType
 import dev.restate.e2e.Containers
-import dev.restate.e2e.Utils.jacksonBodyHandler
-import dev.restate.e2e.Utils.jacksonBodyPublisher
 import dev.restate.e2e.services.counter.CounterGrpc
 import dev.restate.e2e.utils.InjectGrpcIngressURL
+import dev.restate.e2e.utils.JsonUtils
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
 import java.net.URI
@@ -48,11 +47,12 @@ class ConnectIngressTest {
     val req =
         HttpRequest.newBuilder(
                 URI.create("$httpEndpointURL${CounterGrpc.getGetAndAddMethod().fullMethodName}"))
-            .POST(jacksonBodyPublisher(mapOf("counterName" to "my-counter", "value" to 1)))
+            .POST(
+                JsonUtils.jacksonBodyPublisher(mapOf("counterName" to "my-counter", "value" to 1)))
             .headers("Content-Type", "application/json")
             .build()
 
-    val response = client.send(req, jacksonBodyHandler())
+    val response = client.send(req, JsonUtils.jacksonBodyHandler())
 
     assertThat(response.statusCode()).isEqualTo(200)
     assertThat(response.headers().firstValue("content-type"))
@@ -86,11 +86,12 @@ class ConnectIngressTest {
     val req =
         HttpRequest.newBuilder(
                 URI.create("$httpEndpointURL${CounterGrpc.getGetAndAddMethod().fullMethodName}"))
-            .POST(jacksonBodyPublisher(mapOf("counterName" to "my-counter", "value" to 1)))
+            .POST(
+                JsonUtils.jacksonBodyPublisher(mapOf("counterName" to "my-counter", "value" to 1)))
             .headers("Content-Type", "application/whatever")
             .build()
 
-    val response = client.send(req, jacksonBodyHandler())
+    val response = client.send(req, JsonUtils.jacksonBodyHandler())
 
     assertThat(response.statusCode()).isEqualTo(415)
   }
@@ -105,7 +106,7 @@ class ConnectIngressTest {
             .headers("Content-Type", "application/json")
             .build()
 
-    val response = client.send(req, jacksonBodyHandler())
+    val response = client.send(req, JsonUtils.jacksonBodyHandler())
 
     assertThat(response.statusCode()).isEqualTo(400)
   }

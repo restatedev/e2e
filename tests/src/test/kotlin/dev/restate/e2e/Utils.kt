@@ -10,38 +10,10 @@
 package dev.restate.e2e
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
-import java.net.URI
-import java.net.http.HttpClient
-import java.net.http.HttpRequest
-import java.net.http.HttpResponse
-import java.nio.charset.StandardCharsets
+import dev.restate.e2e.utils.JsonUtils
 import org.assertj.core.api.Assertions.assertThat
 
 object Utils {
-
-  private val objMapper = ObjectMapper()
-  private val httpClient = HttpClient.newHttpClient()
-
-  fun jacksonBodyHandler(): HttpResponse.BodyHandler<JsonNode> {
-    return HttpResponse.BodyHandler {
-      HttpResponse.BodySubscribers.mapping(
-          HttpResponse.BodySubscribers.ofString(StandardCharsets.UTF_8), objMapper::readTree)
-    }
-  }
-
-  fun jacksonBodyPublisher(value: Any): HttpRequest.BodyPublisher {
-    return HttpRequest.BodyPublishers.ofString(objMapper.writeValueAsString(value))
-  }
-
-  fun postJsonRequest(uri: String, reqBody: Any): HttpResponse<JsonNode> {
-    val req =
-        HttpRequest.newBuilder(URI.create(uri))
-            .headers("Content-Type", "application/json")
-            .POST(jacksonBodyPublisher(reqBody))
-            .build()
-    return httpClient.send(req, jacksonBodyHandler())
-  }
 
   fun doJsonRequestToService(
       restateEndpoint: String,
@@ -49,7 +21,7 @@ object Utils {
       method: String,
       reqBody: Any
   ): JsonNode {
-    val res = postJsonRequest("${restateEndpoint}${service}/${method}", reqBody)
+    val res = JsonUtils.postJsonRequest("${restateEndpoint}${service}/${method}", reqBody)
     assertThat(res.statusCode()).isEqualTo(200)
     assertThat(res.headers().firstValue("content-type"))
         .get()

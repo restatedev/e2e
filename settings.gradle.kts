@@ -31,7 +31,7 @@ dependencyResolutionManagement {
       version("protobuf", "3.24.3")
       version("grpc", "1.58.0")
       version("grpckt", "1.4.0")
-      version("log4j", "2.19.0")
+      version("log4j", "2.22.0")
       version("jackson", "2.15.2")
 
       version("junit-jupiter", "5.10.0")

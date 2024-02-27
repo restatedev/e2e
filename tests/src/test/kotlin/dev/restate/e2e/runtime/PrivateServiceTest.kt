@@ -80,7 +80,9 @@ class PrivateServiceTest {
     client.modifyService(CounterGrpc.SERVICE_NAME, ModifyServiceRequest()._public(true))
 
     // Wait to get the correct count
-    await untilAsserted
+    await.ignoreExceptionsMatching { e ->
+      (e is StatusRuntimeException) && e.status.code.value() == Code.PERMISSION_DENIED_VALUE
+    } untilAsserted
         {
           assertThat(counterClient.get(counterRequest { counterName = counterId }))
               .returns(2L, GetResponse::getValue)

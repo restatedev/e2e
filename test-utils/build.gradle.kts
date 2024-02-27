@@ -37,6 +37,8 @@ dependencies {
   implementation(libs.jackson.databind)
   implementation(libs.jackson.yaml)
 
+  implementation(libs.awaitility)
+
   testImplementation(libs.junit.all)
   testImplementation(libs.assertj)
 }
