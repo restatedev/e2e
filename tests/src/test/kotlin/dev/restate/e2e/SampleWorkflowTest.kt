@@ -9,6 +9,9 @@
 
 package dev.restate.e2e
 
+import dev.restate.e2e.services.coordinator.CoordinatorGrpc
+import dev.restate.e2e.services.coordinator.CoordinatorProto
+import dev.restate.e2e.utils.InjectBlockingStub
 import dev.restate.e2e.utils.InjectChannel
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
@@ -54,16 +57,22 @@ abstract class BaseOldSampleWorkflowTest {
   @Test
   @DisplayName("Sample workflow with sleep, side effect, call and one way call")
   @Execution(ExecutionMode.CONCURRENT)
-  fun sampleWorkflow(@InjectChannel channel: Channel) {
+  fun sampleWorkflow(
+      @InjectBlockingStub coordinatorClient: CoordinatorGrpc.CoordinatorBlockingStub
+  ) {
     val sleepDuration = Duration.ofMillis(100L)
 
     val elapsed = measureNanoTime {
       val value = "foobar"
       val response =
-          CoordinatorClient.fromIngress(channel)
-              .complex(CoordinatorComplexRequest(sleepDuration.toMillis(), value))
+          coordinatorClient.complex(
+              CoordinatorProto.ComplexRequest.newBuilder()
+                  .setSleepDuration(
+                      CoordinatorProto.Duration.newBuilder().setMillis(sleepDuration.toMillis()))
+                  .setRequestValue(value)
+                  .build())
 
-      assertThat(response).isEqualTo(value)
+      assertThat(response.responseValue).isEqualTo(value)
     }
 
     assertThat(Duration.ofNanos(elapsed)).isGreaterThanOrEqualTo(sleepDuration)
