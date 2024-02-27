@@ -16,14 +16,14 @@ import dev.restate.e2e.services.collections.list.ListProto;
 import dev.restate.e2e.services.collections.list.ListServiceGrpc;
 import dev.restate.e2e.services.upgradetest.UpgradeTestProto.Result;
 import dev.restate.sdk.Awakeable;
-import dev.restate.sdk.KeyedContext;
-import dev.restate.sdk.RestateService;
+import dev.restate.sdk.Component;
+import dev.restate.sdk.ObjectContext;
 import dev.restate.sdk.common.CoreSerdes;
 import io.grpc.stub.StreamObserver;
 import java.util.Objects;
 
 public class UpgradeTestService extends UpgradeTestServiceGrpc.UpgradeTestServiceImplBase
-    implements RestateService {
+    implements Component {
 
   // Value should be either "v1" or "v2"
   private final String version =
@@ -37,7 +37,7 @@ public class UpgradeTestService extends UpgradeTestServiceGrpc.UpgradeTestServic
 
   @Override
   public void executeComplex(Empty request, StreamObserver<Result> responseObserver) {
-    KeyedContext ctx = KeyedContext.current();
+    ObjectContext ctx = ObjectContext.current();
 
     if (!"v1".equals(version)) {
       throw new IllegalStateException(

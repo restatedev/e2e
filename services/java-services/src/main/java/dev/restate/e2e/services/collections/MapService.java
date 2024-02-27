@@ -12,7 +12,7 @@ package dev.restate.e2e.services.collections;
 import static dev.restate.e2e.services.collections.map.MapProto.*;
 
 import dev.restate.e2e.services.collections.map.MapServiceRestate;
-import dev.restate.sdk.KeyedContext;
+import dev.restate.sdk.ObjectContext;
 import dev.restate.sdk.common.StateKey;
 import dev.restate.sdk.common.TerminalException;
 import java.util.Collection;
@@ -20,19 +20,19 @@ import java.util.Collection;
 public class MapService extends MapServiceRestate.MapServiceRestateImplBase {
 
   @Override
-  public void set(KeyedContext context, SetRequest request) throws TerminalException {
+  public void set(ObjectContext context, SetRequest request) throws TerminalException {
     context.set(StateKey.string(request.getKey()), request.getValue());
   }
 
   @Override
-  public GetResponse get(KeyedContext context, GetRequest request) throws TerminalException {
+  public GetResponse get(ObjectContext context, GetRequest request) throws TerminalException {
     return GetResponse.newBuilder()
         .setValue(context.get(StateKey.string(request.getKey())).orElse(""))
         .build();
   }
 
   @Override
-  public ClearAllResponse clearAll(KeyedContext context, ClearAllRequest request)
+  public ClearAllResponse clearAll(ObjectContext context, ClearAllRequest request)
       throws TerminalException {
     Collection<String> keys = context.stateKeys();
     context.clearAll();

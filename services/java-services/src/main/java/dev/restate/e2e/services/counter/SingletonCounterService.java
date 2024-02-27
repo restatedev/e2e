@@ -12,8 +12,8 @@ package dev.restate.e2e.services.counter;
 import com.google.protobuf.Empty;
 import dev.restate.e2e.services.singletoncounter.SingletonCounterGrpc;
 import dev.restate.e2e.services.singletoncounter.SingletonCounterProto.CounterNumber;
-import dev.restate.sdk.KeyedContext;
-import dev.restate.sdk.RestateService;
+import dev.restate.sdk.Component;
+import dev.restate.sdk.ObjectContext;
 import dev.restate.sdk.common.CoreSerdes;
 import dev.restate.sdk.common.StateKey;
 import io.grpc.stub.StreamObserver;
@@ -21,7 +21,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class SingletonCounterService extends SingletonCounterGrpc.SingletonCounterImplBase
-    implements RestateService {
+    implements Component {
 
   private static final Logger logger = LogManager.getLogger(SingletonCounterService.class);
 
@@ -29,7 +29,7 @@ public class SingletonCounterService extends SingletonCounterGrpc.SingletonCount
 
   @Override
   public void reset(Empty request, StreamObserver<Empty> responseObserver) {
-    var ctx = KeyedContext.current();
+    var ctx = ObjectContext.current();
 
     logger.info("Counter cleaned up");
 
@@ -41,7 +41,7 @@ public class SingletonCounterService extends SingletonCounterGrpc.SingletonCount
 
   @Override
   public void add(CounterNumber request, StreamObserver<Empty> responseObserver) {
-    var ctx = KeyedContext.current();
+    var ctx = ObjectContext.current();
 
     long counter = ctx.get(COUNTER_KEY).orElse(0L);
     logger.info("Old counter value: {}", counter);
@@ -57,7 +57,7 @@ public class SingletonCounterService extends SingletonCounterGrpc.SingletonCount
 
   @Override
   public void get(Empty request, StreamObserver<CounterNumber> responseObserver) {
-    var ctx = KeyedContext.current();
+    var ctx = ObjectContext.current();
 
     CounterNumber result =
         CounterNumber.newBuilder().setValue(ctx.get(COUNTER_KEY).orElse(0L)).build();

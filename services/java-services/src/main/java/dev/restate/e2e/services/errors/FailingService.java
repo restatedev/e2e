@@ -14,8 +14,8 @@ import dev.restate.e2e.services.errors.ErrorsProto.ErrorMessage;
 import dev.restate.e2e.services.errors.ErrorsProto.FailRequest;
 import dev.restate.e2e.services.utils.NumberSortHttpServerUtils;
 import dev.restate.sdk.Awakeable;
-import dev.restate.sdk.KeyedContext;
-import dev.restate.sdk.RestateService;
+import dev.restate.sdk.Component;
+import dev.restate.sdk.ObjectContext;
 import dev.restate.sdk.common.CoreSerdes;
 import dev.restate.sdk.common.TerminalException;
 import io.grpc.stub.StreamObserver;
@@ -25,8 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class FailingService extends FailingServiceGrpc.FailingServiceImplBase
-    implements RestateService {
+public class FailingService extends FailingServiceGrpc.FailingServiceImplBase implements Component {
 
   private static final Logger LOG = LogManager.getLogger(FailingService.class);
 
@@ -43,7 +42,7 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase
   @Override
   public void callTerminallyFailingCall(
       ErrorMessage request, StreamObserver<ErrorMessage> responseObserver) {
-    var ctx = KeyedContext.current();
+    var ctx = ObjectContext.current();
     LOG.info("Invoked failAndHandle");
 
     ctx.call(
@@ -61,7 +60,7 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase
       FailRequest request, StreamObserver<ErrorMessage> responseObserver) {
     LOG.info("Invoked invokeExternalAndHandleFailure");
 
-    var ctx = KeyedContext.current();
+    var ctx = ObjectContext.current();
 
     String finalMessage = "begin";
 
@@ -121,7 +120,7 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase
   public void failingSideEffectWithEventualSuccess(
       ErrorsProto.Request request, StreamObserver<ErrorsProto.AttemptResponse> responseObserver) {
     final int successAttempt =
-        KeyedContext.current()
+        ObjectContext.current()
             .sideEffect(
                 CoreSerdes.JSON_INT,
                 () -> {
@@ -143,7 +142,7 @@ public class FailingService extends FailingServiceGrpc.FailingServiceImplBase
   @Override
   public void terminallyFailingSideEffect(
       ErrorMessage request, StreamObserver<Empty> responseObserver) {
-    KeyedContext.current()
+    ObjectContext.current()
         .sideEffect(
             () -> {
               throw new TerminalException(

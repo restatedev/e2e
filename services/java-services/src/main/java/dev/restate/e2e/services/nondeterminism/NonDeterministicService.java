@@ -13,8 +13,8 @@ import com.google.protobuf.Empty;
 import dev.restate.e2e.services.counter.CounterGrpc;
 import dev.restate.e2e.services.counter.CounterProto.CounterAddRequest;
 import dev.restate.e2e.services.counter.CounterProto.CounterRequest;
-import dev.restate.sdk.KeyedContext;
-import dev.restate.sdk.RestateService;
+import dev.restate.sdk.Component;
+import dev.restate.sdk.ObjectContext;
 import dev.restate.sdk.common.StateKey;
 import io.grpc.stub.StreamObserver;
 import java.time.Duration;
@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class NonDeterministicService
-    extends NonDeterministicServiceGrpc.NonDeterministicServiceImplBase implements RestateService {
+    extends NonDeterministicServiceGrpc.NonDeterministicServiceImplBase implements Component {
 
   private final Map<String, Integer> invocationCounts = new ConcurrentHashMap<>();
   private final StateKey<String> STATE_A = StateKey.string("a");
@@ -32,9 +32,9 @@ public class NonDeterministicService
   public void leftSleepRightCall(
       NonDeterminismProto.NonDeterministicRequest request, StreamObserver<Empty> responseObserver) {
     if (doLeftAction(request)) {
-      KeyedContext.current().sleep(Duration.ofMillis(100));
+      ObjectContext.current().sleep(Duration.ofMillis(100));
     } else {
-      KeyedContext.current()
+      ObjectContext.current()
           .call(
               CounterGrpc.getGetMethod(), CounterRequest.newBuilder().setCounterName("abc").build())
           .await();
@@ -46,12 +46,12 @@ public class NonDeterministicService
   public void callDifferentMethod(
       NonDeterminismProto.NonDeterministicRequest request, StreamObserver<Empty> responseObserver) {
     if (doLeftAction(request)) {
-      KeyedContext.current()
+      ObjectContext.current()
           .call(
               CounterGrpc.getGetMethod(), CounterRequest.newBuilder().setCounterName("abc").build())
           .await();
     } else {
-      KeyedContext.current()
+      ObjectContext.current()
           .call(
               CounterGrpc.getResetMethod(),
               CounterRequest.newBuilder().setCounterName("abc").build())
@@ -64,17 +64,17 @@ public class NonDeterministicService
   public void backgroundInvokeWithDifferentTargets(
       NonDeterminismProto.NonDeterministicRequest request, StreamObserver<Empty> responseObserver) {
     if (doLeftAction(request)) {
-      KeyedContext.current()
+      ObjectContext.current()
           .oneWayCall(
               CounterGrpc.getGetMethod(),
               CounterRequest.newBuilder().setCounterName("abc").build());
     } else {
-      KeyedContext.current()
+      ObjectContext.current()
           .oneWayCall(
               CounterGrpc.getResetMethod(),
               CounterRequest.newBuilder().setCounterName("abc").build());
     }
-    KeyedContext.current().sleep(Duration.ofMillis(100));
+    ObjectContext.current().sleep(Duration.ofMillis(100));
     incrementCounterAndEnd(request, responseObserver);
   }
 
@@ -82,11 +82,11 @@ public class NonDeterministicService
   public void setDifferentKey(
       NonDeterminismProto.NonDeterministicRequest request, StreamObserver<Empty> responseObserver) {
     if (doLeftAction(request)) {
-      KeyedContext.current().set(STATE_A, "my-state");
+      ObjectContext.current().set(STATE_A, "my-state");
     } else {
-      KeyedContext.current().set(STATE_B, "my-state");
+      ObjectContext.current().set(STATE_B, "my-state");
     }
-    KeyedContext.current().sleep(Duration.ofMillis(100));
+    ObjectContext.current().sleep(Duration.ofMillis(100));
     incrementCounterAndEnd(request, responseObserver);
   }
 
@@ -96,7 +96,7 @@ public class NonDeterministicService
 
   private void incrementCounterAndEnd(
       NonDeterminismProto.NonDeterministicRequest request, StreamObserver<Empty> responseObserver) {
-    KeyedContext.current()
+    ObjectContext.current()
         .oneWayCall(
             CounterGrpc.getAddMethod(),
             CounterAddRequest.newBuilder().setCounterName(request.getKey()).setValue(1).build());
