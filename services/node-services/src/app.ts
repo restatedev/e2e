@@ -76,7 +76,7 @@ import {
   WorkflowAPIBlockAndWaitFQN,
 } from "./workflow";
 
-export let handler: (event: any) => Promise<any>;
+export let handler: (event: any, ctx: any) => Promise<any>;
 
 const serverBuilder = restate.endpoint();
 
