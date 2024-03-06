@@ -15,7 +15,7 @@ import dev.restate.sdk.annotation.VirtualObject;
 
 // This is a generic utility service that can be used in various situations where
 // we need to synchronize the services with the test runner using an awakeable.
-@VirtualObject
+@VirtualObject(name = "AwakeableHolder")
 public interface AwakeableHolder {
 
   @Exclusive

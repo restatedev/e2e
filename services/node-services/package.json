@@ -5,7 +5,6 @@
   "main": "app.js",
   "type": "commonjs",
   "scripts": {
-    "proto": "npx buf mod update proto && npx buf generate proto",
     "build": "tsc --noEmitOnError",
     "prebundle": "rm -rf dist",
     "bundle": "esbuild src/app.ts --bundle --minify --sourcemap --platform=node --target=es2020 --outfile=dist/index.js",
@@ -18,21 +17,19 @@
   "dependencies": {
     "@restatedev/restate-sdk": "dev",
     "express": "^4.18.2",
-    "protobufjs": "^7.2.2",
     "seedrandom": "^3.0.5",
     "ts-proto": "^1.140.0",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@bufbuild/buf": "1.15.0",
     "@types/express": "^4.17.18",
     "@types/seedrandom": "^3.0.5",
     "@types/uuid": "^9.0.1",
     "@typescript-eslint/eslint-plugin": "^5.53.0",
     "@typescript-eslint/parser": "^5.53.0",
+    "esbuild": "^0.18.12",
     "eslint": "^8.35.0",
     "prettier": "^2.8.4",
-    "typescript": "^5.3.3",
-    "esbuild": "^0.18.12"
+    "typescript": "^5.3.3"
   }
 }

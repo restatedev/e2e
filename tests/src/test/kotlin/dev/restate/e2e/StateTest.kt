@@ -20,7 +20,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
@@ -48,7 +47,6 @@ class JavaStateTest : BaseStateTest() {
 
 @Tag("always-suspending")
 @Tag("lazy-state")
-@Disabled("node-services is not ready with the new interfaces")
 class NodeStateTest : BaseStateTest() {
 
   companion object {
@@ -56,18 +54,12 @@ class NodeStateTest : BaseStateTest() {
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                // TODO
-                //                .withServiceEndpoint(
-                //                    Containers.nodeServicesContainer(
-                //                            "node-counter",
-                //
-                //                                                        CounterGrpc.SERVICE_NAME,
-                //
-                // ProxyCounterGrpc.SERVICE_NAME,
-                //
-                // MapServiceGrpc.SERVICE_NAME
-                //                        )
-                //                        .build())
+                .withServiceEndpoint(
+                    Containers.nodeServicesContainer(
+                        "node-counter",
+                        CounterClient.COMPONENT_NAME,
+                        ProxyCounterClient.COMPONENT_NAME,
+                        MapObjectClient.COMPONENT_NAME))
                 .build())
   }
 }

@@ -8,85 +8,55 @@
 // https://github.com/restatedev/e2e/blob/main/LICENSE
 
 import * as restate from "@restatedev/restate-sdk";
-
-import {
-  Counter,
-  CounterRequest,
-  CounterAddRequest,
-  CounterUpdateResult,
-  UpdateCounterEvent,
-  GetResponse,
-  protobufPackage,
-} from "./generated/counter";
-import { Empty } from "./generated/google/protobuf/empty";
-import { AwakeableHolderServiceClientImpl } from "./generated/awakeable_holder";
+import { REGISTRY } from "./services";
+import { awakeableHolderApi } from "./awakeable_holder";
 
 const COUNTER_KEY = "counter";
 
-export const CounterServiceFQN = protobufPackage + ".Counter";
+export const CounterServiceFQN = "Counter";
 
-export class CounterService implements Counter {
-  async reset(request: CounterRequest): Promise<Empty> {
-    console.log("reset: " + JSON.stringify(request));
-    const ctx = restate.useKeyedContext(this);
+REGISTRY.add({
+  fqdn: CounterServiceFQN,
+  binder: (e) => e.object(CounterServiceFQN, service),
+});
 
+const service = restate.object({
+  async reset(ctx: restate.ObjectContext) {
     ctx.clear(COUNTER_KEY);
+  },
 
-    return Empty.create({});
-  }
+  async add(ctx: restate.ObjectContext, value: number) {
+    const counter = (await ctx.get<number>(COUNTER_KEY)) ?? 0;
+    ctx.set(COUNTER_KEY, counter + value);
+  },
 
-  async add(request: CounterAddRequest): Promise<Empty> {
-    console.log("add: " + JSON.stringify(request));
-    const ctx = restate.useKeyedContext(this);
+  async addThenFail(ctx: restate.ObjectContext, value: number) {
+    const counter = (await ctx.get<number>(COUNTER_KEY)) ?? 0;
+    ctx.set(COUNTER_KEY, counter + value);
+    throw new restate.TerminalError(ctx.key());
+  },
 
-    const value = (await ctx.get<number>(COUNTER_KEY)) || 0;
-    ctx.set(COUNTER_KEY, value + request.value);
+  async get(ctx: restate.ObjectContext): Promise<number> {
+    return (await ctx.get<number>(COUNTER_KEY)) ?? 0;
+  },
 
-    return Empty.create({});
-  }
-
-  async addThenFail(request: CounterAddRequest): Promise<Empty> {
-    await this.add(request);
-
-    throw new restate.TerminalError(request.counterName);
-  }
-
-  async get(request: CounterRequest): Promise<GetResponse> {
-    console.log("get: " + JSON.stringify(request));
-    const ctx = restate.useKeyedContext(this);
-
-    const value = (await ctx.get<number>(COUNTER_KEY)) || 0;
-
-    return GetResponse.create({ value });
-  }
-
-  async getAndAdd(request: CounterAddRequest): Promise<CounterUpdateResult> {
-    console.log("getAndAdd: " + JSON.stringify(request));
-    const ctx = restate.useKeyedContext(this);
-
-    const oldValue = (await ctx.get<number>(COUNTER_KEY)) || 0;
-    const newValue = oldValue + request.value;
+  async getAndAdd(
+    ctx: restate.ObjectContext,
+    request: number
+  ): Promise<{ oldValue: number; newValue: number }> {
+    const oldValue = (await ctx.get<number>(COUNTER_KEY)) ?? 0;
+    const newValue = oldValue + request;
     ctx.set(COUNTER_KEY, newValue);
+    return { oldValue, newValue };
+  },
 
-    return CounterUpdateResult.create({ oldValue, newValue });
-  }
-
-  async infiniteIncrementLoop(request: CounterRequest): Promise<Empty> {
-    console.log("infiniteIncrementLoop: " + JSON.stringify(request));
-    const ctx = restate.useKeyedContext(this);
-
+  async infiniteIncrementLoop(ctx: restate.ObjectContext) {
     let counter = 1;
     ctx.set(COUNTER_KEY, counter);
 
     // Wait for the sync with the test runner
-    const awakeableHolderClient = new AwakeableHolderServiceClientImpl(
-      ctx.grpcChannel()
-    );
     const { id, promise } = ctx.awakeable();
-    awakeableHolderClient.hold({
-      name: request.counterName,
-      id,
-    });
+    ctx.objectSend(awakeableHolderApi, ctx.key()).hold(id);
     await promise;
 
     // Now start looping
@@ -96,15 +66,12 @@ export class CounterService implements Counter {
       ctx.set(COUNTER_KEY, counter);
       await ctx.sleep(50); // Short sleeps to slow down the loop
     }
-  }
+  },
 
-  async handleEvent(request: UpdateCounterEvent): Promise<Empty> {
-    console.log("handleEvent: " + JSON.stringify(request));
-    const ctx = restate.useKeyedContext(this);
-
+  async handleEvent(ctx: restate.ObjectContext, request: string) {
     const value = (await ctx.get<number>(COUNTER_KEY)) || 0;
-    ctx.set(COUNTER_KEY, value + parseInt(request.payload.toString()));
+    ctx.set(COUNTER_KEY, value + parseInt(request));
+  },
+});
 
-    return Empty.create({});
-  }
-}
+export const counterApi = restate.objectApi(CounterServiceFQN, service);

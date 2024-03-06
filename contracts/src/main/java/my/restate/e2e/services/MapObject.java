@@ -16,7 +16,7 @@ import dev.restate.sdk.annotation.Handler;
 import dev.restate.sdk.annotation.VirtualObject;
 import java.util.List;
 
-@VirtualObject
+@VirtualObject(name = "MapObject")
 public interface MapObject {
 
   class Entry {

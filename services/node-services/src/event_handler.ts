@@ -8,27 +8,18 @@
 // https://github.com/restatedev/e2e/blob/main/LICENSE
 
 import * as restate from "@restatedev/restate-sdk";
+import { REGISTRY } from "./services";
+import { counterApi } from "./counter";
 
-import { Empty } from "./generated/google/protobuf/empty";
-import { EventHandler, protobufPackage } from "./generated/event_handler";
-import { Event } from "./generated/dev/restate/events";
-import { CounterClientImpl } from "./generated/counter";
+const EventHandlerFQN = "EventHandler";
 
-export const EventHandlerFQN = protobufPackage + ".EventHandler";
+REGISTRY.add({
+  fqdn: EventHandlerFQN,
+  binder: (e) => e.object(EventHandlerFQN, service),
+});
 
-export class EventHandlerService implements EventHandler {
-  async handle(event: Event): Promise<Empty> {
-    console.log("handleEvent: " + JSON.stringify(event));
-    const ctx = restate.useContext(this);
-
-    const counterClient = new CounterClientImpl(ctx.grpcChannel());
-    await ctx.grpcChannel().oneWayCall(() =>
-      counterClient.add({
-        counterName: event.key.toString(),
-        value: parseInt(event.payload.toString()),
-      })
-    );
-
-    return Empty.create({});
-  }
-}
+const service = restate.object({
+  async handle(ctx: restate.ObjectContext, value: number) {
+    ctx.objectSend(counterApi, ctx.key()).add(value);
+  },
+});
