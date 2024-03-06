@@ -30,10 +30,7 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 import org.apache.logging.log4j.LogManager
 import org.awaitility.kotlin.*
-import org.junit.jupiter.api.DisplayName
-import org.junit.jupiter.api.Tag
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.Timeout
+import org.junit.jupiter.api.*
 import org.junit.jupiter.api.extension.RegisterExtension
 
 @Tag("always-suspending")
@@ -121,6 +118,8 @@ class VerificationTest {
     verifier.clear(clearRequest { params = testParams })
   }
 
+  @Disabled(
+      "Disabled until we have durable loglet implementation. See https://github.com/restatedev/restate/issues/875")
   @Timeout(value = 1, unit = TimeUnit.MINUTES)
   @Test
   fun killingTheRuntime(
@@ -140,6 +139,8 @@ class VerificationTest {
     verifier.clear(clearRequest { params = testParams })
   }
 
+  @Disabled(
+      "Disabled until we have durable loglet implementation. See https://github.com/restatedev/restate/issues/875")
   @Timeout(value = 1, unit = TimeUnit.MINUTES)
   @Test
   fun stoppingTheRuntime(
