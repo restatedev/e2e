@@ -21,7 +21,7 @@ import java.time.Duration;
 public class CancelTestImpl {
 
   public static class RunnerImpl implements CancelTest.Runner {
-    private static StateKey<Boolean> CANCELED_STATE =
+    private static final StateKey<Boolean> CANCELED_STATE =
         StateKey.of("canceled", CoreSerdes.JSON_BOOLEAN);
 
     @Override

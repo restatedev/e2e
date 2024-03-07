@@ -21,11 +21,53 @@
       },
       "$ref": "#/definitions/ObservabilityOptions"
     },
+    "tokio_runtime": {
+      "default": {
+        "max_blocking_threads": null,
+        "worker_threads": null
+      },
+      "$ref": "#/definitions/Options"
+    },
+    "node_name": {
+      "default": "fedora.fritz.box",
+      "type": "string"
+    },
+    "node_id": {
+      "default": null,
+      "anyOf": [
+        {
+          "$ref": "#/definitions/PlainNodeId"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "cluster_name": {
+      "description": "A unique identifier for the cluster. All nodes in the same cluster should have the same.",
+      "default": "Local-Cluster",
+      "type": "string"
+    },
+    "bootstrap_cluster": {
+      "description": "If true, then a new cluster is bootstrapped. This node *must* be has an admin role and a new nodes configuration will be created that includes this node.",
+      "default": true,
+      "type": "boolean"
+    },
     "meta": {
       "default": {
-        "proxy_uri": null,
-        "rest_address": "0.0.0.0:9070",
-        "rest_concurrency_limit": 1000,
+        "service_client": {
+          "http": {
+            "keep_alive_options": {
+              "interval": "40s",
+              "timeout": "20s"
+            },
+            "proxy_uri": null
+          },
+          "lambda": {
+            "assume_role_external_id": null,
+            "aws_profile": null
+          }
+        },
         "storage_path": "target/meta/"
       },
       "$ref": "#/definitions/MetaOptions"
@@ -33,29 +75,17 @@
     "worker": {
       "default": {
         "channel_size": 64,
-        "ingress_grpc": {
+        "ingress": {
           "bind_address": "0.0.0.0:8080",
-          "concurrency_limit": 1000,
-          "json": {
-            "deserialize_deny_unknown_fields": true,
-            "serialize_skip_default_fields": false,
-            "serialize_stringify_64_bit_integers": true,
-            "serialize_use_enum_numbers": false,
-            "serialize_use_proto_field_name": false
-          }
+          "concurrency_limit": 10000000
         },
         "invoker": {
           "abort_timeout": "1m",
           "concurrency_limit": null,
           "disable_eager_state": false,
-          "http2_keep_alive": {
-            "interval": "40s",
-            "timeout": "20s"
-          },
           "inactivity_timeout": "1m",
           "message_size_limit": null,
           "message_size_warning": 10485760,
-          "proxy_uri": null,
           "retry_policy": {
             "factor": 2.0,
             "initial_interval": "50ms",
@@ -63,10 +93,26 @@
             "max_interval": "10s",
             "type": "Exponential"
           },
-          "tmp_dir": "/tmp/invoker-018acbb0a3167eb698fc98eddce8ef84"
+          "service_client": {
+            "http": {
+              "keep_alive_options": {
+                "interval": "40s",
+                "timeout": "20s"
+              },
+              "proxy_uri": null
+            },
+            "lambda": {
+              "assume_role_external_id": null,
+              "aws_profile": null
+            }
+          },
+          "tmp_dir": "/tmp/invoker-018e08ac2613702ab0adce3eb4b85d98"
         },
         "kafka": {
           "clusters": {}
+        },
+        "partition_processor": {
+          "max_batch_duration": "50ms"
         },
         "partitions": 1024,
         "storage_query_datafusion": {
@@ -74,15 +120,12 @@
           "query_parallelism": null,
           "temp_folder": null
         },
-        "storage_query_http": {
-          "http_address": "0.0.0.0:9072",
-          "http_concurrency_limit": 1000
-        },
         "storage_query_postgres": {
           "bind_address": "0.0.0.0:9071"
         },
         "storage_rocksdb": {
-          "cache_size": 1073741824,
+          "cache_size": 0,
+          "disable_statistics": false,
           "max_total_wal_size": 2147483648,
           "path": "target/db/",
           "threads": 10,
@@ -94,12 +137,54 @@
       },
       "$ref": "#/definitions/WorkerOptions"
     },
-    "tokio_runtime": {
+    "server": {
       "default": {
-        "max_blocking_threads": null,
-        "worker_threads": null
+        "advertise_address": {
+          "Http": "http://127.0.0.1:5122/"
+        },
+        "bind_address": "0.0.0.0:5122",
+        "disable_prometheus": false,
+        "histogram_inactivity_timeout": null
       },
-      "$ref": "#/definitions/Options"
+      "$ref": "#/definitions/NodeServerOptions"
+    },
+    "admin": {
+      "default": {
+        "bind_address": "0.0.0.0:9070",
+        "concurrency_limit": 1000
+      },
+      "$ref": "#/definitions/AdminOptions"
+    },
+    "bifrost": {
+      "default": {
+        "default_provider": "File",
+        "providers_config": {
+          "File": {
+            "path": "target/logs/"
+          }
+        }
+      },
+      "$ref": "#/definitions/BifrostOptions"
+    },
+    "cluster_controller": {
+      "default": {},
+      "$ref": "#/definitions/ClusterControllerOptions"
+    },
+    "roles": {
+      "description": "Defines the roles which this Restate node should run",
+      "default": [
+        "Worker",
+        "Admin"
+      ],
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "admin_address": {
+      "description": "Configures the admin address. If it is not specified, then this node needs to run the admin role",
+      "default": "",
+      "type": "string"
     }
   },
   "definitions": {
@@ -109,6 +194,7 @@
       "properties": {
         "tracing": {
           "title": "Tracing options",
+          "default": null,
           "anyOf": [
             {
               "$ref": "#/definitions/TracingOptions"
@@ -211,33 +297,157 @@
         }
       ]
     },
+    "Options": {
+      "title": "Runtime options",
+      "description": "Configuration for the Tokio runtime used by Restate.",
+      "type": "object",
+      "properties": {
+        "worker_threads": {
+          "title": "Worker threads",
+          "description": "Configure the number of [worker threads](https://docs.rs/tokio/latest/tokio/runtime/struct.Builder.html#method.worker_threads) of the Tokio runtime. If not set, it uses the Tokio default, where worker_threads is equal to number of cores.",
+          "default": null,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint",
+          "minimum": 0.0
+        },
+        "max_blocking_threads": {
+          "title": "Max blocking threads",
+          "description": "Configure the number of [max blocking threads](https://docs.rs/tokio/latest/tokio/runtime/struct.Builder.html#method.max_blocking_threads) of the Tokio runtime. If not set, it uses the Tokio default 512.",
+          "default": null,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint",
+          "minimum": 0.0
+        }
+      }
+    },
+    "PlainNodeId": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0.0
+    },
     "MetaOptions": {
       "title": "Meta options",
       "type": "object",
       "properties": {
-        "rest_address": {
-          "title": "Rest endpoint address",
-          "description": "Address to bind for the Meta Operational REST APIs.",
-          "default": "0.0.0.0:9070",
-          "type": "string"
-        },
-        "rest_concurrency_limit": {
-          "title": "Rest concurrency limit",
-          "description": "Concurrency limit for the Meta Operational REST APIs.",
-          "default": 1000,
-          "type": "integer",
-          "format": "uint",
-          "minimum": 0.0
-        },
         "storage_path": {
           "title": "Storage path",
           "description": "Root path for Meta storage.",
           "default": "target/meta/",
           "type": "string"
         },
+        "service_client": {
+          "default": {
+            "http": {
+              "keep_alive_options": {
+                "interval": "40s",
+                "timeout": "20s"
+              },
+              "proxy_uri": null
+            },
+            "lambda": {
+              "assume_role_external_id": null,
+              "aws_profile": null
+            }
+          },
+          "$ref": "#/definitions/ServiceClientOptions"
+        }
+      }
+    },
+    "ServiceClientOptions": {
+      "title": "Client options",
+      "type": "object",
+      "properties": {
+        "http": {
+          "default": {
+            "keep_alive_options": {
+              "interval": "40s",
+              "timeout": "20s"
+            },
+            "proxy_uri": null
+          },
+          "$ref": "#/definitions/HttpClientOptions"
+        },
+        "lambda": {
+          "default": {
+            "assume_role_external_id": null,
+            "aws_profile": null
+          },
+          "$ref": "#/definitions/LambdaClientOptions"
+        }
+      }
+    },
+    "HttpClientOptions": {
+      "title": "HTTP client options",
+      "type": "object",
+      "properties": {
+        "keep_alive_options": {
+          "title": "HTTP/2 Keep-alive",
+          "description": "Configuration for the HTTP/2 keep-alive mechanism, using PING frames. If unset, HTTP/2 keep-alive are disabled.",
+          "default": {
+            "interval": "40s",
+            "timeout": "20s"
+          },
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Http2KeepAliveOptions"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "proxy_uri": {
           "title": "Proxy URI",
-          "description": "A URI, such as `http://127.0.0.1:10001`, of a server to which all invocations should be sent, with the `Host` header set to the service endpoint URI. HTTPS proxy URIs are supported, but only HTTP endpoint traffic will be proxied currently. Can be overridden by the `HTTP_PROXY` environment variable.",
+          "description": "A URI, such as `http://127.0.0.1:10001`, of a server to which all invocations should be sent, with the `Host` header set to the deployment URI. HTTPS proxy URIs are supported, but only HTTP endpoint traffic will be proxied currently. Can be overridden by the `HTTP_PROXY` environment variable.",
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "Http2KeepAliveOptions": {
+      "title": "HTTP/2 Keep alive options",
+      "description": "Configuration for the HTTP/2 keep-alive mechanism, using PING frames.\n\nPlease note: most gateways don't propagate the HTTP/2 keep-alive between downstream and upstream hosts. In those environments, you need to make sure the gateway can detect a broken connection to the upstream deployment(s).",
+      "type": "object",
+      "properties": {
+        "interval": {
+          "title": "HTTP/2 Keep-alive interval",
+          "description": "Sets an interval for HTTP/2 PING frames should be sent to keep a connection alive.\n\nYou should set this timeout with a value lower than the `abort_timeout`.",
+          "default": "40s",
+          "type": "string"
+        },
+        "timeout": {
+          "title": "Timeout",
+          "description": "Sets a timeout for receiving an acknowledgement of the keep-alive ping.\n\nIf the ping is not acknowledged within the timeout, the connection will be closed.",
+          "default": "20s",
+          "type": "string"
+        }
+      }
+    },
+    "LambdaClientOptions": {
+      "title": "Lambda client options",
+      "type": "object",
+      "properties": {
+        "aws_profile": {
+          "title": "AWS Profile",
+          "description": "Name of the AWS profile to select. Defaults to 'AWS_PROFILE' env var, or otherwise the `default` profile.",
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "assume_role_external_id": {
+          "title": "AssumeRole external ID",
+          "description": "An external ID to apply to any AssumeRole operations taken by this client. https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-user_externalid.html Can be overridden by the `AWS_EXTERNAL_ID` environment variable.",
           "default": null,
           "type": [
             "string",
@@ -271,13 +481,6 @@
           },
           "$ref": "#/definitions/StorageQueryDatafusionOptions"
         },
-        "storage_query_http": {
-          "default": {
-            "http_address": "0.0.0.0:9072",
-            "http_concurrency_limit": 1000
-          },
-          "$ref": "#/definitions/StorageQueryHttpOptions"
-        },
         "storage_query_postgres": {
           "default": {
             "bind_address": "0.0.0.0:9071"
@@ -286,7 +489,8 @@
         },
         "storage_rocksdb": {
           "default": {
-            "cache_size": 1073741824,
+            "cache_size": 0,
+            "disable_statistics": false,
             "max_total_wal_size": 2147483648,
             "path": "target/db/",
             "threads": 10,
@@ -294,17 +498,10 @@
           },
           "$ref": "#/definitions/StorageOptions"
         },
-        "ingress_grpc": {
+        "ingress": {
           "default": {
             "bind_address": "0.0.0.0:8080",
-            "concurrency_limit": 1000,
-            "json": {
-              "deserialize_deny_unknown_fields": true,
-              "serialize_skip_default_fields": false,
-              "serialize_stringify_64_bit_integers": true,
-              "serialize_use_enum_numbers": false,
-              "serialize_use_proto_field_name": false
-            }
+            "concurrency_limit": 10000000
           },
           "$ref": "#/definitions/IngressOptions"
         },
@@ -319,14 +516,9 @@
             "abort_timeout": "1m",
             "concurrency_limit": null,
             "disable_eager_state": false,
-            "http2_keep_alive": {
-              "interval": "40s",
-              "timeout": "20s"
-            },
             "inactivity_timeout": "1m",
             "message_size_limit": null,
             "message_size_warning": 10485760,
-            "proxy_uri": null,
             "retry_policy": {
               "factor": 2.0,
               "initial_interval": "50ms",
@@ -334,13 +526,32 @@
               "max_interval": "10s",
               "type": "Exponential"
             },
-            "tmp_dir": "/tmp/invoker-018acbb0a3167f2087130a567cbbb214"
+            "service_client": {
+              "http": {
+                "keep_alive_options": {
+                  "interval": "40s",
+                  "timeout": "20s"
+                },
+                "proxy_uri": null
+              },
+              "lambda": {
+                "assume_role_external_id": null,
+                "aws_profile": null
+              }
+            },
+            "tmp_dir": "/tmp/invoker-018e08ac26137bdfbeb0aa1eb16b6720"
           },
           "$ref": "#/definitions/InvokerOptions"
         },
+        "partition_processor": {
+          "default": {
+            "max_batch_duration": "50ms"
+          },
+          "$ref": "#/definitions/PartitionProcessorOptions"
+        },
         "partitions": {
           "title": "Partitions",
-          "description": "Number of partitions to be used to process messages.\n\nNote: This config entry **will be removed** in future Restate releases, as the partitions number will be dynamically configured depending on the load.",
+          "description": "Number of partitions to be used to process messages.\n\nNote: This config entry **will be removed** in future Restate releases, as the partitions number will be dynamically configured depending on the load.\n\nCannot be higher than `4611686018427387903` (You should almost never need as many partitions anyway)",
           "default": 1024,
           "type": "integer",
           "format": "uint64",
@@ -402,26 +613,6 @@
         }
       }
     },
-    "StorageQueryHttpOptions": {
-      "title": "Storage query http options",
-      "type": "object",
-      "properties": {
-        "http_address": {
-          "title": "Rest endpoint address",
-          "description": "Address to bind for the Storage HTTP APIs.",
-          "default": "0.0.0.0:9072",
-          "type": "string"
-        },
-        "http_concurrency_limit": {
-          "title": "Rest concurrency limit",
-          "description": "Concurrency limit for the Storage HTTP APIs.",
-          "default": 1000,
-          "type": "integer",
-          "format": "uint",
-          "minimum": 0.0
-        }
-      }
-    },
     "StorageQueryPostgresOptions": {
       "title": "Storage query postgres options",
       "type": "object",
@@ -454,7 +645,7 @@
         },
         "write_buffer_size": {
           "title": "Write Buffer size",
-          "description": "The size of a single memtable. Once memtable exceeds this size, it is marked immutable and a new one is created.",
+          "description": "The size of a single memtable. Once memtable exceeds this size, it is marked immutable and a new one is created. The default is set such that 3 column families per table will use a total of 50% of the global memory limit (`MEMORY_LIMIT`), which defaults to 3GiB, leading to a value of 64MiB with 8 tables.",
           "default": 0,
           "type": "integer",
           "format": "uint",
@@ -470,11 +661,16 @@
         },
         "cache_size": {
           "title": "Maximum cache size",
-          "description": "The memory size used for rocksdb caches.",
-          "default": 1073741824,
+          "description": "The memory size used for rocksdb caches. The default is roughly 33% of the global memory limit (set with `MEMORY_LIMIT`), which defaults to 3GiB, leading to a value of 1GiB.",
+          "default": 0,
           "type": "integer",
           "format": "uint",
           "minimum": 0.0
+        },
+        "disable_statistics": {
+          "description": "Disable rocksdb statistics collection",
+          "default": false,
+          "type": "boolean"
         }
       }
     },
@@ -491,58 +687,10 @@
         "concurrency_limit": {
           "title": "Concurrency limit",
           "description": "Local concurrency limit to use to limit the amount of concurrent requests. If exceeded, the ingress will reply immediately with an appropriate status code.",
-          "default": 1000,
+          "default": 10000000,
           "type": "integer",
           "format": "uint",
           "minimum": 0.0
-        },
-        "json": {
-          "title": "Json",
-          "description": "JSON/Protobuf conversion options.",
-          "default": {
-            "deserialize_deny_unknown_fields": true,
-            "serialize_skip_default_fields": false,
-            "serialize_stringify_64_bit_integers": true,
-            "serialize_use_enum_numbers": false,
-            "serialize_use_proto_field_name": false
-          },
-          "$ref": "#/definitions/JsonOptions"
-        }
-      }
-    },
-    "JsonOptions": {
-      "title": "Json options",
-      "type": "object",
-      "properties": {
-        "deserialize_deny_unknown_fields": {
-          "title": "Deserialize: deny unknown fields",
-          "description": "When deserializing, return an error when encountering unknown message fields.",
-          "default": true,
-          "type": "boolean"
-        },
-        "serialize_stringify_64_bit_integers": {
-          "title": "Serialize: stringify 64 bit integers",
-          "description": "When serializing, encode 64-bit integral types as strings.\n\nFor more details, check the [prost-reflect](https://docs.rs/prost-reflect/0.11.4/prost_reflect/struct.SerializeOptions.html#method.stringify_64_bit_integers) and [Protobuf encoding](https://protobuf.dev/programming-guides/proto3/#json-options) documentation",
-          "default": true,
-          "type": "boolean"
-        },
-        "serialize_use_enum_numbers": {
-          "title": "Serialize: use enum numbers",
-          "description": "When serializing, encode enum values as their numeric value.\n\nFor more details, check the [prost-reflect](https://docs.rs/prost-reflect/0.11.4/prost_reflect/struct.SerializeOptions.html#method.use_enum_numbers) and [Protobuf encoding](https://protobuf.dev/programming-guides/proto3/#json-options) documentation",
-          "default": false,
-          "type": "boolean"
-        },
-        "serialize_use_proto_field_name": {
-          "title": "Serialize: use proto field name",
-          "description": "When serializing, use the proto field name instead of the lowerCamelCase name in JSON field names.\n\nFor more details, check the [prost-reflect](https://docs.rs/prost-reflect/0.11.4/prost_reflect/struct.SerializeOptions.html#method.use_proto_field_name) and [Protobuf encoding](https://protobuf.dev/programming-guides/proto3/#json-options) documentation",
-          "default": false,
-          "type": "boolean"
-        },
-        "serialize_skip_default_fields": {
-          "title": "Serialize: skip default fields",
-          "description": "When serializing, skip fields which have their default value.\n\nFor more details, check the [prost-reflect](https://docs.rs/prost-reflect/0.11.4/prost_reflect/struct.SerializeOptions.html#method.skip_default_fields) and [Protobuf encoding](https://protobuf.dev/programming-guides/proto3/#json-options) documentation",
-          "default": false,
-          "type": "boolean"
         }
       }
     },
@@ -608,13 +756,16 @@
         },
         "message_size_warning": {
           "title": "Message size warning",
-          "description": "Threshold to log a warning in case protocol messages coming from service endpoint are larger than the specified amount.",
+          "description": "Threshold to log a warning in case protocol messages coming from a service are larger than the specified amount.",
           "default": 10485760,
-          "type": "string"
+          "type": "integer",
+          "format": "uint",
+          "minimum": 0.0
         },
         "message_size_limit": {
           "title": "Message size limit",
-          "description": "Threshold to fail the invocation in case protocol messages coming from service endpoint are larger than the specified amount.",
+          "description": "Threshold to fail the invocation in case protocol messages coming from a service are larger than the specified amount.",
+          "default": null,
           "type": [
             "integer",
             "null"
@@ -622,24 +773,16 @@
           "format": "uint",
           "minimum": 0.0
         },
-        "proxy_uri": {
-          "title": "Proxy URI",
-          "description": "A URI, such as `http://127.0.0.1:10001`, of a server to which all invocations should be sent, with the `Host` header set to the service endpoint URI. HTTPS proxy URIs are supported, but only HTTP endpoint traffic will be proxied currently. Can be overridden by the `HTTP_PROXY` environment variable.",
-          "default": null,
-          "type": [
-            "string",
-            "null"
-          ]
-        },
         "tmp_dir": {
           "title": "Temporary directory",
           "description": "Temporary directory to use for the invoker temporary files. If empty, the system temporary directory will be used instead.",
-          "default": "/tmp/invoker-018acbb0a3167cb994b305760ad93a70",
+          "default": "/tmp/invoker-018e08ac2614771f88b3469eb7f363ee",
           "type": "string"
         },
         "concurrency_limit": {
           "title": "Concurrency limit",
           "description": "Number of concurrent invocations that can be processed by the invoker.",
+          "default": null,
           "type": [
             "integer",
             "null"
@@ -647,21 +790,21 @@
           "format": "uint",
           "minimum": 0.0
         },
-        "http2_keep_alive": {
-          "title": "HTTP/2 Keep-alive",
-          "description": "Configuration for the HTTP/2 keep-alive mechanism, using PING frames. If unset, HTTP/2 keep-alive are disabled.",
+        "service_client": {
           "default": {
-            "interval": "40s",
-            "timeout": "20s"
-          },
-          "anyOf": [
-            {
-              "$ref": "#/definitions/Http2KeepAliveOptions"
+            "http": {
+              "keep_alive_options": {
+                "interval": "40s",
+                "timeout": "20s"
+              },
+              "proxy_uri": null
             },
-            {
-              "type": "null"
+            "lambda": {
+              "assume_role_external_id": null,
+              "aws_profile": null
             }
-          ]
+          },
+          "$ref": "#/definitions/ServiceClientOptions"
         }
       }
     },
@@ -762,53 +905,94 @@
         }
       ]
     },
-    "Http2KeepAliveOptions": {
-      "title": "HTTP/2 Keep alive options",
-      "description": "Configuration for the HTTP/2 keep-alive mechanism, using PING frames.\n\nPlease note: most gateways don't propagate the HTTP/2 keep-alive between downstream and upstream hosts. In those environments, you need to make sure the gateway can detect a broken connection to the upstream service endpoint(s).",
+    "PartitionProcessorOptions": {
+      "description": "Partition processor options",
       "type": "object",
       "properties": {
-        "interval": {
-          "title": "HTTP/2 Keep-alive interval",
-          "description": "Sets an interval for HTTP/2 PING frames should be sent to keep a connection alive.\n\nYou should set this timeout with a value lower than the `response_abort_timeout`.",
-          "default": "40s",
+        "max_batch_duration": {
+          "title": "Maximum batch duration",
+          "description": "The maximum duration the partition processor can spend on batching commands before checking for signals from its actuators. The larger the value, the fewer disk writes are being performed which can improve overall throughput at the cost of potentially longer invocation latencies.",
+          "default": "50ms",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "NodeServerOptions": {
+      "title": "Node server options",
+      "type": "object",
+      "properties": {
+        "bind_address": {
+          "description": "Address to bind for the Node server.",
+          "default": "0.0.0.0:5122",
           "type": "string"
         },
-        "timeout": {
-          "title": "Timeout",
-          "description": "Sets a timeout for receiving an acknowledgement of the keep-alive ping.\n\nIf the ping is not acknowledged within the timeout, the connection will be closed.",
-          "default": "20s",
+        "advertise_address": {
+          "description": "Address that other nodes will use to connect to this node. Defaults to use bind_address if unset.",
+          "default": {
+            "Http": "http://127.0.0.1:5122/"
+          },
+          "type": "string"
+        },
+        "histogram_inactivity_timeout": {
+          "description": "Timeout for idle histograms.\n\nThe duration after which a histogram is considered idle and will be removed from metric responses to save memory. Unsetting means that histograms will never be removed.",
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "disable_prometheus": {
+          "description": "Disable prometheus metric recording and reporting. Default is `false`.",
+          "default": false,
+          "type": "boolean"
+        }
+      }
+    },
+    "AdminOptions": {
+      "title": "Admin server options",
+      "type": "object",
+      "properties": {
+        "bind_address": {
+          "title": "Endpoint address",
+          "description": "Address to bind for the Admin APIs.",
+          "default": "0.0.0.0:9070",
+          "type": "string"
+        },
+        "concurrency_limit": {
+          "title": "Concurrency limit",
+          "description": "Concurrency limit for the Admin APIs.",
+          "default": 1000,
+          "type": "integer",
+          "format": "uint",
+          "minimum": 0.0
+        }
+      }
+    },
+    "BifrostOptions": {
+      "title": "Bifrost options",
+      "type": "object",
+      "properties": {
+        "default_provider": {
+          "title": "The default kind of loglet to be used",
+          "default": "File",
+          "type": "string"
+        },
+        "providers_config": {
+          "default": {
+            "File": {
+              "path": "target/logs/"
+            }
+          },
           "type": "string"
         }
       }
     },
-    "Options": {
-      "title": "Runtime options",
-      "description": "Configuration for the Tokio runtime used by Restate.",
-      "type": "object",
-      "properties": {
-        "worker_threads": {
-          "title": "Worker threads",
-          "description": "Configure the number of [worker threads](https://docs.rs/tokio/latest/tokio/runtime/struct.Builder.html#method.worker_threads) of the Tokio runtime. If not set, it uses the Tokio default, where worker_threads is equal to number of cores.",
-          "default": null,
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint",
-          "minimum": 0.0
-        },
-        "max_blocking_threads": {
-          "title": "Max blocking threads",
-          "description": "Configure the number of [max blocking threads](https://docs.rs/tokio/latest/tokio/runtime/struct.Builder.html#method.max_blocking_threads) of the Tokio runtime. If not set, it uses the Tokio default 512.",
-          "default": null,
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint",
-          "minimum": 0.0
-        }
-      }
+    "ClusterControllerOptions": {
+      "title": "Controller service options",
+      "type": "object"
     }
   }
 }

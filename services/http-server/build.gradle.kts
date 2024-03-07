@@ -15,7 +15,6 @@ plugins {
 
 dependencies {
   implementation(project(":contracts"))
-  implementation(libs.grpc.netty.shaded)
 
   implementation(platform(libs.jackson.bom))
   implementation(libs.jackson.core)

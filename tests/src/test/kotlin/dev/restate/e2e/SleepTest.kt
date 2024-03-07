@@ -9,11 +9,8 @@
 
 package dev.restate.e2e
 
-import dev.restate.e2e.services.coordinator.CoordinatorGrpc
-import dev.restate.e2e.services.coordinator.CoordinatorGrpcKt
-import dev.restate.e2e.services.coordinator.CoordinatorProto
 import dev.restate.e2e.utils.*
-import io.grpc.Channel
+import dev.restate.sdk.client.IngressClient
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 import kotlin.random.nextLong
@@ -22,10 +19,11 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
-import kotlinx.coroutines.joinAll
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kotlinx.coroutines.test.runTest
+import my.restate.e2e.services.CoordinatorClient
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
@@ -50,6 +48,7 @@ class JavaSimpleSleepTest : BaseSimpleSleepTest() {
 
 @Tag("always-suspending")
 @Tag("timers")
+@Disabled("node-services is not ready with the new interfaces")
 class NodeSimpleSleepTest : BaseSimpleSleepTest() {
   companion object {
     @RegisterExtension
@@ -65,14 +64,11 @@ abstract class BaseSimpleSleepTest {
 
   @Test
   @Execution(ExecutionMode.CONCURRENT)
-  fun sleep(@InjectBlockingStub coordinatorClient: CoordinatorGrpc.CoordinatorBlockingStub) {
+  fun sleep(@InjectIngressClient ingressClient: IngressClient) {
     val sleepDuration = 10.milliseconds
 
     val elapsed = measureNanoTime {
-      coordinatorClient.sleep(
-          CoordinatorProto.Duration.newBuilder()
-              .setMillis(sleepDuration.inWholeMilliseconds)
-              .build())
+      CoordinatorClient.fromIngress(ingressClient).sleep(sleepDuration.inWholeMilliseconds)
     }
 
     assertThat(elapsed.nanoseconds).isGreaterThanOrEqualTo(sleepDuration)
@@ -81,32 +77,25 @@ abstract class BaseSimpleSleepTest {
   @Test
   @Timeout(value = 60, unit = TimeUnit.SECONDS)
   @Execution(ExecutionMode.CONCURRENT)
-  fun manySleeps(@InjectChannel runtimeChannel: Channel) =
+  fun manySleeps(@InjectIngressClient ingressClient: IngressClient) =
       runTest(timeout = 60.seconds) {
         val minSleepDuration = 10.milliseconds
         val maxSleepDuration = 50.milliseconds
         val sleepsPerInvocation = 20
         val concurrentSleepInvocations = 50
 
-        val coordinatorClient = CoordinatorGrpcKt.CoordinatorCoroutineStub(runtimeChannel)
+        val coordinatorClient = CoordinatorClient.fromIngress(ingressClient)
 
         // Range is inclusive
         (1..concurrentSleepInvocations)
             .map {
               launch {
                 coordinatorClient.manyTimers(
-                    CoordinatorProto.ManyTimersRequest.newBuilder()
-                        .addAllTimer(
-                            (1..sleepsPerInvocation)
-                                .map {
-                                  Random.nextLong(
-                                      minSleepDuration.inWholeMilliseconds..maxSleepDuration
-                                              .inWholeMilliseconds)
-                                }
-                                .map {
-                                  CoordinatorProto.Duration.newBuilder().setMillis(it).build()
-                                })
-                        .build())
+                    (1..sleepsPerInvocation).map {
+                      Random.nextLong(
+                          minSleepDuration.inWholeMilliseconds..maxSleepDuration
+                                  .inWholeMilliseconds)
+                    })
               }
             }
             .joinAll()
@@ -129,6 +118,7 @@ class JavaSleepWithFailuresTest : BaseSleepWithFailuresTest() {
 }
 
 @Tag("always-suspending")
+@Disabled("node-services is not ready with the new interfaces")
 class NodeSleepWithFailuresTest : BaseSleepWithFailuresTest() {
   companion object {
     @RegisterExtension
@@ -150,45 +140,48 @@ abstract class BaseSleepWithFailuresTest {
     private val DEFAULT_SLEEP_DURATION = 4.seconds
   }
 
-  private fun asyncSleepTest(
-      runtimeChannel: Channel,
+  private suspend fun asyncSleepTest(
+      ingressClient: IngressClient,
       sleepDuration: Duration = DEFAULT_SLEEP_DURATION,
       action: () -> Unit
   ) {
-    val elapsed = measureNanoTime {
-      val fut =
-          CoordinatorGrpc.newFutureStub(runtimeChannel)
-              .sleep(
-                  CoordinatorProto.Duration.newBuilder()
-                      .setMillis(sleepDuration.inWholeMilliseconds)
-                      .build())
-
-      Thread.sleep(
-          Random.nextLong(
-              (sleepDuration / 4).inWholeMilliseconds..(sleepDuration / 2).inWholeMilliseconds))
-      action()
-
-      fut.get()
+    val start = System.nanoTime()
+    val job = coroutineScope {
+      launch(Dispatchers.Default) {
+        CoordinatorClient.fromIngress(ingressClient).sleep(sleepDuration.inWholeMilliseconds)
+      }
     }
+    delay(
+        Random.nextLong(
+                (sleepDuration / 4).inWholeMilliseconds..(sleepDuration / 2).inWholeMilliseconds)
+            .milliseconds)
 
-    assertThat(elapsed.nanoseconds).isGreaterThanOrEqualTo(sleepDuration)
+    action()
+
+    job.join()
+
+    assertThat(System.nanoTime() - start).isGreaterThanOrEqualTo(sleepDuration.inWholeNanoseconds)
   }
 
   @Timeout(value = 15, unit = TimeUnit.SECONDS)
   @Test
   open fun sleepAndKillServiceEndpoint(
-      @InjectChannel runtimeChannel: Channel,
+      @InjectIngressClient ingressClient: IngressClient,
       @InjectContainerHandle(COORDINATOR_HOSTNAME) coordinatorContainer: ContainerHandle
   ) {
-    this.asyncSleepTest(runtimeChannel) { coordinatorContainer.killAndRestart() }
+    runTest(timeout = 15.seconds) {
+      asyncSleepTest(ingressClient) { coordinatorContainer.killAndRestart() }
+    }
   }
 
   @Timeout(value = 15, unit = TimeUnit.SECONDS)
   @Test
   fun sleepAndTerminateServiceEndpoint(
-      @InjectChannel runtimeChannel: Channel,
+      @InjectIngressClient ingressClient: IngressClient,
       @InjectContainerHandle(COORDINATOR_HOSTNAME) coordinatorContainer: ContainerHandle
   ) {
-    this.asyncSleepTest(runtimeChannel) { coordinatorContainer.terminateAndRestart() }
+    runTest(timeout = 15.seconds) {
+      asyncSleepTest(ingressClient) { coordinatorContainer.terminateAndRestart() }
+    }
   }
 }

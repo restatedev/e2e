@@ -11,7 +11,6 @@ package dev.restate.e2e.testing.externalhttpserver;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
@@ -21,7 +20,6 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.Executors;
 import org.apache.logging.log4j.LogManager;
@@ -37,7 +35,6 @@ public class Main implements HttpHandler {
 
   private final ObjectMapper objectMapper = new ObjectMapper();
   private final HttpClient client = HttpClient.newHttpClient();
-  private final boolean encodeResultAsBase64 = System.getenv("ENCODE_RESULT_AS_BASE64") != null;
   private final String restateUri = Objects.requireNonNull(System.getenv("RESTATE_URI"));
 
   public static void main(String[] args) throws IOException {
@@ -63,27 +60,15 @@ public class Main implements HttpHandler {
               objectMapper.readValue(httpExchange.getRequestBody(), new TypeReference<>() {}));
       inputIntegers.sort(Integer::compareTo);
       logger.info("Output list of numbers is: " + inputIntegers);
+      String outputIntegers = objectMapper.writeValueAsString(inputIntegers);
 
       // Resolve awakeable
-      ObjectNode resolveAwakeableRequest = objectMapper.createObjectNode();
-      resolveAwakeableRequest.set("id", objectMapper.valueToTree(replyId));
-      if (encodeResultAsBase64) {
-        String json_string = objectMapper.valueToTree(inputIntegers).toPrettyString();
-        resolveAwakeableRequest.set(
-            "bytes_result",
-            objectMapper
-                .getNodeFactory()
-                .textNode(
-                    Base64.getEncoder()
-                        .encodeToString(json_string.getBytes(StandardCharsets.UTF_8))));
-      } else {
-        resolveAwakeableRequest.set("json_result", objectMapper.valueToTree(inputIntegers));
-      }
-      logger.info("Sending body: " + resolveAwakeableRequest.toPrettyString());
+      logger.info("Sending body: " + outputIntegers);
 
       HttpRequest req =
-          HttpRequest.newBuilder(URI.create(restateUri + "dev.restate.Awakeables/Resolve"))
-              .POST(HttpRequest.BodyPublishers.ofString(resolveAwakeableRequest.toPrettyString()))
+          HttpRequest.newBuilder(
+                  URI.create(restateUri + "restate/awakeables/" + replyId + "/resolve"))
+              .POST(HttpRequest.BodyPublishers.ofString(outputIntegers))
               .headers("Content-Type", "application/json")
               .build();
       HttpResponse<String> response = client.send(req, HttpResponse.BodyHandlers.ofString());

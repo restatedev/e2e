@@ -9,10 +9,6 @@
 
 package my.restate.e2e.services;
 
-import dev.restate.e2e.services.collections.list.ListProto;
-import dev.restate.e2e.services.collections.list.ListServiceRestate;
-import dev.restate.e2e.services.coordinator.CoordinatorService;
-import dev.restate.e2e.services.receiver.ReceiverGrpc;
 import dev.restate.sdk.Awaitable;
 import dev.restate.sdk.Context;
 import dev.restate.sdk.common.CoreSerdes;
@@ -26,7 +22,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class CoordinatorImpl implements Coordinator {
-  private static final Logger LOG = LogManager.getLogger(CoordinatorService.class);
+  private static final Logger LOG = LogManager.getLogger(CoordinatorImpl.class);
 
   @Override
   public void sleep(Context context, long millisDuration) {
@@ -64,14 +60,14 @@ public class CoordinatorImpl implements Coordinator {
         context.sideEffect(CoreSerdes.JSON_STRING, () -> UUID.randomUUID().toString());
     var receiverClient = ReceiverClient.fromContext(context, receiverUUID);
 
-    LOG.info("Send fire and forget call to {}", ReceiverGrpc.getServiceDescriptor().getName());
+    LOG.info("Send fire and forget call to {}", ReceiverClient.COMPONENT_NAME);
     // services should be invoked in the same order they were called. This means that
     // background calls as well as request-response calls have an absolute ordering that is defined
     // by their call order. In this concrete case, setValue is guaranteed to be executed before
     // getValue.
     receiverClient.send().setValue(complexRequest.getRequestValue());
 
-    LOG.info("Get current value from {}", ReceiverGrpc.getServiceDescriptor().getName());
+    LOG.info("Get current value from {}", ReceiverClient.COMPONENT_NAME);
     var response = receiverClient.getValue().await();
 
     LOG.info("Finish complex coordination with response value '{}'", response);
@@ -96,17 +92,12 @@ public class CoordinatorImpl implements Coordinator {
   public void invokeSequentially(Context context, CoordinatorInvokeSequentiallyRequest request) {
     List<Awaitable<?>> collectedAwaitables = new ArrayList<>();
 
-    var listClient = ListServiceRestate.newClient(context);
+    var listClient = ListObjectClient.fromContext(context, request.getListName());
     for (int i = 0; i < request.getExecuteAsBackgroundCall().size(); i++) {
-      var appendRequest =
-          ListProto.AppendRequest.newBuilder()
-              .setListName(request.getListName())
-              .setValue(String.valueOf(i))
-              .build();
       if (request.getExecuteAsBackgroundCall().get(i)) {
-        listClient.oneWay().append(appendRequest);
+        listClient.send().append(String.valueOf(i));
       } else {
-        collectedAwaitables.add(listClient.append(appendRequest));
+        collectedAwaitables.add(listClient.append(String.valueOf(i)));
       }
     }
 

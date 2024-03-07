@@ -19,16 +19,10 @@ dependencies {
   api(libs.junit.api)
   api(libs.testcontainers.core)
   api(libs.testcontainers.kafka)
-
-  api(libs.grpc.stub)
-
-  // We need this to compile the code generated, can't remove these annotations from code gen :(
-  compileOnly("jakarta.validation:jakarta.validation-api:3.0.2")
+  api(libs.restate.sdk.common)
 
   implementation(libs.restate.admin)
   implementation(libs.log4j.api)
-  implementation(libs.grpc.netty.shaded)
-  implementation(libs.grpc.protobuf)
 
   implementation(libs.testcontainers.toxiproxy)
 

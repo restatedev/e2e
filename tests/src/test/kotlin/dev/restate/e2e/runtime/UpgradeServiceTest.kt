@@ -9,25 +9,21 @@
 
 package dev.restate.e2e.runtime
 
-import com.google.protobuf.Empty
 import dev.restate.admin.api.DeploymentApi
 import dev.restate.admin.client.ApiClient
 import dev.restate.admin.model.RegisterDeploymentRequest
 import dev.restate.admin.model.RegisterDeploymentRequestAnyOf
 import dev.restate.e2e.Containers
-import dev.restate.e2e.services.awakeableholder.AwakeableHolderServiceGrpc
-import dev.restate.e2e.services.awakeableholder.hasAwakeableRequest
-import dev.restate.e2e.services.awakeableholder.unlockRequest
-import dev.restate.e2e.services.collections.list.ListProto
-import dev.restate.e2e.services.collections.list.ListServiceGrpc
-import dev.restate.e2e.services.upgradetest.UpgradeTestServiceGrpc
 import dev.restate.e2e.utils.*
-import dev.restate.generated.IngressGrpc
-import dev.restate.generated.invokeRequest
+import dev.restate.sdk.client.IngressClient
 import java.net.URL
+import my.restate.e2e.services.AwakeableHolderClient
+import my.restate.e2e.services.ListObjectClient
+import my.restate.e2e.services.UpgradeTestClient
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
+import org.awaitility.kotlin.until
 import org.awaitility.kotlin.untilAsserted
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Disabled
@@ -44,13 +40,13 @@ class UpgradeServiceTest {
       RestateDeployer.Builder()
           .withServiceEndpoint(
               Containers.javaServicesContainer(
-                      "version1", UpgradeTestServiceGrpc.SERVICE_NAME, ListServiceGrpc.SERVICE_NAME)
+                      "version1", UpgradeTestClient.COMPONENT_NAME, ListObjectClient.COMPONENT_NAME)
                   .withEnv("E2E_UPGRADETEST_VERSION", "v1"))
           .withServiceEndpoint(
-              Containers.nodeServicesContainer(
-                  "awakeable-holder", AwakeableHolderServiceGrpc.SERVICE_NAME))
+              Containers.javaServicesContainer(
+                  "awakeable-holder", AwakeableHolderClient.COMPONENT_NAME))
           .withServiceEndpoint(
-              Containers.javaServicesContainer("version2", UpgradeTestServiceGrpc.SERVICE_NAME)
+              Containers.javaServicesContainer("version2", UpgradeTestClient.COMPONENT_NAME)
                   .withEnv("E2E_UPGRADETEST_VERSION", "v2")
                   .skipRegistration())
           .build()
@@ -66,12 +62,14 @@ class UpgradeServiceTest {
 
   @Test
   fun executesNewInvocationWithLatestServiceRevisions(
-      @InjectBlockingStub upgradeTestClient: UpgradeTestServiceGrpc.UpgradeTestServiceBlockingStub,
+      @InjectIngressClient ingressClient: IngressClient,
       @InjectMetaURL metaURL: URL
   ) {
+    val upgradeTestClient = UpgradeTestClient.fromIngress(ingressClient)
+
     // Execute the first request
-    val firstResult = upgradeTestClient.executeSimple(Empty.getDefaultInstance())
-    assertThat(firstResult.message).isEqualTo("v1")
+    val firstResult = upgradeTestClient.executeSimple()
+    assertThat(firstResult).isEqualTo("v1")
 
     // Now register the update
     registerService2(metaURL)
@@ -80,94 +78,57 @@ class UpgradeServiceTest {
     // (this effectively depends on implementation details).
     // For this reason, we try to invoke the upgrade test method several times until we see the new
     // version running
-    await untilCallTo
-        {
-          upgradeTestClient.executeSimple(Empty.getDefaultInstance())
-        } matches
-        { result ->
-          result!!.message == "v2"
-        }
+    await untilCallTo { upgradeTestClient.executeSimple() } matches { result -> result!! == "v2" }
   }
 
   @Test
   fun inFlightInvocation(
-      @InjectBlockingStub ingressClient: IngressGrpc.IngressBlockingStub,
-      @InjectBlockingStub upgradeTestClient: UpgradeTestServiceGrpc.UpgradeTestServiceBlockingStub,
-      @InjectBlockingStub
-      awakeableHolderClient: AwakeableHolderServiceGrpc.AwakeableHolderServiceBlockingStub,
-      @InjectBlockingStub listClient: ListServiceGrpc.ListServiceBlockingStub,
+      @InjectIngressClient ingressClient: IngressClient,
       @InjectMetaURL metaURL: URL
   ) {
-    inFlightInvocationtest(
-        ingressClient, upgradeTestClient, awakeableHolderClient, listClient, metaURL)
+    inFlightInvocationtest(ingressClient, metaURL)
   }
 
   @Disabled(
       "Disabled until we have durable loglet implementation. See https://github.com/restatedev/restate/issues/875")
   @Test
   fun inFlightInvocationStoppingTheRuntime(
-      @InjectBlockingStub ingressClient: IngressGrpc.IngressBlockingStub,
-      @InjectBlockingStub upgradeTestClient: UpgradeTestServiceGrpc.UpgradeTestServiceBlockingStub,
-      @InjectBlockingStub
-      awakeableHolderClient: AwakeableHolderServiceGrpc.AwakeableHolderServiceBlockingStub,
-      @InjectBlockingStub listClient: ListServiceGrpc.ListServiceBlockingStub,
+      @InjectIngressClient ingressClient: IngressClient,
       @InjectMetaURL metaURL: URL,
       @InjectContainerHandle(RESTATE_RUNTIME) runtimeContainer: ContainerHandle
   ) {
-    inFlightInvocationtest(
-        ingressClient, upgradeTestClient, awakeableHolderClient, listClient, metaURL) {
-          runtimeContainer.terminateAndRestart()
-        }
+    inFlightInvocationtest(ingressClient, metaURL) { runtimeContainer.terminateAndRestart() }
   }
 
   fun inFlightInvocationtest(
-      ingressClient: IngressGrpc.IngressBlockingStub,
-      upgradeTestClient: UpgradeTestServiceGrpc.UpgradeTestServiceBlockingStub,
-      awakeableHolderClient: AwakeableHolderServiceGrpc.AwakeableHolderServiceBlockingStub,
-      listClient: ListServiceGrpc.ListServiceBlockingStub,
+      ingressClient: IngressClient,
       metaURL: URL,
       restartRuntimeFn: () -> Unit = {},
   ) {
+    val upgradeTestClient = UpgradeTestClient.fromIngress(ingressClient)
+
     // Invoke the upgrade test complex method
-    ingressClient.invoke(
-        invokeRequest {
-          service = UpgradeTestServiceGrpc.SERVICE_NAME
-          method = UpgradeTestServiceGrpc.getExecuteComplexMethod().bareMethodName.toString()
-        })
+    upgradeTestClient.send().executeComplex()
 
     // Await until AwakeableHolder has an awakeable
-    await untilCallTo
-        {
-          awakeableHolderClient.hasAwakeable(hasAwakeableRequest { name = "upgrade" })
-        } matches
-        { result ->
-          result!!.hasAwakeable
-        }
+    val awakeableHolderClient = AwakeableHolderClient.fromIngress(ingressClient, "upgrade")
+    await until { awakeableHolderClient.hasAwakeable() }
 
     // Now register the update
     registerService2(metaURL)
 
     // Let's wait for at least once returning v2
-    await untilCallTo
-        {
-          upgradeTestClient.executeSimple(Empty.getDefaultInstance())
-        } matches
-        { result ->
-          result!!.message == "v2"
-        }
+    await untilCallTo { upgradeTestClient.executeSimple() } matches { result -> result!! == "v2" }
 
     restartRuntimeFn()
 
     // Now let's resume the awakeable
-    awakeableHolderClient.unlock(unlockRequest { name = "upgrade" })
+    awakeableHolderClient.unlock("")
 
     // Let's wait for the list service to contain "v1" once
     await untilAsserted
         {
-          assertThat(
-                  listClient
-                      .get(ListProto.Request.newBuilder().setListName("upgrade-test").build())
-                      .valuesList)
+          assertThat(ListObjectClient.fromIngress(ingressClient, "upgrade-test").get())
               .containsOnlyOnce("v1")
         }
   }

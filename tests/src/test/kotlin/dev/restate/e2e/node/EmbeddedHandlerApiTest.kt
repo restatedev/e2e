@@ -13,21 +13,25 @@ import dev.restate.e2e.Containers
 import dev.restate.e2e.Containers.EMBEDDED_HANDLER_SERVER_CONTAINER_SPEC
 import dev.restate.e2e.Containers.EMBEDDED_HANDLER_SERVER_HOSTNAME
 import dev.restate.e2e.Containers.EMBEDDED_HANDLER_SERVER_PORT
-import dev.restate.e2e.Containers.HANDLER_API_COUNTER_SERVICE_NAME
-import dev.restate.e2e.Containers.nodeServicesContainer
 import dev.restate.e2e.Utils.postJsonRequest
-import dev.restate.e2e.utils.*
-import java.net.URL
-import java.util.UUID
+import dev.restate.e2e.utils.InjectContainerPort
+import dev.restate.e2e.utils.InjectIngressClient
+import dev.restate.e2e.utils.RestateDeployer
+import dev.restate.e2e.utils.RestateDeployerExtension
+import dev.restate.sdk.client.IngressClient
+import java.util.*
+import my.restate.e2e.services.CounterClient
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 
 /** Test the Embedded handler API */
+@Disabled("node-services is not ready with the new interfaces")
 class EmbeddedHandlerApiTest {
 
   companion object {
@@ -37,8 +41,7 @@ class EmbeddedHandlerApiTest {
             RestateDeployer.Builder()
                 .withContainer(EMBEDDED_HANDLER_SERVER_CONTAINER_SPEC)
                 .withContainer(Containers.INT_SORTER_HTTP_SERVER_CONTAINER_SPEC)
-                .withServiceEndpoint(
-                    nodeServicesContainer("handler-api-counter", HANDLER_API_COUNTER_SERVICE_NAME))
+                .withServiceEndpoint(Containers.NODE_COUNTER_SERVICE_SPEC)
                 .build())
   }
 
@@ -48,7 +51,7 @@ class EmbeddedHandlerApiTest {
       @InjectContainerPort(
           hostName = EMBEDDED_HANDLER_SERVER_HOSTNAME, port = EMBEDDED_HANDLER_SERVER_PORT)
       embeddedHandlerServerPort: Int,
-      @InjectGrpcIngressURL httpEndpointURL: URL
+      @InjectIngressClient ingressClient: IngressClient
   ) {
     val counterUuid = UUID.randomUUID().toString()
     val operationUuid = UUID.randomUUID().toString()
@@ -63,11 +66,7 @@ class EmbeddedHandlerApiTest {
       assertThat(response.body().get("result").asInt()).isEqualTo(1)
     }
 
-    val response =
-        postJsonRequest(
-            "${httpEndpointURL}$HANDLER_API_COUNTER_SERVICE_NAME/get", mapOf("key" to counterUuid))
-    assertThat(response.statusCode()).isEqualTo(200)
-    assertThat(response.body().get("response").get("counter").asInt()).isEqualTo(1)
+    assertThat(CounterClient.fromIngress(ingressClient, counterUuid).get()).isEqualTo(1)
   }
 
   @Test
@@ -76,10 +75,10 @@ class EmbeddedHandlerApiTest {
       @InjectContainerPort(
           hostName = EMBEDDED_HANDLER_SERVER_HOSTNAME, port = EMBEDDED_HANDLER_SERVER_PORT)
       embeddedHandlerServerPort: Int,
-      @InjectGrpcIngressURL httpEndpointURL: URL
+      @InjectIngressClient ingressClient: IngressClient
   ) {
     runAsyncIncrementCounterTest(
-        "one_way_increment_counter_test", embeddedHandlerServerPort, httpEndpointURL)
+        "one_way_increment_counter_test", embeddedHandlerServerPort, ingressClient)
   }
 
   @Test
@@ -88,10 +87,10 @@ class EmbeddedHandlerApiTest {
       @InjectContainerPort(
           hostName = EMBEDDED_HANDLER_SERVER_HOSTNAME, port = EMBEDDED_HANDLER_SERVER_PORT)
       embeddedHandlerServerPort: Int,
-      @InjectGrpcIngressURL httpEndpointURL: URL
+      @InjectIngressClient ingressClient: IngressClient
   ) {
     runAsyncIncrementCounterTest(
-        "delayed_increment_counter_test", embeddedHandlerServerPort, httpEndpointURL)
+        "delayed_increment_counter_test", embeddedHandlerServerPort, ingressClient)
   }
 
   @Test
@@ -99,8 +98,7 @@ class EmbeddedHandlerApiTest {
   fun sideEffectAndAwakeable(
       @InjectContainerPort(
           hostName = EMBEDDED_HANDLER_SERVER_HOSTNAME, port = EMBEDDED_HANDLER_SERVER_PORT)
-      embeddedHandlerServerPort: Int,
-      @InjectGrpcIngressURL httpEndpointURL: URL
+      embeddedHandlerServerPort: Int
   ) {
     val operationUuid = UUID.randomUUID().toString()
 
@@ -121,8 +119,7 @@ class EmbeddedHandlerApiTest {
   fun consecutiveSideEffects(
       @InjectContainerPort(
           hostName = EMBEDDED_HANDLER_SERVER_HOSTNAME, port = EMBEDDED_HANDLER_SERVER_PORT)
-      embeddedHandlerServerPort: Int,
-      @InjectGrpcIngressURL httpEndpointURL: URL
+      embeddedHandlerServerPort: Int
   ) {
     val operationUuid = UUID.randomUUID().toString()
 
@@ -137,7 +134,7 @@ class EmbeddedHandlerApiTest {
   private fun runAsyncIncrementCounterTest(
       path: String,
       embeddedHandlerServerPort: Int,
-      httpEndpointURL: URL
+      ingressClient: IngressClient
   ) {
     val counterUuid = UUID.randomUUID().toString()
     val operationUuid = UUID.randomUUID().toString()
@@ -152,12 +149,7 @@ class EmbeddedHandlerApiTest {
 
     await untilAsserted
         {
-          val response =
-              postJsonRequest(
-                  "${httpEndpointURL}$HANDLER_API_COUNTER_SERVICE_NAME/get",
-                  mapOf("key" to counterUuid))
-          assertThat(response.statusCode()).isEqualTo(200)
-          assertThat(response.body().get("response").get("counter").asInt()).isEqualTo(1)
+          assertThat(CounterClient.fromIngress(ingressClient, counterUuid).get()).isEqualTo(1)
         }
   }
 }

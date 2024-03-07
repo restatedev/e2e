@@ -9,13 +9,10 @@
 
 package dev.restate.e2e
 
-import dev.restate.e2e.services.coordinator.CoordinatorGrpc
-import dev.restate.e2e.services.coordinator.CoordinatorProto
-import dev.restate.e2e.utils.InjectBlockingStub
-import dev.restate.e2e.utils.InjectChannel
+import dev.restate.e2e.utils.InjectIngressClient
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
-import io.grpc.Channel
+import dev.restate.sdk.client.IngressClient
 import java.time.Duration
 import kotlin.system.measureNanoTime
 import my.restate.e2e.services.CoordinatorClient
@@ -27,57 +24,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
-
-@Tag("always-suspending")
-class JavaOldSampleWorkflowTest : BaseOldSampleWorkflowTest() {
-  companion object {
-    @RegisterExtension
-    val deployerExt: RestateDeployerExtension =
-        RestateDeployerExtension(
-            RestateDeployer.Builder()
-                .withServiceEndpoint(Containers.JAVA_COORDINATOR_SERVICE_SPEC)
-                .build())
-  }
-}
-
-@Tag("always-suspending")
-class NodeOldSampleWorkflowTest : BaseOldSampleWorkflowTest() {
-  companion object {
-    @RegisterExtension
-    val deployerExt: RestateDeployerExtension =
-        RestateDeployerExtension(
-            RestateDeployer.Builder()
-                .withServiceEndpoint(Containers.NODE_COORDINATOR_SERVICE_SPEC)
-                .build())
-  }
-}
-
-abstract class BaseOldSampleWorkflowTest {
-
-  @Test
-  @DisplayName("Sample workflow with sleep, side effect, call and one way call")
-  @Execution(ExecutionMode.CONCURRENT)
-  fun sampleWorkflow(
-      @InjectBlockingStub coordinatorClient: CoordinatorGrpc.CoordinatorBlockingStub
-  ) {
-    val sleepDuration = Duration.ofMillis(100L)
-
-    val elapsed = measureNanoTime {
-      val value = "foobar"
-      val response =
-          coordinatorClient.complex(
-              CoordinatorProto.ComplexRequest.newBuilder()
-                  .setSleepDuration(
-                      CoordinatorProto.Duration.newBuilder().setMillis(sleepDuration.toMillis()))
-                  .setRequestValue(value)
-                  .build())
-
-      assertThat(response.responseValue).isEqualTo(value)
-    }
-
-    assertThat(Duration.ofNanos(elapsed)).isGreaterThanOrEqualTo(sleepDuration)
-  }
-}
 
 @Tag("always-suspending")
 class JavaSampleWorkflowTest : BaseSampleWorkflowTest() {
@@ -95,13 +41,13 @@ abstract class BaseSampleWorkflowTest {
   @Test
   @DisplayName("Sample workflow with sleep, side effect, call and one way call")
   @Execution(ExecutionMode.CONCURRENT)
-  fun sampleWorkflow(@InjectChannel channel: Channel) {
+  fun sampleWorkflow(@InjectIngressClient ingressClient: IngressClient) {
     val sleepDuration = Duration.ofMillis(100L)
 
     val elapsed = measureNanoTime {
       val value = "foobar"
       val response =
-          CoordinatorClient.fromIngress(channel)
+          CoordinatorClient.fromIngress(ingressClient)
               .complex(CoordinatorComplexRequest(sleepDuration.toMillis(), value))
 
       assertThat(response).isEqualTo(value)
