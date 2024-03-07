@@ -15,7 +15,7 @@ import dev.restate.sdk.Context;
 import dev.restate.sdk.annotation.Handler;
 import dev.restate.sdk.annotation.Service;
 
-@Service
+@Service(name = "ProxyCounter")
 public interface ProxyCounter {
 
   class AddRequest {

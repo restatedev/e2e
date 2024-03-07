@@ -9,45 +9,30 @@
 
 import * as restate from "@restatedev/restate-sdk";
 
-import {
-  AppendRequest,
-  ListService as IListService,
-  List,
-  Request,
-  protobufPackage,
-} from "./generated/list";
-import { Empty } from "./generated/google/protobuf/empty";
+import { REGISTRY } from "./services";
 
 const LIST_KEY = "list";
+const ListServiceFQN = "ListObject";
 
-export const ListServiceFQN = protobufPackage + ".ListService";
+REGISTRY.add({
+  fqdn: ListServiceFQN,
+  binder: (e) => e.object(ListServiceFQN, service),
+});
 
-export class ListService implements IListService {
-  async append(request: AppendRequest): Promise<Empty> {
-    console.log("append: " + JSON.stringify(request));
-    const ctx = restate.useKeyedContext(this);
-
-    const list = (await ctx.get<List>(LIST_KEY)) ?? List.create({});
-    list.values.push(request.value);
+const service = restate.object({
+  async append(ctx: restate.ObjectContext, request: string): Promise<void> {
+    const list = (await ctx.get<string[]>(LIST_KEY)) ?? [];
+    list.push(request);
     ctx.set(LIST_KEY, list);
+  },
 
-    return Empty.create({});
-  }
-
-  async clear(request: Request): Promise<List> {
-    console.log("clear: " + JSON.stringify(request));
-    const ctx = restate.useKeyedContext(this);
-
-    const list = (await ctx.get<List>(LIST_KEY)) ?? List.create({});
+  async clear(ctx: restate.ObjectContext) {
+    const list = (await ctx.get<string[]>(LIST_KEY)) ?? [];
     ctx.clear(LIST_KEY);
-
     return list;
-  }
+  },
 
-  async get(request: Request): Promise<List> {
-    console.log("get: " + JSON.stringify(request));
-    const ctx = restate.useKeyedContext(this);
-
-    return (await ctx.get<List>(LIST_KEY)) ?? List.create({});
-  }
-}
+  async get(ctx: restate.ObjectContext): Promise<string[]> {
+    return (await ctx.get<string[]>(LIST_KEY)) ?? [];
+  },
+});

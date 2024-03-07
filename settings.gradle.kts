@@ -14,7 +14,7 @@ plugins { id("org.gradle.toolchains.foojay-resolver-convention") version "0.7.0"
 include(
     "contracts",
     "services:java-services",
-    //    "services:node-services",
+    "services:node-services",
     "services:http-server",
     "test-utils",
     "tests")

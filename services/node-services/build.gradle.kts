@@ -19,14 +19,7 @@ tasks.register("updateRestateDependency") {
   doLast { exec { commandLine("npm", "update", "@restatedev/restate-sdk") } }
 }
 
-tasks.register("generateProto") {
-  mustRunAfter("npmInstall")
-  dependsOn("npm_run_proto")
-}
-
 tasks.register<Copy>("prepareDockerBuild") {
-  dependsOn("generateProto")
-
   if (!System.getenv("SDK_TYPESCRIPT_LOCAL_BUILD").isNullOrEmpty()) {
     dependsOn("installLocalSdkTypescript")
   } else {
@@ -55,7 +48,7 @@ tasks.create<DockerBuildImage>("dockerBuild") {
 }
 
 tasks.named("check") {
-  mustRunAfter("npmInstall", "generateProto")
+  mustRunAfter("npmInstall")
   dependsOn("npm_run_lint")
 }
 

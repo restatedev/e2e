@@ -8,43 +8,30 @@
 // https://github.com/restatedev/e2e/blob/main/LICENSE
 
 import * as restate from "@restatedev/restate-sdk";
+import { REGISTRY } from "./services";
+export const MapServiceFQN = "MapObject";
 
-import {
-  ClearAllRequest,
-  ClearAllResponse,
-  GetRequest,
-  GetResponse,
-  MapService as IMapService,
-  protobufPackage,
-  SetRequest,
-} from "./generated/map";
-import { Empty } from "./generated/google/protobuf/empty";
+REGISTRY.add({
+  fqdn: MapServiceFQN,
+  binder: (e) => e.object(MapServiceFQN, service),
+});
 
-export const MapServiceFQN = protobufPackage + ".MapService";
-
-export class MapService implements IMapService {
-  async clearAll(): Promise<ClearAllResponse> {
-    const ctx = restate.useKeyedContext(this);
-
+const service = restate.object({
+  async clearAll(ctx: restate.ObjectContext): Promise<string[]> {
     const keys = await ctx.stateKeys();
     ctx.clearAll();
+    return keys;
+  },
 
-    return { keys };
-  }
+  async get(ctx: restate.ObjectContext, request: string): Promise<string> {
+    const value = (await ctx.get<string>(request)) ?? "";
+    return value;
+  },
 
-  async get(request: GetRequest): Promise<GetResponse> {
-    const ctx = restate.useKeyedContext(this);
-
-    const value = (await ctx.get<string>(request.key)) || "";
-
-    return { value };
-  }
-
-  async set(request: SetRequest): Promise<Empty> {
-    const ctx = restate.useKeyedContext(this);
-
+  async set(
+    ctx: restate.ObjectContext,
+    request: { key: string; value: string }
+  ) {
     ctx.set(request.key, request.value);
-
-    return {};
-  }
-}
+  },
+});

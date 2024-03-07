@@ -8,25 +8,22 @@
 // https://github.com/restatedev/e2e/blob/main/LICENSE
 
 import * as restate from "@restatedev/restate-sdk";
+import { REGISTRY } from "./services";
+import { counterApi } from "./counter";
 
-import {
-  ProxyCounter as IProxyCounter,
-  CounterAddRequest,
-  CounterClientImpl,
-  protobufPackage,
-} from "./generated/counter";
-import { Empty } from "./generated/google/protobuf/empty";
+const ProxyCounterServiceFQN = "ProxyCounter";
 
-export const ProxyCounterServiceFQN = protobufPackage + ".ProxyCounter";
+REGISTRY.add({
+  fqdn: ProxyCounterServiceFQN,
+  binder: (e) => e.service(ProxyCounterServiceFQN, service),
+});
 
-export class ProxyCounterService implements IProxyCounter {
-  async addInBackground(request: CounterAddRequest): Promise<Empty> {
-    const ctx = restate.useContext(this);
+const service = restate.service({
+  async addInBackground(
+    ctx: restate.Context,
+    request: { counterName: string; value: number }
+  ) {
     ctx.console.log("addInBackground " + JSON.stringify(request));
-
-    const productServiceClient = new CounterClientImpl(ctx.grpcChannel());
-    await ctx.grpcChannel().oneWayCall(() => productServiceClient.add(request));
-
-    return {};
-  }
-}
+    ctx.objectSend(counterApi, request.counterName).add(request.value);
+  },
+});

@@ -8,55 +8,39 @@
 // https://github.com/restatedev/e2e/blob/main/LICENSE
 
 import * as restate from "@restatedev/restate-sdk";
-
-import {
-  HasAwakeableRequest,
-  HasAwakeableResponse,
-  HoldRequest,
-  AwakeableHolderService as IAwakeableHolderService,
-  UnlockRequest,
-  protobufPackage,
-} from "./generated/awakeable_holder";
-import { Empty } from "./generated/google/protobuf/empty";
+import { REGISTRY } from "./services";
 
 const ID_KEY = "id";
 
-export const AwakeableHolderServiceFQN =
-  protobufPackage + ".AwakeableHolderService";
+const AwakeableHolderServiceFQN = "AwakeableHolder";
 
-export class AwakeableHolderService implements IAwakeableHolderService {
-  async hold(request: HoldRequest): Promise<Empty> {
-    console.log("hold: " + JSON.stringify(request));
-    const ctx = restate.useKeyedContext(this);
+type Ctx = restate.ObjectContext;
 
-    ctx.set(ID_KEY, request.id);
+REGISTRY.add({
+  fqdn: AwakeableHolderServiceFQN,
+  binder: (e) => e.object(AwakeableHolderServiceFQN, service),
+});
 
-    return {};
-  }
+const service = restate.object({
+  async hold(ctx: restate.ObjectContext, id: string) {
+    ctx.set(ID_KEY, id);
+  },
 
-  async hasAwakeable(
-    request: HasAwakeableRequest
-  ): Promise<HasAwakeableResponse> {
-    console.log("hasAwakeable: " + JSON.stringify(request));
-    const ctx = restate.useKeyedContext(this);
+  async hasAwakeable(ctx: Ctx) {
+    return (await ctx.get<string>(ID_KEY)) !== null;
+  },
 
-    return {
-      hasAwakeable: (await ctx.get<string>(ID_KEY)) !== null,
-    };
-  }
-
-  async unlock(request: UnlockRequest): Promise<Empty> {
-    console.log("unlock: " + JSON.stringify(request));
-    const ctx = restate.useKeyedContext(this);
-
+  async unlock(ctx: Ctx, request: string) {
     const id = await ctx.get<string>(ID_KEY);
     if (id === null || id === undefined) {
       throw new Error("No awakeable registered");
     }
-
-    ctx.resolveAwakeable(id, request.payload);
+    ctx.resolveAwakeable(id, request);
     ctx.clear(ID_KEY);
+  },
+});
 
-    return {};
-  }
-}
+export const awakeableHolderApi = restate.objectApi(
+  AwakeableHolderServiceFQN,
+  service
+);

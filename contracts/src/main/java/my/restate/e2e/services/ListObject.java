@@ -14,7 +14,7 @@ import dev.restate.sdk.annotation.Handler;
 import dev.restate.sdk.annotation.VirtualObject;
 import java.util.List;
 
-@VirtualObject
+@VirtualObject(name = "ListObject")
 public interface ListObject {
 
   @Handler

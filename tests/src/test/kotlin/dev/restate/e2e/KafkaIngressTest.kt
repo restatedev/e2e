@@ -25,7 +25,6 @@ import org.apache.kafka.clients.producer.ProducerRecord
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.api.parallel.Execution
@@ -65,7 +64,6 @@ class JavaKafkaIngressTest : BaseKafkaIngressTest() {
   }
 }
 
-@Disabled("node-services is not ready with the new interfaces")
 class NodeKafkaIngressTest : BaseKafkaIngressTest() {
   companion object {
     @RegisterExtension
