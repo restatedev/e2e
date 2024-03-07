@@ -1,0 +1,82 @@
+// Copyright (c) 2023 - Restate Software, Inc., Restate GmbH
+//
+// This file is part of the Restate e2e tests,
+// which are released under the MIT license.
+//
+// You can find a copy of the license in file LICENSE in the root
+// directory of this repository or package, or at
+// https://github.com/restatedev/e2e/blob/main/LICENSE
+
+import * as restate from "@restatedev/restate-sdk";
+import { awakeableHolderApi } from "./awakeable_holder";
+import { REGISTRY } from "./services";
+
+export const CancelTestServiceFQN = "CancelTestRunner";
+export const BlockingServiceFQN = "CancelTestBlockingService";
+
+REGISTRY.add({
+  fqdn: CancelTestServiceFQN,
+  binder: (e) => e.object(CancelTestServiceFQN, canceService),
+});
+
+REGISTRY.add({
+  fqdn: BlockingServiceFQN,
+  binder: (e) => e.object(BlockingServiceFQN, blockingService),
+});
+
+enum BlockingOperation {
+  CALL = "CALL",
+  SLEEP = "SLEEP",
+  AWAKEABLE = "AWAKEABLE",
+}
+
+const canceService = restate.object({
+  async verifyTest(ctx: restate.ObjectContext): Promise<boolean> {
+    const isCanceled = (await ctx.get<boolean>("canceled")) ?? false;
+    return isCanceled;
+  },
+
+  async startTest(ctx: restate.ObjectContext, request: BlockingOperation) {
+    try {
+      await ctx.object(api, ctx.key()).block(request);
+    } catch (e) {
+      if (
+        e instanceof restate.TerminalError &&
+        (e as restate.TerminalError).code === restate.ErrorCodes.CANCELLED
+      ) {
+        ctx.set("canceled", true);
+      } else {
+        throw e;
+      }
+    }
+  },
+});
+
+const blockingService = restate.object({
+  async block(ctx: restate.ObjectContext, request: BlockingOperation) {
+    const { id, promise } = ctx.awakeable();
+    // DO NOT await the next CALL otherwise the test deadlocks.
+    ctx.object(awakeableHolderApi, "cancel").hold(id);
+    await promise;
+
+    switch (request) {
+      case BlockingOperation.CALL: {
+        await ctx.object(api, ctx.key()).block(request);
+        break;
+      }
+      case BlockingOperation.SLEEP: {
+        await ctx.sleep(1_000_000_000);
+        break;
+      }
+      case BlockingOperation.AWAKEABLE: {
+        const { id: _, promise: uncompletable_promise } = ctx.awakeable();
+        await uncompletable_promise;
+        break;
+      }
+    }
+  },
+
+  async isUnlocked() {},
+});
+
+const api = restate.objectApi(BlockingServiceFQN, blockingService);

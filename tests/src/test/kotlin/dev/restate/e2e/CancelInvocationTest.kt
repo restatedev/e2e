@@ -29,7 +29,6 @@ import my.restate.e2e.services.CancelTestBlockingServiceClient
 import my.restate.e2e.services.CancelTestRunnerClient
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.until
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
@@ -50,24 +49,18 @@ class JavaCancelInvocationTest : BaseCancelInvocationTest() {
   }
 }
 
-@Disabled("node-services is not ready with the new interfaces")
 class NodeCancelInvocationTest : BaseCancelInvocationTest() {
   companion object {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                // TODO update once we convert the node tests
-                //                .withServiceEndpoint(
-                //                    Containers.nodeServicesContainer(
-                //                        "node-cancel-invocation",
-                //
-                //
-                // CancelTestServiceGrpc.SERVICE_NAME,
-                //                                                BlockingServiceGrpc.SERVICE_NAME,
-                //
-                // AwakeableHolderServiceGrpc.SERVICE_NAME
-                //                    ))
+                .withServiceEndpoint(
+                    Containers.nodeServicesContainer(
+                        "node-cancel-invocation",
+                        CancelTestRunnerClient.COMPONENT_NAME,
+                        CancelTestBlockingServiceClient.COMPONENT_NAME,
+                        AwakeableHolderClient.COMPONENT_NAME))
                 .build())
   }
 }
