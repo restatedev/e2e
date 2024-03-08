@@ -77,4 +77,3 @@ const service = restate.object({
   },
 });
 
-const api = restate.objectApi(NonDeterministicServiceFQN, service);

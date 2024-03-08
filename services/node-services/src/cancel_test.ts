@@ -69,12 +69,14 @@ const blockingService = restate.object({
         break;
       }
       case BlockingOperation.AWAKEABLE: {
-        const { id: _, promise: uncompletable_promise } = ctx.awakeable();
-        await uncompletable_promise;
+        const { promise } = ctx.awakeable();
+        // uncompletable promise >
+        await promise;
         break;
       }
     }
   },
+
 
   async isUnlocked() {},
 });
