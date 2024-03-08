@@ -16,6 +16,7 @@ import "./list";
 import "./map";
 import "./proxy_counter";
 import "./cancel_test";
+import "./non_determinism";
 
 import { REGISTRY } from "./services";
 
