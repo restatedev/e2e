@@ -15,20 +15,20 @@ import "./event_handler";
 import "./list";
 import "./map";
 import "./proxy_counter";
+import "./cancel_test";
+import "./non_determinism";
 
 import { REGISTRY } from "./services";
 
-export let handler: (event: any, ctx: any) => Promise<any>;
-
 if (!process.env.SERVICES) {
-  throw new Error("Cannot find SERVICES nor EMBEDDED_HANDLER_PORT env");
+  throw new Error("Cannot find SERVICES env");
 }
 const fqdns = new Set(process.env.SERVICES.split(","));
 const endpoint = restate.endpoint();
 REGISTRY.register(fqdns, endpoint);
 
-if (process.env.AWS_LAMBDA_FUNCTION_NAME) {
-  handler = endpoint.lambdaHandler();
-} else {
+if (!process.env.AWS_LAMBDA_FUNCTION_NAME) {
   endpoint.listen();
 }
+
+export const handler = endpoint.lambdaHandler();

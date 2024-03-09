@@ -19,7 +19,6 @@ import my.restate.e2e.services.CounterClient
 import my.restate.e2e.services.NonDeterministicClient
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.api.parallel.Execution
@@ -45,7 +44,6 @@ class JavaNonDeterminismTest : NonDeterminismTest() {
 }
 
 @Tag("only-always-suspending")
-@Disabled("node-services is not ready with the new interfaces")
 class NodeNonDeterminismTest : NonDeterminismTest() {
   companion object {
     @RegisterExtension
@@ -54,13 +52,11 @@ class NodeNonDeterminismTest : NonDeterminismTest() {
             RestateDeployer.Builder()
                 // Disable the retries so we get the error propagated back
                 .withInvokerRetryPolicy(RestateDeployer.RetryPolicy.None)
-                // TODO update once we convert this test
-                //                .withServiceEndpoint(
-                //                    Containers.nodeServicesContainer(
-                //                        "node-non-determinism",
-                //                      NonDeterministicServiceGrpc.SERVICE_NAME,
-                //                        CounterGrpc.SERVICE_NAME
-                //                    ))
+                .withServiceEndpoint(
+                    Containers.nodeServicesContainer(
+                        "node-non-determinism",
+                        NonDeterministicClient.COMPONENT_NAME,
+                        CounterClient.COMPONENT_NAME))
                 .build())
   }
 }

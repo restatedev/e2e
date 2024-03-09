@@ -26,8 +26,9 @@ const service = restate.object({
     ctx.set(ID_KEY, id);
   },
 
-  async hasAwakeable(ctx: Ctx) {
-    return (await ctx.get<string>(ID_KEY)) !== null;
+  async hasAwakeable(ctx: Ctx): Promise<boolean> {
+    const maybe = await ctx.get<string>(ID_KEY);
+    return maybe !== null && maybe !== undefined;
   },
 
   async unlock(ctx: Ctx, request: string) {

@@ -25,7 +25,9 @@ export class ComponenetRegistery {
     fqdns.forEach((fqdn) => {
       const c = this.components.get(fqdn);
       if (!c) {
-        throw new Error(`unknown fqdn ${fqdn}`);
+        throw new Error(
+          `unknown fqdn ${fqdn}. Did you rememeber to import the test at app.ts?`
+        );
       }
       c.binder(e);
     });

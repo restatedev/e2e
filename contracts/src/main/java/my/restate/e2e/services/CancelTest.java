@@ -21,7 +21,7 @@ public interface CancelTest {
     AWAKEABLE
   }
 
-  @VirtualObject
+  @VirtualObject(name = "CancelTestRunner")
   interface Runner {
     @Exclusive
     void startTest(ObjectContext context, BlockingOperation operation);
@@ -30,7 +30,7 @@ public interface CancelTest {
     boolean verifyTest(ObjectContext context);
   }
 
-  @VirtualObject
+  @VirtualObject(name = "CancelTestBlockingService")
   interface BlockingService {
     @Exclusive
     void block(ObjectContext context, BlockingOperation operation);
