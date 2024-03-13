@@ -12,18 +12,19 @@ import { REGISTRY } from "./services";
 import { counterApi } from "./counter";
 
 const ProxyCounterServiceFQN = "ProxyCounter";
+const Counter: counterApi = { path: "Counter" };
 
 REGISTRY.add({
   fqdn: ProxyCounterServiceFQN,
-  binder: (e) => e.service(ProxyCounterServiceFQN, service),
+  binder: (e) => e.service(service),
 });
 
-const service = restate.service({
+const service = restate.service(ProxyCounterServiceFQN, {
   async addInBackground(
     ctx: restate.Context,
     request: { counterName: string; value: number }
   ) {
     ctx.console.log("addInBackground " + JSON.stringify(request));
-    ctx.objectSend(counterApi, request.counterName).add(request.value);
+    ctx.objectSend(Counter, request.counterName).add(request.value);
   },
 });

@@ -16,10 +16,10 @@ const ListServiceFQN = "ListObject";
 
 REGISTRY.add({
   fqdn: ListServiceFQN,
-  binder: (e) => e.object(ListServiceFQN, service),
+  binder: (e) => e.object(service),
 });
 
-const service = restate.object({
+const service = restate.object(ListServiceFQN, {
   async append(ctx: restate.ObjectContext, request: string): Promise<void> {
     const list = (await ctx.get<string[]>(LIST_KEY)) ?? [];
     list.push(request);

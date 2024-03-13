@@ -9,7 +9,7 @@
 
 import * as restate from "@restatedev/restate-sdk";
 import { REGISTRY } from "./services";
-import { awakeableHolderApi } from "./awakeable_holder";
+import type { awakeableHolderApi } from "./awakeable_holder";
 
 const COUNTER_KEY = "counter";
 
@@ -17,10 +17,12 @@ export const CounterServiceFQN = "Counter";
 
 REGISTRY.add({
   fqdn: CounterServiceFQN,
-  binder: (e) => e.object(CounterServiceFQN, service),
+  binder: (e) => e.object(service),
 });
 
-const service = restate.object({
+const AwakeableHolder: awakeableHolderApi = { path: "AwakeableHolder" };
+
+const service = restate.object(CounterServiceFQN, {
   async reset(ctx: restate.ObjectContext) {
     ctx.clear(COUNTER_KEY);
   },
@@ -56,7 +58,7 @@ const service = restate.object({
 
     // Wait for the sync with the test runner
     const { id, promise } = ctx.awakeable();
-    ctx.objectSend(awakeableHolderApi, ctx.key()).hold(id);
+    ctx.objectSend(AwakeableHolder, ctx.key()).hold(id);
     await promise;
 
     // Now start looping
@@ -74,4 +76,4 @@ const service = restate.object({
   },
 });
 
-export const counterApi = restate.objectApi(CounterServiceFQN, service);
+export type counterApi = typeof service;
