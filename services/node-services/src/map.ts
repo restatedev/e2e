@@ -13,10 +13,10 @@ export const MapServiceFQN = "MapObject";
 
 REGISTRY.add({
   fqdn: MapServiceFQN,
-  binder: (e) => e.object(MapServiceFQN, service),
+  binder: (e) => e.object(service),
 });
 
-const service = restate.object({
+const service = restate.object(MapServiceFQN, {
   async clearAll(ctx: restate.ObjectContext): Promise<string[]> {
     const keys = await ctx.stateKeys();
     ctx.clearAll();

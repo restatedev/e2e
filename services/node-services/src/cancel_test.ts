@@ -13,15 +13,16 @@ import { REGISTRY } from "./services";
 
 export const CancelTestServiceFQN = "CancelTestRunner";
 export const BlockingServiceFQN = "CancelTestBlockingService";
+const AwakeableHolder: awakeableHolderApi = { path: "AwakeableHolder"};
 
 REGISTRY.add({
   fqdn: CancelTestServiceFQN,
-  binder: (e) => e.object(CancelTestServiceFQN, canceService),
+  binder: (e) => e.object(canceService),
 });
 
 REGISTRY.add({
   fqdn: BlockingServiceFQN,
-  binder: (e) => e.object(BlockingServiceFQN, blockingService),
+  binder: (e) => e.object(blockingService),
 });
 
 enum BlockingOperation {
@@ -30,7 +31,7 @@ enum BlockingOperation {
   AWAKEABLE = "AWAKEABLE",
 }
 
-const canceService = restate.object({
+const canceService = restate.object(CancelTestServiceFQN, {
   async verifyTest(ctx: restate.ObjectContext): Promise<boolean> {
     const isCanceled = (await ctx.get<boolean>("canceled")) ?? false;
     return isCanceled;
@@ -52,11 +53,11 @@ const canceService = restate.object({
   },
 });
 
-const blockingService = restate.object({
+const blockingService = restate.object(BlockingServiceFQN, {
   async block(ctx: restate.ObjectContext, request: BlockingOperation) {
     const { id, promise } = ctx.awakeable();
     // DO NOT await the next CALL otherwise the test deadlocks.
-    ctx.object(awakeableHolderApi, "cancel").hold(id);
+    ctx.object(AwakeableHolder, "cancel").hold(id);
     await promise;
 
     switch (request) {
@@ -77,8 +78,7 @@ const blockingService = restate.object({
     }
   },
 
-
   async isUnlocked() {},
 });
 
-const api = restate.objectApi(BlockingServiceFQN, blockingService);
+const api: typeof blockingService = { path : "CancelTestBlockingService" };

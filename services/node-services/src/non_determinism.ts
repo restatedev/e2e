@@ -14,9 +14,11 @@ import { REGISTRY } from "./services";
 
 export const NonDeterministicServiceFQN = "NonDeterministic";
 
+const Counter: counterApi = { path: "Counter" };
+
 REGISTRY.add({
   fqdn: NonDeterministicServiceFQN,
-  binder: (e) => e.object(NonDeterministicServiceFQN, service),
+  binder: (e) => e.object(service),
 });
 
 const invocationCounts = new Map<string, number>();
@@ -28,33 +30,33 @@ function doLeftAction(ctx: restate.ObjectContext): boolean {
 }
 
 function incrementCounter(ctx: restate.ObjectContext) {
-  ctx.objectSend(counterApi, ctx.key()).add(1);
+  ctx.objectSend(Counter, ctx.key()).add(1);
 }
 
-const service = restate.object({
+const service = restate.object(NonDeterministicServiceFQN, {
   async leftSleepRightCall(ctx: restate.ObjectContext) {
     if (doLeftAction(ctx)) {
       await ctx.sleep(100);
     } else {
-      await ctx.object(counterApi, "abc").get();
+      await ctx.object(Counter, "abc").get();
     }
     incrementCounter(ctx);
   },
 
   async callDifferentMethod(ctx: restate.ObjectContext) {
     if (doLeftAction(ctx)) {
-      await ctx.object(counterApi, "abc").get();
+      await ctx.object(Counter, "abc").get();
     } else {
-      await ctx.object(counterApi, "abc").reset();
+      await ctx.object(Counter, "abc").reset();
     }
     incrementCounter(ctx);
   },
 
   async backgroundInvokeWithDifferentTargets(ctx: restate.ObjectContext) {
     if (doLeftAction(ctx)) {
-      ctx.objectSend(counterApi, "abc").get();
+      ctx.objectSend(Counter, "abc").get();
     } else {
-      ctx.objectSend(counterApi, "abc").reset();
+      ctx.objectSend(Counter, "abc").reset();
     }
     await ctx.sleep(100);
     incrementCounter(ctx);
@@ -76,4 +78,3 @@ const service = restate.object({
     incrementCounter(ctx);
   },
 });
-

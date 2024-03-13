@@ -18,10 +18,10 @@ type Ctx = restate.ObjectContext;
 
 REGISTRY.add({
   fqdn: AwakeableHolderServiceFQN,
-  binder: (e) => e.object(AwakeableHolderServiceFQN, service),
+  binder: (e) => e.object(service),
 });
 
-const service = restate.object({
+const service = restate.object(AwakeableHolderServiceFQN, {
   async hold(ctx: restate.ObjectContext, id: string) {
     ctx.set(ID_KEY, id);
   },
@@ -41,7 +41,4 @@ const service = restate.object({
   },
 });
 
-export const awakeableHolderApi = restate.objectApi(
-  AwakeableHolderServiceFQN,
-  service
-);
+export type awakeableHolderApi = typeof service;
