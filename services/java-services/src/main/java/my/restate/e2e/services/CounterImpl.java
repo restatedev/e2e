@@ -49,7 +49,7 @@ public class CounterImpl implements Counter {
 
     logger.info("New counter value: {}", counter);
 
-    throw new TerminalException(TerminalException.Code.INTERNAL, ctx.key());
+    throw new TerminalException(ctx.key());
   }
 
   @Override

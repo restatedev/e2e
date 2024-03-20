@@ -13,7 +13,7 @@ import { REGISTRY } from "./services";
 
 export const CancelTestServiceFQN = "CancelTestRunner";
 export const BlockingServiceFQN = "CancelTestBlockingService";
-const AwakeableHolder: awakeableHolderApi = { path: "AwakeableHolder"};
+const AwakeableHolder: awakeableHolderApi = { path: "AwakeableHolder" };
 
 REGISTRY.add({
   fqdn: CancelTestServiceFQN,
@@ -43,7 +43,7 @@ const canceService = restate.object(CancelTestServiceFQN, {
     } catch (e) {
       if (
         e instanceof restate.TerminalError &&
-        (e as restate.TerminalError).code === restate.ErrorCodes.CANCELLED
+        (e as restate.TerminalError).code === 409
       ) {
         ctx.set("canceled", true);
       } else {
@@ -81,4 +81,4 @@ const blockingService = restate.object(BlockingServiceFQN, {
   async isUnlocked() {},
 });
 
-const api: typeof blockingService = { path : "CancelTestBlockingService" };
+const api: typeof blockingService = { path: "CancelTestBlockingService" };

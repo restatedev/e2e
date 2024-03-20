@@ -31,7 +31,7 @@ public class CancelTestImpl {
       try {
         client.block(operation).await();
       } catch (TerminalException e) {
-        if (e.getCode() == TerminalException.Code.CANCELLED) {
+        if (e.getCode() == TerminalException.CANCELLED_CODE) {
           context.set(CANCELED_STATE, true);
         } else {
           throw e;
