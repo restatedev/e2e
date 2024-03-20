@@ -81,6 +81,9 @@ public class Main {
         case KillTestSingletonClient.COMPONENT_NAME:
           restateHttpEndpointBuilder.with(new KillTestImpl.SingletonImpl());
           break;
+        case HeadersPassThroughTestClient.COMPONENT_NAME:
+          restateHttpEndpointBuilder.with(new HeadersPassThroughTestImpl());
+          break;
       }
     }
 

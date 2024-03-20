@@ -1,4 +1,4 @@
-FROM node:18 AS build
+FROM node:20 AS build
 
 WORKDIR /usr/src/app
 COPY . .
@@ -6,7 +6,7 @@ COPY . .
 RUN npm ci
 RUN npm run build
 
-FROM node:18 as prod
+FROM node:20 as prod
 WORKDIR /usr/src/app
 
 # Install app dependencies
