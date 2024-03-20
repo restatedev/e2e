@@ -18,6 +18,7 @@ import dev.restate.e2e.utils.InjectMetaURL
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
 import dev.restate.sdk.client.IngressClient
+import dev.restate.sdk.client.IngressException
 import java.net.URL
 import java.util.*
 import my.restate.e2e.services.CounterClient
@@ -25,6 +26,7 @@ import my.restate.e2e.services.ProxyCounter
 import my.restate.e2e.services.ProxyCounterClient
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.assertj.core.api.InstanceOfAssertFactories
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
 import org.junit.jupiter.api.Test
@@ -58,7 +60,12 @@ class PrivateServiceTest {
         CounterClient.COMPONENT_NAME, ModifyComponentRequest()._public(false))
 
     // Wait for the service to be private
-    await untilAsserted { assertThatThrownBy { counterClient.get() }.hasMessageContaining("400") }
+    await untilAsserted
+        {
+          assertThatThrownBy { counterClient.get() }
+              .asInstanceOf(InstanceOfAssertFactories.type(IngressException::class.java))
+              .returns(400, IngressException::getStatusCode)
+        }
 
     // Send a request through the proxy client
     ProxyCounterClient.fromIngress(ingressClient)
