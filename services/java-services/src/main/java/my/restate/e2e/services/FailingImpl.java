@@ -30,7 +30,7 @@ public class FailingImpl implements Failing {
   public void terminallyFailingCall(ObjectContext context, String errorMessage) {
     LOG.info("Invoked fail");
 
-    throw new TerminalException(TerminalException.Code.INTERNAL, errorMessage);
+    throw new TerminalException(errorMessage);
   }
 
   @Override
@@ -62,7 +62,7 @@ public class FailingImpl implements Failing {
               throw new RuntimeException(
                   "Something went wrong while trying to invoke the external http server", e);
             }
-            throw new TerminalException(TerminalException.Code.INTERNAL, "external_call");
+            throw new TerminalException("external_call");
           });
 
       awakeable.await();
@@ -117,7 +117,7 @@ public class FailingImpl implements Failing {
   public void terminallyFailingSideEffect(ObjectContext context, String errorMessage) {
     context.sideEffect(
         () -> {
-          throw new TerminalException(TerminalException.Code.INTERNAL, errorMessage);
+          throw new TerminalException(errorMessage);
         });
 
     throw new IllegalStateException("Should not be reached.");
