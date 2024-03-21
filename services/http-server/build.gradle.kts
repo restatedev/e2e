@@ -23,6 +23,8 @@ dependencies {
   implementation(libs.log4j.api)
   implementation(libs.log4j.core)
 
+  implementation(libs.restate.sdk.api)
+
   errorprone(libs.errorprone)
 }
 
