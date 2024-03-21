@@ -8,22 +8,12 @@
 // https://github.com/restatedev/e2e/blob/main/LICENSE
 
 import * as restate from "@restatedev/restate-sdk";
-import { awakeableHolderApi } from "./awakeable_holder";
+import { AwakeableHolderApi } from "./awakeable_holder";
 import { REGISTRY } from "./services";
 
 export const CancelTestServiceFQN = "CancelTestRunner";
 export const BlockingServiceFQN = "CancelTestBlockingService";
-const AwakeableHolder: awakeableHolderApi = { path: "AwakeableHolder" };
-
-REGISTRY.add({
-  fqdn: CancelTestServiceFQN,
-  binder: (e) => e.object(canceService),
-});
-
-REGISTRY.add({
-  fqdn: BlockingServiceFQN,
-  binder: (e) => e.object(blockingService),
-});
+const AwakeableHolder: AwakeableHolderApi = { path: "AwakeableHolder" };
 
 enum BlockingOperation {
   CALL = "CALL",
@@ -80,5 +70,8 @@ const blockingService = restate.object(BlockingServiceFQN, {
 
   async isUnlocked() {},
 });
+
+REGISTRY.addObject(canceService);
+REGISTRY.addObject(blockingService);
 
 const api: typeof blockingService = { path: "CancelTestBlockingService" };

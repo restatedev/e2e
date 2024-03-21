@@ -11,6 +11,8 @@ import * as restate from "@restatedev/restate-sdk";
 
 import "./awakeable_holder";
 import "./counter";
+import "./coordinator";
+import "./receiver";
 import "./event_handler";
 import "./list";
 import "./map";

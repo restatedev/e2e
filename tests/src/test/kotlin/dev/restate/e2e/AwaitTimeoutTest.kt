@@ -16,7 +16,6 @@ import dev.restate.sdk.client.IngressClient
 import java.time.Duration
 import my.restate.e2e.services.CoordinatorClient
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
@@ -37,7 +36,6 @@ class JavaAwaitTimeoutTest : BaseAwaitTimeoutTest() {
 }
 
 @Tag("always-suspending")
-@Disabled("node-services is not ready with the new interfaces")
 class NodeAwaitTimeoutTest : BaseAwaitTimeoutTest() {
   companion object {
     @RegisterExtension

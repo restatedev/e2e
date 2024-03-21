@@ -9,20 +9,13 @@
 
 import * as restate from "@restatedev/restate-sdk";
 import { REGISTRY } from "./services";
-import type { awakeableHolderApi } from "./awakeable_holder";
+import type { AwakeableHolderApi } from "./awakeable_holder";
 
 const COUNTER_KEY = "counter";
 
-export const CounterServiceFQN = "Counter";
+const AwakeableHolder: AwakeableHolderApi = { path: "AwakeableHolder" };
 
-REGISTRY.add({
-  fqdn: CounterServiceFQN,
-  binder: (e) => e.object(service),
-});
-
-const AwakeableHolder: awakeableHolderApi = { path: "AwakeableHolder" };
-
-const service = restate.object(CounterServiceFQN, {
+const service = restate.object("Counter", {
   async reset(ctx: restate.ObjectContext) {
     ctx.clear(COUNTER_KEY);
   },
@@ -76,4 +69,6 @@ const service = restate.object(CounterServiceFQN, {
   },
 });
 
-export type counterApi = typeof service;
+REGISTRY.addObject(service);
+
+export type CounterApi = typeof service;

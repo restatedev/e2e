@@ -7,7 +7,11 @@
 // directory of this repository or package, or at
 // https://github.com/restatedev/e2e/blob/main/LICENSE
 
-import { RestateEndpoint } from "@restatedev/restate-sdk";
+import {
+  RestateEndpoint,
+  VirtualObject,
+  VirtualObjectDefintion,
+} from "@restatedev/restate-sdk";
 
 export type IComponent = {
   fqdn: string;
@@ -19,6 +23,13 @@ export class ComponenetRegistery {
 
   add(c: IComponent) {
     this.components.set(c.fqdn, c);
+  }
+
+  addObject(o: VirtualObjectDefintion<string, unknown>) {
+    this.add({
+      fqdn: o.path,
+      binder: (b) => b.object(o),
+    });
   }
 
   register(fqdns: Set<string>, e: RestateEndpoint) {

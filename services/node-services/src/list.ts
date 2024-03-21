@@ -12,14 +12,8 @@ import * as restate from "@restatedev/restate-sdk";
 import { REGISTRY } from "./services";
 
 const LIST_KEY = "list";
-const ListServiceFQN = "ListObject";
 
-REGISTRY.add({
-  fqdn: ListServiceFQN,
-  binder: (e) => e.object(service),
-});
-
-const service = restate.object(ListServiceFQN, {
+const o = restate.object("ListObject", {
   async append(ctx: restate.ObjectContext, request: string): Promise<void> {
     const list = (await ctx.get<string[]>(LIST_KEY)) ?? [];
     list.push(request);
@@ -36,3 +30,5 @@ const service = restate.object(ListServiceFQN, {
     return (await ctx.get<string[]>(LIST_KEY)) ?? [];
   },
 });
+
+REGISTRY.addObject(o);
