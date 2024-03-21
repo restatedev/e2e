@@ -7,7 +7,7 @@
 // directory of this repository or package, or at
 // https://github.com/restatedev/e2e/blob/main/LICENSE
 
-import restate from "@restatedev/restate-sdk";
+import * as restate from "@restatedev/restate-sdk";
 import { REGISTRY } from "./services";
 
 const c = restate.object("Receiver", {

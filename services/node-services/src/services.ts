@@ -8,7 +8,10 @@
 // https://github.com/restatedev/e2e/blob/main/LICENSE
 
 import {
+  ObjectContext,
   RestateEndpoint,
+  Service,
+  ServiceDefintion,
   VirtualObject,
   VirtualObjectDefintion,
 } from "@restatedev/restate-sdk";
@@ -29,6 +32,28 @@ export class ComponenetRegistery {
     this.add({
       fqdn: o.path,
       binder: (b) => b.object(o),
+    });
+  }
+
+  addService(
+    s: ServiceDefintion<
+      "Coordinator",
+      Service<{
+        sleep: (ctx: ObjectContext, request: number) => Promise<void>;
+        manyTimers: (ctx: ObjectContext, request: number[]) => Promise<void>;
+        proxy: (ctx: ObjectContext) => Promise<string>;
+        complex: (
+          ctx: ObjectContext,
+          request: { sleepDurationMillis: number; requestValue: string }
+        ) => Promise<string>;
+        timeout: (ctx: ObjectContext, millis: number) => Promise<boolean>;
+        invokeSequentially: () => never;
+      }>
+    >
+  ) {
+    this.add({
+      fqdn: s.path,
+      binder: (b) => b.service(s),
     });
   }
 

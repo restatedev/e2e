@@ -13,7 +13,7 @@ import dev.restate.sdk.ObjectContext;
 import dev.restate.sdk.annotation.Exclusive;
 import dev.restate.sdk.annotation.VirtualObject;
 
-@VirtualObject
+@VirtualObject(name = "Receiver")
 public interface Receiver {
 
   @Exclusive

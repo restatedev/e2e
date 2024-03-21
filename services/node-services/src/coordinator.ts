@@ -10,19 +10,20 @@
 import * as restate from "@restatedev/restate-sdk";
 
 import { TimeoutError } from "@restatedev/restate-sdk/dist/types/errors";
-import type { RecieverType } from "./receiver";
 import { REGISTRY } from "./services";
+
+import type { RecieverType } from "./receiver";
 
 const Reciever: RecieverType = { path: "Receiver" };
 
-REGISTRY.addObject(
-  restate.object("Coordinator", {
-    sleep(ctx: restate.ObjectContext, request: number): Promise<void> {
+REGISTRY.addService(
+  restate.service("Coordinator", {
+    sleep(ctx: restate.Context, request: number): Promise<void> {
       return this.manyTimers(ctx, [request]);
     },
 
     async manyTimers(
-      ctx: restate.ObjectContext,
+      ctx: restate.Context,
       request: Array<number>
     ): Promise<void> {
       console.log("many timers: " + JSON.stringify(request));
@@ -32,7 +33,7 @@ REGISTRY.addObject(
       );
     },
 
-    async proxy(ctx: restate.ObjectContext): Promise<string> {
+    async proxy(ctx: restate.Context): Promise<string> {
       console.log("proxy");
 
       const uuid = ctx.rand.uuidv4();
@@ -43,7 +44,7 @@ REGISTRY.addObject(
     },
 
     async complex(
-      ctx: restate.ObjectContext,
+      ctx: restate.Context,
       request: { sleepDurationMillis: number; requestValue: string }
     ): Promise<string> {
       console.log("complex: ", request);
@@ -64,10 +65,7 @@ REGISTRY.addObject(
       return ctx.object(Reciever, key).getValue();
     },
 
-    async timeout(
-      ctx: restate.ObjectContext,
-      millis: number
-    ): Promise<boolean> {
+    async timeout(ctx: restate.Context, millis: number): Promise<boolean> {
       let timeoutOccurred = false;
 
       try {
