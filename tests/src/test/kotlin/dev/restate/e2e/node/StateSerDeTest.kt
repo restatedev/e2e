@@ -16,7 +16,6 @@ import dev.restate.e2e.utils.RestateDeployerExtension
 import dev.restate.sdk.client.IngressClient
 import my.restate.e2e.services.ListObjectClient
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
@@ -25,7 +24,6 @@ import org.junit.jupiter.api.parallel.ExecutionMode
 
 /** Test that we can ser/de proto generated objects (check the source of ListService.append) */
 @Tag("always-suspending")
-@Disabled("node-services is not ready with the new interfaces")
 class StateSerDeTest {
   companion object {
     @RegisterExtension
