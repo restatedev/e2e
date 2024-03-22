@@ -18,7 +18,6 @@ import my.restate.e2e.services.CounterClient
 import my.restate.e2e.services.FailingClient
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
@@ -53,7 +52,6 @@ class JavaErrorsTest : BaseErrorsTest() {
   }
 }
 
-@Disabled("node-services is not ready with the new interfaces")
 class NodeErrorsTest : BaseErrorsTest() {
   companion object {
     @RegisterExtension

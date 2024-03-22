@@ -22,7 +22,6 @@ import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.extension.RegisterExtension
 
 @Tag("always-suspending")
-@Disabled("node-services is not ready with the new interfaces")
 class PersistenceTest {
 
   companion object {
