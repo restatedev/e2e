@@ -9,63 +9,66 @@
 
 import * as restate from "@restatedev/restate-sdk";
 import { REGISTRY } from "./services";
-import type { AwakeableHolderApi } from "./awakeable_holder";
+import type { AwakeableHolder } from "./awakeable_holder";
 
 const COUNTER_KEY = "counter";
 
-const AwakeableHolder: AwakeableHolderApi = { path: "AwakeableHolder" };
+const AwakeableHolder: AwakeableHolder = { name: "AwakeableHolder" };
 
-const service = restate.object("Counter", {
-  async reset(ctx: restate.ObjectContext) {
-    ctx.clear(COUNTER_KEY);
-  },
+const service = restate.object({
+  name: "Counter",
+  handlers: {
+    async reset(ctx: restate.ObjectContext) {
+      ctx.clear(COUNTER_KEY);
+    },
 
-  async add(ctx: restate.ObjectContext, value: number) {
-    const counter = (await ctx.get<number>(COUNTER_KEY)) ?? 0;
-    ctx.set(COUNTER_KEY, counter + value);
-  },
+    async add(ctx: restate.ObjectContext, value: number) {
+      const counter = (await ctx.get<number>(COUNTER_KEY)) ?? 0;
+      ctx.set(COUNTER_KEY, counter + value);
+    },
 
-  async addThenFail(ctx: restate.ObjectContext, value: number) {
-    const counter = (await ctx.get<number>(COUNTER_KEY)) ?? 0;
-    ctx.set(COUNTER_KEY, counter + value);
-    throw new restate.TerminalError(ctx.key());
-  },
+    async addThenFail(ctx: restate.ObjectContext, value: number) {
+      const counter = (await ctx.get<number>(COUNTER_KEY)) ?? 0;
+      ctx.set(COUNTER_KEY, counter + value);
+      throw new restate.TerminalError(ctx.key());
+    },
 
-  async get(ctx: restate.ObjectContext): Promise<number> {
-    return (await ctx.get<number>(COUNTER_KEY)) ?? 0;
-  },
+    async get(ctx: restate.ObjectContext): Promise<number> {
+      return (await ctx.get<number>(COUNTER_KEY)) ?? 0;
+    },
 
-  async getAndAdd(
-    ctx: restate.ObjectContext,
-    request: number
-  ): Promise<{ oldValue: number; newValue: number }> {
-    const oldValue = (await ctx.get<number>(COUNTER_KEY)) ?? 0;
-    const newValue = oldValue + request;
-    ctx.set(COUNTER_KEY, newValue);
-    return { oldValue, newValue };
-  },
+    async getAndAdd(
+      ctx: restate.ObjectContext,
+      request: number
+    ): Promise<{ oldValue: number; newValue: number }> {
+      const oldValue = (await ctx.get<number>(COUNTER_KEY)) ?? 0;
+      const newValue = oldValue + request;
+      ctx.set(COUNTER_KEY, newValue);
+      return { oldValue, newValue };
+    },
 
-  async infiniteIncrementLoop(ctx: restate.ObjectContext) {
-    let counter = 1;
-    ctx.set(COUNTER_KEY, counter);
-
-    // Wait for the sync with the test runner
-    const { id, promise } = ctx.awakeable();
-    ctx.objectSend(AwakeableHolder, ctx.key()).hold(id);
-    await promise;
-
-    // Now start looping
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
-      counter++;
+    async infiniteIncrementLoop(ctx: restate.ObjectContext) {
+      let counter = 1;
       ctx.set(COUNTER_KEY, counter);
-      await ctx.sleep(50); // Short sleeps to slow down the loop
-    }
-  },
 
-  async handleEvent(ctx: restate.ObjectContext, request: string) {
-    const value = (await ctx.get<number>(COUNTER_KEY)) || 0;
-    ctx.set(COUNTER_KEY, value + parseInt(request));
+      // Wait for the sync with the test runner
+      const { id, promise } = ctx.awakeable();
+      ctx.objectSendClient(AwakeableHolder, ctx.key()).hold(id);
+      await promise;
+
+      // Now start looping
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        counter++;
+        ctx.set(COUNTER_KEY, counter);
+        await ctx.sleep(50); // Short sleeps to slow down the loop
+      }
+    },
+
+    async handleEvent(ctx: restate.ObjectContext, request: string) {
+      const value = (await ctx.get<number>(COUNTER_KEY)) || 0;
+      ctx.set(COUNTER_KEY, value + parseInt(request));
+    },
   },
 });
 

@@ -14,7 +14,7 @@ import { REGISTRY } from "./services";
 
 export const NonDeterministicServiceFQN = "NonDeterministic";
 
-const Counter: CounterApi = { path: "Counter" };
+const Counter: CounterApi = { name: "Counter" };
 
 const invocationCounts = new Map<string, number>();
 
@@ -25,52 +25,55 @@ function doLeftAction(ctx: restate.ObjectContext): boolean {
 }
 
 function incrementCounter(ctx: restate.ObjectContext) {
-  ctx.objectSend(Counter, ctx.key()).add(1);
+  ctx.objectSendClient(Counter, ctx.key()).add(1);
 }
 
-const o = restate.object(NonDeterministicServiceFQN, {
-  async leftSleepRightCall(ctx: restate.ObjectContext) {
-    if (doLeftAction(ctx)) {
+const o = restate.object({
+  name: NonDeterministicServiceFQN,
+  handlers: {
+    async leftSleepRightCall(ctx: restate.ObjectContext) {
+      if (doLeftAction(ctx)) {
+        await ctx.sleep(100);
+      } else {
+        await ctx.objectClient(Counter, "abc").get();
+      }
+      incrementCounter(ctx);
+    },
+
+    async callDifferentMethod(ctx: restate.ObjectContext) {
+      if (doLeftAction(ctx)) {
+        await ctx.objectClient(Counter, "abc").get();
+      } else {
+        await ctx.objectClient(Counter, "abc").reset();
+      }
+      incrementCounter(ctx);
+    },
+
+    async backgroundInvokeWithDifferentTargets(ctx: restate.ObjectContext) {
+      if (doLeftAction(ctx)) {
+        ctx.objectSendClient(Counter, "abc").get();
+      } else {
+        ctx.objectSendClient(Counter, "abc").reset();
+      }
       await ctx.sleep(100);
-    } else {
-      await ctx.object(Counter, "abc").get();
-    }
-    incrementCounter(ctx);
-  },
+      incrementCounter(ctx);
+    },
 
-  async callDifferentMethod(ctx: restate.ObjectContext) {
-    if (doLeftAction(ctx)) {
-      await ctx.object(Counter, "abc").get();
-    } else {
-      await ctx.object(Counter, "abc").reset();
-    }
-    incrementCounter(ctx);
-  },
+    async setDifferentKey(ctx: restate.ObjectContext) {
+      if (doLeftAction(ctx)) {
+        ctx.set("a", "my-state");
+      } else {
+        ctx.set("b", "my-state");
+      }
+      await ctx.sleep(100);
+      incrementCounter(ctx);
+    },
 
-  async backgroundInvokeWithDifferentTargets(ctx: restate.ObjectContext) {
-    if (doLeftAction(ctx)) {
-      ctx.objectSend(Counter, "abc").get();
-    } else {
-      ctx.objectSend(Counter, "abc").reset();
-    }
-    await ctx.sleep(100);
-    incrementCounter(ctx);
-  },
-
-  async setDifferentKey(ctx: restate.ObjectContext) {
-    if (doLeftAction(ctx)) {
-      ctx.set("a", "my-state");
-    } else {
-      ctx.set("b", "my-state");
-    }
-    await ctx.sleep(100);
-    incrementCounter(ctx);
-  },
-
-  async setDifferentValue(ctx: restate.ObjectContext) {
-    ctx.set("a", uuidv4());
-    await ctx.sleep(100);
-    incrementCounter(ctx);
+    async setDifferentValue(ctx: restate.ObjectContext) {
+      ctx.set("a", uuidv4());
+      await ctx.sleep(100);
+      incrementCounter(ctx);
+    },
   },
 });
 

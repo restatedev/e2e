@@ -8,12 +8,12 @@
 // https://github.com/restatedev/e2e/blob/main/LICENSE
 
 import * as restate from "@restatedev/restate-sdk";
-import { AwakeableHolderApi } from "./awakeable_holder";
+import { AwakeableHolder } from "./awakeable_holder";
 import { REGISTRY } from "./services";
 
 export const CancelTestServiceFQN = "CancelTestRunner";
 export const BlockingServiceFQN = "CancelTestBlockingService";
-const AwakeableHolder: AwakeableHolderApi = { path: "AwakeableHolder" };
+const AwakeableHolder: AwakeableHolder = { name: "AwakeableHolder" };
 
 enum BlockingOperation {
   CALL = "CALL",
@@ -21,57 +21,65 @@ enum BlockingOperation {
   AWAKEABLE = "AWAKEABLE",
 }
 
-const cancelService = restate.object(CancelTestServiceFQN, {
-  async verifyTest(ctx: restate.ObjectContext): Promise<boolean> {
-    const isCanceled = (await ctx.get<boolean>("canceled")) ?? false;
-    return isCanceled;
-  },
+const cancelService = restate.object({
+  name: CancelTestServiceFQN,
+  handlers: {
+    async verifyTest(ctx: restate.ObjectContext): Promise<boolean> {
+      const isCanceled = (await ctx.get<boolean>("canceled")) ?? false;
+      return isCanceled;
+    },
 
-  async startTest(ctx: restate.ObjectContext, request: BlockingOperation) {
-    try {
-      await ctx.object(api, ctx.key()).block(request);
-    } catch (e) {
-      if (
-        e instanceof restate.TerminalError &&
-        (e as restate.TerminalError).code === 409
-      ) {
-        ctx.set("canceled", true);
-      } else {
-        throw e;
+    async startTest(ctx: restate.ObjectContext, request: BlockingOperation) {
+      try {
+        await ctx.objectClient(BlockingService, ctx.key()).block(request);
+      } catch (e) {
+        if (
+          e instanceof restate.TerminalError &&
+          (e as restate.TerminalError).code === 409
+        ) {
+          ctx.set("canceled", true);
+        } else {
+          throw e;
+        }
       }
-    }
+    },
   },
 });
 
-const blockingService = restate.object(BlockingServiceFQN, {
-  async block(ctx: restate.ObjectContext, request: BlockingOperation) {
-    const { id, promise } = ctx.awakeable();
-    // DO NOT await the next CALL otherwise the test deadlocks.
-    ctx.object(AwakeableHolder, "cancel").hold(id);
-    await promise;
+const blockingService = restate.object({
+  name: BlockingServiceFQN,
+  handlers: {
+    async block(ctx: restate.ObjectContext, request: BlockingOperation) {
+      const { id, promise } = ctx.awakeable();
+      // DO NOT await the next CALL otherwise the test deadlocks.
+      ctx.objectClient(AwakeableHolder, "cancel").hold(id);
+      await promise;
 
-    switch (request) {
-      case BlockingOperation.CALL: {
-        await ctx.object(api, ctx.key()).block(request);
-        break;
+      switch (request) {
+        case BlockingOperation.CALL: {
+          await ctx.objectClient(BlockingService, ctx.key()).block(request);
+          break;
+        }
+        case BlockingOperation.SLEEP: {
+          await ctx.sleep(1_000_000_000);
+          break;
+        }
+        case BlockingOperation.AWAKEABLE: {
+          const { promise } = ctx.awakeable();
+          // uncompletable promise >
+          await promise;
+          break;
+        }
       }
-      case BlockingOperation.SLEEP: {
-        await ctx.sleep(1_000_000_000);
-        break;
-      }
-      case BlockingOperation.AWAKEABLE: {
-        const { promise } = ctx.awakeable();
-        // uncompletable promise >
-        await promise;
-        break;
-      }
-    }
+    },
+
+    async isUnlocked() {},
   },
-
-  async isUnlocked() {},
 });
 
 REGISTRY.addObject(cancelService);
 REGISTRY.addObject(blockingService);
 
-const api: typeof blockingService = { path: "CancelTestBlockingService" };
+const BlockingService: typeof blockingService = {
+  name: "CancelTestBlockingService",
+};

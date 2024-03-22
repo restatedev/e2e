@@ -13,11 +13,14 @@ import { CounterApi } from "./counter";
 
 const EventHandlerFQN = "EventHandler";
 
-const CounterApi: CounterApi = { path: "Counter" };
+const CounterApi: CounterApi = { name: "Counter" };
 
-const o = restate.object(EventHandlerFQN, {
-  async handle(ctx: restate.ObjectContext, value: number) {
-    ctx.objectSend(CounterApi, ctx.key()).add(value);
+const o = restate.object({
+  name: EventHandlerFQN,
+  handlers: {
+    async handle(ctx: restate.ObjectContext, value: number) {
+      ctx.objectSendClient(CounterApi, ctx.key()).add(value);
+    },
   },
 });
 
