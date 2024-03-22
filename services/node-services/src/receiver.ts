@@ -9,16 +9,21 @@
 
 import * as restate from "@restatedev/restate-sdk";
 import { REGISTRY } from "./services";
-import { CounterApi } from "./counter";
 
-const EventHandlerFQN = "EventHandler";
+const c = restate.object("Receiver", {
+  async ping(): Promise<string> {
+    return "pong";
+  },
 
-const CounterApi: CounterApi = { path: "Counter" };
+  async setValue(ctx: restate.ObjectContext, value: string) {
+    ctx.set("my-state", value);
+  },
 
-const o = restate.object(EventHandlerFQN, {
-  async handle(ctx: restate.ObjectContext, value: number) {
-    ctx.objectSend(CounterApi, ctx.key()).add(value);
+  async getValue(ctx: restate.ObjectContext): Promise<string> {
+    return (await ctx.get("my-state")) ?? "";
   },
 });
 
-REGISTRY.addObject(o);
+REGISTRY.addObject(c);
+
+export type RecieverType = typeof c;

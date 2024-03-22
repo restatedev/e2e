@@ -9,17 +9,12 @@
 
 import * as restate from "@restatedev/restate-sdk";
 import { v4 as uuidv4 } from "uuid";
-import { counterApi } from "./counter";
+import { CounterApi } from "./counter";
 import { REGISTRY } from "./services";
 
 export const NonDeterministicServiceFQN = "NonDeterministic";
 
-const Counter: counterApi = { path: "Counter" };
-
-REGISTRY.add({
-  fqdn: NonDeterministicServiceFQN,
-  binder: (e) => e.object(service),
-});
+const Counter: CounterApi = { path: "Counter" };
 
 const invocationCounts = new Map<string, number>();
 
@@ -33,7 +28,7 @@ function incrementCounter(ctx: restate.ObjectContext) {
   ctx.objectSend(Counter, ctx.key()).add(1);
 }
 
-const service = restate.object(NonDeterministicServiceFQN, {
+const o = restate.object(NonDeterministicServiceFQN, {
   async leftSleepRightCall(ctx: restate.ObjectContext) {
     if (doLeftAction(ctx)) {
       await ctx.sleep(100);
@@ -78,3 +73,5 @@ const service = restate.object(NonDeterministicServiceFQN, {
     incrementCounter(ctx);
   },
 });
+
+REGISTRY.addObject(o);

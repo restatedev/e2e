@@ -11,12 +11,7 @@ import * as restate from "@restatedev/restate-sdk";
 import { REGISTRY } from "./services";
 export const MapServiceFQN = "MapObject";
 
-REGISTRY.add({
-  fqdn: MapServiceFQN,
-  binder: (e) => e.object(service),
-});
-
-const service = restate.object(MapServiceFQN, {
+const o = restate.object(MapServiceFQN, {
   async clearAll(ctx: restate.ObjectContext): Promise<string[]> {
     const keys = await ctx.stateKeys();
     ctx.clearAll();
@@ -35,3 +30,5 @@ const service = restate.object(MapServiceFQN, {
     ctx.set(request.key, request.value);
   },
 });
+
+REGISTRY.addObject(o);

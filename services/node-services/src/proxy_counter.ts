@@ -9,10 +9,10 @@
 
 import * as restate from "@restatedev/restate-sdk";
 import { REGISTRY } from "./services";
-import { counterApi } from "./counter";
+import { CounterApi } from "./counter";
 
 const ProxyCounterServiceFQN = "ProxyCounter";
-const Counter: counterApi = { path: "Counter" };
+const Counter: CounterApi = { path: "Counter" };
 
 REGISTRY.add({
   fqdn: ProxyCounterServiceFQN,
