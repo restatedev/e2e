@@ -15,7 +15,6 @@ import dev.restate.e2e.utils.RestateDeployerExtension
 import dev.restate.sdk.client.IngressClient
 import my.restate.e2e.services.RandomNumberListGeneratorClient
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
@@ -34,7 +33,6 @@ class JavaAwakeableTest : BaseAwakeableTest() {
 }
 
 @Tag("always-suspending")
-@Disabled("node-services is not ready with the new interfaces")
 class NodeAwakeableTest : BaseAwakeableTest() {
   companion object {
     @RegisterExtension

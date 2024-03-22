@@ -19,6 +19,7 @@ import "./map";
 import "./proxy_counter";
 import "./cancel_test";
 import "./non_determinism";
+import "./random_number_list";
 
 import { REGISTRY } from "./services";
 

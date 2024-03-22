@@ -14,7 +14,7 @@ import dev.restate.sdk.annotation.Handler;
 import dev.restate.sdk.annotation.Service;
 import java.util.List;
 
-@Service
+@Service(name = "RandomNumberListGenerator")
 public interface RandomNumberListGenerator {
 
   @Handler
