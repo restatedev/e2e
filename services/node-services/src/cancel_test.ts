@@ -21,7 +21,7 @@ enum BlockingOperation {
   AWAKEABLE = "AWAKEABLE",
 }
 
-const canceService = restate.object(CancelTestServiceFQN, {
+const cancelService = restate.object(CancelTestServiceFQN, {
   async verifyTest(ctx: restate.ObjectContext): Promise<boolean> {
     const isCanceled = (await ctx.get<boolean>("canceled")) ?? false;
     return isCanceled;
@@ -71,7 +71,7 @@ const blockingService = restate.object(BlockingServiceFQN, {
   async isUnlocked() {},
 });
 
-REGISTRY.addObject(canceService);
+REGISTRY.addObject(cancelService);
 REGISTRY.addObject(blockingService);
 
 const api: typeof blockingService = { path: "CancelTestBlockingService" };

@@ -10,6 +10,7 @@
 package dev.restate.e2e
 
 import dev.restate.e2e.Containers.javaServicesContainer
+import dev.restate.e2e.Containers.nodeServicesContainer
 import dev.restate.e2e.utils.InjectIngressClient
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
@@ -17,7 +18,6 @@ import dev.restate.sdk.client.IngressClient
 import my.restate.e2e.services.CoordinatorClient
 import my.restate.e2e.services.ReceiverClient
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
@@ -37,7 +37,6 @@ class JavaServiceToServiceCallTest : BaseServiceToServiceCallTest() {
 }
 
 @Tag("always-suspending")
-@Disabled("node-services is not ready with the new interfaces")
 class NodeServiceToServiceCallTest : BaseServiceToServiceCallTest() {
   companion object {
     @RegisterExtension
@@ -50,7 +49,6 @@ class NodeServiceToServiceCallTest : BaseServiceToServiceCallTest() {
 }
 
 @Tag("always-suspending")
-@Disabled("node-services is not ready with the new interfaces")
 class JavaCoordinatorWithNodeReceiverServiceToServiceCallTest : BaseServiceToServiceCallTest() {
   companion object {
     @RegisterExtension
@@ -59,31 +57,21 @@ class JavaCoordinatorWithNodeReceiverServiceToServiceCallTest : BaseServiceToSer
             RestateDeployer.Builder()
                 .withServiceEndpoint(
                     javaServicesContainer("java-coordinator", CoordinatorClient.COMPONENT_NAME))
-                // TODO
-                //                .withServiceEndpoint(
-                //                    nodeServicesContainer(
-                //                        "node-coordinator",
-                //
-                //                                              ReceiverGrpc.SERVICE_NAME
-                //                    ))
+                .withServiceEndpoint(
+                    nodeServicesContainer("node-coordinator", ReceiverClient.COMPONENT_NAME))
                 .build())
   }
 }
 
 @Tag("always-suspending")
-@Disabled("node-services is not ready with the new interfaces")
 class NodeCoordinatorWithJavaReceiverServiceToServiceCallTest : BaseServiceToServiceCallTest() {
   companion object {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                // TODO
-                //                .withServiceEndpoint(
-                //                    nodeServicesContainer(
-                //                        "node-coordinator",
-                //                        CoordinatorGrpc.SERVICE_NAME
-                //                    ))
+                .withServiceEndpoint(
+                    nodeServicesContainer("node-coordinator", CoordinatorClient.COMPONENT_NAME))
                 .withServiceEndpoint(
                     javaServicesContainer("java-coordinator", ReceiverClient.COMPONENT_NAME))
                 .build())

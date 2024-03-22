@@ -14,7 +14,7 @@ import { REGISTRY } from "./services";
 
 import type { RecieverType } from "./receiver";
 
-const Reciever: RecieverType = { path: "Receiver" };
+const Receiver: RecieverType = { path: "Receiver" };
 
 REGISTRY.addService(
   restate.service("Coordinator", {
@@ -38,7 +38,7 @@ REGISTRY.addService(
 
       const uuid = ctx.rand.uuidv4();
 
-      const pong = await ctx.object(Reciever, uuid).ping();
+      const pong = await ctx.object(Receiver, uuid).ping();
 
       return pong;
     },
@@ -61,8 +61,8 @@ REGISTRY.addService(
       // background calls as well as request-response calls have an absolute ordering that is defined
       // by their call order. In this concrete case, setValue is guaranteed to be executed before
       // getValue.
-      ctx.objectSend(Reciever, key).setValue(request.requestValue);
-      return ctx.object(Reciever, key).getValue();
+      ctx.objectSend(Receiver, key).setValue(request.requestValue);
+      return ctx.object(Receiver, key).getValue();
     },
 
     async timeout(ctx: restate.Context, millis: number): Promise<boolean> {

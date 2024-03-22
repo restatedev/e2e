@@ -23,7 +23,6 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.test.runTest
 import my.restate.e2e.services.CoordinatorClient
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
@@ -48,7 +47,6 @@ class JavaSimpleSleepTest : BaseSimpleSleepTest() {
 
 @Tag("always-suspending")
 @Tag("timers")
-@Disabled("node-services is not ready with the new interfaces")
 class NodeSimpleSleepTest : BaseSimpleSleepTest() {
   companion object {
     @RegisterExtension
@@ -118,7 +116,6 @@ class JavaSleepWithFailuresTest : BaseSleepWithFailuresTest() {
 }
 
 @Tag("always-suspending")
-@Disabled("node-services is not ready with the new interfaces")
 class NodeSleepWithFailuresTest : BaseSleepWithFailuresTest() {
   companion object {
     @RegisterExtension
