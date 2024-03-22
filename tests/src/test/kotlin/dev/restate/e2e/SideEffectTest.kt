@@ -15,7 +15,6 @@ import dev.restate.e2e.utils.RestateDeployerExtension
 import dev.restate.sdk.client.IngressClient
 import my.restate.e2e.services.SideEffectClient
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
@@ -38,19 +37,15 @@ class JavaSideEffectTest : BaseSideEffectTest() {
 }
 
 @Tag("only-always-suspending")
-@Disabled("node-services is not ready with the new interfaces")
 class NodeSideEffectTest : BaseSideEffectTest() {
   companion object {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension =
         RestateDeployerExtension(
             RestateDeployer.Builder()
-                // TODO
-                //                .withServiceEndpoint(
-                //                    Containers.nodeServicesContainer(
-                //                        "node-side-effect",
-                //                        SideEffectGrpc.SERVICE_NAME
-                //                    ))
+                .withServiceEndpoint(
+                    Containers.nodeServicesContainer(
+                        "node-side-effect", SideEffectClient.COMPONENT_NAME))
                 .build())
   }
 }
