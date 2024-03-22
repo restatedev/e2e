@@ -10,17 +10,20 @@
 import * as restate from "@restatedev/restate-sdk";
 import { REGISTRY } from "./services";
 
-const c = restate.object("Receiver", {
-  async ping(): Promise<string> {
-    return "pong";
-  },
+const c = restate.object({
+  name: "Receiver",
+  handlers: {
+    async ping(): Promise<string> {
+      return "pong";
+    },
 
-  async setValue(ctx: restate.ObjectContext, value: string) {
-    ctx.set("my-state", value);
-  },
+    async setValue(ctx: restate.ObjectContext, value: string) {
+      ctx.set("my-state", value);
+    },
 
-  async getValue(ctx: restate.ObjectContext): Promise<string> {
-    return (await ctx.get("my-state")) ?? "";
+    async getValue(ctx: restate.ObjectContext): Promise<string> {
+      return (await ctx.get("my-state")) ?? "";
+    },
   },
 });
 

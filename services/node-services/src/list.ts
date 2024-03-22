@@ -13,21 +13,24 @@ import { REGISTRY } from "./services";
 
 const LIST_KEY = "list";
 
-const o = restate.object("ListObject", {
-  async append(ctx: restate.ObjectContext, request: string): Promise<void> {
-    const list = (await ctx.get<string[]>(LIST_KEY)) ?? [];
-    list.push(request);
-    ctx.set(LIST_KEY, list);
-  },
+const o = restate.object({
+  name: "ListObject",
+  handlers: {
+    async append(ctx: restate.ObjectContext, request: string): Promise<void> {
+      const list = (await ctx.get<string[]>(LIST_KEY)) ?? [];
+      list.push(request);
+      ctx.set(LIST_KEY, list);
+    },
 
-  async clear(ctx: restate.ObjectContext) {
-    const list = (await ctx.get<string[]>(LIST_KEY)) ?? [];
-    ctx.clear(LIST_KEY);
-    return list;
-  },
+    async clear(ctx: restate.ObjectContext) {
+      const list = (await ctx.get<string[]>(LIST_KEY)) ?? [];
+      ctx.clear(LIST_KEY);
+      return list;
+    },
 
-  async get(ctx: restate.ObjectContext): Promise<string[]> {
-    return (await ctx.get<string[]>(LIST_KEY)) ?? [];
+    async get(ctx: restate.ObjectContext): Promise<string[]> {
+      return (await ctx.get<string[]>(LIST_KEY)) ?? [];
+    },
   },
 });
 

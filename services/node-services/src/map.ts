@@ -11,23 +11,26 @@ import * as restate from "@restatedev/restate-sdk";
 import { REGISTRY } from "./services";
 export const MapServiceFQN = "MapObject";
 
-const o = restate.object(MapServiceFQN, {
-  async clearAll(ctx: restate.ObjectContext): Promise<string[]> {
-    const keys = await ctx.stateKeys();
-    ctx.clearAll();
-    return keys;
-  },
+const o = restate.object({
+  name: MapServiceFQN,
+  handlers: {
+    async clearAll(ctx: restate.ObjectContext): Promise<string[]> {
+      const keys = await ctx.stateKeys();
+      ctx.clearAll();
+      return keys;
+    },
 
-  async get(ctx: restate.ObjectContext, request: string): Promise<string> {
-    const value = (await ctx.get<string>(request)) ?? "";
-    return value;
-  },
+    async get(ctx: restate.ObjectContext, request: string): Promise<string> {
+      const value = (await ctx.get<string>(request)) ?? "";
+      return value;
+    },
 
-  async set(
-    ctx: restate.ObjectContext,
-    request: { key: string; value: string }
-  ) {
-    ctx.set(request.key, request.value);
+    async set(
+      ctx: restate.ObjectContext,
+      request: { key: string; value: string }
+    ) {
+      ctx.set(request.key, request.value);
+    },
   },
 });
 

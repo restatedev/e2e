@@ -14,26 +14,29 @@ const ID_KEY = "id";
 
 type Ctx = restate.ObjectContext;
 
-const service = restate.object("AwakeableHolder", {
-  async hold(ctx: restate.ObjectContext, id: string) {
-    ctx.set(ID_KEY, id);
-  },
+const service = restate.object({
+  name: "AwakeableHolder",
+  handlers: {
+    async hold(ctx: restate.ObjectContext, id: string) {
+      ctx.set(ID_KEY, id);
+    },
 
-  async hasAwakeable(ctx: Ctx): Promise<boolean> {
-    const maybe = await ctx.get<string>(ID_KEY);
-    return maybe !== null && maybe !== undefined;
-  },
+    async hasAwakeable(ctx: Ctx): Promise<boolean> {
+      const maybe = await ctx.get<string>(ID_KEY);
+      return maybe !== null && maybe !== undefined;
+    },
 
-  async unlock(ctx: Ctx, request: string) {
-    const id = await ctx.get<string>(ID_KEY);
-    if (id === null || id === undefined) {
-      throw new Error("No awakeable registered");
-    }
-    ctx.resolveAwakeable(id, request);
-    ctx.clear(ID_KEY);
+    async unlock(ctx: Ctx, request: string) {
+      const id = await ctx.get<string>(ID_KEY);
+      if (id === null || id === undefined) {
+        throw new Error("No awakeable registered");
+      }
+      ctx.resolveAwakeable(id, request);
+      ctx.clear(ID_KEY);
+    },
   },
 });
 
 REGISTRY.addObject(service);
 
-export type AwakeableHolderApi = typeof service;
+export type AwakeableHolder = typeof service;
