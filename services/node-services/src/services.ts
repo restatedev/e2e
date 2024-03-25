@@ -9,8 +9,8 @@
 
 import {
   RestateEndpoint,
-  ServiceDefintion,
-  VirtualObjectDefintion,
+  ServiceDefinition,
+  VirtualObjectDefinition,
 } from "@restatedev/restate-sdk";
 
 export type IComponent = {
@@ -25,14 +25,14 @@ export class ComponenetRegistery {
     this.components.set(c.fqdn, c);
   }
 
-  addObject(o: VirtualObjectDefintion<string, unknown>) {
+  addObject(o: VirtualObjectDefinition<string, unknown>) {
     this.add({
       fqdn: o.name,
       binder: (b) => b.bind(o),
     });
   }
 
-  addService(s: ServiceDefintion<string, unknown>) {
+  addService(s: ServiceDefinition<string, unknown>) {
     this.add({
       fqdn: s.name,
       binder: (b) => b.bind(s),
