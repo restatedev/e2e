@@ -32,8 +32,6 @@ class PersistenceTest {
     }
   }
 
-  @Disabled(
-      "Disabled until we have durable loglet implementation. See https://github.com/restatedev/restate/issues/875")
   @Timeout(value = 30, unit = TimeUnit.SECONDS)
   @Test
   fun startAndStopRuntimeRetainsTheState(
@@ -54,8 +52,6 @@ class PersistenceTest {
     assertThat(res2.newValue).isEqualTo(3)
   }
 
-  @Disabled(
-      "Disabled until we have durable loglet implementation. See https://github.com/restatedev/restate/issues/875")
   @Timeout(value = 30, unit = TimeUnit.SECONDS)
   @Test
   fun startAndKillRuntimeRetainsTheState(

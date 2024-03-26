@@ -26,7 +26,6 @@ import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.until
 import org.awaitility.kotlin.untilAsserted
 import org.awaitility.kotlin.untilCallTo
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
@@ -89,8 +88,6 @@ class UpgradeServiceTest {
     inFlightInvocationtest(ingressClient, metaURL)
   }
 
-  @Disabled(
-      "Disabled until we have durable loglet implementation. See https://github.com/restatedev/restate/issues/875")
   @Test
   fun inFlightInvocationStoppingTheRuntime(
       @InjectIngressClient ingressClient: IngressClient,
