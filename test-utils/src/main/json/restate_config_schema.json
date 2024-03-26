@@ -29,7 +29,7 @@
       "$ref": "#/definitions/Options"
     },
     "node_name": {
-      "default": "fedora.fritz.box",
+      "default": "work.local",
       "type": "string"
     },
     "node_id": {
@@ -68,7 +68,7 @@
             "aws_profile": null
           }
         },
-        "storage_path": "target/meta/"
+        "storage_path": "./restate-data/meta"
       },
       "$ref": "#/definitions/MetaOptions"
     },
@@ -106,15 +106,12 @@
               "aws_profile": null
             }
           },
-          "tmp_dir": "/tmp/invoker-018e08ac2613702ab0adce3eb4b85d98"
+          "tmp_dir": "/var/folders/tw/68_ctnh50rn41q721zt5pwfc0000gn/T/invoker-018e79daaa3d761797e489f16bf2d018"
         },
         "kafka": {
           "clusters": {}
         },
-        "partition_processor": {
-          "max_batch_duration": "50ms"
-        },
-        "partitions": 1024,
+        "partitions": 64,
         "storage_query_datafusion": {
           "memory_limit": null,
           "query_parallelism": null,
@@ -127,7 +124,7 @@
           "cache_size": 0,
           "disable_statistics": false,
           "max_total_wal_size": 2147483648,
-          "path": "target/db/",
+          "path": "./restate-data/db",
           "threads": 10,
           "write_buffer_size": 0
         },
@@ -139,9 +136,7 @@
     },
     "server": {
       "default": {
-        "advertise_address": {
-          "Http": "http://127.0.0.1:5122/"
-        },
+        "advertise_address": "http://127.0.0.1:5122/",
         "bind_address": "0.0.0.0:5122",
         "disable_prometheus": false,
         "histogram_inactivity_timeout": null
@@ -157,11 +152,24 @@
     },
     "bifrost": {
       "default": {
-        "default_provider": "File",
+        "default_provider": "Local",
         "providers_config": {
-          "File": {
-            "path": "target/logs/"
-          }
+          "Local": {
+            "flush_wal_on_commit": true,
+            "rocksdb_cache_size": 0,
+            "rocksdb_disable_statistics": true,
+            "rocksdb_disable_wal": false,
+            "rocksdb_max_total_wal_size": 2147483648,
+            "rocksdb_threads": 10,
+            "rocksdb_write_buffer_size": 0,
+            "writer_commit_batch_size_threshold": 200,
+            "writer_commit_time_interval": {
+              "nanos": 13000000,
+              "secs": 0
+            },
+            "writer_queue_len": 200
+          },
+          "Memory": null
         }
       },
       "$ref": "#/definitions/BifrostOptions"
@@ -170,11 +178,24 @@
       "default": {},
       "$ref": "#/definitions/ClusterControllerOptions"
     },
+    "metadata_store_client": {
+      "default": "http://127.0.0.1:5123/",
+      "type": "string"
+    },
+    "metadata_store": {
+      "default": {
+        "bind_address": "0.0.0.0:5123",
+        "request_queue_length": 32,
+        "storage_path": "./restate-data/local-metadata-store"
+      },
+      "$ref": "#/definitions/LocalMetadataStoreOptions"
+    },
     "roles": {
       "description": "Defines the roles which this Restate node should run",
       "default": [
         "Worker",
-        "Admin"
+        "Admin",
+        "MetadataStore"
       ],
       "type": "array",
       "items": {
@@ -338,7 +359,7 @@
         "storage_path": {
           "title": "Storage path",
           "description": "Root path for Meta storage.",
-          "default": "target/meta/",
+          "default": "./restate-data/meta",
           "type": "string"
         },
         "service_client": {
@@ -492,7 +513,7 @@
             "cache_size": 0,
             "disable_statistics": false,
             "max_total_wal_size": 2147483648,
-            "path": "target/db/",
+            "path": "./restate-data/db",
             "threads": 10,
             "write_buffer_size": 0
           },
@@ -539,20 +560,14 @@
                 "aws_profile": null
               }
             },
-            "tmp_dir": "/tmp/invoker-018e08ac26137bdfbeb0aa1eb16b6720"
+            "tmp_dir": "/var/folders/tw/68_ctnh50rn41q721zt5pwfc0000gn/T/invoker-018e79daaa3d750fa32ea4b2db8b0277"
           },
           "$ref": "#/definitions/InvokerOptions"
-        },
-        "partition_processor": {
-          "default": {
-            "max_batch_duration": "50ms"
-          },
-          "$ref": "#/definitions/PartitionProcessorOptions"
         },
         "partitions": {
           "title": "Partitions",
           "description": "Number of partitions to be used to process messages.\n\nNote: This config entry **will be removed** in future Restate releases, as the partitions number will be dynamically configured depending on the load.\n\nCannot be higher than `4611686018427387903` (You should almost never need as many partitions anyway)",
-          "default": 1024,
+          "default": 64,
           "type": "integer",
           "format": "uint64",
           "minimum": 0.0
@@ -632,7 +647,7 @@
         "path": {
           "title": "Storage path",
           "description": "The root path to use for the Rocksdb storage.",
-          "default": "target/db/",
+          "default": "./restate-data/db",
           "type": "string"
         },
         "threads": {
@@ -776,7 +791,7 @@
         "tmp_dir": {
           "title": "Temporary directory",
           "description": "Temporary directory to use for the invoker temporary files. If empty, the system temporary directory will be used instead.",
-          "default": "/tmp/invoker-018e08ac2614771f88b3469eb7f363ee",
+          "default": "/var/folders/tw/68_ctnh50rn41q721zt5pwfc0000gn/T/invoker-018e79daaa3d7c0c941c4c16611e6d5e",
           "type": "string"
         },
         "concurrency_limit": {
@@ -905,21 +920,6 @@
         }
       ]
     },
-    "PartitionProcessorOptions": {
-      "description": "Partition processor options",
-      "type": "object",
-      "properties": {
-        "max_batch_duration": {
-          "title": "Maximum batch duration",
-          "description": "The maximum duration the partition processor can spend on batching commands before checking for signals from its actuators. The larger the value, the fewer disk writes are being performed which can improve overall throughput at the cost of potentially longer invocation latencies.",
-          "default": "50ms",
-          "type": [
-            "string",
-            "null"
-          ]
-        }
-      }
-    },
     "NodeServerOptions": {
       "title": "Node server options",
       "type": "object",
@@ -931,9 +931,7 @@
         },
         "advertise_address": {
           "description": "Address that other nodes will use to connect to this node. Defaults to use bind_address if unset.",
-          "default": {
-            "Http": "http://127.0.0.1:5122/"
-          },
+          "default": "http://127.0.0.1:5122/",
           "type": "string"
         },
         "histogram_inactivity_timeout": {
@@ -977,14 +975,27 @@
       "properties": {
         "default_provider": {
           "title": "The default kind of loglet to be used",
-          "default": "File",
+          "default": "Local",
           "type": "string"
         },
         "providers_config": {
           "default": {
-            "File": {
-              "path": "target/logs/"
-            }
+            "Local": {
+              "flush_wal_on_commit": true,
+              "rocksdb_cache_size": 0,
+              "rocksdb_disable_statistics": true,
+              "rocksdb_disable_wal": false,
+              "rocksdb_max_total_wal_size": 2147483648,
+              "rocksdb_threads": 10,
+              "rocksdb_write_buffer_size": 0,
+              "writer_commit_batch_size_threshold": 200,
+              "writer_commit_time_interval": {
+                "nanos": 13000000,
+                "secs": 0
+              },
+              "writer_queue_len": 200
+            },
+            "Memory": null
           },
           "type": "string"
         }
@@ -993,6 +1004,28 @@
     "ClusterControllerOptions": {
       "title": "Controller service options",
       "type": "object"
+    },
+    "LocalMetadataStoreOptions": {
+      "type": "object",
+      "properties": {
+        "bind_address": {
+          "description": "Address to which the metadata store will bind to.",
+          "default": "0.0.0.0:5123",
+          "type": "string"
+        },
+        "storage_path": {
+          "description": "Storage path under which the metadata store will store its data.",
+          "default": "./restate-data/local-metadata-store",
+          "type": "string"
+        },
+        "request_queue_length": {
+          "description": "Number of in-flight metadata store requests.",
+          "default": 32,
+          "type": "integer",
+          "format": "uint",
+          "minimum": 0.0
+        }
+      }
     }
   }
 }
