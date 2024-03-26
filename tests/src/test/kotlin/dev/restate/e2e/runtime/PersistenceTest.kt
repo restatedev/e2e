@@ -15,7 +15,6 @@ import dev.restate.sdk.client.IngressClient
 import java.util.concurrent.TimeUnit
 import my.restate.e2e.services.CounterClient
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
