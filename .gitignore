@@ -12,3 +12,7 @@ build
 kls_database.db
 services/node-services/restatedev-restate-sdk-*
 
+.classpath
+.settings
+.project
+.factorypath

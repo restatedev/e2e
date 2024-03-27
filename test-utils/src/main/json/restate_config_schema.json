@@ -1,38 +1,29 @@
 {
   "$schema": "https://json-schema.org/draft/2019-09/schema",
   "title": "Restate configuration file",
-  "description": "Configuration for the Restate single binary deployment.\n\nYou can specify the configuration file to use through the `--config-file <PATH>` argument or with `RESTATE_CONFIG=<PATH>` environment variable.\n\nEach configuration entry can be overridden using environment variables, prefixing them with `RESTATE_` and separating nested structs with `__` (double underscore). For example, to configure `meta.rest_address`, the corresponding environment variable is `RESTATE_META__REST_ADDRESS`.",
+  "description": "Configuration for the Restate single binary deployment.\n\nYou can specify the configuration file to use through the `--config-file <PATH>` argument or with `RESTATE_CONFIG=<PATH>` environment variable.\n\nEach configuration entry can be overridden using environment variables, prefixing them with `RESTATE_` and separating nested structs with `__` (double underscore).\n\nFor example, to configure `admin.bind_address`, the corresponding environment variable is `RESTATE_ADMIN__BIND_ADDRESS`.",
   "type": "object",
   "properties": {
-    "shutdown_grace_period": {
-      "title": "Shutdown grace timeout",
-      "description": "This timeout is used when shutting down the various Restate components to drain all the internal queues.\n\nCan be configured using the [`humantime`](https://docs.rs/humantime/latest/humantime/fn.parse_duration.html) format.",
-      "default": "1m",
-      "type": "string"
-    },
-    "observability": {
-      "default": {
-        "log": {
-          "disable_ansi_codes": false,
-          "filter": "warn,restate=info",
-          "format": "Pretty"
-        },
-        "tracing": null
-      },
-      "$ref": "#/definitions/ObservabilityOptions"
-    },
-    "tokio_runtime": {
-      "default": {
-        "max_blocking_threads": null,
-        "worker_threads": null
-      },
-      "$ref": "#/definitions/Options"
+    "roles": {
+      "description": "Defines the roles which this Restate node should run, by default the node starts with all roles.",
+      "default": [
+        "worker",
+        "admin",
+        "metadata_store"
+      ],
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     },
     "node_name": {
-      "default": "work.local",
+      "title": "Node Name",
+      "description": "Unique name for this node in the cluster. The node must not change unless it's started with empty local store. It defaults to the node hostname.",
+      "default": "localhost",
       "type": "string"
     },
-    "node_id": {
+    "force_node_id": {
+      "description": "If set, the node insists on acquiring this node ID.",
       "default": null,
       "anyOf": [
         {
@@ -44,13 +35,101 @@
       ]
     },
     "cluster_name": {
+      "title": "Cluster Name",
       "description": "A unique identifier for the cluster. All nodes in the same cluster should have the same.",
-      "default": "Local-Cluster",
+      "default": "localcluster",
       "type": "string"
     },
-    "bootstrap_cluster": {
+    "allow_bootstrap": {
       "description": "If true, then a new cluster is bootstrapped. This node *must* be has an admin role and a new nodes configuration will be created that includes this node.",
       "default": true,
+      "type": "boolean"
+    },
+    "metadata_store_address": {
+      "description": "Address of the metadata store server to bootstrap the node from.",
+      "default": "http://127.0.0.1:5123/",
+      "type": "string"
+    },
+    "bind_address": {
+      "description": "Address to bind for the Node server. Default is `0.0.0.0:5122`",
+      "default": "0.0.0.0:5122",
+      "type": "string"
+    },
+    "advertise_address": {
+      "description": "Address that other nodes will use to connect to this node. Default is `http://127.0.0.1:5122/`",
+      "default": "http://127.0.0.1:5122/",
+      "type": "string"
+    },
+    "shutdown_timeout": {
+      "title": "Shutdown grace timeout",
+      "description": "This timeout is used when shutting down the various Restate components to drain all the internal queues.\n\nCan be configured using the [`humantime`](https://docs.rs/humantime/latest/humantime/fn.parse_duration.html) format.",
+      "default": "1m",
+      "type": "string"
+    },
+    "default_thread_pool_size": {
+      "title": "Default async runtime thread pool",
+      "description": "Size of the default thread pool used to perform internal tasks. If not set, it defaults to the number of CPU cores.",
+      "default": null,
+      "type": [
+        "integer",
+        "null"
+      ],
+      "format": "uint",
+      "minimum": 0.0
+    },
+    "tracing_endpoint": {
+      "title": "Tracing Endpoint",
+      "description": "Specify the tracing endpoint to send traces to. Traces will be exported using [OTLP gRPC](https://opentelemetry.io/docs/specs/otlp/#otlpgrpc) through [opentelemetry_otlp](https://docs.rs/opentelemetry-otlp/0.12.0/opentelemetry_otlp/).\n\nTo configure the sampling, please refer to the [opentelemetry autoconfigure docs](https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/autoconfigure/README.md#sampler).",
+      "default": null,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "tracing_json_path": {
+      "title": "Distributed Tracing JSON Export Path",
+      "description": "If set, an exporter will be configured to write traces to files using the Jaeger JSON format. Each trace file will start with the `trace` prefix.\n\nIf unset, no traces will be written to file.\n\nIt can be used to export traces in a structured format without configuring a Jaeger agent.\n\nTo inspect the traces, open the Jaeger UI and use the Upload JSON feature to load and inspect them.",
+      "default": null,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "tracing_filter": {
+      "title": "Tracing Filter",
+      "description": "Distributed tracing exporter filter. Check the [`RUST_LOG` documentation](https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html) for more details how to configure it.",
+      "default": "info",
+      "type": "string"
+    },
+    "log_filter": {
+      "title": "Logging Filter",
+      "description": "Log filter configuration. Can be overridden by the `RUST_LOG` environment variable. Check the [`RUST_LOG` documentation](https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html) for more details how to configure it.",
+      "default": "warn,restate=info",
+      "type": "string"
+    },
+    "log_format": {
+      "title": "Logging format",
+      "description": "Format to use when logging.",
+      "default": "pretty",
+      "$ref": "#/definitions/LogFormat"
+    },
+    "log_disable_ansi_codes": {
+      "title": "Disable ANSI in log output",
+      "description": "Disable ANSI terminal codes for logs. This is useful when the log collector doesn't support processing ANSI terminal codes.",
+      "default": false,
+      "type": "boolean"
+    },
+    "histogram_inactivity_timeout": {
+      "description": "Timeout for idle histograms.\n\nThe duration after which a histogram is considered idle and will be removed from metric responses to save memory. Unsetting means that histograms will never be removed.",
+      "default": null,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "disable_prometheus": {
+      "description": "Disable prometheus metric recording and reporting. Default is `false`.",
+      "default": false,
       "type": "boolean"
     },
     "meta": {
@@ -106,7 +185,7 @@
               "aws_profile": null
             }
           },
-          "tmp_dir": "/var/folders/tw/68_ctnh50rn41q721zt5pwfc0000gn/T/invoker-018e79daaa3d761797e489f16bf2d018"
+          "tmp_dir": "/var/folders/9_/5xtjs16s0xd1yfysv6b9h8b80000gn/T/invoker-018e807858a175f887d764a7e5b8127d"
         },
         "kafka": {
           "clusters": {}
@@ -134,15 +213,6 @@
       },
       "$ref": "#/definitions/WorkerOptions"
     },
-    "server": {
-      "default": {
-        "advertise_address": "http://127.0.0.1:5122/",
-        "bind_address": "0.0.0.0:5122",
-        "disable_prometheus": false,
-        "histogram_inactivity_timeout": null
-      },
-      "$ref": "#/definitions/NodeServerOptions"
-    },
     "admin": {
       "default": {
         "bind_address": "0.0.0.0:9070",
@@ -152,24 +222,19 @@
     },
     "bifrost": {
       "default": {
-        "default_provider": "Local",
-        "providers_config": {
-          "Local": {
-            "flush_wal_on_commit": true,
-            "rocksdb_cache_size": 0,
-            "rocksdb_disable_statistics": true,
-            "rocksdb_disable_wal": false,
-            "rocksdb_max_total_wal_size": 2147483648,
-            "rocksdb_threads": 10,
-            "rocksdb_write_buffer_size": 0,
-            "writer_commit_batch_size_threshold": 200,
-            "writer_commit_time_interval": {
-              "nanos": 13000000,
-              "secs": 0
-            },
-            "writer_queue_len": 200
-          },
-          "Memory": null
+        "default_provider": "local",
+        "local": {
+          "flush_wal_on_commit": true,
+          "path": "./restate-data/local_loglet",
+          "rocksdb_cache_size": 0,
+          "rocksdb_disable_statistics": true,
+          "rocksdb_disable_wal": false,
+          "rocksdb_max_total_wal_size": 2147483648,
+          "rocksdb_threads": 10,
+          "rocksdb_write_buffer_size": 0,
+          "writer_commit_batch_size_threshold": 200,
+          "writer_commit_time_interval": "13ms",
+          "writer_queue_len": 200
         }
       },
       "$ref": "#/definitions/BifrostOptions"
@@ -178,29 +243,13 @@
       "default": {},
       "$ref": "#/definitions/ClusterControllerOptions"
     },
-    "metadata_store_client": {
-      "default": "http://127.0.0.1:5123/",
-      "type": "string"
-    },
     "metadata_store": {
       "default": {
         "bind_address": "0.0.0.0:5123",
-        "request_queue_length": 32,
-        "storage_path": "./restate-data/local-metadata-store"
+        "path": "./restate-data/local_metadata_store",
+        "request_queue_length": 32
       },
       "$ref": "#/definitions/LocalMetadataStoreOptions"
-    },
-    "roles": {
-      "description": "Defines the roles which this Restate node should run",
-      "default": [
-        "Worker",
-        "Admin",
-        "MetadataStore"
-      ],
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
     },
     "admin_address": {
       "description": "Configures the admin address. If it is not specified, then this node needs to run the admin role",
@@ -209,85 +258,10 @@
     }
   },
   "definitions": {
-    "ObservabilityOptions": {
-      "title": "Observability options",
-      "type": "object",
-      "properties": {
-        "tracing": {
-          "title": "Tracing options",
-          "default": null,
-          "anyOf": [
-            {
-              "$ref": "#/definitions/TracingOptions"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "log": {
-          "title": "Logging options",
-          "default": {
-            "disable_ansi_codes": false,
-            "filter": "warn,restate=info",
-            "format": "Pretty"
-          },
-          "$ref": "#/definitions/LogOptions"
-        }
-      }
-    },
-    "TracingOptions": {
-      "title": "Tracing Options",
-      "description": "Configuration for the [OTLP exporter](https://opentelemetry.io/docs/specs/otel/protocol/exporter/) which can export to all OTLP compatible systems (e.g. Jaeger).\n\nAt least `endpoint` or `json_file_export_path` must be configured.\n\nTo configure the sampling, please refer to the [opentelemetry autoconfigure docs](https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/autoconfigure/README.md#sampler).",
-      "type": "object",
-      "properties": {
-        "endpoint": {
-          "title": "Endpoint",
-          "description": "Specify the tracing endpoint to send traces to. Traces will be exported using [OTLP gRPC](https://opentelemetry.io/docs/specs/otlp/#otlpgrpc) through [opentelemetry_otlp](https://docs.rs/opentelemetry-otlp/0.12.0/opentelemetry_otlp/).",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "json_file_export_path": {
-          "title": "JSON File export path",
-          "description": "If set, an exporter will be configured to write traces to files using the Jaeger JSON format. Each trace file will start with the `trace` prefix.\n\nIf unset, no traces will be written to file.\n\nIt can be used to export traces in a structured format without configuring a Jaeger agent.\n\nTo inspect the traces, open the Jaeger UI and use the Upload JSON feature to load and inspect them.",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "filter": {
-          "title": "Filter",
-          "description": "Exporter filter configuration. Check the [`RUST_LOG` documentation](https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html) for more details how to configure it.",
-          "default": "info",
-          "type": "string"
-        }
-      }
-    },
-    "LogOptions": {
-      "title": "Log options",
-      "type": "object",
-      "properties": {
-        "filter": {
-          "title": "Filter",
-          "description": "Log filter configuration. Can be overridden by the `RUST_LOG` environment variable. Check the [`RUST_LOG` documentation](https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html) for more details how to configure it.",
-          "default": "warn,restate=info",
-          "type": "string"
-        },
-        "format": {
-          "title": "Log format",
-          "description": "Format to use when logging.",
-          "default": "Pretty",
-          "$ref": "#/definitions/LogFormat"
-        },
-        "disable_ansi_codes": {
-          "title": "Disable ANSI log",
-          "description": "Disable ANSI terminal codes for logs. This is useful when the log collector doesn't support processing ANSI terminal codes.",
-          "default": false,
-          "type": "boolean"
-        }
-      }
+    "PlainNodeId": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0.0
     },
     "LogFormat": {
       "title": "Log format",
@@ -297,7 +271,7 @@
           "description": "Enables verbose logging. Not recommended in production.",
           "type": "string",
           "enum": [
-            "Pretty"
+            "pretty"
           ]
         },
         {
@@ -305,7 +279,7 @@
           "description": "Enables compact logging.",
           "type": "string",
           "enum": [
-            "Compact"
+            "compact"
           ]
         },
         {
@@ -313,44 +287,10 @@
           "description": "Enables json logging. You can use a json log collector to ingest these logs and further process them.",
           "type": "string",
           "enum": [
-            "Json"
+            "json"
           ]
         }
       ]
-    },
-    "Options": {
-      "title": "Runtime options",
-      "description": "Configuration for the Tokio runtime used by Restate.",
-      "type": "object",
-      "properties": {
-        "worker_threads": {
-          "title": "Worker threads",
-          "description": "Configure the number of [worker threads](https://docs.rs/tokio/latest/tokio/runtime/struct.Builder.html#method.worker_threads) of the Tokio runtime. If not set, it uses the Tokio default, where worker_threads is equal to number of cores.",
-          "default": null,
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint",
-          "minimum": 0.0
-        },
-        "max_blocking_threads": {
-          "title": "Max blocking threads",
-          "description": "Configure the number of [max blocking threads](https://docs.rs/tokio/latest/tokio/runtime/struct.Builder.html#method.max_blocking_threads) of the Tokio runtime. If not set, it uses the Tokio default 512.",
-          "default": null,
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint",
-          "minimum": 0.0
-        }
-      }
-    },
-    "PlainNodeId": {
-      "type": "integer",
-      "format": "uint32",
-      "minimum": 0.0
     },
     "MetaOptions": {
       "title": "Meta options",
@@ -560,7 +500,7 @@
                 "aws_profile": null
               }
             },
-            "tmp_dir": "/var/folders/tw/68_ctnh50rn41q721zt5pwfc0000gn/T/invoker-018e79daaa3d750fa32ea4b2db8b0277"
+            "tmp_dir": "/var/folders/9_/5xtjs16s0xd1yfysv6b9h8b80000gn/T/invoker-018e807858a170a98b7b2415550638c6"
           },
           "$ref": "#/definitions/InvokerOptions"
         },
@@ -791,7 +731,7 @@
         "tmp_dir": {
           "title": "Temporary directory",
           "description": "Temporary directory to use for the invoker temporary files. If empty, the system temporary directory will be used instead.",
-          "default": "/var/folders/tw/68_ctnh50rn41q721zt5pwfc0000gn/T/invoker-018e79daaa3d7c0c941c4c16611e6d5e",
+          "default": "/var/folders/9_/5xtjs16s0xd1yfysv6b9h8b80000gn/T/invoker-018e807858a27d2cb7811c523af9dc89",
           "type": "string"
         },
         "concurrency_limit": {
@@ -920,35 +860,6 @@
         }
       ]
     },
-    "NodeServerOptions": {
-      "title": "Node server options",
-      "type": "object",
-      "properties": {
-        "bind_address": {
-          "description": "Address to bind for the Node server.",
-          "default": "0.0.0.0:5122",
-          "type": "string"
-        },
-        "advertise_address": {
-          "description": "Address that other nodes will use to connect to this node. Defaults to use bind_address if unset.",
-          "default": "http://127.0.0.1:5122/",
-          "type": "string"
-        },
-        "histogram_inactivity_timeout": {
-          "description": "Timeout for idle histograms.\n\nThe duration after which a histogram is considered idle and will be removed from metric responses to save memory. Unsetting means that histograms will never be removed.",
-          "default": null,
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "disable_prometheus": {
-          "description": "Disable prometheus metric recording and reporting. Default is `false`.",
-          "default": false,
-          "type": "boolean"
-        }
-      }
-    },
     "AdminOptions": {
       "title": "Admin server options",
       "type": "object",
@@ -975,27 +886,23 @@
       "properties": {
         "default_provider": {
           "title": "The default kind of loglet to be used",
-          "default": "Local",
+          "default": "local",
           "type": "string"
         },
-        "providers_config": {
+        "local": {
+          "description": "Configuration of local loglet provider",
           "default": {
-            "Local": {
-              "flush_wal_on_commit": true,
-              "rocksdb_cache_size": 0,
-              "rocksdb_disable_statistics": true,
-              "rocksdb_disable_wal": false,
-              "rocksdb_max_total_wal_size": 2147483648,
-              "rocksdb_threads": 10,
-              "rocksdb_write_buffer_size": 0,
-              "writer_commit_batch_size_threshold": 200,
-              "writer_commit_time_interval": {
-                "nanos": 13000000,
-                "secs": 0
-              },
-              "writer_queue_len": 200
-            },
-            "Memory": null
+            "flush_wal_on_commit": true,
+            "path": "./restate-data/local_loglet",
+            "rocksdb_cache_size": 0,
+            "rocksdb_disable_statistics": true,
+            "rocksdb_disable_wal": false,
+            "rocksdb_max_total_wal_size": 2147483648,
+            "rocksdb_threads": 10,
+            "rocksdb_write_buffer_size": 0,
+            "writer_commit_batch_size_threshold": 200,
+            "writer_commit_time_interval": "13ms",
+            "writer_queue_len": 200
           },
           "type": "string"
         }
@@ -1013,9 +920,9 @@
           "default": "0.0.0.0:5123",
           "type": "string"
         },
-        "storage_path": {
+        "path": {
           "description": "Storage path under which the metadata store will store its data.",
-          "default": "./restate-data/local-metadata-store",
+          "default": "./restate-data/local_metadata_store",
           "type": "string"
         },
         "request_queue_length": {
