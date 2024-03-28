@@ -132,25 +132,6 @@
       "default": false,
       "type": "boolean"
     },
-    "meta": {
-      "default": {
-        "service_client": {
-          "http": {
-            "keep_alive_options": {
-              "interval": "40s",
-              "timeout": "20s"
-            },
-            "proxy_uri": null
-          },
-          "lambda": {
-            "assume_role_external_id": null,
-            "aws_profile": null
-          }
-        },
-        "storage_path": "./restate-data/meta"
-      },
-      "$ref": "#/definitions/MetaOptions"
-    },
     "worker": {
       "default": {
         "channel_size": 64,
@@ -173,22 +154,15 @@
             "type": "Exponential"
           },
           "service_client": {
-            "http": {
-              "keep_alive_options": {
-                "interval": "40s",
-                "timeout": "20s"
-              },
-              "proxy_uri": null
+            "aws_assume_role_external_id": null,
+            "aws_profile": null,
+            "http_keep_alive_options": {
+              "interval": "40s",
+              "timeout": "20s"
             },
-            "lambda": {
-              "assume_role_external_id": null,
-              "aws_profile": null
-            }
+            "http_proxy": null
           },
-          "tmp_dir": "/var/folders/9_/5xtjs16s0xd1yfysv6b9h8b80000gn/T/invoker-018e807858a175f887d764a7e5b8127d"
-        },
-        "kafka": {
-          "clusters": {}
+          "tmp_dir": "/var/folders/9_/5xtjs16s0xd1yfysv6b9h8b80000gn/T/invoker-018e840f768a7a09bdc95f7fb30cb71d"
         },
         "partitions": 64,
         "storage_query_datafusion": {
@@ -216,7 +190,17 @@
     "admin": {
       "default": {
         "bind_address": "0.0.0.0:9070",
-        "concurrency_limit": 1000
+        "concurrent_api_requests_limit": 1000,
+        "discovery": {
+          "aws_assume_role_external_id": null,
+          "aws_profile": null,
+          "http_keep_alive_options": {
+            "interval": "40s",
+            "timeout": "20s"
+          },
+          "http_proxy": null
+        },
+        "schema_storage_path": "./restate-data/meta"
       },
       "$ref": "#/definitions/AdminOptions"
     },
@@ -239,10 +223,6 @@
       },
       "$ref": "#/definitions/BifrostOptions"
     },
-    "cluster_controller": {
-      "default": {},
-      "$ref": "#/definitions/ClusterControllerOptions"
-    },
     "metadata_store": {
       "default": {
         "bind_address": "0.0.0.0:5123",
@@ -251,10 +231,11 @@
       },
       "$ref": "#/definitions/LocalMetadataStoreOptions"
     },
-    "admin_address": {
-      "description": "Configures the admin address. If it is not specified, then this node needs to run the admin role",
-      "default": "",
-      "type": "string"
+    "kafka": {
+      "default": {
+        "clusters": {}
+      },
+      "$ref": "#/definitions/SubscriptionOptions"
     }
   },
   "definitions": {
@@ -291,131 +272,6 @@
           ]
         }
       ]
-    },
-    "MetaOptions": {
-      "title": "Meta options",
-      "type": "object",
-      "properties": {
-        "storage_path": {
-          "title": "Storage path",
-          "description": "Root path for Meta storage.",
-          "default": "./restate-data/meta",
-          "type": "string"
-        },
-        "service_client": {
-          "default": {
-            "http": {
-              "keep_alive_options": {
-                "interval": "40s",
-                "timeout": "20s"
-              },
-              "proxy_uri": null
-            },
-            "lambda": {
-              "assume_role_external_id": null,
-              "aws_profile": null
-            }
-          },
-          "$ref": "#/definitions/ServiceClientOptions"
-        }
-      }
-    },
-    "ServiceClientOptions": {
-      "title": "Client options",
-      "type": "object",
-      "properties": {
-        "http": {
-          "default": {
-            "keep_alive_options": {
-              "interval": "40s",
-              "timeout": "20s"
-            },
-            "proxy_uri": null
-          },
-          "$ref": "#/definitions/HttpClientOptions"
-        },
-        "lambda": {
-          "default": {
-            "assume_role_external_id": null,
-            "aws_profile": null
-          },
-          "$ref": "#/definitions/LambdaClientOptions"
-        }
-      }
-    },
-    "HttpClientOptions": {
-      "title": "HTTP client options",
-      "type": "object",
-      "properties": {
-        "keep_alive_options": {
-          "title": "HTTP/2 Keep-alive",
-          "description": "Configuration for the HTTP/2 keep-alive mechanism, using PING frames. If unset, HTTP/2 keep-alive are disabled.",
-          "default": {
-            "interval": "40s",
-            "timeout": "20s"
-          },
-          "anyOf": [
-            {
-              "$ref": "#/definitions/Http2KeepAliveOptions"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "proxy_uri": {
-          "title": "Proxy URI",
-          "description": "A URI, such as `http://127.0.0.1:10001`, of a server to which all invocations should be sent, with the `Host` header set to the deployment URI. HTTPS proxy URIs are supported, but only HTTP endpoint traffic will be proxied currently. Can be overridden by the `HTTP_PROXY` environment variable.",
-          "default": null,
-          "type": [
-            "string",
-            "null"
-          ]
-        }
-      }
-    },
-    "Http2KeepAliveOptions": {
-      "title": "HTTP/2 Keep alive options",
-      "description": "Configuration for the HTTP/2 keep-alive mechanism, using PING frames.\n\nPlease note: most gateways don't propagate the HTTP/2 keep-alive between downstream and upstream hosts. In those environments, you need to make sure the gateway can detect a broken connection to the upstream deployment(s).",
-      "type": "object",
-      "properties": {
-        "interval": {
-          "title": "HTTP/2 Keep-alive interval",
-          "description": "Sets an interval for HTTP/2 PING frames should be sent to keep a connection alive.\n\nYou should set this timeout with a value lower than the `abort_timeout`.",
-          "default": "40s",
-          "type": "string"
-        },
-        "timeout": {
-          "title": "Timeout",
-          "description": "Sets a timeout for receiving an acknowledgement of the keep-alive ping.\n\nIf the ping is not acknowledged within the timeout, the connection will be closed.",
-          "default": "20s",
-          "type": "string"
-        }
-      }
-    },
-    "LambdaClientOptions": {
-      "title": "Lambda client options",
-      "type": "object",
-      "properties": {
-        "aws_profile": {
-          "title": "AWS Profile",
-          "description": "Name of the AWS profile to select. Defaults to 'AWS_PROFILE' env var, or otherwise the `default` profile.",
-          "default": null,
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "assume_role_external_id": {
-          "title": "AssumeRole external ID",
-          "description": "An external ID to apply to any AssumeRole operations taken by this client. https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-user_externalid.html Can be overridden by the `AWS_EXTERNAL_ID` environment variable.",
-          "default": null,
-          "type": [
-            "string",
-            "null"
-          ]
-        }
-      }
     },
     "WorkerOptions": {
       "title": "Worker options",
@@ -466,12 +322,6 @@
           },
           "$ref": "#/definitions/IngressOptions"
         },
-        "kafka": {
-          "default": {
-            "clusters": {}
-          },
-          "$ref": "#/definitions/SubscriptionOptions"
-        },
         "invoker": {
           "default": {
             "abort_timeout": "1m",
@@ -488,19 +338,15 @@
               "type": "Exponential"
             },
             "service_client": {
-              "http": {
-                "keep_alive_options": {
-                  "interval": "40s",
-                  "timeout": "20s"
-                },
-                "proxy_uri": null
+              "aws_assume_role_external_id": null,
+              "aws_profile": null,
+              "http_keep_alive_options": {
+                "interval": "40s",
+                "timeout": "20s"
               },
-              "lambda": {
-                "assume_role_external_id": null,
-                "aws_profile": null
-              }
+              "http_proxy": null
             },
-            "tmp_dir": "/var/folders/9_/5xtjs16s0xd1yfysv6b9h8b80000gn/T/invoker-018e807858a170a98b7b2415550638c6"
+            "tmp_dir": "/var/folders/9_/5xtjs16s0xd1yfysv6b9h8b80000gn/T/invoker-018e840f768a73678e298bbd40c74d5c"
           },
           "$ref": "#/definitions/InvokerOptions"
         },
@@ -649,38 +495,6 @@
         }
       }
     },
-    "SubscriptionOptions": {
-      "title": "Subscription options",
-      "type": "object",
-      "required": [
-        "clusters"
-      ],
-      "properties": {
-        "clusters": {
-          "title": "Kafka clusters",
-          "description": "Configuration parameters for the known kafka clusters",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/KafkaClusterOptions"
-          }
-        }
-      }
-    },
-    "KafkaClusterOptions": {
-      "title": "Kafka cluster options",
-      "description": "Configuration options to connect to a Kafka cluster.",
-      "type": "object",
-      "required": [
-        "metadata.broker.list"
-      ],
-      "properties": {
-        "metadata.broker.list": {
-          "title": "Servers",
-          "description": "Initial list of brokers as a CSV list of broker host or host:port.",
-          "type": "string"
-        }
-      }
-    },
     "InvokerOptions": {
       "title": "Invoker options",
       "type": "object",
@@ -731,7 +545,7 @@
         "tmp_dir": {
           "title": "Temporary directory",
           "description": "Temporary directory to use for the invoker temporary files. If empty, the system temporary directory will be used instead.",
-          "default": "/var/folders/9_/5xtjs16s0xd1yfysv6b9h8b80000gn/T/invoker-018e807858a27d2cb7811c523af9dc89",
+          "default": "/var/folders/9_/5xtjs16s0xd1yfysv6b9h8b80000gn/T/invoker-018e840f768a7fb4894defad32d52e35",
           "type": "string"
         },
         "concurrency_limit": {
@@ -747,17 +561,13 @@
         },
         "service_client": {
           "default": {
-            "http": {
-              "keep_alive_options": {
-                "interval": "40s",
-                "timeout": "20s"
-              },
-              "proxy_uri": null
+            "aws_assume_role_external_id": null,
+            "aws_profile": null,
+            "http_keep_alive_options": {
+              "interval": "40s",
+              "timeout": "20s"
             },
-            "lambda": {
-              "assume_role_external_id": null,
-              "aws_profile": null
-            }
+            "http_proxy": null
           },
           "$ref": "#/definitions/ServiceClientOptions"
         }
@@ -860,6 +670,74 @@
         }
       ]
     },
+    "ServiceClientOptions": {
+      "title": "Client options",
+      "type": "object",
+      "properties": {
+        "http_keep_alive_options": {
+          "title": "HTTP/2 Keep-alive",
+          "description": "Configuration for the HTTP/2 keep-alive mechanism, using PING frames. If unset, HTTP/2 keep-alive are disabled.",
+          "default": {
+            "interval": "40s",
+            "timeout": "20s"
+          },
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Http2KeepAliveOptions"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "http_proxy": {
+          "title": "Proxy URI",
+          "description": "A URI, such as `http://127.0.0.1:10001`, of a server to which all invocations should be sent, with the `Host` header set to the deployment URI. HTTPS proxy URIs are supported, but only HTTP endpoint traffic will be proxied currently. Can be overridden by the `HTTP_PROXY` environment variable.",
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "aws_profile": {
+          "title": "AWS Profile",
+          "description": "Name of the AWS profile to select. Defaults to 'AWS_PROFILE' env var, or otherwise the `default` profile.",
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "aws_assume_role_external_id": {
+          "title": "AssumeRole external ID",
+          "description": "An external ID to apply to any AssumeRole operations taken by this client. https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-user_externalid.html Can be overridden by the `AWS_EXTERNAL_ID` environment variable.",
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "Http2KeepAliveOptions": {
+      "title": "HTTP/2 Keep alive options",
+      "description": "Configuration for the HTTP/2 keep-alive mechanism, using PING frames.\n\nPlease note: most gateways don't propagate the HTTP/2 keep-alive between downstream and upstream hosts. In those environments, you need to make sure the gateway can detect a broken connection to the upstream deployment(s).",
+      "type": "object",
+      "properties": {
+        "interval": {
+          "title": "HTTP/2 Keep-alive interval",
+          "description": "Sets an interval for HTTP/2 PING frames should be sent to keep a connection alive.\n\nYou should set this timeout with a value lower than the `abort_timeout`.",
+          "default": "40s",
+          "type": "string"
+        },
+        "timeout": {
+          "title": "Timeout",
+          "description": "Sets a timeout for receiving an acknowledgement of the keep-alive ping.\n\nIf the ping is not acknowledged within the timeout, the connection will be closed.",
+          "default": "20s",
+          "type": "string"
+        }
+      }
+    },
     "AdminOptions": {
       "title": "Admin server options",
       "type": "object",
@@ -870,13 +748,31 @@
           "default": "0.0.0.0:9070",
           "type": "string"
         },
-        "concurrency_limit": {
+        "concurrent_api_requests_limit": {
           "title": "Concurrency limit",
           "description": "Concurrency limit for the Admin APIs.",
           "default": 1000,
           "type": "integer",
           "format": "uint",
           "minimum": 0.0
+        },
+        "schema_storage_path": {
+          "title": "[DEPRECATED] Storage path",
+          "description": "Root path for Schema storage.",
+          "default": "./restate-data/meta",
+          "type": "string"
+        },
+        "discovery": {
+          "default": {
+            "aws_assume_role_external_id": null,
+            "aws_profile": null,
+            "http_keep_alive_options": {
+              "interval": "40s",
+              "timeout": "20s"
+            },
+            "http_proxy": null
+          },
+          "$ref": "#/definitions/ServiceClientOptions"
         }
       }
     },
@@ -908,10 +804,6 @@
         }
       }
     },
-    "ClusterControllerOptions": {
-      "title": "Controller service options",
-      "type": "object"
-    },
     "LocalMetadataStoreOptions": {
       "type": "object",
       "properties": {
@@ -931,6 +823,38 @@
           "type": "integer",
           "format": "uint",
           "minimum": 0.0
+        }
+      }
+    },
+    "SubscriptionOptions": {
+      "title": "Subscription options",
+      "type": "object",
+      "required": [
+        "clusters"
+      ],
+      "properties": {
+        "clusters": {
+          "title": "Kafka clusters",
+          "description": "Configuration parameters for the known kafka clusters",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/KafkaClusterOptions"
+          }
+        }
+      }
+    },
+    "KafkaClusterOptions": {
+      "title": "Kafka cluster options",
+      "description": "Configuration options to connect to a Kafka cluster.",
+      "type": "object",
+      "required": [
+        "metadata.broker.list"
+      ],
+      "properties": {
+        "metadata.broker.list": {
+          "title": "Servers",
+          "description": "Initial list of brokers as a CSV list of broker host or host:port.",
+          "type": "string"
         }
       }
     }
