@@ -18,7 +18,7 @@ export type IComponent = {
   binder: (endpoint: RestateEndpoint) => void;
 };
 
-export class ComponenetRegistery {
+export class ComponentRegistry {
   constructor(readonly components: Map<string, IComponent> = new Map()) {}
 
   add(c: IComponent) {
@@ -52,4 +52,4 @@ export class ComponenetRegistery {
   }
 }
 
-export const REGISTRY = new ComponenetRegistery();
+export const REGISTRY = new ComponentRegistry();
