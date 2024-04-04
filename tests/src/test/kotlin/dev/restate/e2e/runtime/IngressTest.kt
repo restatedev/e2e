@@ -19,23 +19,19 @@ import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
 import dev.restate.sdk.client.IngressClient
 import dev.restate.sdk.client.RequestOptions
+import java.net.URL
 import java.util.*
 import java.util.concurrent.TimeUnit
-import kotlin.time.Duration.Companion.seconds
-import kotlin.time.toJavaDuration
-import my.restate.e2e.services.CounterClient
-import my.restate.e2e.services.CounterUpdateResponse
-import my.restate.e2e.services.HeadersPassThroughTestClient
-import my.restate.e2e.services.ProxyCounterClient
+import my.restate.e2e.services.*
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
+import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
-import java.net.URL
 
 class IngressTest {
 
@@ -56,16 +52,19 @@ class IngressTest {
   @Test
   @Execution(ExecutionMode.CONCURRENT)
   @Timeout(value = 15, unit = TimeUnit.SECONDS)
-  fun idempotentInvoke(@InjectMetaURL metaURL: URL, @InjectIngressClient ingressClient: IngressClient) {
+  @DisplayName("Idempotent invocation to a virtual object")
+  fun idempotentInvokeVirtualObject(
+      @InjectMetaURL metaURL: URL,
+      @InjectIngressClient ingressClient: IngressClient
+  ) {
     // Let's update the idempotency retention time to 3 seconds, to make this test faster
     val adminComponentClient = ComponentApi(ApiClient().setHost(metaURL.host).setPort(metaURL.port))
     adminComponentClient.modifyComponent(
-      CounterClient.COMPONENT_NAME, ModifyComponentRequest().idempotencyRetention("3s"))
+        CounterClient.COMPONENT_NAME, ModifyComponentRequest().idempotencyRetention("3s"))
 
     val counterRandomName = UUID.randomUUID().toString()
     val myIdempotencyId = UUID.randomUUID().toString()
-    val requestOptions =
-        RequestOptions().withIdempotency(myIdempotencyId)
+    val requestOptions = RequestOptions().withIdempotency(myIdempotencyId)
 
     val counterClient = CounterClient.fromIngress(ingressClient, counterRandomName)
 
@@ -92,6 +91,57 @@ class IngressTest {
 
     // State in the counter service is now equal to 4
     assertThat(counterClient.get()).isEqualTo(4L)
+  }
+
+  @Test
+  @Execution(ExecutionMode.CONCURRENT)
+  @Timeout(value = 15, unit = TimeUnit.SECONDS)
+  @DisplayName("Idempotent invocation to a service")
+  fun idempotentInvokeService(@InjectIngressClient ingressClient: IngressClient) {
+    val counterRandomName = UUID.randomUUID().toString()
+    val myIdempotencyId = UUID.randomUUID().toString()
+    val requestOptions = RequestOptions().withIdempotency(myIdempotencyId)
+
+    val counterClient = CounterClient.fromIngress(ingressClient, counterRandomName)
+    val proxyCounterClient = ProxyCounterClient.fromIngress(ingressClient)
+
+    // Send request twice
+    proxyCounterClient.addInBackground(
+        ProxyCounter.AddRequest(counterRandomName, 2), requestOptions)
+    proxyCounterClient.addInBackground(
+        ProxyCounter.AddRequest(counterRandomName, 2), requestOptions)
+
+    // Wait for get
+    await untilAsserted { assertThat(counterClient.get()).isEqualTo(2) }
+
+    // Without request options this should be executed immediately and return 4
+    assertThat(counterClient.getAndAdd(2))
+        .returns(2, CounterUpdateResponse::getOldValue)
+        .returns(4, CounterUpdateResponse::getNewValue)
+  }
+
+  @Test
+  @Execution(ExecutionMode.CONCURRENT)
+  @Timeout(value = 15, unit = TimeUnit.SECONDS)
+  @DisplayName("Idempotent invocation to a virtual object using send")
+  fun idempotentInvokeSend(@InjectIngressClient ingressClient: IngressClient) {
+    val counterRandomName = UUID.randomUUID().toString()
+    val myIdempotencyId = UUID.randomUUID().toString()
+    val requestOptions = RequestOptions().withIdempotency(myIdempotencyId)
+
+    val counterClient = CounterClient.fromIngress(ingressClient, counterRandomName)
+
+    // Send request twice
+    counterClient.send().add(2, requestOptions)
+    counterClient.send().add(2, requestOptions)
+
+    // Wait for get
+    await untilAsserted { assertThat(counterClient.get()).isEqualTo(2) }
+
+    // Without request options this should be executed immediately and return 4
+    assertThat(counterClient.getAndAdd(2))
+        .returns(2, CounterUpdateResponse::getOldValue)
+        .returns(4, CounterUpdateResponse::getNewValue)
   }
 
   @Test
