@@ -27,7 +27,7 @@ const service = restate.service({
       }
 
       const { id, promise } = ctx.awakeable<number[]>();
-      await ctx.sideEffect(() =>
+      await ctx.run(() =>
         NumberSortHttpServerUtils.sendSortNumbersRequest(id, list)
       );
 

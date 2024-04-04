@@ -43,7 +43,7 @@ const service = restate.object({
       const { id, promise } = ctx.awakeable();
 
       try {
-        await ctx.sideEffect(async () => {
+        await ctx.run(async () => {
           await NumberSortHttpServerUtils.sendSortNumbersRequest(id, [3, 2, 1]);
           throw new restate.TerminalError("external_call");
         });
@@ -87,7 +87,7 @@ const service = restate.object({
     failingSideEffectWithEventualSuccess: async (
       context: restate.ObjectContext
     ) => {
-      const successAttempt = await context.sideEffect(async () => {
+      const successAttempt = await context.run(() => {
         eventualSuccessSideEffectCalls += 1;
         const currentAttempt = eventualSuccessSideEffectCalls;
 
@@ -106,7 +106,7 @@ const service = restate.object({
       ctx: restate.ObjectContext,
       errorMessage: string
     ) => {
-      await ctx.sideEffect(async () => {
+      await ctx.run(() => {
         throw new restate.TerminalError(errorMessage);
       });
 

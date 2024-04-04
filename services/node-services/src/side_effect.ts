@@ -16,15 +16,15 @@ const c = restate.service({
     invokeSideEffects: async (ctx: restate.ObjectContext): Promise<number> => {
       let n = 0;
 
-      await ctx.sideEffect(async () => {
+      await ctx.run(() => {
         n += 1;
       });
 
-      await ctx.sideEffect(async () => {
+      await ctx.run(() => {
         n += 1;
       });
 
-      await ctx.sideEffect(async () => {
+      await ctx.run(() => {
         n += 1;
       });
 
