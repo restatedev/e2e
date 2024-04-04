@@ -9,7 +9,7 @@
       "default": [
         "worker",
         "admin",
-        "metadata_store"
+        "metadata-store"
       ],
       "type": "array",
       "items": {
@@ -148,10 +148,10 @@
           "message_size_warning": 10485760,
           "retry_policy": {
             "factor": 2.0,
-            "initial_interval": "50ms",
-            "max_attempts": 18446744073709551615,
-            "max_interval": "10s",
-            "type": "Exponential"
+            "initial-interval": "50ms",
+            "max-attempts": 9223372036854775807,
+            "max-interval": "10s",
+            "type": "exponential"
           },
           "service_client": {
             "aws_assume_role_external_id": null,
@@ -332,10 +332,10 @@
             "message_size_warning": 10485760,
             "retry_policy": {
               "factor": 2.0,
-              "initial_interval": "50ms",
-              "max_attempts": 18446744073709551615,
-              "max_interval": "10s",
-              "type": "Exponential"
+              "initial-interval": "50ms",
+              "max-attempts": 9223372036854775807,
+              "max-interval": "10s",
+              "type": "exponential"
             },
             "service_client": {
               "aws_assume_role_external_id": null,
@@ -346,7 +346,7 @@
               },
               "http_proxy": null
             },
-            "tmp_dir": "/var/folders/9_/5xtjs16s0xd1yfysv6b9h8b80000gn/T/invoker-018e840f768a73678e298bbd40c74d5c"
+            "tmp_dir": "/var/folders/9_/5xtjs16s0xd1yfysv6b9h8b80000gn/T/invoker-018ea4f4f8557f30b3b59be1d20b2b71"
           },
           "$ref": "#/definitions/InvokerOptions"
         },
@@ -504,10 +504,10 @@
           "description": "Retry policy to use for all the invocations handled by this invoker.",
           "default": {
             "factor": 2.0,
-            "initial_interval": "50ms",
-            "max_attempts": 18446744073709551615,
-            "max_interval": "10s",
-            "type": "Exponential"
+            "initial-interval": "50ms",
+            "max-attempts": 9223372036854775807,
+            "max-interval": "10s",
+            "type": "exponential"
           },
           "$ref": "#/definitions/RetryPolicy"
         },
@@ -588,7 +588,7 @@
             "type": {
               "type": "string",
               "enum": [
-                "None"
+                "none"
               ]
             }
           }
@@ -606,7 +606,7 @@
             "type": {
               "type": "string",
               "enum": [
-                "FixedDelay"
+                "fixed-delay"
               ]
             },
             "interval": {
@@ -637,7 +637,7 @@
             "type": {
               "type": "string",
               "enum": [
-                "Exponential"
+                "exponential"
               ]
             },
             "initial_interval": {
