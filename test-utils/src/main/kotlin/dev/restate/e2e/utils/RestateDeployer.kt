@@ -57,14 +57,14 @@ private constructor(
 
     object None : RetryPolicy() {
       override fun toInvokerSetupEnv(): Map<String, String> {
-        return mapOf("RESTATE_WORKER__INVOKER__RETRY_POLICY__TYPE" to "None")
+        return mapOf("RESTATE_WORKER__INVOKER__RETRY_POLICY__TYPE" to "none")
       }
     }
 
     class FixedDelay(private val interval: String, private val maxAttempts: Int) : RetryPolicy() {
       override fun toInvokerSetupEnv(): Map<String, String> {
         return mapOf(
-            "RESTATE_WORKER__INVOKER__RETRY_POLICY__TYPE" to "FixedDelay",
+            "RESTATE_WORKER__INVOKER__RETRY_POLICY__TYPE" to "fixed-delay",
             "RESTATE_WORKER__INVOKER__RETRY_POLICY__INTERVAL" to interval,
             "RESTATE_WORKER__INVOKER__RETRY_POLICY__MAX_ATTEMPTS" to maxAttempts.toString())
       }
