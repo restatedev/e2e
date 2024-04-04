@@ -9,8 +9,12 @@
 
 package dev.restate.e2e.runtime
 
+import dev.restate.admin.api.ComponentApi
+import dev.restate.admin.client.ApiClient
+import dev.restate.admin.model.ModifyComponentRequest
 import dev.restate.e2e.Containers
 import dev.restate.e2e.utils.InjectIngressClient
+import dev.restate.e2e.utils.InjectMetaURL
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
 import dev.restate.sdk.client.IngressClient
@@ -26,12 +30,12 @@ import my.restate.e2e.services.ProxyCounterClient
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
+import java.net.URL
 
 class IngressTest {
 
@@ -52,12 +56,16 @@ class IngressTest {
   @Test
   @Execution(ExecutionMode.CONCURRENT)
   @Timeout(value = 15, unit = TimeUnit.SECONDS)
-  @Disabled
-  fun idempotentInvoke(@InjectIngressClient ingressClient: IngressClient) {
+  fun idempotentInvoke(@InjectMetaURL metaURL: URL, @InjectIngressClient ingressClient: IngressClient) {
+    // Let's update the idempotency retention time to 3 seconds, to make this test faster
+    val adminComponentClient = ComponentApi(ApiClient().setHost(metaURL.host).setPort(metaURL.port))
+    adminComponentClient.modifyComponent(
+      CounterClient.COMPONENT_NAME, ModifyComponentRequest().idempotencyRetention("3s"))
+
     val counterRandomName = UUID.randomUUID().toString()
     val myIdempotencyId = UUID.randomUUID().toString()
     val requestOptions =
-        RequestOptions().withIdempotency(myIdempotencyId, 3.seconds.toJavaDuration())
+        RequestOptions().withIdempotency(myIdempotencyId)
 
     val counterClient = CounterClient.fromIngress(ingressClient, counterRandomName)
 
