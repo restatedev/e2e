@@ -41,7 +41,7 @@ public class CoordinatorImpl implements Coordinator {
 
   @Override
   public String proxy(Context context) {
-    String key = context.sideEffect(CoreSerdes.JSON_STRING, () -> UUID.randomUUID().toString());
+    String key = context.run(CoreSerdes.JSON_STRING, () -> UUID.randomUUID().toString());
 
     var pong = ReceiverClient.fromContext(context, key).ping().await();
 
@@ -56,8 +56,7 @@ public class CoordinatorImpl implements Coordinator {
 
     context.sleep(Duration.ofMillis(complexRequest.getSleepDurationMillis()));
 
-    var receiverUUID =
-        context.sideEffect(CoreSerdes.JSON_STRING, () -> UUID.randomUUID().toString());
+    var receiverUUID = context.run(CoreSerdes.JSON_STRING, () -> UUID.randomUUID().toString());
     var receiverClient = ReceiverClient.fromContext(context, receiverUUID);
 
     LOG.info("Send fire and forget call to {}", ReceiverClient.COMPONENT_NAME);

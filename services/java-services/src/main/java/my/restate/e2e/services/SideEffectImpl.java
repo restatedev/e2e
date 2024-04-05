@@ -18,9 +18,9 @@ public class SideEffectImpl implements SideEffect {
   public int invokeSideEffects(Context ctx) {
     AtomicInteger invokedSideEffects = new AtomicInteger(0);
 
-    ctx.sideEffect(() -> invokedSideEffects.incrementAndGet());
-    ctx.sideEffect(() -> invokedSideEffects.incrementAndGet());
-    ctx.sideEffect(() -> invokedSideEffects.incrementAndGet());
+    ctx.run(() -> invokedSideEffects.incrementAndGet());
+    ctx.run(() -> invokedSideEffects.incrementAndGet());
+    ctx.run(() -> invokedSideEffects.incrementAndGet());
 
     return invokedSideEffects.get();
   }

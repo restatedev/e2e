@@ -53,7 +53,7 @@ public class FailingImpl implements Failing {
     Awakeable<byte[]> awakeable = ctx.awakeable(CoreSerdes.RAW);
 
     try {
-      ctx.sideEffect(
+      ctx.run(
           () -> {
             try {
               NumberSortHttpServerUtils.sendSortNumbersRequest(
@@ -97,7 +97,7 @@ public class FailingImpl implements Failing {
   @Override
   public int failingSideEffectWithEventualSuccess(ObjectContext context) {
     final int successAttempt =
-        context.sideEffect(
+        context.run(
             CoreSerdes.JSON_INT,
             () -> {
               final int currentAttempt = this.eventualSuccessSideEffectCalls.incrementAndGet();
@@ -115,7 +115,7 @@ public class FailingImpl implements Failing {
 
   @Override
   public void terminallyFailingSideEffect(ObjectContext context, String errorMessage) {
-    context.sideEffect(
+    context.run(
         () -> {
           throw new TerminalException(errorMessage);
         });
