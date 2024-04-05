@@ -10,6 +10,7 @@
 plugins {
   java
   kotlin("jvm")
+  kotlin("plugin.serialization")
 }
 
 dependencies {
@@ -32,6 +33,13 @@ dependencies {
   testImplementation(libs.jackson.databind)
 
   testImplementation("org.apache.kafka:kafka-clients:3.5.0")
+
+  testImplementation(libs.kotlinx.serialization.core)
+  testImplementation(libs.kotlinx.serialization.json)
+  testImplementation(libs.ktor.client.core)
+  testImplementation(libs.ktor.client.java)
+  testImplementation(libs.ktor.client.content.negotiation)
+  testImplementation(libs.ktor.serialization.kotlinx.json)
 
   testImplementation(libs.awaitility)
 }

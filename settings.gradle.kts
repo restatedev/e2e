@@ -35,7 +35,7 @@ dependencyResolutionManagement {
       version("junit-jupiter", "5.10.0")
       version("assertj", "3.24.2")
       version("testcontainers", "1.19.0")
-      version("awaitility", "4.2.0")
+      version("awaitility", "4.2.1")
 
       version("errorprone", "2.18.0")
 
@@ -73,6 +73,11 @@ dependencyResolutionManagement {
       library("testcontainers-toxiproxy", "org.testcontainers", "toxiproxy")
           .versionRef("testcontainers")
       library("awaitility", "org.awaitility", "awaitility-kotlin").versionRef("awaitility")
+
+      library("kotlinx-serialization-core", "org.jetbrains.kotlinx", "kotlinx-serialization-core")
+          .version("1.6.2")
+      library("kotlinx-serialization-json", "org.jetbrains.kotlinx", "kotlinx-serialization-json")
+          .version("1.6.2")
 
       library("errorprone", "com.google.errorprone", "error_prone_core").versionRef("errorprone")
     }
