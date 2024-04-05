@@ -22,6 +22,7 @@ import "./non_determinism";
 import "./random_number_list";
 import "./failing";
 import "./side_effect";
+import "./interpreter/entry_point";
 
 import { REGISTRY } from "./services";
 
