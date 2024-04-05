@@ -10,8 +10,7 @@
 package dev.restate.e2e.utils
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
-import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
+import com.fasterxml.jackson.dataformat.toml.TomlFactory
 import dev.restate.admin.api.DeploymentApi
 import dev.restate.admin.client.ApiClient
 import dev.restate.admin.client.ApiException
@@ -226,7 +225,7 @@ private constructor(
     val ingressPort =
         URI(
                 "http",
-                configSchema?.worker?.ingress?.bindAddress ?: IngressOptions().bindAddress,
+                configSchema?.ingress?.bindAddress ?: IngressOptions().bindAddress,
                 "/",
                 null,
                 null)
@@ -308,9 +307,8 @@ private constructor(
         .dependsOn(additionalContainers.values)
         .withEnv(runtimeContainerEnvs)
         // These envs should not be overriden by additionalEnv
-        .withEnv("RESTATE_META__REST_ADDRESS", "0.0.0.0:${RUNTIME_META_ENDPOINT_PORT}")
-        .withEnv(
-            "RESTATE_WORKER__INGRESS__BIND_ADDRESS", "0.0.0.0:${RUNTIME_INGRESS_ENDPOINT_PORT}")
+        .withEnv("RESTATE_ADMIN__BIND_ADDRESS", "0.0.0.0:${RUNTIME_META_ENDPOINT_PORT}")
+        .withEnv("RESTATE_INGRESS__BIND_ADDRESS", "0.0.0.0:${RUNTIME_INGRESS_ENDPOINT_PORT}")
         .withNetwork(network)
         .withNetworkAliases(RESTATE_RUNTIME)
         .withLogConsumer(ContainerLogger(testReportDir, "restate-runtime"))
@@ -323,9 +321,7 @@ private constructor(
       runtimeContainer.addFileSystemBind(
           stateDir.toString(), "/state", BindMode.READ_WRITE, SelinuxContext.SINGLE)
     }
-    runtimeContainer
-        .withEnv("RESTATE_META__STORAGE_PATH", "/state/meta")
-        .withEnv("RESTATE_WORKER__STORAGE_ROCKSDB__PATH", "/state/worker")
+    runtimeContainer.withEnv("RESTATE_BASE_DIR", "/state")
 
     if (this.enableTracesExport) {
       // Create and mount traces directory
@@ -333,15 +329,14 @@ private constructor(
       tracesDir.mkdirs()
       runtimeContainer.addFileSystemBind(
           tracesDir.toString(), "/traces", BindMode.READ_WRITE, SelinuxContext.SINGLE)
-      runtimeContainer.withEnv("RESTATE_OBSERVABILITY__TRACING__JSON_FILE_EXPORT_PATH", "/traces")
+      runtimeContainer.withEnv("RESTATE_TRACING_JSON_PATH", "/traces")
     }
 
     if (this.configSchema != null) {
-      val yamlMapper =
-          ObjectMapper(YAMLFactory().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER))
+      val tomlMapper = ObjectMapper(TomlFactory())
       runtimeContainer.withCopyToContainer(
-          Transferable.of(yamlMapper.writeValueAsBytes(this.configSchema)), "/config.yaml")
-      runtimeContainer.withEnv("RESTATE_CONFIG", "/config.yaml")
+          Transferable.of(tomlMapper.writeValueAsBytes(this.configSchema)), "/config.toml")
+      runtimeContainer.withEnv("RESTATE_CONFIG", "/config.toml")
     }
 
     val pullPolicy = System.getenv(IMAGE_PULL_POLICY_ENV)

@@ -4,6 +4,72 @@
   "description": "Configuration for the Restate single binary deployment.\n\nYou can specify the configuration file to use through the `--config-file <PATH>` argument or with `RESTATE_CONFIG=<PATH>` environment variable.\n\nEach configuration entry can be overridden using environment variables, prefixing them with `RESTATE_` and separating nested structs with `__` (double underscore).\n\nFor example, to configure `admin.bind_address`, the corresponding environment variable is `RESTATE_ADMIN__BIND_ADDRESS`.",
   "type": "object",
   "properties": {
+    "worker": {
+      "default": {
+        "bootstrap-num-partitions": 64,
+        "internal-queue-length": 64,
+        "invoker": {
+          "abort-timeout": "1m",
+          "concurrent-invocations-limit": null,
+          "disable-eager-state": false,
+          "inactivity-timeout": "1m",
+          "message-size-limit": null,
+          "message-size-warning": 10485760,
+          "retry-policy": {
+            "factor": 2.0,
+            "initial-interval": "50ms",
+            "max-attempts": 9223372036854775807,
+            "max-interval": "10s",
+            "type": "exponential"
+          },
+          "tmp-dir": null
+        },
+        "num-timers-in-memory-limit": null,
+        "rocksdb-disable-wal": true
+      },
+      "$ref": "#/definitions/WorkerOptions"
+    },
+    "admin": {
+      "default": {
+        "bind-address": "0.0.0.0:9070",
+        "concurrent-api-requests-limit": 2305843009213693950,
+        "query-engine": {
+          "memory-limit": null,
+          "pgsql-bind-address": "0.0.0.0:9071",
+          "query-parallelism": null,
+          "tmp-dir": null
+        }
+      },
+      "$ref": "#/definitions/AdminOptions"
+    },
+    "ingress": {
+      "default": {
+        "bind-address": "0.0.0.0:8080",
+        "concurrent-api-requests-limit": 2305843009213693950,
+        "kafka-clusters": []
+      },
+      "$ref": "#/definitions/IngressOptions"
+    },
+    "bifrost": {
+      "default": {
+        "default-provider": "local",
+        "local": {
+          "rocksdb-disable-wal": false,
+          "writer-commit-batch-size-threshold": 200,
+          "writer-commit-time-interval": "13ms",
+          "writer-queue-len": 200
+        }
+      },
+      "$ref": "#/definitions/BifrostOptions"
+    },
+    "metadata-store": {
+      "default": {
+        "bind-address": "0.0.0.0:5123",
+        "request-queue-length": 32,
+        "rocksdb": {}
+      },
+      "$ref": "#/definitions/LocalMetadataStoreOptions"
+    },
     "roles": {
       "description": "Defines the roles which this Restate node should run, by default the node starts with all roles.",
       "default": [
@@ -16,13 +82,16 @@
         "type": "string"
       }
     },
-    "node_name": {
+    "node-name": {
       "title": "Node Name",
-      "description": "Unique name for this node in the cluster. The node must not change unless it's started with empty local store. It defaults to the node hostname.",
-      "default": "localhost",
-      "type": "string"
+      "description": "Unique name for this node in the cluster. The node must not change unless it's started with empty local store. It defaults to the node's hostname.",
+      "default": null,
+      "type": [
+        "string",
+        "null"
+      ]
     },
-    "force_node_id": {
+    "force-node-id": {
       "description": "If set, the node insists on acquiring this node ID.",
       "default": null,
       "anyOf": [
@@ -34,39 +103,47 @@
         }
       ]
     },
-    "cluster_name": {
+    "cluster-name": {
       "title": "Cluster Name",
       "description": "A unique identifier for the cluster. All nodes in the same cluster should have the same.",
       "default": "localcluster",
       "type": "string"
     },
-    "allow_bootstrap": {
+    "allow-bootstrap": {
       "description": "If true, then a new cluster is bootstrapped. This node *must* be has an admin role and a new nodes configuration will be created that includes this node.",
       "default": true,
       "type": "boolean"
     },
-    "metadata_store_address": {
+    "base-dir": {
+      "description": "The working directory which this Restate node should use for relative paths. The default is `restate-data` under the current working directory.",
+      "default": null,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "metadata-store-address": {
       "description": "Address of the metadata store server to bootstrap the node from.",
       "default": "http://127.0.0.1:5123/",
       "type": "string"
     },
-    "bind_address": {
+    "bind-address": {
       "description": "Address to bind for the Node server. Default is `0.0.0.0:5122`",
       "default": "0.0.0.0:5122",
       "type": "string"
     },
-    "advertise_address": {
+    "advertised-address": {
       "description": "Address that other nodes will use to connect to this node. Default is `http://127.0.0.1:5122/`",
       "default": "http://127.0.0.1:5122/",
       "type": "string"
     },
-    "shutdown_timeout": {
+    "shutdown-timeout": {
       "title": "Shutdown grace timeout",
       "description": "This timeout is used when shutting down the various Restate components to drain all the internal queues.\n\nCan be configured using the [`humantime`](https://docs.rs/humantime/latest/humantime/fn.parse_duration.html) format.",
       "default": "1m",
       "type": "string"
     },
-    "default_thread_pool_size": {
+    "default-thread-pool-size": {
       "title": "Default async runtime thread pool",
       "description": "Size of the default thread pool used to perform internal tasks. If not set, it defaults to the number of CPU cores.",
       "default": null,
@@ -77,7 +154,7 @@
       "format": "uint",
       "minimum": 0.0
     },
-    "tracing_endpoint": {
+    "tracing-endpoint": {
       "title": "Tracing Endpoint",
       "description": "Specify the tracing endpoint to send traces to. Traces will be exported using [OTLP gRPC](https://opentelemetry.io/docs/specs/otlp/#otlpgrpc) through [opentelemetry_otlp](https://docs.rs/opentelemetry-otlp/0.12.0/opentelemetry_otlp/).\n\nTo configure the sampling, please refer to the [opentelemetry autoconfigure docs](https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/autoconfigure/README.md#sampler).",
       "default": null,
@@ -86,7 +163,7 @@
         "null"
       ]
     },
-    "tracing_json_path": {
+    "tracing-json-path": {
       "title": "Distributed Tracing JSON Export Path",
       "description": "If set, an exporter will be configured to write traces to files using the Jaeger JSON format. Each trace file will start with the `trace` prefix.\n\nIf unset, no traces will be written to file.\n\nIt can be used to export traces in a structured format without configuring a Jaeger agent.\n\nTo inspect the traces, open the Jaeger UI and use the Upload JSON feature to load and inspect them.",
       "default": null,
@@ -95,31 +172,31 @@
         "null"
       ]
     },
-    "tracing_filter": {
+    "tracing-filter": {
       "title": "Tracing Filter",
       "description": "Distributed tracing exporter filter. Check the [`RUST_LOG` documentation](https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html) for more details how to configure it.",
       "default": "info",
       "type": "string"
     },
-    "log_filter": {
+    "log-filter": {
       "title": "Logging Filter",
       "description": "Log filter configuration. Can be overridden by the `RUST_LOG` environment variable. Check the [`RUST_LOG` documentation](https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html) for more details how to configure it.",
       "default": "warn,restate=info",
       "type": "string"
     },
-    "log_format": {
+    "log-format": {
       "title": "Logging format",
       "description": "Format to use when logging.",
       "default": "pretty",
       "$ref": "#/definitions/LogFormat"
     },
-    "log_disable_ansi_codes": {
+    "log-disable-ansi-codes": {
       "title": "Disable ANSI in log output",
       "description": "Disable ANSI terminal codes for logs. This is useful when the log collector doesn't support processing ANSI terminal codes.",
       "default": false,
       "type": "boolean"
     },
-    "histogram_inactivity_timeout": {
+    "histogram-inactivity-timeout": {
       "description": "Timeout for idle histograms.\n\nThe duration after which a histogram is considered idle and will be removed from metric responses to save memory. Unsetting means that histograms will never be removed.",
       "default": null,
       "type": [
@@ -127,371 +204,232 @@
         "null"
       ]
     },
-    "disable_prometheus": {
+    "disable-prometheus": {
       "description": "Disable prometheus metric recording and reporting. Default is `false`.",
       "default": false,
       "type": "boolean"
     },
-    "worker": {
+    "http-keep-alive-options": {
+      "title": "HTTP/2 Keep-alive",
+      "description": "Configuration for the HTTP/2 keep-alive mechanism, using PING frames. If unset, HTTP/2 keep-alive are disabled.",
       "default": {
-        "channel_size": 64,
-        "ingress": {
-          "bind_address": "0.0.0.0:8080",
-          "concurrency_limit": 10000000
-        },
-        "invoker": {
-          "abort_timeout": "1m",
-          "concurrency_limit": null,
-          "disable_eager_state": false,
-          "inactivity_timeout": "1m",
-          "message_size_limit": null,
-          "message_size_warning": 10485760,
-          "retry_policy": {
-            "factor": 2.0,
-            "initial-interval": "50ms",
-            "max-attempts": 9223372036854775807,
-            "max-interval": "10s",
-            "type": "exponential"
-          },
-          "service_client": {
-            "aws_assume_role_external_id": null,
-            "aws_profile": null,
-            "http_keep_alive_options": {
-              "interval": "40s",
-              "timeout": "20s"
-            },
-            "http_proxy": null
-          },
-          "tmp_dir": "/var/folders/9_/5xtjs16s0xd1yfysv6b9h8b80000gn/T/invoker-018e840f768a7a09bdc95f7fb30cb71d"
-        },
-        "partitions": 64,
-        "storage_query_datafusion": {
-          "memory_limit": null,
-          "query_parallelism": null,
-          "temp_folder": null
-        },
-        "storage_query_postgres": {
-          "bind_address": "0.0.0.0:9071"
-        },
-        "storage_rocksdb": {
-          "cache_size": 0,
-          "disable_statistics": false,
-          "max_total_wal_size": 2147483648,
-          "path": "./restate-data/db",
-          "threads": 10,
-          "write_buffer_size": 0
-        },
-        "timers": {
-          "num_timers_in_memory_limit": 1024
-        }
+        "interval": "40s",
+        "timeout": "20s"
       },
-      "$ref": "#/definitions/WorkerOptions"
+      "$ref": "#/definitions/Http2KeepAliveOptions"
     },
-    "admin": {
-      "default": {
-        "bind_address": "0.0.0.0:9070",
-        "concurrent_api_requests_limit": 1000,
-        "discovery": {
-          "aws_assume_role_external_id": null,
-          "aws_profile": null,
-          "http_keep_alive_options": {
-            "interval": "40s",
-            "timeout": "20s"
-          },
-          "http_proxy": null
-        },
-        "schema_storage_path": "./restate-data/meta"
-      },
-      "$ref": "#/definitions/AdminOptions"
+    "http-proxy": {
+      "title": "Proxy URI",
+      "description": "A URI, such as `http://127.0.0.1:10001`, of a server to which all invocations should be sent, with the `Host` header set to the deployment URI. HTTPS proxy URIs are supported, but only HTTP endpoint traffic will be proxied currently. Can be overridden by the `HTTP_PROXY` environment variable.",
+      "default": null,
+      "type": [
+        "string",
+        "null"
+      ]
     },
-    "bifrost": {
-      "default": {
-        "default_provider": "local",
-        "local": {
-          "flush_wal_on_commit": true,
-          "path": "./restate-data/local_loglet",
-          "rocksdb_cache_size": 0,
-          "rocksdb_disable_statistics": true,
-          "rocksdb_disable_wal": false,
-          "rocksdb_max_total_wal_size": 2147483648,
-          "rocksdb_threads": 10,
-          "rocksdb_write_buffer_size": 0,
-          "writer_commit_batch_size_threshold": 200,
-          "writer_commit_time_interval": "13ms",
-          "writer_queue_len": 200
-        }
-      },
-      "$ref": "#/definitions/BifrostOptions"
+    "request-identity-private-key-pem-file": {
+      "title": "Request identity private key PEM file",
+      "description": "A path to a file, such as \"/var/secrets/key.pem\", which contains exactly one ed25519 private key in PEM format. Such a file can be generated with `openssl genpkey -algorithm ed25519`. If provided, this key will be used to attach JWTs to HTTP requests from this client which SDKs may optionally verify, proving that the caller is a particular Restate instance.\n\nThis file is currently only read on client creation, but this may change in future. Parsed public keys will be logged at INFO level in the same format that SDKs expect.",
+      "default": null,
+      "type": [
+        "string",
+        "null"
+      ]
     },
-    "metadata_store": {
-      "default": {
-        "bind_address": "0.0.0.0:5123",
-        "path": "./restate-data/local_metadata_store",
-        "request_queue_length": 32
-      },
-      "$ref": "#/definitions/LocalMetadataStoreOptions"
+    "aws_profile": {
+      "title": "AWS Profile",
+      "description": "Name of the AWS profile to select. Defaults to 'AWS_PROFILE' env var, or otherwise the `default` profile.",
+      "default": null,
+      "type": [
+        "string",
+        "null"
+      ]
     },
-    "kafka": {
-      "default": {
-        "clusters": {}
-      },
-      "$ref": "#/definitions/SubscriptionOptions"
+    "aws_assume_role_external_id": {
+      "title": "AssumeRole external ID",
+      "description": "An external ID to apply to any AssumeRole operations taken by this client. https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-user_externalid.html Can be overridden by the `AWS_EXTERNAL_ID` environment variable.",
+      "default": null,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "rocksdb-num-threads": {
+      "title": "Threads",
+      "description": "The number of threads to reserve to Rocksdb background tasks.",
+      "type": [
+        "integer",
+        "null"
+      ],
+      "format": "uint",
+      "minimum": 0.0
+    },
+    "rocksdb-write-buffer-size": {
+      "title": "Write Buffer size",
+      "description": "The size of a single memtable. Once memtable exceeds this size, it is marked immutable and a new one is created. The default is set such that 3 column families per table will use a total of 50% of the global memory limit (`MEMORY_LIMIT`), which defaults to 3GiB, leading to a value of 64MiB with 8 tables.",
+      "type": [
+        "integer",
+        "null"
+      ],
+      "format": "uint",
+      "minimum": 0.0
+    },
+    "rocksdb-max-total-wal-size": {
+      "title": "Maximum total WAL size",
+      "description": "Max WAL size, that after this Rocksdb start flushing mem tables to disk. Default is 2GB.",
+      "type": [
+        "integer",
+        "null"
+      ],
+      "format": "uint64",
+      "minimum": 0.0
+    },
+    "rocksdb-disable-wal": {
+      "title": "Disable WAL",
+      "description": "The default depends on the different rocksdb use-cases at Restate.\n\nSupports hot-reloading (Partial / Bifrost only)",
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "rocksdb-batch-wal-flushes": {
+      "title": "Flush WAL in batches",
+      "description": "when WAL is enabled, this allows Restate server to control WAL flushes in batches. This trades off latency for IO throughput.\n\nDefault: True.",
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "rocksdb-cache-size": {
+      "title": "Maximum cache size",
+      "description": "The memory size used for rocksdb caches. Default is 1GB.",
+      "type": [
+        "integer",
+        "null"
+      ],
+      "format": "uint",
+      "minimum": 0.0
+    },
+    "rocksdb-disable-statistics": {
+      "description": "Disable rocksdb statistics collection\n\nDefault: False (statistics enabled)",
+      "type": [
+        "boolean",
+        "null"
+      ]
     }
   },
   "definitions": {
-    "PlainNodeId": {
-      "type": "integer",
-      "format": "uint32",
-      "minimum": 0.0
-    },
-    "LogFormat": {
-      "title": "Log format",
-      "oneOf": [
-        {
-          "title": "Pretty",
-          "description": "Enables verbose logging. Not recommended in production.",
-          "type": "string",
-          "enum": [
-            "pretty"
-          ]
-        },
-        {
-          "title": "Compact",
-          "description": "Enables compact logging.",
-          "type": "string",
-          "enum": [
-            "compact"
-          ]
-        },
-        {
-          "title": "Json",
-          "description": "Enables json logging. You can use a json log collector to ingest these logs and further process them.",
-          "type": "string",
-          "enum": [
-            "json"
-          ]
-        }
-      ]
-    },
     "WorkerOptions": {
       "title": "Worker options",
       "type": "object",
       "properties": {
-        "channel_size": {
-          "title": "Bounded channel size",
+        "internal-queue-length": {
+          "title": "Internal queue for partition processor communication",
           "default": 64,
           "type": "integer",
           "format": "uint",
           "minimum": 0.0
         },
-        "timers": {
-          "default": {
-            "num_timers_in_memory_limit": 1024
-          },
-          "$ref": "#/definitions/TimerOptions"
-        },
-        "storage_query_datafusion": {
-          "default": {
-            "memory_limit": null,
-            "query_parallelism": null,
-            "temp_folder": null
-          },
-          "$ref": "#/definitions/StorageQueryDatafusionOptions"
-        },
-        "storage_query_postgres": {
-          "default": {
-            "bind_address": "0.0.0.0:9071"
-          },
-          "$ref": "#/definitions/StorageQueryPostgresOptions"
-        },
-        "storage_rocksdb": {
-          "default": {
-            "cache_size": 0,
-            "disable_statistics": false,
-            "max_total_wal_size": 2147483648,
-            "path": "./restate-data/db",
-            "threads": 10,
-            "write_buffer_size": 0
-          },
-          "$ref": "#/definitions/StorageOptions"
-        },
-        "ingress": {
-          "default": {
-            "bind_address": "0.0.0.0:8080",
-            "concurrency_limit": 10000000
-          },
-          "$ref": "#/definitions/IngressOptions"
+        "num-timers-in-memory-limit": {
+          "title": "Num timers in memory limit",
+          "description": "The number of timers in memory limit is used to bound the amount of timers loaded in memory. If this limit is set, when exceeding it, the timers farther in the future will be spilled to disk.",
+          "default": null,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint",
+          "minimum": 0.0
         },
         "invoker": {
           "default": {
-            "abort_timeout": "1m",
-            "concurrency_limit": null,
-            "disable_eager_state": false,
-            "inactivity_timeout": "1m",
-            "message_size_limit": null,
-            "message_size_warning": 10485760,
-            "retry_policy": {
+            "abort-timeout": "1m",
+            "concurrent-invocations-limit": null,
+            "disable-eager-state": false,
+            "inactivity-timeout": "1m",
+            "message-size-limit": null,
+            "message-size-warning": 10485760,
+            "retry-policy": {
               "factor": 2.0,
               "initial-interval": "50ms",
               "max-attempts": 9223372036854775807,
               "max-interval": "10s",
               "type": "exponential"
             },
-            "service_client": {
-              "aws_assume_role_external_id": null,
-              "aws_profile": null,
-              "http_keep_alive_options": {
-                "interval": "40s",
-                "timeout": "20s"
-              },
-              "http_proxy": null
-            },
-            "tmp_dir": "/var/folders/9_/5xtjs16s0xd1yfysv6b9h8b80000gn/T/invoker-018ea4f4f8557f30b3b59be1d20b2b71"
+            "tmp-dir": null
           },
           "$ref": "#/definitions/InvokerOptions"
         },
-        "partitions": {
+        "bootstrap-num-partitions": {
           "title": "Partitions",
-          "description": "Number of partitions to be used to process messages.\n\nNote: This config entry **will be removed** in future Restate releases, as the partitions number will be dynamically configured depending on the load.\n\nCannot be higher than `4611686018427387903` (You should almost never need as many partitions anyway)",
+          "description": "Number of partitions that will be provisioned during cluster bootstrap, partitions used to process messages.\n\nNOTE: This config entry only impacts the initial number of partitions, the value of this entry is ignored for bootstrapped nodes/clusters.\n\nCannot be higher than `4611686018427387903` (You should almost never need as many partitions anyway)",
           "default": 64,
           "type": "integer",
           "format": "uint64",
           "minimum": 0.0
-        }
-      }
-    },
-    "TimerOptions": {
-      "title": "Timer options",
-      "type": "object",
-      "properties": {
-        "num_timers_in_memory_limit": {
-          "title": "Num timers in memory limit",
-          "description": "The number of timers in memory limit is used to bound the amount of timers loaded in memory. If this limit is set, when exceeding it, the timers farther in the future will be spilled to disk.",
-          "default": 1024,
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint",
-          "minimum": 0.0
-        }
-      }
-    },
-    "StorageQueryDatafusionOptions": {
-      "title": "Storage query datafusion options",
-      "type": "object",
-      "properties": {
-        "memory_limit": {
-          "title": "Memory limit",
-          "description": "The total memory in bytes that can be used to preform sql queries",
-          "default": null,
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint",
-          "minimum": 0.0
         },
-        "temp_folder": {
-          "title": "Temp folder to use for spill",
-          "description": "The path to spill to",
-          "default": null,
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "query_parallelism": {
-          "title": "Default query parallelism",
-          "description": "The number of parallel partitions to use for a query execution",
-          "default": null,
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint",
-          "minimum": 0.0
-        }
-      }
-    },
-    "StorageQueryPostgresOptions": {
-      "title": "Storage query postgres options",
-      "type": "object",
-      "properties": {
-        "bind_address": {
-          "title": "Bind address",
-          "description": "The address to bind for the psql service.",
-          "default": "0.0.0.0:9071",
-          "type": "string"
-        }
-      }
-    },
-    "StorageOptions": {
-      "title": "Storage options",
-      "type": "object",
-      "properties": {
-        "path": {
-          "title": "Storage path",
-          "description": "The root path to use for the Rocksdb storage.",
-          "default": "./restate-data/db",
-          "type": "string"
-        },
-        "threads": {
+        "rocksdb-num-threads": {
           "title": "Threads",
           "description": "The number of threads to reserve to Rocksdb background tasks.",
-          "default": 10,
-          "type": "integer",
+          "type": [
+            "integer",
+            "null"
+          ],
           "format": "uint",
           "minimum": 0.0
         },
-        "write_buffer_size": {
+        "rocksdb-write-buffer-size": {
           "title": "Write Buffer size",
           "description": "The size of a single memtable. Once memtable exceeds this size, it is marked immutable and a new one is created. The default is set such that 3 column families per table will use a total of 50% of the global memory limit (`MEMORY_LIMIT`), which defaults to 3GiB, leading to a value of 64MiB with 8 tables.",
-          "default": 0,
-          "type": "integer",
+          "type": [
+            "integer",
+            "null"
+          ],
           "format": "uint",
           "minimum": 0.0
         },
-        "max_total_wal_size": {
+        "rocksdb-max-total-wal-size": {
           "title": "Maximum total WAL size",
-          "description": "Max WAL size, that after this Rocksdb start flushing mem tables to disk.",
-          "default": 2147483648,
-          "type": "integer",
+          "description": "Max WAL size, that after this Rocksdb start flushing mem tables to disk. Default is 2GB.",
+          "type": [
+            "integer",
+            "null"
+          ],
           "format": "uint64",
           "minimum": 0.0
         },
-        "cache_size": {
+        "rocksdb-disable-wal": {
+          "title": "Disable WAL",
+          "description": "The default depends on the different rocksdb use-cases at Restate.\n\nSupports hot-reloading (Partial / Bifrost only)",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "rocksdb-batch-wal-flushes": {
+          "title": "Flush WAL in batches",
+          "description": "when WAL is enabled, this allows Restate server to control WAL flushes in batches. This trades off latency for IO throughput.\n\nDefault: True.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "rocksdb-cache-size": {
           "title": "Maximum cache size",
-          "description": "The memory size used for rocksdb caches. The default is roughly 33% of the global memory limit (set with `MEMORY_LIMIT`), which defaults to 3GiB, leading to a value of 1GiB.",
-          "default": 0,
-          "type": "integer",
+          "description": "The memory size used for rocksdb caches. Default is 1GB.",
+          "type": [
+            "integer",
+            "null"
+          ],
           "format": "uint",
           "minimum": 0.0
         },
-        "disable_statistics": {
-          "description": "Disable rocksdb statistics collection",
-          "default": false,
-          "type": "boolean"
-        }
-      }
-    },
-    "IngressOptions": {
-      "title": "Ingress options",
-      "type": "object",
-      "properties": {
-        "bind_address": {
-          "title": "Bind address",
-          "description": "The address to bind for the ingress.",
-          "default": "0.0.0.0:8080",
-          "type": "string"
-        },
-        "concurrency_limit": {
-          "title": "Concurrency limit",
-          "description": "Local concurrency limit to use to limit the amount of concurrent requests. If exceeded, the ingress will reply immediately with an appropriate status code.",
-          "default": 10000000,
-          "type": "integer",
-          "format": "uint",
-          "minimum": 0.0
+        "rocksdb-disable-statistics": {
+          "description": "Disable rocksdb statistics collection\n\nDefault: False (statistics enabled)",
+          "type": [
+            "boolean",
+            "null"
+          ]
         }
       }
     },
@@ -499,7 +437,7 @@
       "title": "Invoker options",
       "type": "object",
       "properties": {
-        "retry_policy": {
+        "retry-policy": {
           "title": "Retry policy",
           "description": "Retry policy to use for all the invocations handled by this invoker.",
           "default": {
@@ -511,19 +449,19 @@
           },
           "$ref": "#/definitions/RetryPolicy"
         },
-        "inactivity_timeout": {
+        "inactivity-timeout": {
           "title": "Inactivity timeout",
           "description": "This timer guards against stalled service/handler invocations. Once it expires, Restate triggers a graceful termination by asking the service invocation to suspend (which preserves intermediate progress).\n\nThe 'abort timeout' is used to abort the invocation, in case it doesn't react to the request to suspend.\n\nCan be configured using the [`humantime`](https://docs.rs/humantime/latest/humantime/fn.parse_duration.html) format.",
           "default": "1m",
           "type": "string"
         },
-        "abort_timeout": {
+        "abort-timeout": {
           "title": "Abort timeout",
           "description": "This timer guards against stalled service/handler invocations that are supposed to terminate. The abort timeout is started after the 'inactivity timeout' has expired and the service/handler invocation has been asked to gracefully terminate. Once the timer expires, it will abort the service/handler invocation.\n\nThis timer potentially **interrupts** user code. If the user code needs longer to gracefully terminate, then this value needs to be set accordingly.\n\nCan be configured using the [`humantime`](https://docs.rs/humantime/latest/humantime/fn.parse_duration.html) format.",
           "default": "1m",
           "type": "string"
         },
-        "message_size_warning": {
+        "message-size-warning": {
           "title": "Message size warning",
           "description": "Threshold to log a warning in case protocol messages coming from a service are larger than the specified amount.",
           "default": 10485760,
@@ -531,7 +469,7 @@
           "format": "uint",
           "minimum": 0.0
         },
-        "message_size_limit": {
+        "message-size-limit": {
           "title": "Message size limit",
           "description": "Threshold to fail the invocation in case protocol messages coming from a service are larger than the specified amount.",
           "default": null,
@@ -542,14 +480,17 @@
           "format": "uint",
           "minimum": 0.0
         },
-        "tmp_dir": {
+        "tmp-dir": {
           "title": "Temporary directory",
           "description": "Temporary directory to use for the invoker temporary files. If empty, the system temporary directory will be used instead.",
-          "default": "/var/folders/9_/5xtjs16s0xd1yfysv6b9h8b80000gn/T/invoker-018e840f768a7fb4894defad32d52e35",
-          "type": "string"
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
         },
-        "concurrency_limit": {
-          "title": "Concurrency limit",
+        "concurrent-invocations-limit": {
+          "title": "Limit number of concurrent invocations from this node",
           "description": "Number of concurrent invocations that can be processed by the invoker.",
           "default": null,
           "type": [
@@ -558,18 +499,6 @@
           ],
           "format": "uint",
           "minimum": 0.0
-        },
-        "service_client": {
-          "default": {
-            "aws_assume_role_external_id": null,
-            "aws_profile": null,
-            "http_keep_alive_options": {
-              "interval": "40s",
-              "timeout": "20s"
-            },
-            "http_proxy": null
-          },
-          "$ref": "#/definitions/ServiceClientOptions"
         }
       }
     },
@@ -670,54 +599,271 @@
         }
       ]
     },
-    "ServiceClientOptions": {
-      "title": "Client options",
+    "AdminOptions": {
+      "title": "Admin server options",
       "type": "object",
       "properties": {
-        "http_keep_alive_options": {
-          "title": "HTTP/2 Keep-alive",
-          "description": "Configuration for the HTTP/2 keep-alive mechanism, using PING frames. If unset, HTTP/2 keep-alive are disabled.",
+        "bind-address": {
+          "title": "Endpoint address",
+          "description": "Address to bind for the Admin APIs.",
+          "default": "0.0.0.0:9070",
+          "type": "string"
+        },
+        "concurrent-api-requests-limit": {
+          "title": "Concurrency limit",
+          "description": "Concurrency limit for the Admin APIs. Max allowed value is 2305843009213693950",
+          "default": 2305843009213693950,
+          "type": "integer",
+          "format": "uint",
+          "minimum": 0.0
+        },
+        "query-engine": {
           "default": {
-            "interval": "40s",
-            "timeout": "20s"
+            "memory-limit": null,
+            "pgsql-bind-address": "0.0.0.0:9071",
+            "query-parallelism": null,
+            "tmp-dir": null
           },
-          "anyOf": [
-            {
-              "$ref": "#/definitions/Http2KeepAliveOptions"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "$ref": "#/definitions/QueryEngineOptions"
+        }
+      }
+    },
+    "QueryEngineOptions": {
+      "title": "Storage query engine options",
+      "type": "object",
+      "properties": {
+        "memory-limit": {
+          "title": "Memory limit",
+          "description": "The total memory in bytes that can be used to preform sql queries",
+          "default": null,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint",
+          "minimum": 0.0
         },
-        "http_proxy": {
-          "title": "Proxy URI",
-          "description": "A URI, such as `http://127.0.0.1:10001`, of a server to which all invocations should be sent, with the `Host` header set to the deployment URI. HTTPS proxy URIs are supported, but only HTTP endpoint traffic will be proxied currently. Can be overridden by the `HTTP_PROXY` environment variable.",
+        "tmp-dir": {
+          "title": "Temp folder to use for spill",
+          "description": "The path to spill to",
           "default": null,
           "type": [
             "string",
             "null"
           ]
         },
-        "aws_profile": {
-          "title": "AWS Profile",
-          "description": "Name of the AWS profile to select. Defaults to 'AWS_PROFILE' env var, or otherwise the `default` profile.",
+        "query-parallelism": {
+          "title": "Default query parallelism",
+          "description": "The number of parallel partitions to use for a query execution",
           "default": null,
           "type": [
-            "string",
+            "integer",
+            "null"
+          ],
+          "format": "uint",
+          "minimum": 0.0
+        },
+        "pgsql-bind-address": {
+          "title": "Pgsql Bind address",
+          "description": "The address to bind for the psql service.",
+          "default": "0.0.0.0:9071",
+          "type": "string"
+        }
+      }
+    },
+    "IngressOptions": {
+      "title": "Ingress options",
+      "type": "object",
+      "properties": {
+        "bind-address": {
+          "title": "Bind address",
+          "description": "The address to bind for the ingress.",
+          "default": "0.0.0.0:8080",
+          "type": "string"
+        },
+        "concurrent-api-requests-limit": {
+          "title": "Concurrency limit",
+          "description": "Local concurrency limit to use to limit the amount of concurrent requests. If exceeded, the ingress will reply immediately with an appropriate status code. Max allowed value is 2305843009213693950",
+          "default": 2305843009213693950,
+          "type": "integer",
+          "format": "uint",
+          "minimum": 0.0
+        },
+        "kafka-clusters": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/KafkaClusterOptions"
+          }
+        }
+      }
+    },
+    "KafkaClusterOptions": {
+      "title": "Kafka cluster options",
+      "description": "Configuration options to connect to a Kafka cluster.",
+      "type": "object",
+      "required": [
+        "brokers",
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "description": "Cluster name (Used to identify subscriptions).",
+          "type": "string"
+        },
+        "brokers": {
+          "title": "Servers",
+          "description": "Initial list of brokers (host or host:port).",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "BifrostOptions": {
+      "title": "Bifrost options",
+      "type": "object",
+      "properties": {
+        "default-provider": {
+          "title": "The default kind of loglet to be used",
+          "default": "local",
+          "type": "string"
+        },
+        "local": {
+          "description": "Configuration of local loglet provider",
+          "default": {
+            "rocksdb-disable-wal": false,
+            "writer-commit-batch-size-threshold": 200,
+            "writer-commit-time-interval": "13ms",
+            "writer-queue-len": 200
+          },
+          "type": "string"
+        }
+      }
+    },
+    "LocalMetadataStoreOptions": {
+      "type": "object",
+      "properties": {
+        "bind-address": {
+          "description": "Address to which the metadata store will bind to.",
+          "default": "0.0.0.0:5123",
+          "type": "string"
+        },
+        "request-queue-length": {
+          "description": "Number of in-flight metadata store requests.",
+          "default": 32,
+          "type": "integer",
+          "format": "uint",
+          "minimum": 0.0
+        },
+        "rocksdb": {
+          "default": {},
+          "$ref": "#/definitions/WorkerRocksDbOptions"
+        }
+      }
+    },
+    "WorkerRocksDbOptions": {
+      "type": "object",
+      "properties": {
+        "rocksdb-num-threads": {
+          "title": "Threads",
+          "description": "The number of threads to reserve to Rocksdb background tasks.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint",
+          "minimum": 0.0
+        },
+        "rocksdb-write-buffer-size": {
+          "title": "Write Buffer size",
+          "description": "The size of a single memtable. Once memtable exceeds this size, it is marked immutable and a new one is created. The default is set such that 3 column families per table will use a total of 50% of the global memory limit (`MEMORY_LIMIT`), which defaults to 3GiB, leading to a value of 64MiB with 8 tables.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint",
+          "minimum": 0.0
+        },
+        "rocksdb-max-total-wal-size": {
+          "title": "Maximum total WAL size",
+          "description": "Max WAL size, that after this Rocksdb start flushing mem tables to disk. Default is 2GB.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0.0
+        },
+        "rocksdb-disable-wal": {
+          "title": "Disable WAL",
+          "description": "The default depends on the different rocksdb use-cases at Restate.\n\nSupports hot-reloading (Partial / Bifrost only)",
+          "type": [
+            "boolean",
             "null"
           ]
         },
-        "aws_assume_role_external_id": {
-          "title": "AssumeRole external ID",
-          "description": "An external ID to apply to any AssumeRole operations taken by this client. https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-user_externalid.html Can be overridden by the `AWS_EXTERNAL_ID` environment variable.",
-          "default": null,
+        "rocksdb-batch-wal-flushes": {
+          "title": "Flush WAL in batches",
+          "description": "when WAL is enabled, this allows Restate server to control WAL flushes in batches. This trades off latency for IO throughput.\n\nDefault: True.",
           "type": [
-            "string",
+            "boolean",
+            "null"
+          ]
+        },
+        "rocksdb-cache-size": {
+          "title": "Maximum cache size",
+          "description": "The memory size used for rocksdb caches. Default is 1GB.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint",
+          "minimum": 0.0
+        },
+        "rocksdb-disable-statistics": {
+          "description": "Disable rocksdb statistics collection\n\nDefault: False (statistics enabled)",
+          "type": [
+            "boolean",
             "null"
           ]
         }
       }
+    },
+    "PlainNodeId": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0.0
+    },
+    "LogFormat": {
+      "title": "Log format",
+      "oneOf": [
+        {
+          "title": "Pretty",
+          "description": "Enables verbose logging. Not recommended in production.",
+          "type": "string",
+          "enum": [
+            "pretty"
+          ]
+        },
+        {
+          "title": "Compact",
+          "description": "Enables compact logging.",
+          "type": "string",
+          "enum": [
+            "compact"
+          ]
+        },
+        {
+          "title": "Json",
+          "description": "Enables json logging. You can use a json log collector to ingest these logs and further process them.",
+          "type": "string",
+          "enum": [
+            "json"
+          ]
+        }
+      ]
     },
     "Http2KeepAliveOptions": {
       "title": "HTTP/2 Keep alive options",
@@ -734,126 +880,6 @@
           "title": "Timeout",
           "description": "Sets a timeout for receiving an acknowledgement of the keep-alive ping.\n\nIf the ping is not acknowledged within the timeout, the connection will be closed.",
           "default": "20s",
-          "type": "string"
-        }
-      }
-    },
-    "AdminOptions": {
-      "title": "Admin server options",
-      "type": "object",
-      "properties": {
-        "bind_address": {
-          "title": "Endpoint address",
-          "description": "Address to bind for the Admin APIs.",
-          "default": "0.0.0.0:9070",
-          "type": "string"
-        },
-        "concurrent_api_requests_limit": {
-          "title": "Concurrency limit",
-          "description": "Concurrency limit for the Admin APIs.",
-          "default": 1000,
-          "type": "integer",
-          "format": "uint",
-          "minimum": 0.0
-        },
-        "schema_storage_path": {
-          "title": "[DEPRECATED] Storage path",
-          "description": "Root path for Schema storage.",
-          "default": "./restate-data/meta",
-          "type": "string"
-        },
-        "discovery": {
-          "default": {
-            "aws_assume_role_external_id": null,
-            "aws_profile": null,
-            "http_keep_alive_options": {
-              "interval": "40s",
-              "timeout": "20s"
-            },
-            "http_proxy": null
-          },
-          "$ref": "#/definitions/ServiceClientOptions"
-        }
-      }
-    },
-    "BifrostOptions": {
-      "title": "Bifrost options",
-      "type": "object",
-      "properties": {
-        "default_provider": {
-          "title": "The default kind of loglet to be used",
-          "default": "local",
-          "type": "string"
-        },
-        "local": {
-          "description": "Configuration of local loglet provider",
-          "default": {
-            "flush_wal_on_commit": true,
-            "path": "./restate-data/local_loglet",
-            "rocksdb_cache_size": 0,
-            "rocksdb_disable_statistics": true,
-            "rocksdb_disable_wal": false,
-            "rocksdb_max_total_wal_size": 2147483648,
-            "rocksdb_threads": 10,
-            "rocksdb_write_buffer_size": 0,
-            "writer_commit_batch_size_threshold": 200,
-            "writer_commit_time_interval": "13ms",
-            "writer_queue_len": 200
-          },
-          "type": "string"
-        }
-      }
-    },
-    "LocalMetadataStoreOptions": {
-      "type": "object",
-      "properties": {
-        "bind_address": {
-          "description": "Address to which the metadata store will bind to.",
-          "default": "0.0.0.0:5123",
-          "type": "string"
-        },
-        "path": {
-          "description": "Storage path under which the metadata store will store its data.",
-          "default": "./restate-data/local_metadata_store",
-          "type": "string"
-        },
-        "request_queue_length": {
-          "description": "Number of in-flight metadata store requests.",
-          "default": 32,
-          "type": "integer",
-          "format": "uint",
-          "minimum": 0.0
-        }
-      }
-    },
-    "SubscriptionOptions": {
-      "title": "Subscription options",
-      "type": "object",
-      "required": [
-        "clusters"
-      ],
-      "properties": {
-        "clusters": {
-          "title": "Kafka clusters",
-          "description": "Configuration parameters for the known kafka clusters",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/KafkaClusterOptions"
-          }
-        }
-      }
-    },
-    "KafkaClusterOptions": {
-      "title": "Kafka cluster options",
-      "description": "Configuration options to connect to a Kafka cluster.",
-      "type": "object",
-      "required": [
-        "metadata.broker.list"
-      ],
-      "properties": {
-        "metadata.broker.list": {
-          "title": "Servers",
-          "description": "Initial list of brokers as a CSV list of broker host or host:port.",
           "type": "string"
         }
       }
