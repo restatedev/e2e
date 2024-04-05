@@ -10,7 +10,7 @@
 package dev.restate.e2e.utils
 
 const val RESTATE_RUNTIME = "runtime"
-internal const val RUNTIME_INGRESS_ENDPOINT_PORT = 8080
+const val RUNTIME_INGRESS_ENDPOINT_PORT = 8080
 internal const val RUNTIME_META_ENDPOINT_PORT = 9070
 
 @Target(AnnotationTarget.VALUE_PARAMETER) annotation class InjectIngressClient
