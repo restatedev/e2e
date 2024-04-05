@@ -26,7 +26,6 @@ dependencies {
 
   implementation(libs.testcontainers.toxiproxy)
 
-  implementation(platform(libs.jackson.bom))
   implementation(libs.jackson.core)
   implementation(libs.jackson.databind)
   implementation(libs.jackson.toml)

@@ -64,8 +64,6 @@ object Containers {
 
   // -- Node containers
 
-  // TODO double check service names!
-
   fun nodeServicesContainer(hostName: String, vararg services: String): ServiceSpec.Builder {
     assert(services.isNotEmpty())
     return ServiceSpec.builder("restatedev/e2e-node-services")
@@ -103,29 +101,12 @@ object Containers {
   val NODE_WORKFLOW_SERVICE_SPEC =
       nodeServicesContainer("node-workflow", WORKFLOW_API_BLOCK_AND_WAIT_COMPONENT_NAME).build()
 
-  const val EMBEDDED_HANDLER_SERVER_HOSTNAME = "node-embedded-handler"
-  const val EMBEDDED_HANDLER_SERVER_PORT = 8080
+  // --- Kotlin containers
 
-  fun embeddedHandlerServerContainer() =
-      GenericContainer("restatedev/e2e-node-services")
-          .withEnv("EMBEDDED_HANDLER_PORT", EMBEDDED_HANDLER_SERVER_PORT.toString())
-          .withEnv(
-              "HTTP_SERVER_ADDRESS", "http://${INT_SORTER_HTTP_SERVER_CONTAINER_SPEC.first}:8080")
-          .withExposedPorts(EMBEDDED_HANDLER_SERVER_PORT)
-
-  val EMBEDDED_HANDLER_SERVER_CONTAINER_SPEC =
-      EMBEDDED_HANDLER_SERVER_HOSTNAME to embeddedHandlerServerContainer()
-
-  // -- Verification test container
-
-  const val VERIFICATION_SERVICE_HOSTNAME = "restate-verification"
-
-  // TODO update once we convert the node tests
-  //  val VERIFICATION_SERVICE_SPEC =
-  //      nodeServicesContainer(
-  //              VERIFICATION_SERVICE_HOSTNAME,
-  //                            CommandVerifierGrpc.COMPONENT_NAME,
-  //                            CommandInterpreterGrpc.COMPONENT_NAME
-  //          )
-  //          .build()
+  fun kotlinServicesContainer(hostName: String, vararg services: String): ServiceSpec.Builder {
+    assert(services.isNotEmpty())
+    return ServiceSpec.builder("restatedev/e2e-kotlin-services")
+        .withEnv("SERVICES", services.joinToString(","))
+        .withHostName(hostName)
+  }
 }

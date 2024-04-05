@@ -17,6 +17,7 @@ dependencies {
   testImplementation(kotlin("test"))
   testImplementation(project(":test-utils"))
   testImplementation(project(":contracts"))
+  testImplementation(project(":contracts-kt"))
 
   testImplementation(libs.restate.admin)
 
@@ -28,7 +29,6 @@ dependencies {
   testRuntimeOnly(libs.log4j.core)
   testRuntimeOnly(libs.log4j.slf4j)
 
-  testImplementation(platform(libs.jackson.bom))
   testImplementation(libs.jackson.core)
   testImplementation(libs.jackson.databind)
 
@@ -149,6 +149,7 @@ tasks {
   withType<Test>().configureEach {
     dependsOn(":services:http-server:jibDockerBuild")
     dependsOn(":services:java-services:jibDockerBuild")
+    dependsOn(":services:kotlin-services:jibDockerBuild")
     dependsOn(":services:node-services:dockerBuild")
 
     maxParallelForks = 3
