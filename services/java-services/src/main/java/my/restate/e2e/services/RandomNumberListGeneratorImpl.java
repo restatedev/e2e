@@ -41,7 +41,7 @@ public class RandomNumberListGeneratorImpl implements RandomNumberListGenerator 
 
     Awakeable<List<Integer>> awakeable = ctx.awakeable(INT_LIST_SERDE);
 
-    ctx.sideEffect(
+    ctx.run(
         () -> {
           try {
             NumberSortHttpServerUtils.sendSortNumbersRequest(awakeable.id(), numbers);
