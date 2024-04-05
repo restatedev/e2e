@@ -29,7 +29,7 @@ dependencies {
   implementation(platform(libs.jackson.bom))
   implementation(libs.jackson.core)
   implementation(libs.jackson.databind)
-  implementation(libs.jackson.yaml)
+  implementation(libs.jackson.toml)
 
   testImplementation(libs.junit.all)
   testImplementation(libs.assertj)

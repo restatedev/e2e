@@ -8,6 +8,7 @@
 # Ignore Gradle build output directory
 build
 
+.sl
 .restate
 kls_database.db
 services/node-services/restatedev-restate-sdk-*
