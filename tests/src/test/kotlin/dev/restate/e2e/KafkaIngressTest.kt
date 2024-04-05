@@ -35,10 +35,10 @@ private const val EVENT_HANDLER_TOPIC = "event-handler"
 
 private fun kafkaClusterOptions(): RestateConfigSchema {
   return RestateConfigSchema()
-      .withKafka(
-          SubscriptionOptions()
-              .withClusters(
-                  Clusters()
+      .withIngress(
+          IngressOptions()
+              .withKafka(
+                  SubscriptionOptions()
                       .withAdditionalProperty(
                           "my-cluster",
                           KafkaClusterOptions().withMetadataBrokerList("PLAINTEXT://kafka:9092"))))
