@@ -1,0 +1,37 @@
+services:
+  driver:
+    image: ghcr.io/restatedev/node-e2e-services 
+    ports:
+      - 3000:3000
+    depends_on:
+      interpreter:
+        condition: service_started
+      restate:
+        condition: service_started
+    environment:
+      NODE_ENV: production
+      NODE_OPTIONS: "--max-old-space-size=4096"
+      SERVICES: InterpreterDriverJob
+      INTERPRETER_DRIVER_CONF: ${INTERPRETER_DRIVER_CONF}
+    restart: no
+  interpreter:
+    image: ghcr.io/restatedev/node-e2e-services 
+    ports:
+      - 9080:9080
+    environment:
+      - NODE_ENV=production
+      - SERVICES=ObjectInterpreterL0,ObjectInterpreterL1,ObjectInterpreterL2,ServiceInterpreterHelper
+    restart: always
+  restate:
+    image: ghcr.io/restatedev/restate:main
+    ports:
+      - 8080:8080
+      - 9090:9090
+      - 9070:9070
+      - 8081:8081
+    restart: no
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 65535
+        hard: 65535
