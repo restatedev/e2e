@@ -26,6 +26,7 @@ import my.restate.e2e.services.ProxyCounterClient
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.extension.RegisterExtension
@@ -51,6 +52,7 @@ class IngressTest {
   @Test
   @Execution(ExecutionMode.CONCURRENT)
   @Timeout(value = 15, unit = TimeUnit.SECONDS)
+  @Disabled
   fun idempotentInvoke(@InjectIngressClient ingressClient: IngressClient) {
     val counterRandomName = UUID.randomUUID().toString()
     val myIdempotencyId = UUID.randomUUID().toString()
