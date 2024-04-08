@@ -16,7 +16,7 @@ let TEST: Test | undefined = undefined;
  * Start a runner as a batch job
  */
 export const createJob = async () => {
-  const conf = await readJSONFromStdin();
+  const conf = readJsonEnv();
   TEST = new Test(conf);
   return TEST.go();
 };
@@ -87,23 +87,10 @@ function writeJsonResponse(
   res.end();
 }
 
-function readJSONFromStdin(): Promise<TestConfiguration> {
-  return new Promise((resolve, reject) => {
-    let input = "";
-    process.stdin.setEncoding("utf-8");
-    process.stdin.on("readable", () => {
-      const chunk = process.stdin.read();
-      if (chunk !== null) {
-        input += chunk;
-      }
-    });
-    process.stdin.on("end", () => {
-      try {
-        const jsonData: TestConfiguration = JSON.parse(input.trim());
-        resolve(jsonData);
-      } catch (error) {
-        reject(error);
-      }
-    });
-  });
+function readJsonEnv(): TestConfiguration {
+  const conf = process.env.INTERPRETER_DRIVER_CONF;
+  if (!conf) {
+    throw new Error(`Missing INTERPRETER_DRIVER_CONF env var`);
+  }
+  return JSON.parse(conf) as TestConfiguration;
 }

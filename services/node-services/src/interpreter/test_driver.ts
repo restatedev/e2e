@@ -19,12 +19,18 @@ import * as restate from "@restatedev/restate-sdk";
 
 const MAX_LAYERS = 3;
 
+export interface TestConfigurationDeployments {
+  adminUrl: string;
+  deployments: string[];
+}
+
 export interface TestConfiguration {
   readonly ingress: string;
   readonly seed: string;
   readonly keys: number;
   readonly tests: number;
   readonly maxProgramSize: number;
+  readonly register?: TestConfigurationDeployments; // auto register the following endpoints
 }
 
 export enum TestStatus {
@@ -43,7 +49,10 @@ class StateTracker {
     private readonly numInterpreters: number
   ) {
     for (let i = 0; i < numLayers; i++) {
-      const layerState = Array.from({ length: this.numInterpreters }, () => 0);
+      const layerState = [];
+      for (let j = 0; j < this.numInterpreters; j++) {
+        layerState.push(0);
+      }
       this.states.push(layerState);
     }
   }
@@ -106,17 +115,106 @@ export class Test {
     }
   }
 
+  async ingressReady() {
+    if (!this.conf.ingress) {
+      throw new Error(`missing ingress url`);
+    }
+    const url = this.conf.ingress;
+    for (;;) {
+      try {
+        const rc = await fetch(`${url}/restate/health`);
+        if (rc.ok) {
+          break;
+        }
+      } catch (e) {
+        // suppress
+      }
+      console.log(`Waiting for ${url} to be healthy...`);
+      await sleep(1000);
+    }
+    console.log(`Ingress is ready.`);
+  }
+
+  async registerEndpoints() {
+    const adminUrl = this.conf.register?.adminUrl;
+    if (!adminUrl) {
+      throw new Error("Missing adminUrl");
+    }
+    for (;;) {
+      try {
+        const rc = await fetch(`${adminUrl}/health`);
+        if (rc.ok) {
+          break;
+        }
+      } catch (e) {
+        // suppress
+      }
+      console.log(`Waiting for ${adminUrl} to be healthy...`);
+      await sleep(1000);
+    }
+    for (;;) {
+      try {
+        const rc = await fetch(`${adminUrl}/health`);
+        if (rc.ok) {
+          break;
+        }
+      } catch (e) {
+        // suppress
+      }
+      console.log(`Waiting for ${adminUrl} to be healthy...`);
+      await sleep(1000);
+    }
+    const deployments = this.conf.register?.deployments;
+    if (!deployments) {
+      throw new Error("Missing register.deployments (array of uri string)");
+    }
+    for (const uri of deployments) {
+      const res = await fetch(`${adminUrl}/deployments`, {
+        method: "POST",
+        body: JSON.stringify({
+          uri,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (!res.ok) {
+        throw new Error(
+          `unable to register ${uri} because: ${await res.text()}`
+        );
+      }
+    }
+    console.log("Registered deployments");
+  }
+
   async go(): Promise<TestStatus> {
+    console.log(this.conf);
     this.status = TestStatus.RUNNING;
-    for (const b of batch(this.generate(), 16)) {
-      // TODO: add `idempotencyKey` once supported.
-      const promises = b.map(({ id, program }) =>
-        this.ingress.objectSendClient(InterpreterL0, `${id}`).interpret(program)
-      );
+    if (this.conf.register) {
+      await this.registerEndpoints();
+    }
+    await this.ingressReady();
+    console.log("Generating ...");
+    let idempotencyKey = 1;
+    for (const b of batch(this.generate(), 32)) {
+      const promises = b.map(({ id, program }) => {
+        idempotencyKey += 1;
+        const client = this.ingress.objectSendClient(InterpreterL0, `${id}`);
+        return retry(() =>
+          client.interpret(
+            program,
+            restate.ingress.Opts.from({ idempotencyKey: `${idempotencyKey}` })
+          )
+        );
+      });
 
       b.forEach(({ id, program }) => this.stateTracker.update(0, id, program));
-
-      await Promise.all(promises);
+      try {
+        await Promise.all(promises);
+      } catch (e) {
+        console.error(e);
+        throw e;
+      }
     }
 
     this.status = TestStatus.VALIDATING;
@@ -124,7 +222,7 @@ export class Test {
 
     for (const layerId of [0, 1, 2]) {
       while (!(await this.verifyLayer(layerId))) {
-        await new Promise((resolve) => setTimeout(resolve, 10 * 1000));
+        await sleep(10 * 1000);
       }
       console.log(`Done validating layer ${layerId}`);
     }
@@ -140,9 +238,10 @@ export class Test {
     const layer = this.stateTracker.getLayer(layerId);
     const interpreterLn = createInterpreterObject(layerId);
     const futures = layer.map(async (expected, id) => {
-      const actual = await this.ingress
-        .objectClient(interpreterLn, `${id}`)
-        .counter();
+      const actual = await retry(
+        async () =>
+          await this.ingress.objectClient(interpreterLn, `${id}`).counter()
+      );
       return expected === actual;
     });
 
@@ -173,5 +272,21 @@ function* batch<T>(iterable: IterableIterator<T>, batchSize: number) {
     yield items;
   }
 }
+
+const sleep = (duration: number): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, duration));
+
+const retry = async <T>(op: () => Promise<T>): Promise<T> => {
+  let error;
+  for (let i = 0; i < 60; i++) {
+    try {
+      return await op();
+    } catch (e) {
+      error = e;
+      sleep(1000);
+    }
+  }
+  throw error;
+};
 
 const InterpreterL0 = interpreterObjectForLayer(0);
