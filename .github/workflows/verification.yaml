@@ -3,6 +3,12 @@ name: Verification tests
 on:
   workflow_dispatch: # To start from UI
 
+env:
+  REPOSITORY_OWNER: ${{ github.repository_owner }}
+  GHCR_REGISTRY: "ghcr.io"
+  GHCR_REGISTRY_USERNAME: ${{ github.actor }}
+  GHCR_REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 jobs:
   build:
     # prevent running on forks
