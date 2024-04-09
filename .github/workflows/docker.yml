@@ -27,3 +27,5 @@ jobs:
           file: services/node-services/Dockerfile
           push: true
           platforms: linux/arm64,linux/amd64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
