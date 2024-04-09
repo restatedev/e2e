@@ -203,7 +203,9 @@ export class Test {
         return retry(() =>
           client.interpret(
             program,
-            restate.ingress.Opts.from({ idempotencyKey: `${idempotencyKey}` })
+            restate.ingress.SendOpts.from({
+              idempotencyKey: `${idempotencyKey}`,
+            })
           )
         );
       });
