@@ -21,7 +21,7 @@ jobs:
         with:
           registry: ${{ env.GHCR_REGISTRY }}
           username: ${{ env.GHCR_REGISTRY_USERNAME }}
-          password: ${{ env.GHCR_REGISTRY_TOKEN }
+          password: ${{ env.GHCR_REGISTRY_TOKEN }}
 
       - run: ./run.sh
         working-directory: services/node-services/compose
