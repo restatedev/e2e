@@ -1,0 +1,29 @@
+name: Build docker image
+
+on:
+  push:
+    branches: [main]
+    tags:
+      - v**
+
+jobs:
+  build-node-services-docker-image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ghcr.io/restatedev/e2e-node-services
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}
+      - name: Build docker image
+        uses: docker/build-push-action@v3
+        with:
+          context: services/node-services
+          file: services/node-services/Dockerfile
+          push: true
+          platforms: linux/arm64,linux/amd64

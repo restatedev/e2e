@@ -1,0 +1,14 @@
+name: verification
+
+on:
+  workflow_dispatch: # To start from UI
+
+jobs:
+  build:
+    # prevent running on forks
+    if: github.repository_owner == 'restatedev'
+    runs-on: warp-ubuntu-2204-arm64-16x # warpbuild runner
+    timeout-minutes: 70
+    steps:
+      - run: ./run.sh
+        working-directory: services/node-services/compose
