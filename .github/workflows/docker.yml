@@ -6,6 +6,12 @@ on:
     tags:
       - v**
 
+env:
+  REPOSITORY_OWNER: ${{ github.repository_owner }}
+  GHCR_REGISTRY: "ghcr.io"
+  GHCR_REGISTRY_USERNAME: ${{ github.actor }}
+  GHCR_REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 jobs:
   build-node-services-docker-image:
     runs-on: ubuntu-latest
