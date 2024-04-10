@@ -9,7 +9,7 @@
 
 import * as restate from "@restatedev/restate-sdk";
 
-import { TimeoutError } from "@restatedev/restate-sdk/dist/types/errors";
+import { TimeoutError } from "@restatedev/restate-sdk";
 import { REGISTRY } from "./services";
 
 import type { RecieverType } from "./receiver";
