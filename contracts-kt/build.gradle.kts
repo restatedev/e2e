@@ -7,12 +7,14 @@
 // directory of this repository or package, or at
 // https://github.com/restatedev/e2e/blob/main/LICENSE
 
-plugins { java }
+plugins {
+  kotlin("jvm")
+  kotlin("plugin.serialization")
+  alias(libs.plugins.ksp)
+}
 
 dependencies {
-  annotationProcessor(libs.restate.sdk.api.gen)
-
-  api(libs.restate.sdk.api)
-  api(libs.restate.sdk.workflow.api)
-  api(libs.restate.sdk.jackson)
+  ksp(libs.restate.sdk.api.kotlin.gen)
+  api(libs.restate.sdk.api.kotlin)
+  implementation(libs.kotlinx.serialization.core)
 }

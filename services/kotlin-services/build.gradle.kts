@@ -8,24 +8,24 @@
 // https://github.com/restatedev/e2e/blob/main/LICENSE
 
 plugins {
-  java
+  kotlin("jvm")
+  kotlin("plugin.serialization")
+  application
   id("com.google.cloud.tools.jib")
 }
 
 dependencies {
-  implementation(project(":contracts"))
+  implementation(libs.restate.sdk.api.kotlin)
+  implementation(libs.restate.sdk.http.vertx)
 
-  implementation(libs.jackson.core)
-  implementation(libs.jackson.databind)
+  implementation(project(":contracts-kt"))
 
   implementation(libs.log4j.api)
   implementation(libs.log4j.core)
-
-  implementation(libs.restate.sdk.api)
 }
 
 jib {
-  to.image = "restatedev/e2e-http-server"
+  to.image = "restatedev/e2e-kotlin-services"
   from.image = parent!!.parent!!.ext.get("testBaseImage").toString()
 
   from {
@@ -38,6 +38,6 @@ jib {
   }
 }
 
-tasks.jar {
-  manifest { attributes["Main-Class"] = "dev.restate.e2e.testing.externalhttpserver.Main" }
-}
+tasks.jar { manifest { attributes["Main-Class"] = "my.restate.e2e.services.kotlin.AppKt" } }
+
+application { mainClass.set("my.restate.e2e.services.kotlin.AppKt") }

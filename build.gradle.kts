@@ -17,7 +17,6 @@ plugins {
   kotlin("jvm") version "1.9.22" apply false
   kotlin("plugin.serialization") version "1.9.22" apply false
   id("com.google.cloud.tools.jib") version "3.2.1" apply false
-  id("net.ltgt.errorprone") version "3.1.0" apply false
 }
 
 val restateVersion = libs.versions.restate.get()
