@@ -30,6 +30,9 @@ services:
       - 9070:9070
       - 8081:8081
     restart: "no"
+    environment:
+      - RESTATE_LOG_FILTER=restate=warn
+      - RESTATE_LOG_FORMAT=json
     ulimits:
       nproc: 65535
       nofile:

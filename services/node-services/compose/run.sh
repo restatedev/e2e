@@ -6,8 +6,8 @@ TIMEOUT_SECNODS=3600
 export INTERPRETER_DRIVER_CONF=$(cat <<-EOF 
 			{
         "seed" : "${SEED}", 
-        "keys" : 100,
-        "tests" : 100,
+        "keys" : 10000,
+        "tests" : 100000,
         "maxProgramSize" : 15,
         "ingress" : "http://restate:8080",
         "register" : {
