@@ -1,6 +1,6 @@
 services:
   driver:
-    image: ghcr.io/restatedev/e2e-node-services
+    image: ghcr.io/restatedev/e2e-node-services:main
     ports:
       - 3000:3000
     depends_on:
@@ -15,11 +15,11 @@ services:
       INTERPRETER_DRIVER_CONF: ${INTERPRETER_DRIVER_CONF}
     restart: "no"
   interpreter:
-    image: ghcr.io/restatedev/e2e-node-services
+    image: ghcr.io/restatedev/e2e-node-services:main
     ports:
       - 9080:9080
     environment:
-      - RESET_LOGGING=INFO
+      - RESTATE_LOGGING=WARN
       - NODE_ENV=production
       - SERVICES=ObjectInterpreterL0,ObjectInterpreterL1,ObjectInterpreterL2,ServiceInterpreterHelper
     restart: always
