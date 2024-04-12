@@ -19,6 +19,7 @@ services:
     ports:
       - 9080:9080
     environment:
+      - RESET_LOGGING=INFO
       - NODE_ENV=production
       - SERVICES=ObjectInterpreterL0,ObjectInterpreterL1,ObjectInterpreterL2,ServiceInterpreterHelper
     restart: always
