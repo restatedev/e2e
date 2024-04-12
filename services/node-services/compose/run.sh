@@ -12,10 +12,14 @@ export INTERPRETER_DRIVER_CONF=$(cat <<-EOF
         "maxProgramSize" : 15,
         "ingress" : "http://restate:8080",
         "register" : {
-          "adminUrl" : "http://restate:9070",
-          "deployments" : ["http://interpreter:9080"]
-        }
-      }
+					"adminUrl" : "http://restate:9070",
+					"deployments" : [
+														"http://interpreter_zero:9000",
+														"http://interpreter_one:9001",
+														"http://interpreter_two:9002"
+					]
+				}
+			}
 EOF
 )
 
@@ -29,7 +33,7 @@ docker-compose -f compose.template.yml up \
 	--abort-on-container-exit \
 	--exit-code-from driver \
 	--force-recreate \
-	--timeout ${TIMEOUT_SECNODS} | grep -v "${EXPECTED_NOISY_LOG_MESSAGE}"
+	--timeout ${TIMEOUT_SECNODS} "${@}" | grep -v "${EXPECTED_NOISY_LOG_MESSAGE}"
 
 exit ${PIPESTATUS[0]}
 

@@ -4,8 +4,6 @@ services:
     ports:
       - 3000:3000
     depends_on:
-      interpreter:
-        condition: service_started
       restate:
         condition: service_started
     environment:
@@ -14,14 +12,35 @@ services:
       SERVICES: InterpreterDriverJob
       INTERPRETER_DRIVER_CONF: ${INTERPRETER_DRIVER_CONF}
     restart: "no"
-  interpreter:
+  interpreter_zero:
     image: ghcr.io/restatedev/e2e-node-services:main
     ports:
-      - 9080:9080
+      - 9000:9000
     environment:
+      - PORT=9000
       - RESTATE_LOGGING=WARN
       - NODE_ENV=production
-      - SERVICES=ObjectInterpreterL0,ObjectInterpreterL1,ObjectInterpreterL2,ServiceInterpreterHelper
+      - SERVICES=ObjectInterpreterL0
+    restart: always
+  interpreter_one:
+    image: ghcr.io/restatedev/e2e-node-services:main
+    ports:
+      - 9001:9001
+    environment:
+      - PORT=9001
+      - RESTATE_LOGGING=WARN
+      - NODE_ENV=production
+      - SERVICES=ObjectInterpreterL1
+    restart: always
+  interpreter_two:
+    image: ghcr.io/restatedev/e2e-node-services:main
+    ports:
+      - 9002:9002
+    environment:
+      - PORT=9002
+      - RESTATE_LOGGING=WARN
+      - NODE_ENV=production
+      - SERVICES=ObjectInterpreterL2,ServiceInterpreterHelper
     restart: always
   restate:
     image: ghcr.io/restatedev/restate:main
