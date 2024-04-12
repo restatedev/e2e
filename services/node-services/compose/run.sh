@@ -19,6 +19,8 @@ EOF
 )
 
 
+docker-compose -f compose.template.yml pull
+
 docker-compose -f compose.template.yml up \
 	--abort-on-container-exit \
 	--exit-code-from driver \
