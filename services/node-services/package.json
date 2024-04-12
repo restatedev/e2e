@@ -16,6 +16,7 @@
   "author": "Restate developers",
   "dependencies": {
     "@restatedev/restate-sdk": "dev",
+    "@restatedev/restate-sdk-ingress": "dev",
     "express": "^4.18.2",
     "seedrandom": "^3.0.5",
     "ts-proto": "^1.140.0",

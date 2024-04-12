@@ -101,20 +101,42 @@ jobs:
           name: restatedev-restate-sdk
           path: e2e/services/node-services
 
+      - name: Download sdk-typescript-ingress snapshot from in-progress workflow
+        if: ${{ inputs.sdkTypescriptCommit != '' && github.event_name != 'workflow_dispatch' }}
+        uses: actions/download-artifact@v3
+        with:
+          name: restatedev-restate-sdk-ingress
+          path: e2e/services/node-services 
+
       # In the workflow dispatch case where the artifact was created in a previous run, we can download as normal
-      - name: Download sdk-typescript snapshot from completed workflow
-        if: ${{ inputs.sdkTypescriptCommit != '' && github.event_name == 'workflow_dispatch' }}
+      - name: download sdk-typescript snapshot from completed workflow
+        if: ${{ inputs.sdktypescriptcommit != '' && github.event_name == 'workflow_dispatch' }}
         uses: dawidd6/action-download-artifact@v2
         with:
           workflow: test.yml
           repo: restatedev/sdk-typescript
-          commit: ${{ inputs.sdkTypescriptCommit }}
+          commit: ${{ inputs.sdktypescriptcommit }}
           name: restatedev-restate-sdk
           path: e2e/services/node-services
-
+       
+      - name: download sdk-typescript-ingress snapshot from completed workflow
+        if: ${{ inputs.sdktypescriptcommit != '' && github.event_name == 'workflow_dispatch' }}
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          workflow: test.yml
+          repo: restatedev/sdk-typescript
+          commit: ${{ inputs.sdktypescriptcommit }}
+          name: restatedev-restate-sdk-ingress
+          path: e2e/services/node-services
+      
       - name: Install sdk-typescript snapshot
         if: ${{ inputs.sdkTypescriptCommit != '' }}
         run: npm install restatedev-restate-sdk.tgz
+        working-directory: e2e/services/node-services
+
+      - name: Install sdk-typescript-ingress snapshot
+        if: ${{ inputs.sdkTypescriptCommit != '' }}
+        run: npm install restatedev-restate-sdk-ingress.tgz
         working-directory: e2e/services/node-services
 
       # Setup sdk-java snapshot if necessary

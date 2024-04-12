@@ -15,7 +15,7 @@ import {
 import { Random } from "./random";
 import { ProgramGenerator } from "./test_generator";
 
-import * as restate from "@restatedev/restate-sdk";
+import * as restate from "@restatedev/restate-sdk-ingress";
 
 const MAX_LAYERS = 3;
 
@@ -86,14 +86,14 @@ class StateTracker {
 export class Test {
   readonly random: Random;
   readonly stateTracker: StateTracker;
-  readonly ingress: restate.ingress.Ingress;
+  readonly ingress: restate.Ingress;
 
   status: TestStatus = TestStatus.NOT_STARTED;
 
   constructor(readonly conf: TestConfiguration) {
     this.random = new Random(conf.seed);
     this.stateTracker = new StateTracker(MAX_LAYERS, conf.keys);
-    this.ingress = restate.ingress.connect({ url: this.conf.ingress });
+    this.ingress = restate.connect({ url: this.conf.ingress });
   }
 
   testStatus(): TestStatus {
@@ -203,7 +203,7 @@ export class Test {
         return retry(() =>
           client.interpret(
             program,
-            restate.ingress.SendOpts.from({
+            restate.SendOpts.from({
               idempotencyKey: `${idempotencyKey}`,
             })
           )
