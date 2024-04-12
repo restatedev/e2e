@@ -239,22 +239,23 @@ export class Test {
 
     const layer = this.stateTracker.getLayer(layerId);
     const interpreterLn = createInterpreterObject(layerId);
-    const futures = layer.map(async (expected, id) => {
-      const actual = await retry(
-        async () =>
-          await this.ingress.objectClient(interpreterLn, `${id}`).counter()
-      );
-      return expected === actual;
-    });
 
-    const results = await Promise.all(futures);
-    for (let j = 0; j < layer.length; j++) {
-      const p = results[j];
-      if (!p) {
-        console.log(
-          `Found a mismatch at layer ${layerId} interpreter ${j}. This is expected, this interpreter might still have some backlog to process, and eventually it will catchup with the desired value. Will retry in few seconds.`
+    for (const layerChunk of batch(iterate(layer), 256)) {
+      const futures = layerChunk.map(async ({ expected, id }) => {
+        const actual = await retry(
+          async () =>
+            await this.ingress.objectClient(interpreterLn, `${id}`).counter()
         );
-        return false;
+        return { expected, actual, id };
+      });
+      await Promise.all(futures);
+      for await (const { expected, actual, id } of futures) {
+        if (expected !== actual) {
+          console.log(
+            `Found a mismatch at layer ${layerId} interpreter ${id}. Expected ${expected} but got ${actual}. This is expected, this interpreter might still have some backlog to process, and eventually it will catchup with the desired value. Will retry in few seconds.`
+          );
+          return false;
+        }
       }
     }
     return true;
@@ -272,6 +273,14 @@ function* batch<T>(iterable: IterableIterator<T>, batchSize: number) {
   }
   if (items.length !== 0) {
     yield items;
+  }
+}
+
+function* iterate(arr: number[]) {
+  for (let j = 0; j < arr.length; j++) {
+    const expected = arr[j];
+    const id = j;
+    yield { id, expected };
   }
 }
 
