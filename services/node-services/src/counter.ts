@@ -30,7 +30,7 @@ const service = restate.object({
     async addThenFail(ctx: restate.ObjectContext, value: number) {
       const counter = (await ctx.get<number>(COUNTER_KEY)) ?? 0;
       ctx.set(COUNTER_KEY, counter + value);
-      throw new restate.TerminalError(ctx.key());
+      throw new restate.TerminalError(ctx.key);
     },
 
     async get(ctx: restate.ObjectContext): Promise<number> {
@@ -53,7 +53,7 @@ const service = restate.object({
 
       // Wait for the sync with the test runner
       const { id, promise } = ctx.awakeable();
-      ctx.objectSendClient(AwakeableHolder, ctx.key()).hold(id);
+      ctx.objectSendClient(AwakeableHolder, ctx.key).hold(id);
       await promise;
 
       // Now start looping

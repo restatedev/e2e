@@ -71,7 +71,7 @@ class ProgramInterpreter {
     layer: number,
     ctx: restate.ObjectContext
   ): ProgramInterpreter {
-    const id = { layer, key: ctx.key() };
+    const id = { layer, key: ctx.key };
     return new ProgramInterpreter(ctx, id);
   }
 
