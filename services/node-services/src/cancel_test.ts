@@ -31,7 +31,7 @@ const cancelService = restate.object({
 
     async startTest(ctx: restate.ObjectContext, request: BlockingOperation) {
       try {
-        await ctx.objectClient(BlockingService, ctx.key()).block(request);
+        await ctx.objectClient(BlockingService, ctx.key).block(request);
       } catch (e) {
         if (
           e instanceof restate.TerminalError &&
@@ -57,7 +57,7 @@ const blockingService = restate.object({
 
       switch (request) {
         case BlockingOperation.CALL: {
-          await ctx.objectClient(BlockingService, ctx.key()).block(request);
+          await ctx.objectClient(BlockingService, ctx.key).block(request);
           break;
         }
         case BlockingOperation.SLEEP: {

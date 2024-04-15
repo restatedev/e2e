@@ -19,13 +19,13 @@ const Counter: CounterApi = { name: "Counter" };
 const invocationCounts = new Map<string, number>();
 
 function doLeftAction(ctx: restate.ObjectContext): boolean {
-  const newValue = (invocationCounts.get(ctx.key()) ?? 0) + 1;
-  invocationCounts.set(ctx.key(), newValue);
+  const newValue = (invocationCounts.get(ctx.key) ?? 0) + 1;
+  invocationCounts.set(ctx.key, newValue);
   return newValue % 2 == 1;
 }
 
 function incrementCounter(ctx: restate.ObjectContext) {
-  ctx.objectSendClient(Counter, ctx.key()).add(1);
+  ctx.objectSendClient(Counter, ctx.key).add(1);
 }
 
 const o = restate.object({
