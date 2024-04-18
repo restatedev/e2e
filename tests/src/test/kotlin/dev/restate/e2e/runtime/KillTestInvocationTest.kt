@@ -33,9 +33,9 @@ class KillTestInvocationTest {
           .withServiceEndpoint(
               Containers.javaServicesContainer(
                   "services",
-                  KillTestRunnerClient.COMPONENT_NAME,
-                  KillTestSingletonClient.COMPONENT_NAME,
-                  AwakeableHolderClient.COMPONENT_NAME))
+                  KillTestRunnerClient.SERVICE_NAME,
+                  KillTestSingletonClient.SERVICE_NAME,
+                  AwakeableHolderClient.SERVICE_NAME))
           .build()
     }
   }

@@ -57,7 +57,7 @@ class PrivateServiceTest {
 
     // Make the service private
     adminComponentClient.modifyComponent(
-        CounterClient.COMPONENT_NAME, ModifyComponentRequest()._public(false))
+        CounterClient.SERVICE_NAME, ModifyComponentRequest()._public(false))
 
     // Wait for the service to be private
     await untilAsserted
@@ -73,7 +73,7 @@ class PrivateServiceTest {
 
     // Make the service public again
     adminComponentClient.modifyComponent(
-        CounterClient.COMPONENT_NAME, ModifyComponentRequest()._public(true))
+        CounterClient.SERVICE_NAME, ModifyComponentRequest()._public(true))
 
     // Wait to get the correct count
     await untilAsserted { assertThat(counterClient.get()).isEqualTo(2L) }

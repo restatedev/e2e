@@ -53,8 +53,8 @@ class JavaKafkaIngressTest : BaseKafkaIngressTest() {
                 .withServiceEndpoint(
                     Containers.javaServicesContainer(
                         "java-counter",
-                        CounterClient.COMPONENT_NAME,
-                        EventHandlerClient.COMPONENT_NAME))
+                        CounterClient.SERVICE_NAME,
+                        EventHandlerClient.SERVICE_NAME))
                 .withContainer("kafka", KafkaContainer(COUNTER_TOPIC, EVENT_HANDLER_TOPIC))
                 .withConfig(kafkaClusterOptions())
                 .build())
@@ -70,8 +70,8 @@ class NodeKafkaIngressTest : BaseKafkaIngressTest() {
                 .withServiceEndpoint(
                     Containers.nodeServicesContainer(
                         "node-counter",
-                        CounterClient.COMPONENT_NAME,
-                        EventHandlerClient.COMPONENT_NAME))
+                        CounterClient.SERVICE_NAME,
+                        EventHandlerClient.SERVICE_NAME))
                 .withContainer("kafka", KafkaContainer(COUNTER_TOPIC, EVENT_HANDLER_TOPIC))
                 .withConfig(kafkaClusterOptions())
                 .build())
@@ -88,7 +88,7 @@ abstract class BaseKafkaIngressTest {
       @InjectIngressClient ingressClient: IngressClient
   ) {
     counterEventsTest(
-        metaURL, kafkaPort, ingressClient, COUNTER_TOPIC, "${CounterClient.COMPONENT_NAME}/add")
+        metaURL, kafkaPort, ingressClient, COUNTER_TOPIC, "${CounterClient.SERVICE_NAME}/add")
   }
 
   @Test
@@ -103,7 +103,7 @@ abstract class BaseKafkaIngressTest {
         kafkaPort,
         ingressClient,
         EVENT_HANDLER_TOPIC,
-        "${EventHandlerClient.COMPONENT_NAME}/handle")
+        "${EventHandlerClient.SERVICE_NAME}/handle")
   }
 
   fun counterEventsTest(

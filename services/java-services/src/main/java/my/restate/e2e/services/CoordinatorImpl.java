@@ -59,14 +59,14 @@ public class CoordinatorImpl implements Coordinator {
     var receiverUUID = context.run(CoreSerdes.JSON_STRING, () -> UUID.randomUUID().toString());
     var receiverClient = ReceiverClient.fromContext(context, receiverUUID);
 
-    LOG.info("Send fire and forget call to {}", ReceiverClient.COMPONENT_NAME);
+    LOG.info("Send fire and forget call to {}", ReceiverClient.SERVICE_NAME);
     // services should be invoked in the same order they were called. This means that
     // background calls as well as request-response calls have an absolute ordering that is defined
     // by their call order. In this concrete case, setValue is guaranteed to be executed before
     // getValue.
     receiverClient.send().setValue(complexRequest.getRequestValue());
 
-    LOG.info("Get current value from {}", ReceiverClient.COMPONENT_NAME);
+    LOG.info("Get current value from {}", ReceiverClient.SERVICE_NAME);
     var response = receiverClient.getValue().await();
 
     LOG.info("Finish complex coordination with response value '{}'", response);

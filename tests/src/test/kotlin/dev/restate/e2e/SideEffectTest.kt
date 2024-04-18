@@ -31,7 +31,7 @@ class JavaSideEffectTest : BaseSideEffectTest() {
             RestateDeployer.Builder()
                 .withServiceEndpoint(
                     Containers.javaServicesContainer(
-                        "java-side-effect", SideEffectClient.COMPONENT_NAME))
+                        "java-side-effect", SideEffectClient.SERVICE_NAME))
                 .build())
   }
 }
@@ -45,7 +45,7 @@ class NodeSideEffectTest : BaseSideEffectTest() {
             RestateDeployer.Builder()
                 .withServiceEndpoint(
                     Containers.nodeServicesContainer(
-                        "node-side-effect", SideEffectClient.COMPONENT_NAME))
+                        "node-side-effect", SideEffectClient.SERVICE_NAME))
                 .build())
   }
 }

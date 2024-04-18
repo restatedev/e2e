@@ -42,9 +42,9 @@ class JavaCancelInvocationTest : BaseCancelInvocationTest() {
                 .withServiceEndpoint(
                     Containers.javaServicesContainer(
                         "java-cancel-invocation",
-                        CancelTestRunnerClient.COMPONENT_NAME,
-                        CancelTestBlockingServiceClient.COMPONENT_NAME,
-                        AwakeableHolderClient.COMPONENT_NAME))
+                        CancelTestRunnerClient.SERVICE_NAME,
+                        CancelTestBlockingServiceClient.SERVICE_NAME,
+                        AwakeableHolderClient.SERVICE_NAME))
                 .build())
   }
 }
@@ -58,9 +58,9 @@ class NodeCancelInvocationTest : BaseCancelInvocationTest() {
                 .withServiceEndpoint(
                     Containers.nodeServicesContainer(
                         "node-cancel-invocation",
-                        CancelTestRunnerClient.COMPONENT_NAME,
-                        CancelTestBlockingServiceClient.COMPONENT_NAME,
-                        AwakeableHolderClient.COMPONENT_NAME))
+                        CancelTestRunnerClient.SERVICE_NAME,
+                        CancelTestBlockingServiceClient.SERVICE_NAME,
+                        AwakeableHolderClient.SERVICE_NAME))
                 .build())
   }
 }

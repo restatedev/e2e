@@ -42,8 +42,7 @@ class RetryOnUnknownServiceTest {
     val deployerExt: RestateDeployerForEachExtension = RestateDeployerForEachExtension {
       RestateDeployer.Builder()
           .withServiceEndpoint(
-              Containers.javaServicesContainer(
-                      "java-proxy", VirtualObjectProxyClient.COMPONENT_NAME)
+              Containers.javaServicesContainer("java-proxy", VirtualObjectProxyClient.SERVICE_NAME)
                   .build())
           .withServiceEndpoint(
               Containers.JAVA_COLLECTIONS_SERVICE_SPEC.copy(skipRegistration = true))
@@ -89,7 +88,7 @@ class RetryOnUnknownServiceTest {
     val valueToAppend = "a"
     val request =
         VirtualObjectProxy.Request(
-            ListObjectClient.COMPONENT_NAME,
+            ListObjectClient.SERVICE_NAME,
             list,
             "append",
             CoreSerdes.JSON_STRING.serialize(valueToAppend))

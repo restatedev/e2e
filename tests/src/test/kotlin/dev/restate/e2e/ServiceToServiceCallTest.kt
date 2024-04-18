@@ -56,9 +56,9 @@ class JavaCoordinatorWithNodeReceiverServiceToServiceCallTest : BaseServiceToSer
         RestateDeployerExtension(
             RestateDeployer.Builder()
                 .withServiceEndpoint(
-                    javaServicesContainer("java-coordinator", CoordinatorClient.COMPONENT_NAME))
+                    javaServicesContainer("java-coordinator", CoordinatorClient.SERVICE_NAME))
                 .withServiceEndpoint(
-                    nodeServicesContainer("node-coordinator", ReceiverClient.COMPONENT_NAME))
+                    nodeServicesContainer("node-coordinator", ReceiverClient.SERVICE_NAME))
                 .build())
   }
 }
@@ -71,9 +71,9 @@ class NodeCoordinatorWithJavaReceiverServiceToServiceCallTest : BaseServiceToSer
         RestateDeployerExtension(
             RestateDeployer.Builder()
                 .withServiceEndpoint(
-                    nodeServicesContainer("node-coordinator", CoordinatorClient.COMPONENT_NAME))
+                    nodeServicesContainer("node-coordinator", CoordinatorClient.SERVICE_NAME))
                 .withServiceEndpoint(
-                    javaServicesContainer("java-coordinator", ReceiverClient.COMPONENT_NAME))
+                    javaServicesContainer("java-coordinator", ReceiverClient.SERVICE_NAME))
                 .build())
   }
 }

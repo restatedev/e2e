@@ -24,64 +24,64 @@ public class Main {
     for (String svc : env.split(",")) {
       String fqsn = svc.trim();
       switch (fqsn) {
-        case AwakeableHolderClient.COMPONENT_NAME:
+        case AwakeableHolderClient.SERVICE_NAME:
           restateHttpEndpointBuilder.bind(new AwakeableHolderImpl());
           break;
-        case ListObjectClient.COMPONENT_NAME:
+        case ListObjectClient.SERVICE_NAME:
           restateHttpEndpointBuilder.bind(new ListObjectImpl());
           break;
-        case CounterClient.COMPONENT_NAME:
+        case CounterClient.SERVICE_NAME:
           restateHttpEndpointBuilder.bind(new CounterImpl());
           break;
-        case VirtualObjectProxyClient.COMPONENT_NAME:
+        case VirtualObjectProxyClient.SERVICE_NAME:
           restateHttpEndpointBuilder.bind(new VirtualObjectProxyImpl());
           break;
-        case ProxyCounterClient.COMPONENT_NAME:
+        case ProxyCounterClient.SERVICE_NAME:
           restateHttpEndpointBuilder.bind(new ProxyCounterImpl());
           break;
-        case FailingClient.COMPONENT_NAME:
+        case FailingClient.SERVICE_NAME:
           restateHttpEndpointBuilder.bind(new FailingImpl());
           break;
-        case RandomNumberListGeneratorClient.COMPONENT_NAME:
+        case RandomNumberListGeneratorClient.SERVICE_NAME:
           restateHttpEndpointBuilder.bind(new RandomNumberListGeneratorImpl());
           break;
-        case NonDeterministicClient.COMPONENT_NAME:
+        case NonDeterministicClient.SERVICE_NAME:
           restateHttpEndpointBuilder.bind(new NonDeterministicImpl());
           break;
-        case SideEffectClient.COMPONENT_NAME:
+        case SideEffectClient.SERVICE_NAME:
           restateHttpEndpointBuilder.bind(new SideEffectImpl());
           break;
-        case UpgradeTestClient.COMPONENT_NAME:
+        case UpgradeTestClient.SERVICE_NAME:
           restateHttpEndpointBuilder.bind(new UpgradeTestImpl());
           break;
-        case EventHandlerClient.COMPONENT_NAME:
+        case EventHandlerClient.SERVICE_NAME:
           restateHttpEndpointBuilder.bind(new EventHandlerImpl());
           break;
-        case MapObjectClient.COMPONENT_NAME:
+        case MapObjectClient.SERVICE_NAME:
           restateHttpEndpointBuilder.bind(new MapObjectImpl());
           break;
         case WorkflowAPIBlockAndWaitClient.WORKFLOW_NAME:
           restateHttpEndpointBuilder.bind(new WorkflowAPIBlockAndWaitImpl());
           break;
-        case CoordinatorClient.COMPONENT_NAME:
+        case CoordinatorClient.SERVICE_NAME:
           restateHttpEndpointBuilder.bind(new CoordinatorImpl());
           break;
-        case ReceiverClient.COMPONENT_NAME:
+        case ReceiverClient.SERVICE_NAME:
           restateHttpEndpointBuilder.bind(new ReceiverImpl());
           break;
-        case CancelTestRunnerClient.COMPONENT_NAME:
+        case CancelTestRunnerClient.SERVICE_NAME:
           restateHttpEndpointBuilder.bind(new CancelTestImpl.RunnerImpl());
           break;
-        case CancelTestBlockingServiceClient.COMPONENT_NAME:
+        case CancelTestBlockingServiceClient.SERVICE_NAME:
           restateHttpEndpointBuilder.bind(new CancelTestImpl.BlockingService());
           break;
-        case KillTestRunnerClient.COMPONENT_NAME:
+        case KillTestRunnerClient.SERVICE_NAME:
           restateHttpEndpointBuilder.bind(new KillTestImpl.RunnerImpl());
           break;
-        case KillTestSingletonClient.COMPONENT_NAME:
+        case KillTestSingletonClient.SERVICE_NAME:
           restateHttpEndpointBuilder.bind(new KillTestImpl.SingletonImpl());
           break;
-        case HeadersPassThroughTestClient.COMPONENT_NAME:
+        case HeadersPassThroughTestClient.SERVICE_NAME:
           restateHttpEndpointBuilder.bind(new HeadersPassThroughTestImpl());
           break;
       }

@@ -105,7 +105,7 @@ class NodeWorkflowAPITest {
     assertThat(
             doWorkflowRequest(
                     httpEndpointURL,
-                    Containers.WORKFLOW_API_BLOCK_AND_WAIT_COMPONENT_NAME,
+                    Containers.WORKFLOW_API_BLOCK_AND_WAIT_SERVICE_NAME,
                     "start",
                     workflowId,
                     "input" to "Francesco")
@@ -117,7 +117,7 @@ class NodeWorkflowAPITest {
         {
           doWorkflowRequest(
                   httpEndpointURL,
-                  Containers.WORKFLOW_API_BLOCK_AND_WAIT_COMPONENT_NAME,
+                  Containers.WORKFLOW_API_BLOCK_AND_WAIT_SERVICE_NAME,
                   "getState",
                   workflowId)
               .asText()
@@ -129,7 +129,7 @@ class NodeWorkflowAPITest {
     // Now unblock
     doWorkflowRequestWithoutResponse(
         httpEndpointURL,
-        Containers.WORKFLOW_API_BLOCK_AND_WAIT_COMPONENT_NAME,
+        Containers.WORKFLOW_API_BLOCK_AND_WAIT_SERVICE_NAME,
         "unblock",
         workflowId,
         "output" to "Till")
@@ -138,7 +138,7 @@ class NodeWorkflowAPITest {
     assertThat(
             doWorkflowRequest(
                     httpEndpointURL,
-                    Containers.WORKFLOW_API_BLOCK_AND_WAIT_COMPONENT_NAME,
+                    Containers.WORKFLOW_API_BLOCK_AND_WAIT_SERVICE_NAME,
                     "waitForResult",
                     workflowId)
                 .asText())
@@ -148,7 +148,7 @@ class NodeWorkflowAPITest {
     assertThat(
             doWorkflowRequest(
                     httpEndpointURL,
-                    Containers.WORKFLOW_API_BLOCK_AND_WAIT_COMPONENT_NAME,
+                    Containers.WORKFLOW_API_BLOCK_AND_WAIT_SERVICE_NAME,
                     "waitForResult",
                     workflowId)
                 .asText())
@@ -158,7 +158,7 @@ class NodeWorkflowAPITest {
     assertThat(
             doWorkflowRequest(
                     httpEndpointURL,
-                    Containers.WORKFLOW_API_BLOCK_AND_WAIT_COMPONENT_NAME,
+                    Containers.WORKFLOW_API_BLOCK_AND_WAIT_SERVICE_NAME,
                     "start",
                     workflowId,
                     "input" to "Francesco")
@@ -174,7 +174,7 @@ class NodeWorkflowAPITest {
     assertThat(
             doWorkflowRequest(
                     httpEndpointURL,
-                    Containers.WORKFLOW_API_BLOCK_AND_WAIT_COMPONENT_NAME,
+                    Containers.WORKFLOW_API_BLOCK_AND_WAIT_SERVICE_NAME,
                     "start",
                     workflowId,
                     "input" to "Francesco")
@@ -183,7 +183,7 @@ class NodeWorkflowAPITest {
     assertThat(
             doWorkflowRequest(
                     httpEndpointURL,
-                    Containers.WORKFLOW_API_BLOCK_AND_WAIT_COMPONENT_NAME,
+                    Containers.WORKFLOW_API_BLOCK_AND_WAIT_SERVICE_NAME,
                     "start",
                     workflowId,
                     "input" to "Francesco")

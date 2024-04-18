@@ -38,9 +38,9 @@ class JavaStateTest : BaseStateTest() {
                 .withServiceEndpoint(
                     javaServicesContainer(
                         "java-counter",
-                        CounterClient.COMPONENT_NAME,
-                        ProxyCounterClient.COMPONENT_NAME,
-                        MapObjectClient.COMPONENT_NAME))
+                        CounterClient.SERVICE_NAME,
+                        ProxyCounterClient.SERVICE_NAME,
+                        MapObjectClient.SERVICE_NAME))
                 .build())
   }
 }
@@ -57,9 +57,9 @@ class NodeStateTest : BaseStateTest() {
                 .withServiceEndpoint(
                     Containers.nodeServicesContainer(
                         "node-counter",
-                        CounterClient.COMPONENT_NAME,
-                        ProxyCounterClient.COMPONENT_NAME,
-                        MapObjectClient.COMPONENT_NAME))
+                        CounterClient.SERVICE_NAME,
+                        ProxyCounterClient.SERVICE_NAME,
+                        MapObjectClient.SERVICE_NAME))
                 .build())
   }
 }
