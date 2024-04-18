@@ -15,7 +15,7 @@ import {
 import { Random } from "./random";
 import { ProgramGenerator } from "./test_generator";
 
-import * as restate from "@restatedev/restate-sdk-ingress";
+import * as restate from "@restatedev/restate-sdk-clients";
 
 const MAX_LAYERS = 3;
 

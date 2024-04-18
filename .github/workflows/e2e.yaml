@@ -101,11 +101,11 @@ jobs:
           name: restatedev-restate-sdk
           path: e2e/services/node-services
 
-      - name: Download sdk-typescript-ingress snapshot from in-progress workflow
+      - name: Download sdk-typescript-clients snapshot from in-progress workflow
         if: ${{ inputs.sdkTypescriptCommit != '' && github.event_name != 'workflow_dispatch' }}
         uses: actions/download-artifact@v3
         with:
-          name: restatedev-restate-sdk-ingress
+          name: restatedev-restate-sdk-clients
           path: e2e/services/node-services 
 
       # In the workflow dispatch case where the artifact was created in a previous run, we can download as normal
@@ -119,14 +119,14 @@ jobs:
           name: restatedev-restate-sdk
           path: e2e/services/node-services
        
-      - name: download sdk-typescript-ingress snapshot from completed workflow
+      - name: download sdk-typescript-clients snapshot from completed workflow
         if: ${{ inputs.sdktypescriptcommit != '' && github.event_name == 'workflow_dispatch' }}
         uses: dawidd6/action-download-artifact@v2
         with:
           workflow: test.yml
           repo: restatedev/sdk-typescript
           commit: ${{ inputs.sdktypescriptcommit }}
-          name: restatedev-restate-sdk-ingress
+          name: restatedev-restate-sdk-clients
           path: e2e/services/node-services
       
       - name: Install sdk-typescript snapshot
@@ -134,9 +134,9 @@ jobs:
         run: npm install restatedev-restate-sdk.tgz
         working-directory: e2e/services/node-services
 
-      - name: Install sdk-typescript-ingress snapshot
+      - name: Install sdk-typescript-clients snapshot
         if: ${{ inputs.sdkTypescriptCommit != '' }}
-        run: npm install restatedev-restate-sdk-ingress.tgz
+        run: npm install restatedev-restate-sdk-clients.tgz
         working-directory: e2e/services/node-services
 
       # Setup sdk-java snapshot if necessary
