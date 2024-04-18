@@ -2,6 +2,8 @@ name: Verification tests
 
 on:
   workflow_dispatch: # To start from UI
+  schedule:
+    - cron: "12 0 * * *" # 00:12am UTC daily
 
 env:
   REPOSITORY_OWNER: ${{ github.repository_owner }}
