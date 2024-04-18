@@ -24,8 +24,7 @@ fun main() {
   for (svc in services) {
     val fqsn = svc.trim { it <= ' ' }
     when (fqsn) {
-      VerificationTestClient.COMPONENT_NAME ->
-          restateHttpEndpointBuilder.bind(VerificationTestImpl())
+      VerificationTestClient.SERVICE_NAME -> restateHttpEndpointBuilder.bind(VerificationTestImpl())
     }
   }
 

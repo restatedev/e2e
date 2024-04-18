@@ -37,8 +37,8 @@ class JavaNonDeterminismTest : NonDeterminismTest() {
                 .withServiceEndpoint(
                     Containers.javaServicesContainer(
                         "java-non-determinism",
-                        NonDeterministicClient.COMPONENT_NAME,
-                        CounterClient.COMPONENT_NAME))
+                        NonDeterministicClient.SERVICE_NAME,
+                        CounterClient.SERVICE_NAME))
                 .build())
   }
 }
@@ -55,8 +55,8 @@ class NodeNonDeterminismTest : NonDeterminismTest() {
                 .withServiceEndpoint(
                     Containers.nodeServicesContainer(
                         "node-non-determinism",
-                        NonDeterministicClient.COMPONENT_NAME,
-                        CounterClient.COMPONENT_NAME))
+                        NonDeterministicClient.SERVICE_NAME,
+                        CounterClient.SERVICE_NAME))
                 .build())
   }
 }
@@ -75,7 +75,7 @@ abstract class NonDeterminismTest {
   fun method(handlerName: String, @InjectIngressClient ingressClient: IngressClient) {
     Assertions.assertThatThrownBy {
           ingressClient.call(
-              Target.virtualObject(NonDeterministicClient.COMPONENT_NAME, handlerName, handlerName),
+              Target.virtualObject(NonDeterministicClient.SERVICE_NAME, handlerName, handlerName),
               CoreSerdes.VOID,
               CoreSerdes.VOID,
               null)

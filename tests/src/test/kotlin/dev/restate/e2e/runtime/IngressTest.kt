@@ -43,9 +43,9 @@ class IngressTest {
                 .withServiceEndpoint(
                     Containers.javaServicesContainer(
                         "java-counter",
-                        CounterClient.COMPONENT_NAME,
-                        ProxyCounterClient.COMPONENT_NAME,
-                        HeadersPassThroughTestClient.COMPONENT_NAME))
+                        CounterClient.SERVICE_NAME,
+                        ProxyCounterClient.SERVICE_NAME,
+                        HeadersPassThroughTestClient.SERVICE_NAME))
                 .build())
   }
 
@@ -60,7 +60,7 @@ class IngressTest {
     // Let's update the idempotency retention time to 3 seconds, to make this test faster
     val adminComponentClient = ComponentApi(ApiClient().setHost(metaURL.host).setPort(metaURL.port))
     adminComponentClient.modifyComponent(
-        CounterClient.COMPONENT_NAME, ModifyComponentRequest().idempotencyRetention("3s"))
+        CounterClient.SERVICE_NAME, ModifyComponentRequest().idempotencyRetention("3s"))
 
     val counterRandomName = UUID.randomUUID().toString()
     val myIdempotencyId = UUID.randomUUID().toString()

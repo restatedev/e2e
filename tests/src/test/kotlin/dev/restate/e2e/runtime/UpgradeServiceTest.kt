@@ -39,13 +39,13 @@ class UpgradeServiceTest {
       RestateDeployer.Builder()
           .withServiceEndpoint(
               Containers.javaServicesContainer(
-                      "version1", UpgradeTestClient.COMPONENT_NAME, ListObjectClient.COMPONENT_NAME)
+                      "version1", UpgradeTestClient.SERVICE_NAME, ListObjectClient.SERVICE_NAME)
                   .withEnv("E2E_UPGRADETEST_VERSION", "v1"))
           .withServiceEndpoint(
               Containers.javaServicesContainer(
-                  "awakeable-holder", AwakeableHolderClient.COMPONENT_NAME))
+                  "awakeable-holder", AwakeableHolderClient.SERVICE_NAME))
           .withServiceEndpoint(
-              Containers.javaServicesContainer("version2", UpgradeTestClient.COMPONENT_NAME)
+              Containers.javaServicesContainer("version2", UpgradeTestClient.SERVICE_NAME)
                   .withEnv("E2E_UPGRADETEST_VERSION", "v2")
                   .skipRegistration())
           .build()
