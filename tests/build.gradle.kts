@@ -63,8 +63,6 @@ tasks {
                   .get()
                   .asFile
                   .absolutePath,
-          // We don't need many partitions, fewer partitions will occupy less test resources
-          "RESTATE_WORKER__PARTITIONS" to "10",
           "RESTATE_CONTAINER_IMAGE" to
               (if (System.getenv("RESTATE_CONTAINER_IMAGE").isNullOrEmpty())
                   "ghcr.io/restatedev/restate:main"
@@ -102,9 +100,8 @@ tasks {
             environment +
                 baseRestateEnvironment(name) +
                 mapOf(
-                    "RESTATE_WORKER__PARTITIONS" to "1",
-                    "RESTATE_TOKIO_RUNTIME__WORKER_THREADS" to "1",
-                    "RESTATE_TOKIO_RUNTIME__MAX_BLOCKING_THREADS" to "1",
+                    "RESTATE_WORKER__BOOTSTRAP_NUM_PARTITIONS" to "1",
+                    "RESTATE_DEFAULT_THREAD_POOL_SIZE" to "1",
                 )
 
         useJUnitPlatform {
@@ -135,7 +132,7 @@ tasks {
         environment =
             environment +
                 baseRestateEnvironment(name) +
-                mapOf("RESTATE_WORKER__TIMERS__NUM_TIMERS_IN_MEMORY_LIMIT" to "1")
+                mapOf("RESTATE_WORKER__NUM_TIMERS_IN_MEMORY_LIMIT" to "1")
 
         useJUnitPlatform {
           // Run all the tests with always-suspending or only-always-suspending tag
