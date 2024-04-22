@@ -9,9 +9,9 @@
 
 package dev.restate.e2e.runtime
 
-import dev.restate.admin.api.ComponentApi
+import dev.restate.admin.api.ServiceApi
 import dev.restate.admin.client.ApiClient
-import dev.restate.admin.model.ModifyComponentRequest
+import dev.restate.admin.model.ModifyServiceRequest
 import dev.restate.e2e.Containers
 import dev.restate.e2e.utils.InjectIngressClient
 import dev.restate.e2e.utils.InjectMetaURL
@@ -49,15 +49,15 @@ class PrivateServiceTest {
       @InjectMetaURL metaURL: URL,
       @InjectIngressClient ingressClient: IngressClient,
   ) {
-    val adminComponentClient = ComponentApi(ApiClient().setHost(metaURL.host).setPort(metaURL.port))
+    val adminServiceClient = ServiceApi(ApiClient().setHost(metaURL.host).setPort(metaURL.port))
     val counterId = UUID.randomUUID().toString()
     val counterClient = CounterClient.fromIngress(ingressClient, counterId)
 
     counterClient.add(1)
 
     // Make the service private
-    adminComponentClient.modifyComponent(
-        CounterClient.SERVICE_NAME, ModifyComponentRequest()._public(false))
+    adminServiceClient.modifyService(
+        CounterClient.SERVICE_NAME, ModifyServiceRequest()._public(false))
 
     // Wait for the service to be private
     await untilAsserted
@@ -72,8 +72,8 @@ class PrivateServiceTest {
         .addInBackground(ProxyCounter.AddRequest(counterId, 1))
 
     // Make the service public again
-    adminComponentClient.modifyComponent(
-        CounterClient.SERVICE_NAME, ModifyComponentRequest()._public(true))
+    adminServiceClient.modifyService(
+        CounterClient.SERVICE_NAME, ModifyServiceRequest()._public(true))
 
     // Wait to get the correct count
     await untilAsserted { assertThat(counterClient.get()).isEqualTo(2L) }
