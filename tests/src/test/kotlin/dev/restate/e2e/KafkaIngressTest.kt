@@ -121,7 +121,7 @@ abstract class BaseKafkaIngressTest {
     subscriptionsClient.createSubscription(
         CreateSubscriptionRequest()
             .source("kafka://my-cluster/$topic")
-            .sink("component://${targetEventHandler}")
+            .sink("service://${targetEventHandler}")
             .options(mapOf("auto.offset.reset" to "earliest")))
 
     // Produce message to kafka

@@ -9,9 +9,9 @@
 
 package dev.restate.e2e.runtime
 
-import dev.restate.admin.api.ComponentApi
+import dev.restate.admin.api.ServiceApi
 import dev.restate.admin.client.ApiClient
-import dev.restate.admin.model.ModifyComponentRequest
+import dev.restate.admin.model.ModifyServiceRequest
 import dev.restate.e2e.Containers
 import dev.restate.e2e.utils.InjectIngressClient
 import dev.restate.e2e.utils.InjectMetaURL
@@ -58,9 +58,9 @@ class IngressTest {
       @InjectIngressClient ingressClient: IngressClient
   ) {
     // Let's update the idempotency retention time to 3 seconds, to make this test faster
-    val adminComponentClient = ComponentApi(ApiClient().setHost(metaURL.host).setPort(metaURL.port))
-    adminComponentClient.modifyComponent(
-        CounterClient.SERVICE_NAME, ModifyComponentRequest().idempotencyRetention("3s"))
+    val adminServiceClient = ServiceApi(ApiClient().setHost(metaURL.host).setPort(metaURL.port))
+    adminServiceClient.modifyService(
+        CounterClient.SERVICE_NAME, ModifyServiceRequest().idempotencyRetention("3s"))
 
     val counterRandomName = UUID.randomUUID().toString()
     val myIdempotencyId = UUID.randomUUID().toString()
