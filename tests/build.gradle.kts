@@ -31,6 +31,7 @@ dependencies {
 
   testImplementation(libs.jackson.core)
   testImplementation(libs.jackson.databind)
+  testImplementation(libs.jackson.parameter.names)
 
   testImplementation("org.apache.kafka:kafka-clients:3.5.0")
 

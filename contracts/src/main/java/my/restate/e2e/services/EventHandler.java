@@ -9,13 +9,13 @@
 
 package my.restate.e2e.services;
 
-import dev.restate.sdk.ObjectContext;
+import dev.restate.sdk.Context;
 import dev.restate.sdk.annotation.Handler;
-import dev.restate.sdk.annotation.VirtualObject;
+import dev.restate.sdk.annotation.Service;
 
-@VirtualObject(name = "EventHandler")
+@Service(name = "EventHandler")
 public interface EventHandler {
 
   @Handler
-  void handle(ObjectContext context, Long value);
+  void handle(Context context, TestEvent event);
 }

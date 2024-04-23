@@ -15,4 +15,12 @@ dependencies {
   api(libs.restate.sdk.api)
   api(libs.restate.sdk.workflow.api)
   api(libs.restate.sdk.jackson)
+
+  implementation(libs.jackson.parameter.names)
+}
+
+tasks.withType<JavaCompile> {
+  // Using -parameters allows to use Jackson ParameterName feature
+  // https://github.com/FasterXML/jackson-modules-java8/tree/2.14/parameter-names
+  options.compilerArgs.add("-parameters")
 }
