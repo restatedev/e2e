@@ -43,6 +43,10 @@ object Utils {
     return httpClient.send(req, jacksonBodyHandler())
   }
 
+  fun writeValueAsStringUsingJackson(value: Any?): String {
+    return objMapper.writeValueAsString(value)
+  }
+
   fun doJsonRequestToService(
       restateEndpoint: String,
       service: String,

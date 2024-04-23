@@ -9,11 +9,11 @@
 
 package my.restate.e2e.services;
 
-import dev.restate.sdk.ObjectContext;
+import dev.restate.sdk.Context;
 
 public class EventHandlerImpl implements EventHandler {
   @Override
-  public void handle(ObjectContext context, Long value) {
-    CounterClient.fromContext(context, context.key()).send().add(value);
+  public void handle(Context context, TestEvent event) {
+    CounterClient.fromContext(context, event.getId()).send().add(event.getValue());
   }
 }

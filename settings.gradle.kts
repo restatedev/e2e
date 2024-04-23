@@ -46,9 +46,14 @@ dependencyResolutionManagement {
       library("log4j-core", "org.apache.logging.log4j", "log4j-core").versionRef("log4j")
       library("log4j-slf4j", "org.apache.logging.log4j", "log4j-slf4j-impl").versionRef("log4j")
 
-      version("jackson", "2.15.2")
+      version("jackson", "2.16.1")
       library("jackson-core", "com.fasterxml.jackson.core", "jackson-core").versionRef("jackson")
       library("jackson-databind", "com.fasterxml.jackson.core", "jackson-databind")
+          .versionRef("jackson")
+      library(
+              "jackson-parameter-names",
+              "com.fasterxml.jackson.module",
+              "jackson-module-parameter-names")
           .versionRef("jackson")
       library("jackson-kotlin", "com.fasterxml.jackson.module", "jackson-module-kotlin")
           .versionRef("jackson")

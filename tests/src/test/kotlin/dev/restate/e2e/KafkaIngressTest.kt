@@ -19,6 +19,7 @@ import java.net.URL
 import java.util.*
 import my.restate.e2e.services.CounterClient
 import my.restate.e2e.services.EventHandlerClient
+import my.restate.e2e.services.TestEvent
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.Producer
 import org.apache.kafka.clients.producer.ProducerRecord
@@ -87,8 +88,31 @@ abstract class BaseKafkaIngressTest {
       @InjectContainerPort(hostName = "kafka", port = KafkaContainer.EXTERNAL_PORT) kafkaPort: Int,
       @InjectIngressClient ingressClient: IngressClient
   ) {
-    counterEventsTest(
-        metaURL, kafkaPort, ingressClient, COUNTER_TOPIC, "${CounterClient.SERVICE_NAME}/add")
+    val counter = UUID.randomUUID().toString()
+
+    // Create subscription
+    val subscriptionsClient =
+        SubscriptionApi(ApiClient().setHost(metaURL.host).setPort(metaURL.port))
+    subscriptionsClient.createSubscription(
+        CreateSubscriptionRequest()
+            .source("kafka://my-cluster/$COUNTER_TOPIC")
+            .sink("service://${CounterClient.SERVICE_NAME}/add")
+            .options(mapOf("auto.offset.reset" to "earliest")))
+
+    // Produce message to kafka
+    produceMessageToKafka(
+        "PLAINTEXT://localhost:$kafkaPort",
+        COUNTER_TOPIC,
+        listOf(counter to "1", counter to "2", counter to "3"))
+
+    // Now wait for the update to be visible
+    await untilCallTo
+        {
+          CounterClient.fromIngress(ingressClient, counter).get()
+        } matches
+        { num ->
+          num!! == 6L
+        }
   }
 
   @Test
@@ -98,21 +122,6 @@ abstract class BaseKafkaIngressTest {
       @InjectContainerPort(hostName = "kafka", port = KafkaContainer.EXTERNAL_PORT) kafkaPort: Int,
       @InjectIngressClient ingressClient: IngressClient
   ) {
-    counterEventsTest(
-        metaURL,
-        kafkaPort,
-        ingressClient,
-        EVENT_HANDLER_TOPIC,
-        "${EventHandlerClient.SERVICE_NAME}/handle")
-  }
-
-  fun counterEventsTest(
-      metaURL: URL,
-      kafkaPort: Int,
-      ingressClient: IngressClient,
-      topic: String,
-      targetEventHandler: String
-  ) {
     val counter = UUID.randomUUID().toString()
 
     // Create subscription
@@ -120,12 +129,18 @@ abstract class BaseKafkaIngressTest {
         SubscriptionApi(ApiClient().setHost(metaURL.host).setPort(metaURL.port))
     subscriptionsClient.createSubscription(
         CreateSubscriptionRequest()
-            .source("kafka://my-cluster/$topic")
-            .sink("service://${targetEventHandler}")
+            .source("kafka://my-cluster/$EVENT_HANDLER_TOPIC")
+            .sink("service://${EventHandlerClient.SERVICE_NAME}/handle")
             .options(mapOf("auto.offset.reset" to "earliest")))
 
     // Produce message to kafka
-    produceMessageToKafka("PLAINTEXT://localhost:$kafkaPort", topic, counter, listOf("1", "2", "3"))
+    produceMessageToKafka(
+        "PLAINTEXT://localhost:$kafkaPort",
+        EVENT_HANDLER_TOPIC,
+        listOf(
+            null to Utils.writeValueAsStringUsingJackson(TestEvent(counter, 1)),
+            null to Utils.writeValueAsStringUsingJackson(TestEvent(counter, 2)),
+            null to Utils.writeValueAsStringUsingJackson(TestEvent(counter, 3))))
 
     // Now wait for the update to be visible
     await untilCallTo
@@ -141,8 +156,7 @@ abstract class BaseKafkaIngressTest {
 private fun produceMessageToKafka(
     bootstrapServer: String,
     topic: String,
-    key: String,
-    values: List<String>
+    values: List<Pair<String?, String>>
 ) {
   val props = Properties()
   props["bootstrap.servers"] = bootstrapServer
@@ -151,7 +165,7 @@ private fun produceMessageToKafka(
 
   val producer: Producer<String, String> = KafkaProducer(props)
   for (value in values) {
-    producer.send(ProducerRecord(topic, key, value))
+    producer.send(ProducerRecord(topic, value.first, value.second))
   }
   producer.close()
 }

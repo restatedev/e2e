@@ -15,11 +15,11 @@ const EventHandlerFQN = "EventHandler";
 
 const CounterApi: CounterApi = { name: "Counter" };
 
-const o = restate.object({
+const o = restate.service({
   name: EventHandlerFQN,
   handlers: {
-    async handle(ctx: restate.ObjectContext, value: number) {
-      ctx.objectSendClient(CounterApi, ctx.key).add(value);
+    async handle(ctx: restate.Context, request: { id: string; value: number }) {
+      ctx.objectSendClient(CounterApi, request.id).add(request.value);
     },
   },
 });
