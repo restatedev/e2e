@@ -67,12 +67,14 @@ dependencyResolutionManagement {
       version("assertj", "3.24.2")
       library("assertj", "org.assertj", "assertj-core").versionRef("assertj")
 
-      version("testcontainers", "1.19.0")
+      version("testcontainers", "1.19.7")
       library("testcontainers-core", "org.testcontainers", "testcontainers")
           .versionRef("testcontainers")
       library("testcontainers-kafka", "org.testcontainers", "kafka").versionRef("testcontainers")
       library("testcontainers-toxiproxy", "org.testcontainers", "toxiproxy")
           .versionRef("testcontainers")
+      // Keep this in sync with the version used by testcontainers
+      library("docker", "com.github.docker-java:docker-java:3.3.6")
 
       version("awaitility", "4.2.1")
       library("awaitility", "org.awaitility", "awaitility-kotlin").versionRef("awaitility")

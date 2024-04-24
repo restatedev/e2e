@@ -29,7 +29,7 @@ internal constructor(
 
   fun terminateAndRestart() {
     logger.info(
-        "Going to kill and restart the container {} with hostnames {}.",
+        "Going to terminate and restart the container {} with hostnames {}.",
         container.containerName,
         container.networkAliases.joinToString())
     retryDockerClientCommand { dockerClient, containerId ->
@@ -45,9 +45,7 @@ internal constructor(
         container.containerName,
         container.networkAliases.joinToString())
     retryDockerClientCommand { dockerClient, containerId ->
-      // Using timeout 0 because I'm missing a signal argument
-      // https://github.com/docker-java/docker-java/issues/2123
-      dockerClient.restartContainerCmd(containerId).withTimeout(0).exec()
+      dockerClient.restartContainerCmd(containerId).withSignal("SIGKILL").withTimeout(0).exec()
     }
 
     postStart()
