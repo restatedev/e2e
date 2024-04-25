@@ -21,6 +21,8 @@ dependencies {
   api(libs.testcontainers.kafka)
   api(libs.restate.sdk.common)
 
+  implementation(libs.docker)
+
   implementation(libs.restate.admin)
   implementation(libs.log4j.api)
 

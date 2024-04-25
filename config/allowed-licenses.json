@@ -29,6 +29,9 @@
     },
     {
       "moduleName": "org.jetbrains.kotlin:kotlin-stdlib-common"
+    },
+    {
+      "moduleLicense": "Bouncy Castle Licence"
     }
   ]
 }
