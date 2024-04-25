@@ -165,7 +165,7 @@ jobs:
         uses: dawidd6/action-download-artifact@v3
         with:
           repo: restatedev/restate
-          workflow: docker.yml
+          workflow: ci.yml
           commit: ${{ inputs.restateCommit }}
           name: restate.tar
 
