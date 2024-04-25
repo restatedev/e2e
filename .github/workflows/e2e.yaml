@@ -189,7 +189,7 @@ jobs:
           build-root-directory: e2e
 
       # Upload container logs
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: always() # Make sure this is run even when test fails
         with:
           name: container-logs
