@@ -46,6 +46,7 @@ class InterpreterTest {
     @RegisterExtension
     val deployerExt: RestateDeployerForEachExtension = RestateDeployerForEachExtension {
       RestateDeployer.Builder()
+          .withInvokerRetryPolicy(RestateDeployer.RetryPolicy.FixedDelay("50ms", Int.MAX_VALUE))
           .withServiceEndpoint(
               Containers.nodeServicesContainer(
                   "intepreter",
