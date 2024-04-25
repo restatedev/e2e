@@ -176,17 +176,18 @@ jobs:
           docker tag "${output#*: }" "localhost:5000/restatedev/restate:latest"
           docker push localhost:5000/restatedev/restate:latest
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
       # Run tests
-      - name: Test
-        uses: gradle/gradle-build-action@v3
+      - name: Run E2E tests
         env:
           E2E_IMAGE_PULL_POLICY: always
           E2E_VERIFICATION_SEED: ${{ github.run_id }}
           RESTATE_CONTAINER_IMAGE: ${{ inputs.restateCommit != '' && 'localhost:5000/restatedev/restate:latest' || '' }}
           JAVA_SDK_LOCAL_BUILD: ${{ inputs.sdkJavaCommit != '' && 'true' || '' }}
-        with:
-          arguments: --continue -Djib.console=plain check
-          build-root-directory: e2e
+        working-directory: e2e
+        run: ./gradlew --continue -Djib.console=plain check
 
       # Upload container logs
       - uses: actions/upload-artifact@v4
