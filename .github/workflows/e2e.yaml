@@ -67,7 +67,7 @@ jobs:
         ports:
           - 5000:5000
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: restatedev/e2e
           path: e2e
@@ -80,13 +80,13 @@ jobs:
         working-directory: e2e
 
       # Setup Java
-      - uses: actions/setup-java@v3
+      - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
       # Setup node
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: "18.x"
           registry-url: 'https://registry.npmjs.org'
@@ -96,14 +96,14 @@ jobs:
       # We must use download-artifact to get artifacts created during *this* workflow run, ie by workflow call
       - name: Download sdk-typescript snapshot from in-progress workflow
         if: ${{ inputs.sdkTypescriptCommit != '' && github.event_name != 'workflow_dispatch' }}
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: restatedev-restate-sdk
           path: e2e/services/node-services
 
       - name: Download sdk-typescript-clients snapshot from in-progress workflow
         if: ${{ inputs.sdkTypescriptCommit != '' && github.event_name != 'workflow_dispatch' }}
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: restatedev-restate-sdk-clients
           path: e2e/services/node-services 
@@ -141,7 +141,7 @@ jobs:
 
       # Setup sdk-java snapshot if necessary
       - name: Checkout sdk-java repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         if: ${{ inputs.sdkJavaCommit != '' }}
         with:
           repository: restatedev/sdk-java
@@ -155,7 +155,7 @@ jobs:
       # We must use download-artifact to get artifacts created during *this* workflow run, ie by workflow call
       - name: Download restate snapshot from in-progress workflow
         if: ${{ inputs.restateCommit != '' && github.event_name != 'workflow_dispatch' }}
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: restate.tar
 
@@ -178,7 +178,7 @@ jobs:
 
       # Run tests
       - name: Test
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@v3
         env:
           E2E_IMAGE_PULL_POLICY: always
           E2E_VERIFICATION_SEED: ${{ github.run_id }}
