@@ -43,6 +43,7 @@ private constructor(
     serviceSpecs: List<ServiceSpec>,
     private val additionalContainers: Map<String, GenericContainer<*>>,
     private val runtimeContainerEnvs: Map<String, String>,
+    private val copyToContainer: List<Pair<String, Transferable>>,
     private val restateContainerImage: String,
     private val enableTracesExport: Boolean,
     private val configSchema: RestateConfigSchema?
@@ -151,7 +152,8 @@ private constructor(
       private var invokerRetryPolicy: RetryPolicy? = null,
       private var enableTracesExport: Boolean = true,
       private var configSchema: RestateConfigSchema? = null,
-      private var loadEnvs: Boolean = true
+      private var loadEnvs: Boolean = true,
+      private var copyToContainer: MutableList<Pair<String, Transferable>> = mutableListOf()
   ) {
 
     fun withServiceEndpoint(serviceSpec: ServiceSpec) = apply {
@@ -196,6 +198,14 @@ private constructor(
 
     fun disableLoadingRestateEnv() = apply { this.loadEnvs = false }
 
+    fun withCopyToContainer(name: String, value: String) = apply {
+      this.copyToContainer += (name to Transferable.of(value))
+    }
+
+    fun withCopyToContainer(name: String, value: ByteArray) = apply {
+      this.copyToContainer += (name to Transferable.of(value))
+    }
+
     fun build(): RestateDeployer {
       val loadedRuntimeContainerEnvs =
           if (this.loadEnvs) {
@@ -214,6 +224,7 @@ private constructor(
           loadedRuntimeContainerEnvs +
               this.runtimeContainerEnvs +
               (invokerRetryPolicy?.toInvokerSetupEnv() ?: emptyMap()),
+          copyToContainer,
           restateContainerImage,
           enableTracesExport,
           configSchema)
@@ -337,6 +348,10 @@ private constructor(
       runtimeContainer.withCopyToContainer(
           Transferable.of(tomlMapper.writeValueAsBytes(this.configSchema)), "/config.toml")
       runtimeContainer.withEnv("RESTATE_CONFIG", "/config.toml")
+    }
+
+    for (file in this.copyToContainer) {
+      runtimeContainer.withCopyToContainer(file.second, file.first)
     }
 
     val pullPolicy = System.getenv(IMAGE_PULL_POLICY_ENV)

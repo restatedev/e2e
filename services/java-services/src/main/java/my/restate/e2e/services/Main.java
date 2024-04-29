@@ -9,6 +9,7 @@
 
 package my.restate.e2e.services;
 
+import dev.restate.sdk.auth.signing.RestateRequestIdentityVerifier;
 import dev.restate.sdk.http.vertx.RestateHttpEndpointBuilder;
 import java.util.Objects;
 
@@ -85,6 +86,12 @@ public class Main {
           restateHttpEndpointBuilder.bind(new HeadersPassThroughTestImpl());
           break;
       }
+    }
+
+    String requestSigningKey = System.getenv("E2E_REQUEST_SIGNING");
+    if (requestSigningKey != null) {
+      restateHttpEndpointBuilder.withRequestIdentityVerifier(
+          RestateRequestIdentityVerifier.fromKey(requestSigningKey));
     }
 
     restateHttpEndpointBuilder.buildAndListen();

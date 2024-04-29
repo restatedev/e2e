@@ -33,6 +33,9 @@ const fqdns = new Set(process.env.SERVICES.split(","));
 const endpoint = restate.endpoint();
 REGISTRY.register(fqdns, endpoint);
 
+if (process.env.E2E_REQUEST_SIGNING) {
+  endpoint.withIdentityV1(...process.env.E2E_REQUEST_SIGNING.split(","));
+}
 if (!process.env.AWS_LAMBDA_FUNCTION_NAME) {
   endpoint.listen();
 }

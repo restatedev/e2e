@@ -40,6 +40,8 @@ dependencyResolutionManagement {
       library("restate-sdk-jackson", "dev.restate", "sdk-serde-jackson").versionRef("restate")
       library("restate-sdk-http-vertx", "dev.restate", "sdk-http-vertx").versionRef("restate")
       library("restate-sdk-workflow-api", "dev.restate", "sdk-workflow-api").versionRef("restate")
+      library("restate-sdk-request-identity", "dev.restate", "sdk-request-identity")
+          .versionRef("restate")
 
       version("log4j", "2.19.0")
       library("log4j-api", "org.apache.logging.log4j", "log4j-api").versionRef("log4j")
@@ -105,6 +107,7 @@ if (!System.getenv("JAVA_SDK_LOCAL_BUILD").isNullOrEmpty()) {
       substitute(module("dev.restate:sdk-workflow-api")).using(project(":sdk-workflow-api"))
       substitute(module("dev.restate:sdk-http-vertx")).using(project(":sdk-http-vertx"))
       substitute(module("dev.restate:sdk-serde-jackson")).using(project(":sdk-serde-jackson"))
+      substitute(module("dev.restate:sdk-request-identity")).using(project(":sdk-request-identity"))
     }
   }
 }
