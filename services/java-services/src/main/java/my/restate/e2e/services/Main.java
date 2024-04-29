@@ -9,6 +9,7 @@
 
 package my.restate.e2e.services;
 
+import dev.restate.sdk.auth.signing.RestateRequestIdentityVerifier;
 import dev.restate.sdk.http.vertx.RestateHttpEndpointBuilder;
 import java.util.Objects;
 
