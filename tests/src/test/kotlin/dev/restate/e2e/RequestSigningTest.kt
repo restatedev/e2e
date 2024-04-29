@@ -21,8 +21,6 @@ import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 
-// -- Simple sleep tests
-
 const val E2E_REQUEST_SIGNING_ENV = "E2E_REQUEST_SIGNING"
 const val PRIVATE_KEY =
     """
