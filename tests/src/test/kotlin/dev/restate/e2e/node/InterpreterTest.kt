@@ -49,11 +49,12 @@ class InterpreterTest {
           .withInvokerRetryPolicy(RestateDeployer.RetryPolicy.FixedDelay("50ms", Int.MAX_VALUE))
           .withServiceEndpoint(
               Containers.nodeServicesContainer(
-                  "intepreter",
-                  "ObjectInterpreterL0",
-                  "ObjectInterpreterL1",
-                  "ObjectInterpreterL2",
-                  "ServiceInterpreterHelper"))
+                      "intepreter",
+                      "ObjectInterpreterL0",
+                      "ObjectInterpreterL1",
+                      "ObjectInterpreterL2",
+                      "ServiceInterpreterHelper")
+                  .withEnv("RESTATE_LOGGING", "ERROR"))
           .withContainer(
               "test-driver",
               GenericContainer("restatedev/e2e-node-services")
