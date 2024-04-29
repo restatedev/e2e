@@ -87,6 +87,12 @@ public class Main {
       }
     }
 
+    String requestSigningKey = System.getenv("E2E_REQUEST_SIGNING");
+    if (requestSigningKey != null) {
+      restateHttpEndpointBuilder.withRequestIdentityVerifier(
+          RestateRequestIdentityVerifier.fromKey(requestSigningKey));
+    }
+
     restateHttpEndpointBuilder.buildAndListen();
   }
 }

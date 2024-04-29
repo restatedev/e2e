@@ -48,6 +48,22 @@ class NodeRequestSigningTest : BaseRequestSigningTest() {
   }
 }
 
+class JavaRequestSigningTest : BaseRequestSigningTest() {
+  companion object {
+    @RegisterExtension
+    val deployerExt: RestateDeployerExtension =
+        RestateDeployerExtension(
+            RestateDeployer.Builder()
+                .withCopyToContainer("/a.pem", PRIVATE_KEY)
+                .withEnv("RESTATE_REQUEST_IDENTITY_PRIVATE_KEY_PEM_FILE", "/a.pem")
+                .withServiceEndpoint(
+                    Containers.JAVA_COUNTER_SERVICE_SPEC.toBuilder()
+                        .withEnv(E2E_REQUEST_SIGNING_ENV, SIGNING_KEY)
+                        .build())
+                .build())
+  }
+}
+
 abstract class BaseRequestSigningTest {
 
   @Test

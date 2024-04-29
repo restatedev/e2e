@@ -17,6 +17,7 @@ dependencies {
   implementation(libs.restate.sdk.api)
   implementation(libs.restate.sdk.http.vertx)
   implementation(libs.restate.sdk.jackson)
+  implementation(libs.restate.sdk.request.identity)
 
   implementation(project(":contracts"))
 
