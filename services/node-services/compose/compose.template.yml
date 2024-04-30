@@ -18,7 +18,7 @@ services:
       - 9000:9000
     environment:
       - PORT=9000
-      - RESTATE_LOGGING=WARN
+      - RESTATE_LOGGING=ERROR
       - NODE_ENV=production
       - SERVICES=ObjectInterpreterL0
     restart: always
@@ -28,7 +28,7 @@ services:
       - 9001:9001
     environment:
       - PORT=9001
-      - RESTATE_LOGGING=WARN
+      - RESTATE_LOGGING=ERROR
       - NODE_ENV=production
       - SERVICES=ObjectInterpreterL1
     restart: always
@@ -38,7 +38,7 @@ services:
       - 9002:9002
     environment:
       - PORT=9002
-      - RESTATE_LOGGING=WARN
+      - RESTATE_LOGGING=ERROR
       - NODE_ENV=production
       - SERVICES=ObjectInterpreterL2,ServiceInterpreterHelper
     restart: always
