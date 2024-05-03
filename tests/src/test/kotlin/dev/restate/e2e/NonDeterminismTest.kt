@@ -16,7 +16,8 @@ import dev.restate.sdk.client.IngressClient
 import dev.restate.sdk.common.CoreSerdes
 import dev.restate.sdk.common.Target
 import my.restate.e2e.services.CounterClient
-import my.restate.e2e.services.NonDeterministicClient
+import my.restate.e2e.services.CounterDefinitions
+import my.restate.e2e.services.NonDeterministicDefinitions
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Tag
@@ -37,8 +38,8 @@ class JavaNonDeterminismTest : NonDeterminismTest() {
                 .withServiceEndpoint(
                     Containers.javaServicesContainer(
                         "java-non-determinism",
-                        NonDeterministicClient.SERVICE_NAME,
-                        CounterClient.SERVICE_NAME))
+                        NonDeterministicDefinitions.SERVICE_NAME,
+                        CounterDefinitions.SERVICE_NAME))
                 .build())
   }
 }
@@ -55,8 +56,8 @@ class NodeNonDeterminismTest : NonDeterminismTest() {
                 .withServiceEndpoint(
                     Containers.nodeServicesContainer(
                         "node-non-determinism",
-                        NonDeterministicClient.SERVICE_NAME,
-                        CounterClient.SERVICE_NAME))
+                        NonDeterministicDefinitions.SERVICE_NAME,
+                        CounterDefinitions.SERVICE_NAME))
                 .build())
   }
 }
@@ -75,7 +76,8 @@ abstract class NonDeterminismTest {
   fun method(handlerName: String, @InjectIngressClient ingressClient: IngressClient) {
     Assertions.assertThatThrownBy {
           ingressClient.call(
-              Target.virtualObject(NonDeterministicClient.SERVICE_NAME, handlerName, handlerName),
+              Target.virtualObject(
+                  NonDeterministicDefinitions.SERVICE_NAME, handlerName, handlerName),
               CoreSerdes.VOID,
               CoreSerdes.VOID,
               null)

@@ -16,7 +16,8 @@ import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
 import dev.restate.sdk.client.IngressClient
 import my.restate.e2e.services.CoordinatorClient
-import my.restate.e2e.services.ReceiverClient
+import my.restate.e2e.services.CoordinatorDefinitions
+import my.restate.e2e.services.ReceiverDefinitions
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
@@ -56,9 +57,9 @@ class JavaCoordinatorWithNodeReceiverServiceToServiceCallTest : BaseServiceToSer
         RestateDeployerExtension(
             RestateDeployer.Builder()
                 .withServiceEndpoint(
-                    javaServicesContainer("java-coordinator", CoordinatorClient.SERVICE_NAME))
+                    javaServicesContainer("java-coordinator", CoordinatorDefinitions.SERVICE_NAME))
                 .withServiceEndpoint(
-                    nodeServicesContainer("node-coordinator", ReceiverClient.SERVICE_NAME))
+                    nodeServicesContainer("node-coordinator", ReceiverDefinitions.SERVICE_NAME))
                 .build())
   }
 }
@@ -71,9 +72,9 @@ class NodeCoordinatorWithJavaReceiverServiceToServiceCallTest : BaseServiceToSer
         RestateDeployerExtension(
             RestateDeployer.Builder()
                 .withServiceEndpoint(
-                    nodeServicesContainer("node-coordinator", CoordinatorClient.SERVICE_NAME))
+                    nodeServicesContainer("node-coordinator", CoordinatorDefinitions.SERVICE_NAME))
                 .withServiceEndpoint(
-                    javaServicesContainer("java-coordinator", ReceiverClient.SERVICE_NAME))
+                    javaServicesContainer("java-coordinator", ReceiverDefinitions.SERVICE_NAME))
                 .build())
   }
 }

@@ -14,6 +14,7 @@ import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
 import dev.restate.sdk.client.IngressClient
 import my.restate.e2e.services.SideEffectClient
+import my.restate.e2e.services.SideEffectDefinitions
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Tag
@@ -31,7 +32,7 @@ class JavaSideEffectTest : BaseSideEffectTest() {
             RestateDeployer.Builder()
                 .withServiceEndpoint(
                     Containers.javaServicesContainer(
-                        "java-side-effect", SideEffectClient.SERVICE_NAME))
+                        "java-side-effect", SideEffectDefinitions.SERVICE_NAME))
                 .build())
   }
 }
@@ -45,7 +46,7 @@ class NodeSideEffectTest : BaseSideEffectTest() {
             RestateDeployer.Builder()
                 .withServiceEndpoint(
                     Containers.nodeServicesContainer(
-                        "node-side-effect", SideEffectClient.SERVICE_NAME))
+                        "node-side-effect", SideEffectDefinitions.SERVICE_NAME))
                 .build())
   }
 }

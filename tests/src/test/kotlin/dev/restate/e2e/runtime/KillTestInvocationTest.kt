@@ -16,9 +16,7 @@ import dev.restate.e2e.Containers
 import dev.restate.e2e.utils.*
 import dev.restate.sdk.client.IngressClient
 import java.net.URL
-import my.restate.e2e.services.AwakeableHolderClient
-import my.restate.e2e.services.KillTestRunnerClient
-import my.restate.e2e.services.KillTestSingletonClient
+import my.restate.e2e.services.*
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.until
 import org.junit.jupiter.api.Test
@@ -33,9 +31,9 @@ class KillTestInvocationTest {
           .withServiceEndpoint(
               Containers.javaServicesContainer(
                   "services",
-                  KillTestRunnerClient.SERVICE_NAME,
-                  KillTestSingletonClient.SERVICE_NAME,
-                  AwakeableHolderClient.SERVICE_NAME))
+                  KillTestRunnerDefinitions.SERVICE_NAME,
+                  KillTestSingletonDefinitions.SERVICE_NAME,
+                  AwakeableHolderDefinitions.SERVICE_NAME))
           .build()
     }
   }

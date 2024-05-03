@@ -18,7 +18,8 @@ import dev.restate.sdk.client.IngressClient
 import java.net.URL
 import java.util.*
 import my.restate.e2e.services.CounterClient
-import my.restate.e2e.services.EventHandlerClient
+import my.restate.e2e.services.CounterDefinitions
+import my.restate.e2e.services.EventHandlerDefinitions
 import my.restate.e2e.services.TestEvent
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.Producer
@@ -54,8 +55,8 @@ class JavaKafkaIngressTest : BaseKafkaIngressTest() {
                 .withServiceEndpoint(
                     Containers.javaServicesContainer(
                         "java-counter",
-                        CounterClient.SERVICE_NAME,
-                        EventHandlerClient.SERVICE_NAME))
+                        CounterDefinitions.SERVICE_NAME,
+                        EventHandlerDefinitions.SERVICE_NAME))
                 .withContainer("kafka", KafkaContainer(COUNTER_TOPIC, EVENT_HANDLER_TOPIC))
                 .withConfig(kafkaClusterOptions())
                 .build())
@@ -71,8 +72,8 @@ class NodeKafkaIngressTest : BaseKafkaIngressTest() {
                 .withServiceEndpoint(
                     Containers.nodeServicesContainer(
                         "node-counter",
-                        CounterClient.SERVICE_NAME,
-                        EventHandlerClient.SERVICE_NAME))
+                        CounterDefinitions.SERVICE_NAME,
+                        EventHandlerDefinitions.SERVICE_NAME))
                 .withContainer("kafka", KafkaContainer(COUNTER_TOPIC, EVENT_HANDLER_TOPIC))
                 .withConfig(kafkaClusterOptions())
                 .build())
@@ -96,7 +97,7 @@ abstract class BaseKafkaIngressTest {
     subscriptionsClient.createSubscription(
         CreateSubscriptionRequest()
             .source("kafka://my-cluster/$COUNTER_TOPIC")
-            .sink("service://${CounterClient.SERVICE_NAME}/add")
+            .sink("service://${CounterDefinitions.SERVICE_NAME}/add")
             .options(mapOf("auto.offset.reset" to "earliest")))
 
     // Produce message to kafka
@@ -130,7 +131,7 @@ abstract class BaseKafkaIngressTest {
     subscriptionsClient.createSubscription(
         CreateSubscriptionRequest()
             .source("kafka://my-cluster/$EVENT_HANDLER_TOPIC")
-            .sink("service://${EventHandlerClient.SERVICE_NAME}/handle")
+            .sink("service://${EventHandlerDefinitions.SERVICE_NAME}/handle")
             .options(mapOf("auto.offset.reset" to "earliest")))
 
     // Produce message to kafka
