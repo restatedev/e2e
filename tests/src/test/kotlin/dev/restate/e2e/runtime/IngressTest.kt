@@ -132,8 +132,11 @@ class IngressTest {
     val counterClient = CounterClient.fromIngress(ingressClient, counterRandomName)
 
     // Send request twice
-    counterClient.send().add(2, requestOptions)
-    counterClient.send().add(2, requestOptions)
+    val firstInvocationId = counterClient.send().add(2, requestOptions)
+    val secondInvocationId = counterClient.send().add(2, requestOptions)
+
+    // IDs should be the same
+    assertThat(firstInvocationId).startsWith("inv").isEqualTo(secondInvocationId)
 
     // Wait for get
     await untilAsserted { assertThat(counterClient.get()).isEqualTo(2) }
