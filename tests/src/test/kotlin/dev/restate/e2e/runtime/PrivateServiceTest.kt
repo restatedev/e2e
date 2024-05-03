@@ -22,6 +22,7 @@ import dev.restate.sdk.client.IngressException
 import java.net.URL
 import java.util.*
 import my.restate.e2e.services.CounterClient
+import my.restate.e2e.services.CounterDefinitions
 import my.restate.e2e.services.ProxyCounter
 import my.restate.e2e.services.ProxyCounterClient
 import org.assertj.core.api.Assertions.assertThat
@@ -57,7 +58,7 @@ class PrivateServiceTest {
 
     // Make the service private
     adminServiceClient.modifyService(
-        CounterClient.SERVICE_NAME, ModifyServiceRequest()._public(false))
+        CounterDefinitions.SERVICE_NAME, ModifyServiceRequest()._public(false))
 
     // Wait for the service to be private
     await untilAsserted
@@ -73,7 +74,7 @@ class PrivateServiceTest {
 
     // Make the service public again
     adminServiceClient.modifyService(
-        CounterClient.SERVICE_NAME, ModifyServiceRequest()._public(true))
+        CounterDefinitions.SERVICE_NAME, ModifyServiceRequest()._public(true))
 
     // Wait to get the correct count
     await untilAsserted { assertThat(counterClient.get()).isEqualTo(2L) }

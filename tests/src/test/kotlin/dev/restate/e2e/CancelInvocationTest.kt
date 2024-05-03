@@ -23,10 +23,7 @@ import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
-import my.restate.e2e.services.AwakeableHolderClient
-import my.restate.e2e.services.CancelTest
-import my.restate.e2e.services.CancelTestBlockingServiceClient
-import my.restate.e2e.services.CancelTestRunnerClient
+import my.restate.e2e.services.*
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.until
 import org.junit.jupiter.api.extension.RegisterExtension
@@ -42,9 +39,9 @@ class JavaCancelInvocationTest : BaseCancelInvocationTest() {
                 .withServiceEndpoint(
                     Containers.javaServicesContainer(
                         "java-cancel-invocation",
-                        CancelTestRunnerClient.SERVICE_NAME,
-                        CancelTestBlockingServiceClient.SERVICE_NAME,
-                        AwakeableHolderClient.SERVICE_NAME))
+                        CancelTestRunnerDefinitions.SERVICE_NAME,
+                        CancelTestBlockingServiceDefinitions.SERVICE_NAME,
+                        AwakeableHolderDefinitions.SERVICE_NAME))
                 .build())
   }
 }
@@ -58,9 +55,9 @@ class NodeCancelInvocationTest : BaseCancelInvocationTest() {
                 .withServiceEndpoint(
                     Containers.nodeServicesContainer(
                         "node-cancel-invocation",
-                        CancelTestRunnerClient.SERVICE_NAME,
-                        CancelTestBlockingServiceClient.SERVICE_NAME,
-                        AwakeableHolderClient.SERVICE_NAME))
+                        CancelTestRunnerDefinitions.SERVICE_NAME,
+                        CancelTestBlockingServiceDefinitions.SERVICE_NAME,
+                        AwakeableHolderDefinitions.SERVICE_NAME))
                 .build())
   }
 }

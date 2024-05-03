@@ -22,9 +22,7 @@ import dev.restate.sdk.client.IngressClient
 import dev.restate.sdk.common.CoreSerdes
 import java.net.URL
 import java.util.*
-import my.restate.e2e.services.ListObjectClient
-import my.restate.e2e.services.VirtualObjectProxy
-import my.restate.e2e.services.VirtualObjectProxyClient
+import my.restate.e2e.services.*
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
@@ -42,7 +40,8 @@ class RetryOnUnknownServiceTest {
     val deployerExt: RestateDeployerForEachExtension = RestateDeployerForEachExtension {
       RestateDeployer.Builder()
           .withServiceEndpoint(
-              Containers.javaServicesContainer("java-proxy", VirtualObjectProxyClient.SERVICE_NAME)
+              Containers.javaServicesContainer(
+                      "java-proxy", VirtualObjectProxyDefinitions.SERVICE_NAME)
                   .build())
           .withServiceEndpoint(
               Containers.JAVA_COLLECTIONS_SERVICE_SPEC.copy(skipRegistration = true))
@@ -88,7 +87,7 @@ class RetryOnUnknownServiceTest {
     val valueToAppend = "a"
     val request =
         VirtualObjectProxy.Request(
-            ListObjectClient.SERVICE_NAME,
+            ListObjectDefinitions.SERVICE_NAME,
             list,
             "append",
             CoreSerdes.JSON_STRING.serialize(valueToAppend))

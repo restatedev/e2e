@@ -17,9 +17,7 @@ import dev.restate.e2e.Containers
 import dev.restate.e2e.utils.*
 import dev.restate.sdk.client.IngressClient
 import java.net.URL
-import my.restate.e2e.services.AwakeableHolderClient
-import my.restate.e2e.services.ListObjectClient
-import my.restate.e2e.services.UpgradeTestClient
+import my.restate.e2e.services.*
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
@@ -39,13 +37,15 @@ class UpgradeServiceTest {
       RestateDeployer.Builder()
           .withServiceEndpoint(
               Containers.javaServicesContainer(
-                      "version1", UpgradeTestClient.SERVICE_NAME, ListObjectClient.SERVICE_NAME)
+                      "version1",
+                      UpgradeTestDefinitions.SERVICE_NAME,
+                      ListObjectDefinitions.SERVICE_NAME)
                   .withEnv("E2E_UPGRADETEST_VERSION", "v1"))
           .withServiceEndpoint(
               Containers.javaServicesContainer(
-                  "awakeable-holder", AwakeableHolderClient.SERVICE_NAME))
+                  "awakeable-holder", AwakeableHolderDefinitions.SERVICE_NAME))
           .withServiceEndpoint(
-              Containers.javaServicesContainer("version2", UpgradeTestClient.SERVICE_NAME)
+              Containers.javaServicesContainer("version2", UpgradeTestDefinitions.SERVICE_NAME)
                   .withEnv("E2E_UPGRADETEST_VERSION", "v2")
                   .skipRegistration())
           .build()
