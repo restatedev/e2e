@@ -107,6 +107,13 @@ jobs:
         with:
           name: restatedev-restate-sdk-clients
           path: e2e/services/node-services 
+      - name: Download sdk-typescript-core snapshot from in-progress workflow
+        if: ${{ inputs.sdkTypescriptCommit != '' && github.event_name != 'workflow_dispatch' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: restatedev-restate-sdk-core
+          path: e2e/services/node-services 
+
 
       # In the workflow dispatch case where the artifact was created in a previous run, we can download as normal
       - name: download sdk-typescript snapshot from completed workflow
@@ -128,7 +135,21 @@ jobs:
           commit: ${{ inputs.sdktypescriptcommit }}
           name: restatedev-restate-sdk-clients
           path: e2e/services/node-services
-      
+      - name: download sdk-typescript-core snapshot from completed workflow
+        if: ${{ inputs.sdktypescriptcommit != '' && github.event_name == 'workflow_dispatch' }}
+        uses: dawidd6/action-download-artifact@v3
+        with:
+          workflow: test.yml
+          repo: restatedev/sdk-typescript
+          commit: ${{ inputs.sdktypescriptcommit }}
+          name: restatedev-restate-sdk-core
+          path: e2e/services/node-services
+     
+      - name: Install sdk-typescript-core snapshot
+        if: ${{ inputs.sdkTypescriptCommit != '' }}
+        run: npm install restatedev-restate-sdk-core.tgz
+        working-directory: e2e/services/node-services
+
       - name: Install sdk-typescript snapshot
         if: ${{ inputs.sdkTypescriptCommit != '' }}
         run: npm install restatedev-restate-sdk.tgz
