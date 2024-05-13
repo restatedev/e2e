@@ -17,14 +17,19 @@ import dev.restate.e2e.utils.InjectIngressClient
 import dev.restate.e2e.utils.InjectMetaURL
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
+import dev.restate.sdk.client.CallRequestOptions
 import dev.restate.sdk.client.IngressClient
-import dev.restate.sdk.client.RequestOptions
+import dev.restate.sdk.client.IngressException
+import dev.restate.sdk.common.CoreSerdes
 import java.net.URL
 import java.util.*
 import java.util.concurrent.TimeUnit
 import my.restate.e2e.services.*
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.assertj.core.api.InstanceOfAssertFactories.type
 import org.awaitility.kotlin.await
+import org.awaitility.kotlin.until
 import org.awaitility.kotlin.untilAsserted
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -45,7 +50,9 @@ class IngressTest {
                         "java-counter",
                         CounterDefinitions.SERVICE_NAME,
                         ProxyCounterDefinitions.SERVICE_NAME,
-                        HeadersPassThroughTestDefinitions.SERVICE_NAME))
+                        HeadersPassThroughTestDefinitions.SERVICE_NAME,
+                        AwakeableHolderDefinitions.SERVICE_NAME,
+                        EchoDefinitions.SERVICE_NAME))
                 .build())
   }
 
@@ -64,7 +71,7 @@ class IngressTest {
 
     val counterRandomName = UUID.randomUUID().toString()
     val myIdempotencyId = UUID.randomUUID().toString()
-    val requestOptions = RequestOptions().withIdempotency(myIdempotencyId)
+    val requestOptions = CallRequestOptions().withIdempotency(myIdempotencyId)
 
     val counterClient = CounterClient.fromIngress(ingressClient, counterRandomName)
 
@@ -100,7 +107,7 @@ class IngressTest {
   fun idempotentInvokeService(@InjectIngressClient ingressClient: IngressClient) {
     val counterRandomName = UUID.randomUUID().toString()
     val myIdempotencyId = UUID.randomUUID().toString()
-    val requestOptions = RequestOptions().withIdempotency(myIdempotencyId)
+    val requestOptions = CallRequestOptions().withIdempotency(myIdempotencyId)
 
     val counterClient = CounterClient.fromIngress(ingressClient, counterRandomName)
     val proxyCounterClient = ProxyCounterClient.fromIngress(ingressClient)
@@ -127,7 +134,7 @@ class IngressTest {
   fun idempotentInvokeSend(@InjectIngressClient ingressClient: IngressClient) {
     val counterRandomName = UUID.randomUUID().toString()
     val myIdempotencyId = UUID.randomUUID().toString()
-    val requestOptions = RequestOptions().withIdempotency(myIdempotencyId)
+    val requestOptions = CallRequestOptions().withIdempotency(myIdempotencyId)
 
     val counterClient = CounterClient.fromIngress(ingressClient, counterRandomName)
 
@@ -150,13 +157,56 @@ class IngressTest {
   @Test
   @Execution(ExecutionMode.CONCURRENT)
   @Timeout(value = 15, unit = TimeUnit.SECONDS)
+  @DisplayName("Idempotent send then attach/getOutput")
+  fun idempotentSendThenAttach(@InjectIngressClient ingressClient: IngressClient) {
+    val awakeableKey = UUID.randomUUID().toString()
+    val myIdempotencyId = UUID.randomUUID().toString()
+    val response = "response"
+
+    // Send request
+    val echoClient = EchoClient.fromIngress(ingressClient)
+    val invocationId =
+        echoClient
+            .send()
+            .blockThenEcho(awakeableKey, CallRequestOptions().withIdempotency(myIdempotencyId))
+
+    // Attach to request
+    val blockedFut =
+        ingressClient.invocationHandle(invocationId).attachAsync(CoreSerdes.JSON_STRING)
+
+    // Get output throws exception
+    assertThatThrownBy {
+          ingressClient.invocationHandle(invocationId).getOutput(CoreSerdes.JSON_STRING)
+        }
+        .asInstanceOf(type(IngressException::class.java))
+        .returns(470, IngressException::getStatusCode)
+
+    // Blocked fut should still be blocked
+    assertThat(blockedFut).isNotDone
+
+    // Unblock
+    val awakeableHolderClient = AwakeableHolderClient.fromIngress(ingressClient, awakeableKey)
+    await until { awakeableHolderClient.hasAwakeable() }
+    awakeableHolderClient.unlock(response)
+
+    // Attach should be completed
+    assertThat(blockedFut.get()).isEqualTo(response)
+
+    // Invoke get output
+    assertThat(ingressClient.invocationHandle(invocationId).getOutput(CoreSerdes.JSON_STRING))
+        .isEqualTo(response)
+  }
+
+  @Test
+  @Execution(ExecutionMode.CONCURRENT)
+  @Timeout(value = 15, unit = TimeUnit.SECONDS)
   fun headersPassThrough(@InjectIngressClient ingressClient: IngressClient) {
     val headerName = "x-my-custom-header"
     val headerValue = "x-my-custom-value"
 
     assertThat(
             HeadersPassThroughTestClient.fromIngress(ingressClient)
-                .echoHeaders(RequestOptions().withHeader(headerName, headerValue)))
+                .echoHeaders(CallRequestOptions().withHeader(headerName, headerValue)))
         .containsEntry(headerName, headerValue)
   }
 }

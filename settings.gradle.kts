@@ -23,6 +23,7 @@ include(
 
 dependencyResolutionManagement {
   repositories {
+    mavenLocal()
     mavenCentral()
     // OSSRH Snapshots repo
     maven { url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/") }

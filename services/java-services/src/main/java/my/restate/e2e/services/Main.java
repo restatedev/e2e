@@ -85,6 +85,9 @@ public class Main {
         case HeadersPassThroughTestDefinitions.SERVICE_NAME:
           restateHttpEndpointBuilder.bind(new HeadersPassThroughTestImpl());
           break;
+        case EchoDefinitions.SERVICE_NAME:
+          restateHttpEndpointBuilder.bind(new EchoImpl());
+          break;
       }
     }
 
