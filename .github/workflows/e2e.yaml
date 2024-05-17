@@ -206,7 +206,7 @@ jobs:
           E2E_IMAGE_PULL_POLICY: always
           E2E_VERIFICATION_SEED: ${{ github.run_id }}
           RESTATE_CONTAINER_IMAGE: ${{ inputs.restateCommit != '' && 'localhost:5000/restatedev/restate:latest' || '' }}
-          JAVA_SDK_LOCAL_BUILD: ${{ inputs.sdkJavaCommit != '' && 'true' || '' }}
+          SDK_JAVA_LOCAL_BUILD: ${{ inputs.sdkJavaCommit != '' && 'true' || '' }}
         working-directory: e2e
         run: ./gradlew --continue -Djib.console=plain check
 

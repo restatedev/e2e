@@ -95,7 +95,7 @@ dependencyResolutionManagement {
 }
 
 // Include composite build for easier local testing
-if (!System.getenv("JAVA_SDK_LOCAL_BUILD").isNullOrEmpty()) {
+if (!System.getenv("SDK_JAVA_LOCAL_BUILD").isNullOrEmpty()) {
   includeBuild("../sdk-java") {
     dependencySubstitution {
       substitute(module("dev.restate:admin-client")).using(project(":admin-client"))

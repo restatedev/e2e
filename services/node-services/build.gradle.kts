@@ -78,7 +78,7 @@ tasks.register("installLocalSdkTypescript") {
         .assertNormalExitValue()
     exec {
           workingDir = sdkTypescriptDirectory
-          commandLine("npm", "pack", "--workspaces", "true", "--include-workspace-root", "false")
+          commandLine("npm", "--workspaces", "pack")
         }
         .assertNormalExitValue()
 

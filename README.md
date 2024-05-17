@@ -72,7 +72,7 @@ For each deployment of `RestateDeployer`, the `stdout` and `stderr` of the conta
 ### How to test Java SDK changes
 
 In order to test local changes to the `sdk-java`, you need to check it out under `../sdk-java`.
-When building the `e2e` project you have to set the environment variable `JAVA_SDK_LOCAL_BUILD=true` 
+When building the `e2e` project you have to set the environment variable `SDK_JAVA_LOCAL_BUILD=true` 
 to include `sdk-java` as a composite build and substitute the `dev.restate.sdk:sdk-java` dependency with it.
 The build will fail if Gradle cannot find the `sdk-java` project.
 

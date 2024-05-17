@@ -66,7 +66,7 @@ licenseReport {
 
   excludes =
       arrayOf(
-          "dev.restate:.*", // Our own dependencies imported through JAVA_SDK_LOCAL_BUILD won't have
+          "dev.restate:.*", // Our own dependencies imported through SDK_JAVA_LOCAL_BUILD won't have
           // a license
       )
 
