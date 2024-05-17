@@ -20,6 +20,7 @@ tasks.register("updateRestateDependency") {
 }
 
 tasks.register<Copy>("prepareDockerBuild") {
+  mustRunAfter("npmInstall")
   if (!System.getenv("SDK_TYPESCRIPT_LOCAL_BUILD").isNullOrEmpty()) {
     dependsOn("installLocalSdkTypescript")
   } else {
@@ -77,24 +78,24 @@ tasks.register("installLocalSdkTypescript") {
         .assertNormalExitValue()
     exec {
           workingDir = sdkTypescriptDirectory
-          commandLine("npm", "pack")
+          commandLine("npm", "pack", "--workspaces", "true", "--include-workspace-root", "false")
         }
         .assertNormalExitValue()
 
     copy {
       from(sdkTypescriptDirectory)
-      include("*.tgz")
+      include("*restate-sdk*.tgz")
       into(".")
     }
 
-    val packageToInstall =
-        fileTree(projectDir).matching { include("*.tgz") }.maxByOrNull { it.lastModified() }!!
-    println("Going to install $packageToInstall")
+    fileTree(sdkTypescriptDirectory)
+        .matching { include("*restate-sdk*.tgz") }
+        .forEach { delete(it) }
 
+    val deps = fileTree(projectDir).matching { include("*.tgz") }.toList()
     exec {
-          workingDir = projectDir
-          commandLine("npm", "install", "--save", packageToInstall)
-        }
-        .assertNormalExitValue()
+      workingDir = projectDir
+      commandLine("npm", "install", "--save", *deps.toTypedArray())
+    }
   }
 }
