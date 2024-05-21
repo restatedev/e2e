@@ -13,10 +13,11 @@ dependencies {
   annotationProcessor(libs.restate.sdk.api.gen)
 
   api(libs.restate.sdk.api)
-  api(libs.restate.sdk.workflow.api)
   api(libs.restate.sdk.jackson)
 
   implementation(libs.jackson.parameter.names)
+  implementation(libs.jackson.java8)
+  implementation(libs.jackson.datetime)
 }
 
 tasks.withType<JavaCompile> {

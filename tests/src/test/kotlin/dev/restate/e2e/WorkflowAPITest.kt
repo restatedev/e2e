@@ -16,10 +16,8 @@ import dev.restate.e2e.utils.InjectIngressURL
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
 import dev.restate.sdk.client.IngressClient
-import dev.restate.sdk.workflow.WorkflowExecutionState
 import java.net.URL
 import java.util.*
-import my.restate.e2e.services.WorkflowAPIBlockAndWait
 import my.restate.e2e.services.WorkflowAPIBlockAndWaitClient
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
@@ -51,36 +49,20 @@ class JavaWorkflowAPITest {
   fun setAndResolve(@InjectIngressClient ingressClient: IngressClient) {
     val client =
         WorkflowAPIBlockAndWaitClient.fromIngress(ingressClient, UUID.randomUUID().toString())
-    assertThat(client.submit("Francesco")).isEqualTo(WorkflowExecutionState.STARTED)
+    val handle = client.submit("Francesco")
 
     // Wait state is set
-    await untilCallTo
-        {
-          client.getState(WorkflowAPIBlockAndWait.MY_STATE)
-        } matches
-        {
-          it!!.isPresent
-        }
+    await untilCallTo { client.getState() } matches { it!!.isPresent }
 
     client.unblock("Till")
 
-    await untilCallTo { client.output } matches { it!!.orElse("") == "Till" }
+    assertThat(handle.attach()).isEqualTo("Till")
 
     // Can call get output again
-    assertThat(client.output).get().isEqualTo("Till")
+    assertThat(handle.output).isEqualTo("Till")
 
-    // Re-submit returns completed
-    assertThat(client.submit("Francesco")).isEqualTo(WorkflowExecutionState.ALREADY_COMPLETED)
-  }
-
-  @Test
-  @DisplayName("Workflow cannot be submitted more than once")
-  @Execution(ExecutionMode.CONCURRENT)
-  fun manySubmit(@InjectIngressClient ingressClient: IngressClient) {
-    val client =
-        WorkflowAPIBlockAndWaitClient.fromIngress(ingressClient, UUID.randomUUID().toString())
-    assertThat(client.submit("Francesco")).isEqualTo(WorkflowExecutionState.STARTED)
-    assertThat(client.submit("Francesco")).isEqualTo(WorkflowExecutionState.ALREADY_STARTED)
+    // Re-submit should have no effect
+    assertThat(client.submit("Francesco").output).isEqualTo("Till")
   }
 }
 

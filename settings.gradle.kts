@@ -39,7 +39,6 @@ dependencyResolutionManagement {
           .versionRef("restate")
       library("restate-sdk-jackson", "dev.restate", "sdk-serde-jackson").versionRef("restate")
       library("restate-sdk-http-vertx", "dev.restate", "sdk-http-vertx").versionRef("restate")
-      library("restate-sdk-workflow-api", "dev.restate", "sdk-workflow-api").versionRef("restate")
       library("restate-sdk-request-identity", "dev.restate", "sdk-request-identity")
           .versionRef("restate")
 
@@ -56,6 +55,10 @@ dependencyResolutionManagement {
               "jackson-parameter-names",
               "com.fasterxml.jackson.module",
               "jackson-module-parameter-names")
+          .versionRef("jackson")
+      library("jackson-java8", "com.fasterxml.jackson.datatype", "jackson-datatype-jdk8")
+          .versionRef("jackson")
+      library("jackson-datetime", "com.fasterxml.jackson.datatype", "jackson-datatype-jsr310")
           .versionRef("jackson")
       library("jackson-kotlin", "com.fasterxml.jackson.module", "jackson-module-kotlin")
           .versionRef("jackson")

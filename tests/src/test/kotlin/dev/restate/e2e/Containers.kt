@@ -62,7 +62,8 @@ object Containers {
           .build()
 
   val JAVA_WORKFLOW_SERVICE_SPEC =
-      javaServicesContainer("java-workflow", WorkflowAPIBlockAndWaitClient.WORKFLOW_NAME).build()
+      javaServicesContainer("java-workflow", WorkflowAPIBlockAndWaitDefinitions.SERVICE_NAME)
+          .build()
 
   // -- Node containers
 
