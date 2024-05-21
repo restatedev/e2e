@@ -9,11 +9,11 @@
 
 package my.restate.e2e.services;
 
+import dev.restate.sdk.SharedWorkflowContext;
+import dev.restate.sdk.WorkflowContext;
 import dev.restate.sdk.annotation.Shared;
 import dev.restate.sdk.annotation.Workflow;
-import dev.restate.sdk.common.StateKey;
-import dev.restate.sdk.workflow.WorkflowContext;
-import dev.restate.sdk.workflow.WorkflowSharedContext;
+import java.util.Optional;
 
 @Workflow
 public interface WorkflowAPIBlockAndWait {
@@ -22,7 +22,8 @@ public interface WorkflowAPIBlockAndWait {
   String blockAndWait(WorkflowContext context, String input);
 
   @Shared
-  void unblock(WorkflowSharedContext context, String output);
+  void unblock(SharedWorkflowContext context, String output);
 
-  StateKey<String> MY_STATE = StateKey.string("my-state");
+  @Shared
+  Optional<String> getState(SharedWorkflowContext context);
 }

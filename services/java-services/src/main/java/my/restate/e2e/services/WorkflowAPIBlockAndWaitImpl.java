@@ -9,15 +9,18 @@
 
 package my.restate.e2e.services;
 
+import dev.restate.sdk.SharedWorkflowContext;
+import dev.restate.sdk.WorkflowContext;
+import dev.restate.sdk.common.DurablePromiseKey;
+import dev.restate.sdk.common.StateKey;
 import dev.restate.sdk.common.TerminalException;
-import dev.restate.sdk.workflow.DurablePromiseKey;
-import dev.restate.sdk.workflow.WorkflowContext;
-import dev.restate.sdk.workflow.WorkflowSharedContext;
+import java.util.Optional;
 
 public class WorkflowAPIBlockAndWaitImpl implements WorkflowAPIBlockAndWait {
 
   private static final DurablePromiseKey<String> MY_DURABLE_PROMISE =
       DurablePromiseKey.string("durable-promise");
+  private static final StateKey<String> MY_STATE = StateKey.string("my-state");
 
   @Override
   public String blockAndWait(WorkflowContext context, String input) {
@@ -37,7 +40,12 @@ public class WorkflowAPIBlockAndWaitImpl implements WorkflowAPIBlockAndWait {
   }
 
   @Override
-  public void unblock(WorkflowSharedContext context, String output) {
+  public void unblock(SharedWorkflowContext context, String output) {
     context.durablePromiseHandle(MY_DURABLE_PROMISE).resolve(output);
+  }
+
+  @Override
+  public Optional<String> getState(SharedWorkflowContext context) {
+    return context.get(MY_STATE);
   }
 }

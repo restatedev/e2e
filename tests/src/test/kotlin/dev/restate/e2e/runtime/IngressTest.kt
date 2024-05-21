@@ -169,15 +169,13 @@ class IngressTest {
         echoClient
             .send()
             .blockThenEcho(awakeableKey, CallRequestOptions().withIdempotency(myIdempotencyId))
+    val invocationHandle = ingressClient.invocationHandle(invocationId, CoreSerdes.JSON_STRING)
 
     // Attach to request
-    val blockedFut =
-        ingressClient.invocationHandle(invocationId).attachAsync(CoreSerdes.JSON_STRING)
+    val blockedFut = invocationHandle.attachAsync()
 
     // Get output throws exception
-    assertThatThrownBy {
-          ingressClient.invocationHandle(invocationId).getOutput(CoreSerdes.JSON_STRING)
-        }
+    assertThatThrownBy { invocationHandle.getOutput() }
         .asInstanceOf(type(IngressException::class.java))
         .returns(470, IngressException::getStatusCode)
 
@@ -193,8 +191,7 @@ class IngressTest {
     assertThat(blockedFut.get()).isEqualTo(response)
 
     // Invoke get output
-    assertThat(ingressClient.invocationHandle(invocationId).getOutput(CoreSerdes.JSON_STRING))
-        .isEqualTo(response)
+    assertThat(invocationHandle.getOutput()).isEqualTo(response)
   }
 
   @Test

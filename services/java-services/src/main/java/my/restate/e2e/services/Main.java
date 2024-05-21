@@ -61,7 +61,7 @@ public class Main {
         case MapObjectDefinitions.SERVICE_NAME:
           restateHttpEndpointBuilder.bind(new MapObjectImpl());
           break;
-        case WorkflowAPIBlockAndWaitClient.WORKFLOW_NAME:
+        case WorkflowAPIBlockAndWaitDefinitions.SERVICE_NAME:
           restateHttpEndpointBuilder.bind(new WorkflowAPIBlockAndWaitImpl());
           break;
         case CoordinatorDefinitions.SERVICE_NAME:
