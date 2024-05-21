@@ -107,7 +107,6 @@ if (!System.getenv("SDK_JAVA_LOCAL_BUILD").isNullOrEmpty()) {
       substitute(module("dev.restate:sdk-api-gen")).using(project(":sdk-api-gen"))
       substitute(module("dev.restate:sdk-api-kotlin")).using(project(":sdk-api-kotlin"))
       substitute(module("dev.restate:sdk-api-kotlin-gen")).using(project(":sdk-api-kotlin-gen"))
-      substitute(module("dev.restate:sdk-workflow-api")).using(project(":sdk-workflow-api"))
       substitute(module("dev.restate:sdk-http-vertx")).using(project(":sdk-http-vertx"))
       substitute(module("dev.restate:sdk-serde-jackson")).using(project(":sdk-serde-jackson"))
       substitute(module("dev.restate:sdk-request-identity")).using(project(":sdk-request-identity"))
