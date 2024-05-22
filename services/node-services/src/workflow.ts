@@ -1,4 +1,4 @@
-// Copyright (c) 2024 - Restate Software, Inc., Restate GmbH
+// Copyright (c) 2023 - Restate Software, Inc., Restate GmbH
 //
 // This file is part of the Restate e2e tests,
 // which are released under the MIT license.
@@ -8,40 +8,36 @@
 // https://github.com/restatedev/e2e/blob/main/LICENSE
 
 import * as restate from "@restatedev/restate-sdk";
+import { REGISTRY } from "./services";
 
-const MY_STATE = "my-state";
-const MY_DURABLE_PROMISE = "durable-promise";
+const wf = restate.workflow({
+  name: "WorkflowAPIBlockAndWait",
+  handlers: {
+    run: async (ctx: restate.WorkflowContext, input: string) => {
+      ctx.set("input", input);
 
-export const WorkflowAPIBlockAndWaitFQN = "WorkflowAPIBlockAndWait";
+      const output = await ctx.promise("p");
 
-export const WorkflowAPIBlockAndWait = restate.workflow.workflow(
-  WorkflowAPIBlockAndWaitFQN,
-  {
-    run: async (ctx: restate.workflow.WfContext, params: { input: string }) => {
-      ctx.console.log("input: " + JSON.stringify(params));
-      ctx.set(MY_STATE, params.input);
-
-      // Wait on unblock
-      const p = ctx.promise<string>(MY_DURABLE_PROMISE);
-      const output = await p;
-
-      // Check peek works
-      ctx.console.assert((await p.peek()) == output);
+      if (ctx.promise("p").peek() == undefined) {
+        throw new restate.TerminalError("Durable promise should be completed");
+      }
 
       return output;
     },
 
-    unblock: async (
-      ctx: restate.workflow.SharedWfContext,
-      params: { output: string }
-    ) => {
-      ctx.promise<string>(MY_DURABLE_PROMISE).resolve(params.output);
+    unblock: async (ctx: restate.WorkflowSharedContext, input: string) => {
+      ctx.promise<string>("p").resolve(input);
     },
 
-    getState: async (
-      ctx: restate.workflow.SharedWfContext
-    ): Promise<string> => {
-      return (await ctx.get(MY_STATE)) ?? "(not yet set)";
+    getState: async (ctx: restate.WorkflowSharedContext) => {
+      const input = ctx.get("input");
+      if (!input) {
+        return undefined;
+      } else {
+        return input;
+      }
     },
-  }
-);
+  },
+});
+
+REGISTRY.addWorkflow(wf);

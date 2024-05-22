@@ -20,7 +20,11 @@ export const interpreterObjectForLayer = (
   layer: number
 ): restate.VirtualObjectDefinition<
   string,
-  restate.VirtualObject<InterpreterObject>
+  restate.VirtualObject<
+    InterpreterObject,
+    restate.ObjectContext,
+    restate.ObjectSharedContext
+  >
 > => {
   const name = `ObjectInterpreterL${layer}`;
   return { name };

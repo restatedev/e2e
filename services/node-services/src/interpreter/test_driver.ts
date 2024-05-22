@@ -294,7 +294,7 @@ const retry = async <T>(op: () => Promise<T>): Promise<T> => {
       return await op();
     } catch (e) {
       error = e;
-      sleep(1000);
+      await sleep(1000);
     }
   }
   throw error;

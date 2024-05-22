@@ -24,10 +24,10 @@ REGISTRY.addService(
         return this.manyTimers(ctx, [request]);
       },
 
-      async manyTimers(
+      manyTimers: async (
         ctx: restate.Context,
         request: Array<number>
-      ): Promise<void> {
+      ): Promise<void> => {
         console.log("many timers: " + JSON.stringify(request));
 
         await restate.CombineablePromise.all(

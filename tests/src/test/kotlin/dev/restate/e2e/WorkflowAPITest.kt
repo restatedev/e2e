@@ -9,21 +9,16 @@
 
 package dev.restate.e2e
 
-import com.fasterxml.jackson.databind.JsonNode
-import dev.restate.e2e.Utils.doJsonRequestToService
 import dev.restate.e2e.utils.InjectIngressClient
-import dev.restate.e2e.utils.InjectIngressURL
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
 import dev.restate.sdk.client.IngressClient
-import java.net.URL
 import java.util.*
 import my.restate.e2e.services.WorkflowAPIBlockAndWaitClient
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
@@ -67,7 +62,6 @@ class JavaWorkflowAPITest {
 }
 
 @Tag("always-suspending")
-@Disabled("node-services is not ready with the new interfaces")
 class NodeWorkflowAPITest {
 
   companion object {
@@ -82,126 +76,23 @@ class NodeWorkflowAPITest {
   @Test
   @DisplayName("Set and resolve durable promise leads to completion")
   @Execution(ExecutionMode.CONCURRENT)
-  fun setAndResolve(@InjectIngressURL httpEndpointURL: URL) {
-    val workflowId = UUID.randomUUID().toString()
-    assertThat(
-            doWorkflowRequest(
-                    httpEndpointURL,
-                    Containers.WORKFLOW_API_BLOCK_AND_WAIT_SERVICE_NAME,
-                    "start",
-                    workflowId,
-                    "input" to "Francesco")
-                .asText())
-        .isEqualTo("STARTED")
+  fun setAndResolve(@InjectIngressClient ingressClient: IngressClient) {
+    val client =
+        WorkflowAPIBlockAndWaitClient.fromIngress(ingressClient, UUID.randomUUID().toString())
+
+    val handle = client.submit("Francesco")
 
     // Wait state is set
-    await untilCallTo
-        {
-          doWorkflowRequest(
-                  httpEndpointURL,
-                  Containers.WORKFLOW_API_BLOCK_AND_WAIT_SERVICE_NAME,
-                  "getState",
-                  workflowId)
-              .asText()
-        } matches
-        {
-          it == "Francesco"
-        }
+    await untilCallTo { client.getState() } matches { it!!.isPresent }
 
-    // Now unblock
-    doWorkflowRequestWithoutResponse(
-        httpEndpointURL,
-        Containers.WORKFLOW_API_BLOCK_AND_WAIT_SERVICE_NAME,
-        "unblock",
-        workflowId,
-        "output" to "Till")
+    client.unblock("Till")
 
-    // Now wait output
-    assertThat(
-            doWorkflowRequest(
-                    httpEndpointURL,
-                    Containers.WORKFLOW_API_BLOCK_AND_WAIT_SERVICE_NAME,
-                    "waitForResult",
-                    workflowId)
-                .asText())
-        .isEqualTo("Till")
+    assertThat(handle.attach()).isEqualTo("Till")
 
     // Can call get output again
-    assertThat(
-            doWorkflowRequest(
-                    httpEndpointURL,
-                    Containers.WORKFLOW_API_BLOCK_AND_WAIT_SERVICE_NAME,
-                    "waitForResult",
-                    workflowId)
-                .asText())
-        .isEqualTo("Till")
+    assertThat(handle.output).isEqualTo("Till")
 
-    // Re-submit returns completed
-    assertThat(
-            doWorkflowRequest(
-                    httpEndpointURL,
-                    Containers.WORKFLOW_API_BLOCK_AND_WAIT_SERVICE_NAME,
-                    "start",
-                    workflowId,
-                    "input" to "Francesco")
-                .asText())
-        .isEqualTo("ALREADY_FINISHED")
-  }
-
-  @Test
-  @DisplayName("Workflow cannot be submitted more than once")
-  @Execution(ExecutionMode.CONCURRENT)
-  fun manySubmit(@InjectIngressURL httpEndpointURL: URL) {
-    val workflowId = UUID.randomUUID().toString()
-    assertThat(
-            doWorkflowRequest(
-                    httpEndpointURL,
-                    Containers.WORKFLOW_API_BLOCK_AND_WAIT_SERVICE_NAME,
-                    "start",
-                    workflowId,
-                    "input" to "Francesco")
-                .asText())
-        .isEqualTo("STARTED")
-    assertThat(
-            doWorkflowRequest(
-                    httpEndpointURL,
-                    Containers.WORKFLOW_API_BLOCK_AND_WAIT_SERVICE_NAME,
-                    "start",
-                    workflowId,
-                    "input" to "Francesco")
-                .asText())
-        .isEqualTo("ALREADY_STARTED")
-  }
-
-  private fun doWorkflowRequest(
-      httpEndpointURL: URL,
-      workflowName: String,
-      method: String,
-      workflowId: String,
-      vararg payloadEntries: Pair<String, Any>
-  ): JsonNode {
-    val request = mutableMapOf<String, Any>("workflowId" to workflowId)
-    request.putAll(payloadEntries)
-
-    return doJsonRequestToService(
-            httpEndpointURL.toString(),
-            workflowName,
-            method,
-            mapOf<String, Any>("request" to request))
-        .get("response")
-  }
-
-  private fun doWorkflowRequestWithoutResponse(
-      httpEndpointURL: URL,
-      workflowName: String,
-      method: String,
-      workflowId: String,
-      vararg payloadEntries: Pair<String, Any>
-  ) {
-    val request = mutableMapOf<String, Any>("workflowId" to workflowId)
-    request.putAll(payloadEntries)
-
-    doJsonRequestToService(
-        httpEndpointURL.toString(), workflowName, method, mapOf<String, Any>("request" to request))
+    // Re-submit should have no effect
+    assertThat(client.submit("Francesco").output).isEqualTo("Till")
   }
 }
