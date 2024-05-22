@@ -11,6 +11,7 @@ import {
   RestateEndpoint,
   ServiceDefinition,
   VirtualObjectDefinition,
+  WorkflowDefinition,
 } from "@restatedev/restate-sdk";
 
 export type IComponent = {
@@ -33,6 +34,13 @@ export class ComponentRegistry {
   }
 
   addService(s: ServiceDefinition<string, unknown>) {
+    this.add({
+      fqdn: s.name,
+      binder: (b) => b.bind(s),
+    });
+  }
+
+  addWorkflow(s: WorkflowDefinition<string, unknown>) {
     this.add({
       fqdn: s.name,
       binder: (b) => b.bind(s),

@@ -23,7 +23,7 @@ public class WorkflowAPIBlockAndWaitImpl implements WorkflowAPIBlockAndWait {
   private static final StateKey<String> MY_STATE = StateKey.string("my-state");
 
   @Override
-  public String blockAndWait(WorkflowContext context, String input) {
+  public String run(WorkflowContext context, String input) {
     context.set(MY_STATE, input);
 
     // Wait on unblock

@@ -23,6 +23,7 @@ import "./random_number_list";
 import "./failing";
 import "./side_effect";
 import "./interpreter/entry_point";
+import "./workflow";
 
 import { REGISTRY } from "./services";
 

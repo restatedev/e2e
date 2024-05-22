@@ -19,7 +19,7 @@ import java.util.Optional;
 public interface WorkflowAPIBlockAndWait {
 
   @Workflow
-  String blockAndWait(WorkflowContext context, String input);
+  String run(WorkflowContext context, String input);
 
   @Shared
   void unblock(SharedWorkflowContext context, String output);
