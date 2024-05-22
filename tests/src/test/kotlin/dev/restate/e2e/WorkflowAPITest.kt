@@ -19,7 +19,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
@@ -77,7 +76,6 @@ class NodeWorkflowAPITest {
   @Test
   @DisplayName("Set and resolve durable promise leads to completion")
   @Execution(ExecutionMode.CONCURRENT)
-  @Disabled("While suspension tests are resolved")
   fun setAndResolve(@InjectIngressClient ingressClient: IngressClient) {
     val client =
         WorkflowAPIBlockAndWaitClient.fromIngress(ingressClient, UUID.randomUUID().toString())
