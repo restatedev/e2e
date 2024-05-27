@@ -9,6 +9,7 @@
 
 package my.restate.e2e.services;
 
+import dev.restate.sdk.JsonSerdes;
 import dev.restate.sdk.ObjectContext;
 import dev.restate.sdk.common.StateKey;
 import java.time.Duration;
@@ -18,8 +19,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class NonDeterministicImpl implements NonDeterministic {
 
   private final Map<String, Integer> invocationCounts = new ConcurrentHashMap<>();
-  private final StateKey<String> STATE_A = StateKey.string("a");
-  private final StateKey<String> STATE_B = StateKey.string("b");
+  private final StateKey<String> STATE_A = StateKey.of("a", JsonSerdes.STRING);
+  private final StateKey<String> STATE_B = StateKey.of("b", JsonSerdes.STRING);
 
   @Override
   public void leftSleepRightCall(ObjectContext context) {

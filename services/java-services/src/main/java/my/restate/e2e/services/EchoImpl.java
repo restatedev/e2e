@@ -10,12 +10,12 @@
 package my.restate.e2e.services;
 
 import dev.restate.sdk.Context;
-import dev.restate.sdk.common.CoreSerdes;
+import dev.restate.sdk.JsonSerdes;
 
 public class EchoImpl implements Echo {
   @Override
   public String blockThenEcho(Context ctx, String awakeableKey) {
-    var a = ctx.awakeable(CoreSerdes.JSON_STRING);
+    var a = ctx.awakeable(JsonSerdes.STRING);
     AwakeableHolderClient.fromContext(ctx, awakeableKey).hold(a.id());
     return a.await();
   }

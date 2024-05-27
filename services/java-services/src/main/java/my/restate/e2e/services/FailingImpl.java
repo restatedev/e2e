@@ -10,8 +10,9 @@
 package my.restate.e2e.services;
 
 import dev.restate.sdk.Awakeable;
+import dev.restate.sdk.JsonSerdes;
 import dev.restate.sdk.ObjectContext;
-import dev.restate.sdk.common.CoreSerdes;
+import dev.restate.sdk.common.Serde;
 import dev.restate.sdk.common.TerminalException;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -50,7 +51,7 @@ public class FailingImpl implements Failing {
 
     String finalMessage = "begin";
 
-    Awakeable<byte[]> awakeable = ctx.awakeable(CoreSerdes.RAW);
+    Awakeable<byte[]> awakeable = ctx.awakeable(Serde.RAW);
 
     try {
       ctx.run(
@@ -98,7 +99,7 @@ public class FailingImpl implements Failing {
   public int failingSideEffectWithEventualSuccess(ObjectContext context) {
     final int successAttempt =
         context.run(
-            CoreSerdes.JSON_INT,
+            JsonSerdes.INT,
             () -> {
               final int currentAttempt = this.eventualSuccessSideEffectCalls.incrementAndGet();
 

@@ -17,10 +17,10 @@ import dev.restate.e2e.utils.InjectIngressClient
 import dev.restate.e2e.utils.InjectMetaURL
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
+import dev.restate.sdk.JsonSerdes
 import dev.restate.sdk.client.CallRequestOptions
 import dev.restate.sdk.client.IngressClient
 import dev.restate.sdk.client.IngressException
-import dev.restate.sdk.common.CoreSerdes
 import java.net.URL
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -169,7 +169,7 @@ class IngressTest {
         echoClient
             .send()
             .blockThenEcho(awakeableKey, CallRequestOptions().withIdempotency(myIdempotencyId))
-    val invocationHandle = ingressClient.invocationHandle(invocationId, CoreSerdes.JSON_STRING)
+    val invocationHandle = ingressClient.invocationHandle(invocationId, JsonSerdes.STRING)
 
     // Attach to request
     val blockedFut = invocationHandle.attachAsync()

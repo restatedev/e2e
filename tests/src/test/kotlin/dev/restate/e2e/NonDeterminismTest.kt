@@ -13,7 +13,7 @@ import dev.restate.e2e.utils.InjectIngressClient
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
 import dev.restate.sdk.client.IngressClient
-import dev.restate.sdk.common.CoreSerdes
+import dev.restate.sdk.common.Serde
 import dev.restate.sdk.common.Target
 import my.restate.e2e.services.CounterClient
 import my.restate.e2e.services.CounterDefinitions
@@ -78,8 +78,8 @@ abstract class NonDeterminismTest {
           ingressClient.call(
               Target.virtualObject(
                   NonDeterministicDefinitions.SERVICE_NAME, handlerName, handlerName),
-              CoreSerdes.VOID,
-              CoreSerdes.VOID,
+              Serde.VOID,
+              Serde.VOID,
               null)
         }
         .isNotNull()

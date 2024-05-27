@@ -11,7 +11,8 @@ package my.restate.e2e.services;
 
 import dev.restate.sdk.Awaitable;
 import dev.restate.sdk.Context;
-import dev.restate.sdk.common.CoreSerdes;
+import dev.restate.sdk.JsonSerdes;
+import dev.restate.sdk.common.Serde;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,7 +42,7 @@ public class CoordinatorImpl implements Coordinator {
 
   @Override
   public String proxy(Context context) {
-    String key = context.run(CoreSerdes.JSON_STRING, () -> UUID.randomUUID().toString());
+    String key = context.run(JsonSerdes.STRING, () -> UUID.randomUUID().toString());
 
     var pong = ReceiverClient.fromContext(context, key).ping().await();
 
@@ -56,7 +57,7 @@ public class CoordinatorImpl implements Coordinator {
 
     context.sleep(Duration.ofMillis(complexRequest.getSleepDurationMillis()));
 
-    var receiverUUID = context.run(CoreSerdes.JSON_STRING, () -> UUID.randomUUID().toString());
+    var receiverUUID = context.run(JsonSerdes.STRING, () -> UUID.randomUUID().toString());
     var receiverClient = ReceiverClient.fromContext(context, receiverUUID);
 
     LOG.info("Send fire and forget call to {}", ReceiverDefinitions.SERVICE_NAME);
@@ -77,7 +78,7 @@ public class CoordinatorImpl implements Coordinator {
   public boolean timeout(Context context, long millisDuration) {
     var timeoutOccurred = false;
 
-    var awakeable = context.awakeable(CoreSerdes.VOID);
+    var awakeable = context.awakeable(Serde.VOID);
     try {
       awakeable.await(Duration.ofMillis(millisDuration));
     } catch (TimeoutException te) {
