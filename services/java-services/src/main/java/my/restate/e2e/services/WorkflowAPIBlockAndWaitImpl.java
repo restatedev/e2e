@@ -9,6 +9,7 @@
 
 package my.restate.e2e.services;
 
+import dev.restate.sdk.JsonSerdes;
 import dev.restate.sdk.SharedWorkflowContext;
 import dev.restate.sdk.WorkflowContext;
 import dev.restate.sdk.common.DurablePromiseKey;
@@ -19,8 +20,8 @@ import java.util.Optional;
 public class WorkflowAPIBlockAndWaitImpl implements WorkflowAPIBlockAndWait {
 
   private static final DurablePromiseKey<String> MY_DURABLE_PROMISE =
-      DurablePromiseKey.string("durable-promise");
-  private static final StateKey<String> MY_STATE = StateKey.string("my-state");
+      DurablePromiseKey.of("durable-promise", JsonSerdes.STRING);
+  private static final StateKey<String> MY_STATE = StateKey.of("my-state", JsonSerdes.STRING);
 
   @Override
   public String run(WorkflowContext context, String input) {

@@ -9,6 +9,7 @@
 
 package my.restate.e2e.services;
 
+import dev.restate.sdk.JsonSerdes;
 import dev.restate.sdk.ObjectContext;
 import dev.restate.sdk.common.StateKey;
 import java.util.ArrayList;
@@ -19,12 +20,12 @@ public class MapObjectImpl implements MapObject {
 
   @Override
   public void set(ObjectContext context, Entry entry) {
-    context.set(StateKey.string(entry.getKey()), entry.getValue());
+    context.set(StateKey.of(entry.getKey(), JsonSerdes.STRING), entry.getValue());
   }
 
   @Override
   public String get(ObjectContext context, String key) {
-    return context.get(StateKey.string(key)).orElse("");
+    return context.get(StateKey.of(key, JsonSerdes.STRING)).orElse("");
   }
 
   @Override

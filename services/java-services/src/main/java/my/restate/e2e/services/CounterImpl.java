@@ -9,8 +9,8 @@
 
 package my.restate.e2e.services;
 
+import dev.restate.sdk.JsonSerdes;
 import dev.restate.sdk.ObjectContext;
-import dev.restate.sdk.common.CoreSerdes;
 import dev.restate.sdk.common.StateKey;
 import dev.restate.sdk.common.TerminalException;
 import org.apache.logging.log4j.LogManager;
@@ -20,7 +20,7 @@ public class CounterImpl implements Counter {
 
   private static final Logger logger = LogManager.getLogger(CounterImpl.class);
 
-  private static final StateKey<Long> COUNTER_KEY = StateKey.of("counter", CoreSerdes.JSON_LONG);
+  private static final StateKey<Long> COUNTER_KEY = StateKey.of("counter", JsonSerdes.LONG);
 
   @Override
   public void add(ObjectContext ctx, long value) {

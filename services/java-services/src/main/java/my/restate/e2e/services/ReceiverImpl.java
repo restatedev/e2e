@@ -9,12 +9,13 @@
 
 package my.restate.e2e.services;
 
+import dev.restate.sdk.JsonSerdes;
 import dev.restate.sdk.ObjectContext;
 import dev.restate.sdk.common.StateKey;
 
 public class ReceiverImpl implements Receiver {
 
-  public static final StateKey<String> STATE_KEY = StateKey.string("my-state");
+  public static final StateKey<String> STATE_KEY = StateKey.of("my-state", JsonSerdes.STRING);
 
   @Override
   public String ping(ObjectContext context) {

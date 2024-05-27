@@ -18,8 +18,8 @@ import dev.restate.e2e.utils.InjectIngressClient
 import dev.restate.e2e.utils.InjectMetaURL
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerForEachExtension
+import dev.restate.sdk.JsonSerdes
 import dev.restate.sdk.client.IngressClient
-import dev.restate.sdk.common.CoreSerdes
 import java.net.URL
 import java.util.*
 import my.restate.e2e.services.*
@@ -90,7 +90,7 @@ class RetryOnUnknownServiceTest {
             ListObjectDefinitions.SERVICE_NAME,
             list,
             "append",
-            CoreSerdes.JSON_STRING.serialize(valueToAppend))
+            JsonSerdes.STRING.serialize(valueToAppend))
 
     // We invoke the AwakeableGuardedProxyService through the ingress service
     action(request)

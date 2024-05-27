@@ -9,11 +9,9 @@
 
 package my.restate.e2e.services;
 
-import static my.restate.e2e.services.CancelTest.BlockingOperation.CALL;
-
 import dev.restate.sdk.Awakeable;
+import dev.restate.sdk.JsonSerdes;
 import dev.restate.sdk.ObjectContext;
-import dev.restate.sdk.common.CoreSerdes;
 import dev.restate.sdk.common.StateKey;
 import dev.restate.sdk.common.TerminalException;
 import java.time.Duration;
@@ -22,7 +20,7 @@ public class CancelTestImpl {
 
   public static class RunnerImpl implements CancelTest.Runner {
     private static final StateKey<Boolean> CANCELED_STATE =
-        StateKey.of("canceled", CoreSerdes.JSON_BOOLEAN);
+        StateKey.of("canceled", JsonSerdes.BOOLEAN);
 
     @Override
     public void startTest(ObjectContext context, CancelTest.BlockingOperation operation) {
@@ -51,7 +49,7 @@ public class CancelTestImpl {
       final var self = CancelTestBlockingServiceClient.fromContext(context, "");
       final var client = AwakeableHolderClient.fromContext(context, "cancel");
 
-      Awakeable<String> awakeable = context.awakeable(CoreSerdes.JSON_STRING);
+      Awakeable<String> awakeable = context.awakeable(JsonSerdes.STRING);
       client.hold(awakeable.id()).await();
       awakeable.await();
 
@@ -63,7 +61,7 @@ public class CancelTestImpl {
           context.sleep(Duration.ofDays(1024));
           break;
         case AWAKEABLE:
-          Awakeable<String> uncompletable = context.awakeable(CoreSerdes.JSON_STRING);
+          Awakeable<String> uncompletable = context.awakeable(JsonSerdes.STRING);
           uncompletable.await();
           break;
         default:

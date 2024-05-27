@@ -11,7 +11,7 @@ package my.restate.e2e.services;
 
 import dev.restate.sdk.Context;
 import dev.restate.sdk.ObjectContext;
-import dev.restate.sdk.common.CoreSerdes;
+import dev.restate.sdk.common.Serde;
 
 public class KillTestImpl {
 
@@ -32,7 +32,7 @@ public class KillTestImpl {
 
     @Override
     public void recursiveCall(ObjectContext context) {
-      var awakeable = context.awakeable(CoreSerdes.RAW);
+      var awakeable = context.awakeable(Serde.RAW);
       AwakeableHolderClient.fromContext(context, "kill").send().hold(awakeable.id());
 
       awakeable.await();

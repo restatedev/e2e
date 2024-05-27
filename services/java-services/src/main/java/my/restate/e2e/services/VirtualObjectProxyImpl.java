@@ -10,7 +10,7 @@
 package my.restate.e2e.services;
 
 import dev.restate.sdk.Context;
-import dev.restate.sdk.common.CoreSerdes;
+import dev.restate.sdk.common.Serde;
 import dev.restate.sdk.common.Target;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -25,8 +25,8 @@ public class VirtualObjectProxyImpl implements VirtualObjectProxy {
         .call(
             Target.virtualObject(
                 request.getComponentName(), request.getKey(), request.getHandlerName()),
-            CoreSerdes.RAW,
-            CoreSerdes.RAW,
+            Serde.RAW,
+            Serde.RAW,
             request.getMessage())
         .await();
   }
@@ -37,7 +37,7 @@ public class VirtualObjectProxyImpl implements VirtualObjectProxy {
     context.send(
         Target.virtualObject(
             request.getComponentName(), request.getKey(), request.getHandlerName()),
-        CoreSerdes.RAW,
+        Serde.RAW,
         request.getMessage());
   }
 

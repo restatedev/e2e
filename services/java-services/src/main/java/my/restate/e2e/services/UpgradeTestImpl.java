@@ -11,8 +11,8 @@ package my.restate.e2e.services;
 
 import dev.restate.sdk.Awakeable;
 import dev.restate.sdk.Context;
+import dev.restate.sdk.JsonSerdes;
 import dev.restate.sdk.annotation.Handler;
-import dev.restate.sdk.common.CoreSerdes;
 import java.util.Objects;
 
 public class UpgradeTestImpl implements UpgradeTest {
@@ -35,7 +35,7 @@ public class UpgradeTestImpl implements UpgradeTest {
 
     // In v1 case we create an awakeable, we ask the AwakeableHolderService to hold it, and then we
     // await on it
-    Awakeable<String> awakeable = ctx.awakeable(CoreSerdes.JSON_STRING);
+    Awakeable<String> awakeable = ctx.awakeable(JsonSerdes.STRING);
     AwakeableHolderClient.fromContext(ctx, "upgrade").send().hold(awakeable.id());
     awakeable.await();
 
