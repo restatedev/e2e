@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 SEED=$(date --iso-8601=seconds)
-TIMEOUT_SECNODS=3600
+TIMEOUT_SECNODS=7200
 EXPECTED_NOISY_LOG_MESSAGE="undefined is not a number, but it still has feelings"
 
 export INTERPRETER_DRIVER_CONF=$(cat <<-EOF 
