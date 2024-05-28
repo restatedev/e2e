@@ -199,12 +199,13 @@ export class Test {
     for (const b of batch(this.generate(), 32)) {
       const promises = b.map(({ id, program }) => {
         idempotencyKey += 1;
+        const key = `${idempotencyKey}`;
         const client = this.ingress.objectSendClient(InterpreterL0, `${id}`);
         return retry(() =>
           client.interpret(
             program,
             restate.SendOpts.from({
-              idempotencyKey: `${idempotencyKey}`,
+              idempotencyKey: key,
             })
           )
         );
