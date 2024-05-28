@@ -74,7 +74,7 @@ abstract class BaseCancelInvocationTest {
     val cancelTestClient = CancelTestRunnerClient.fromIngress(ingressClient, key)
     val blockingServiceClient = CancelTestBlockingServiceClient.fromIngress(ingressClient, key)
 
-    val id = cancelTestClient.send().startTest(blockingOperation)
+    val id = cancelTestClient.send().startTest(blockingOperation).invocationId
 
     val awakeableHolderClient = AwakeableHolderClient.fromIngress(ingressClient, "cancel")
 
