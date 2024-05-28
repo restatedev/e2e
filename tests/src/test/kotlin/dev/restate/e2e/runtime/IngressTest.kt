@@ -21,6 +21,7 @@ import dev.restate.sdk.JsonSerdes
 import dev.restate.sdk.client.CallRequestOptions
 import dev.restate.sdk.client.IngressClient
 import dev.restate.sdk.client.IngressException
+import dev.restate.sdk.client.SendResponse.SendStatus
 import java.net.URL
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -139,11 +140,15 @@ class IngressTest {
     val counterClient = CounterClient.fromIngress(ingressClient, counterRandomName)
 
     // Send request twice
-    val firstInvocationId = counterClient.send().add(2, requestOptions)
-    val secondInvocationId = counterClient.send().add(2, requestOptions)
+    val firstInvocationSendStatus = counterClient.send().add(2, requestOptions)
+    assertThat(firstInvocationSendStatus.status).isEqualTo(SendStatus.ACCEPTED)
+    val secondInvocationSendStatus = counterClient.send().add(2, requestOptions)
+    assertThat(secondInvocationSendStatus.status).isEqualTo(SendStatus.PREVIOUSLY_ACCEPTED)
 
     // IDs should be the same
-    assertThat(firstInvocationId).startsWith("inv").isEqualTo(secondInvocationId)
+    assertThat(firstInvocationSendStatus.invocationId)
+        .startsWith("inv")
+        .isEqualTo(secondInvocationSendStatus.invocationId)
 
     // Wait for get
     await untilAsserted { assertThat(counterClient.get()).isEqualTo(2) }
@@ -169,6 +174,7 @@ class IngressTest {
         echoClient
             .send()
             .blockThenEcho(awakeableKey, CallRequestOptions().withIdempotency(myIdempotencyId))
+            .invocationId
     val invocationHandle = ingressClient.invocationHandle(invocationId, JsonSerdes.STRING)
 
     // Attach to request

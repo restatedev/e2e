@@ -40,7 +40,7 @@ class KillTestInvocationTest {
 
   @Test
   fun kill(@InjectIngressClient ingressClient: IngressClient, @InjectMetaURL metaURL: URL) {
-    val id = KillTestRunnerClient.fromIngress(ingressClient).send().startCallTree()
+    val id = KillTestRunnerClient.fromIngress(ingressClient).send().startCallTree().invocationId
     val awakeableHolderClient = AwakeableHolderClient.fromIngress(ingressClient, "kill")
 
     // Await until AwakeableHolder has an awakeable and then complete it.

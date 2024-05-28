@@ -13,6 +13,7 @@ import dev.restate.e2e.utils.InjectIngressClient
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
 import dev.restate.sdk.client.IngressClient
+import dev.restate.sdk.client.SendResponse.SendStatus
 import java.util.*
 import my.restate.e2e.services.WorkflowAPIBlockAndWaitClient
 import org.assertj.core.api.Assertions.assertThat
@@ -27,7 +28,7 @@ import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 
 @Tag("always-suspending")
-class JavaWorkflowAPITest {
+class JavaWorkflowAPITest : BaseWorkflowAPITest() {
 
   companion object {
     @RegisterExtension
@@ -37,32 +38,10 @@ class JavaWorkflowAPITest {
                 .withServiceEndpoint(Containers.JAVA_WORKFLOW_SERVICE_SPEC)
                 .build())
   }
-
-  @Test
-  @DisplayName("Set and resolve durable promise leads to completion")
-  @Execution(ExecutionMode.CONCURRENT)
-  fun setAndResolve(@InjectIngressClient ingressClient: IngressClient) {
-    val client =
-        WorkflowAPIBlockAndWaitClient.fromIngress(ingressClient, UUID.randomUUID().toString())
-    val handle = client.submit("Francesco")
-
-    // Wait state is set
-    await untilCallTo { client.getState() } matches { it!!.isPresent }
-
-    client.unblock("Till")
-
-    assertThat(handle.attach()).isEqualTo("Till")
-
-    // Can call get output again
-    assertThat(handle.output).isEqualTo("Till")
-
-    // Re-submit should have no effect
-    assertThat(client.submit("Francesco").output).isEqualTo("Till")
-  }
 }
 
 @Tag("always-suspending")
-class NodeWorkflowAPITest {
+class NodeWorkflowAPITest : BaseWorkflowAPITest() {
 
   companion object {
     @RegisterExtension
@@ -72,7 +51,9 @@ class NodeWorkflowAPITest {
                 .withServiceEndpoint(Containers.NODE_WORKFLOW_SERVICE_SPEC)
                 .build())
   }
+}
 
+abstract class BaseWorkflowAPITest {
   @Test
   @DisplayName("Set and resolve durable promise leads to completion")
   @Execution(ExecutionMode.CONCURRENT)
@@ -80,19 +61,23 @@ class NodeWorkflowAPITest {
     val client =
         WorkflowAPIBlockAndWaitClient.fromIngress(ingressClient, UUID.randomUUID().toString())
 
-    val handle = client.submit("Francesco")
+    val sendResponse = client.submit("Francesco")
+    assertThat(sendResponse.status).isEqualTo(SendStatus.ACCEPTED)
 
     // Wait state is set
     await untilCallTo { client.getState() } matches { it!!.isPresent }
 
     client.unblock("Till")
 
-    assertThat(handle.attach()).isEqualTo("Till")
+    assertThat(client.workflowHandle().attach()).isEqualTo("Till")
 
     // Can call get output again
-    assertThat(handle.output).isEqualTo("Till")
+    assertThat(client.workflowHandle().output).isEqualTo("Till")
 
     // Re-submit should have no effect
-    assertThat(client.submit("Francesco").output).isEqualTo("Till")
+    val secondSendResponse = client.submit("Francesco")
+    assertThat(secondSendResponse.status).isEqualTo(SendStatus.PREVIOUSLY_ACCEPTED)
+    assertThat(secondSendResponse.invocationId).isEqualTo(sendResponse.invocationId)
+    assertThat(client.workflowHandle().output).isEqualTo("Till")
   }
 }
