@@ -17,4 +17,5 @@ dependencies {
   ksp(libs.restate.sdk.api.kotlin.gen)
   api(libs.restate.sdk.api.kotlin)
   implementation(libs.kotlinx.serialization.core)
+  implementation(libs.kotlinx.serialization.json)
 }

@@ -23,7 +23,6 @@ include(
 
 dependencyResolutionManagement {
   repositories {
-    mavenLocal()
     mavenCentral()
     // OSSRH Snapshots repo
     maven { url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/") }
@@ -89,6 +88,8 @@ dependencyResolutionManagement {
           .version("1.6.2")
       library("kotlinx-serialization-json", "org.jetbrains.kotlinx", "kotlinx-serialization-json")
           .version("1.6.2")
+      library("kotlinx-coroutines-core", "org.jetbrains.kotlinx", "kotlinx-coroutines-core")
+          .version("1.8.1")
 
       version("ksp", "1.9.22-1.0.18")
       library("symbol-processing-api", "com.google.devtools.ksp", "symbol-processing-api")

@@ -19,6 +19,9 @@ dependencies {
   implementation(libs.restate.sdk.http.vertx)
 
   implementation(project(":contracts-kt"))
+  implementation(libs.kotlinx.serialization.core)
+  implementation(libs.kotlinx.serialization.json)
+  implementation(libs.kotlinx.coroutines.core)
 
   implementation(libs.log4j.api)
   implementation(libs.log4j.core)
