@@ -18,14 +18,7 @@ export type InterpreterId = {
 
 export const interpreterObjectForLayer = (
   layer: number
-): restate.VirtualObjectDefinition<
-  string,
-  restate.VirtualObject<
-    InterpreterObject,
-    restate.ObjectContext,
-    restate.ObjectSharedContext
-  >
-> => {
+): restate.VirtualObjectDefinition<string, InterpreterObject> => {
   const name = `ObjectInterpreterL${layer}`;
   return { name };
 };
