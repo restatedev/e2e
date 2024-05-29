@@ -28,12 +28,12 @@ public class WorkflowAPIBlockAndWaitImpl implements WorkflowAPIBlockAndWait {
     context.set(MY_STATE, input);
 
     // Wait on unblock
-    String output = context.durablePromise(MY_DURABLE_PROMISE).awaitable().await();
+    String output = context.promise(MY_DURABLE_PROMISE).awaitable().await();
 
-    if (!context.durablePromise(MY_DURABLE_PROMISE).isCompleted()) {
+    if (!context.promise(MY_DURABLE_PROMISE).isCompleted()) {
       throw new TerminalException("Durable promise should be completed");
     }
-    if (context.durablePromise(MY_DURABLE_PROMISE).peek().isEmpty()) {
+    if (context.promise(MY_DURABLE_PROMISE).peek().isEmpty()) {
       throw new TerminalException("Durable promise should be completed");
     }
 
@@ -42,7 +42,7 @@ public class WorkflowAPIBlockAndWaitImpl implements WorkflowAPIBlockAndWait {
 
   @Override
   public void unblock(SharedWorkflowContext context, String output) {
-    context.durablePromiseHandle(MY_DURABLE_PROMISE).resolve(output);
+    context.promiseHandle(MY_DURABLE_PROMISE).resolve(output);
   }
 
   @Override
