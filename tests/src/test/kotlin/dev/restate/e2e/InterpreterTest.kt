@@ -7,9 +7,8 @@
 // directory of this repository or package, or at
 // https://github.com/restatedev/e2e/blob/main/LICENSE
 
-package dev.restate.e2e.node
+package dev.restate.e2e
 
-import dev.restate.e2e.Containers
 import dev.restate.e2e.utils.*
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -38,41 +37,17 @@ import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.testcontainers.containers.GenericContainer
 
-@Tag("always-suspending")
-class InterpreterTest {
+abstract class BaseInterpreterTest {
 
   companion object {
-    @JvmStatic
-    @RegisterExtension
-    val deployerExt: RestateDeployerForEachExtension = RestateDeployerForEachExtension {
-      RestateDeployer.Builder()
-          .withInvokerRetryPolicy(RestateDeployer.RetryPolicy.FixedDelay("50ms", Int.MAX_VALUE))
-          .withServiceEndpoint(
-              Containers.nodeServicesContainer(
-                      "intepreter",
-                      "ObjectInterpreterL0",
-                      "ObjectInterpreterL1",
-                      "ObjectInterpreterL2",
-                      "ServiceInterpreterHelper")
-                  .withEnv("RESTATE_LOGGING", "ERROR"))
-          .withContainer(
-              "test-driver",
-              GenericContainer("restatedev/e2e-node-services")
-                  .withEnv("SERVICES", "InterpreterDriver")
-                  .withEnv("InterpreterDriverPort", "3000")
-                  .withExposedPorts(3000))
-          .build()
-    }
-
-    private const val E2E_VERIFICATION_SEED_ENV = "E2E_VERIFICATION_SEED"
 
     private val ALPHANUMERIC_ALPHABET: Array<Char> =
         (('0'..'9').toList() + ('a'..'z').toList() + ('A'..'Z').toList()).toTypedArray()
-
     private val POLL_INTERVAL = 1.seconds.toJavaDuration()
     private val MAX_POLL_TIME = 45.seconds.toJavaDuration()
+    private const val E2E_VERIFICATION_SEED_ENV = "E2E_VERIFICATION_SEED"
 
-    private val LOG = LogManager.getLogger(InterpreterTest::class.java)
+    private val LOG = LogManager.getLogger(BaseInterpreterTest::class.java)
 
     fun generateAlphanumericString(length: Int): String {
       return List(length) { Random.nextInt(0, ALPHANUMERIC_ALPHABET.size) }
@@ -133,5 +108,60 @@ class InterpreterTest {
 
     return InterpreterTestConfiguration(
         "http://$RESTATE_RUNTIME:$RUNTIME_INGRESS_ENDPOINT_PORT/", testSeed, 10, 1, 100)
+  }
+}
+
+@Tag("always-suspending")
+class NodeInterpreterTest : BaseInterpreterTest() {
+
+  companion object {
+    @JvmStatic
+    @RegisterExtension
+    val deployerExt: RestateDeployerForEachExtension = RestateDeployerForEachExtension {
+      RestateDeployer.Builder()
+          .withInvokerRetryPolicy(RestateDeployer.RetryPolicy.FixedDelay("50ms", Int.MAX_VALUE))
+          .withServiceEndpoint(
+              Containers.nodeServicesContainer(
+                      "intepreter",
+                      "ObjectInterpreterL0",
+                      "ObjectInterpreterL1",
+                      "ObjectInterpreterL2",
+                      "ServiceInterpreterHelper")
+                  .withEnv("RESTATE_LOGGING", "ERROR"))
+          .withContainer(
+              "test-driver",
+              GenericContainer("restatedev/e2e-node-services")
+                  .withEnv("SERVICES", "InterpreterDriver")
+                  .withEnv("InterpreterDriverPort", "3000")
+                  .withExposedPorts(3000))
+          .build()
+    }
+  }
+}
+
+@Tag("always-suspending")
+class KtInterpreterTest : BaseInterpreterTest() {
+
+  companion object {
+    @JvmStatic
+    @RegisterExtension
+    val deployerExt: RestateDeployerForEachExtension = RestateDeployerForEachExtension {
+      RestateDeployer.Builder()
+          .withInvokerRetryPolicy(RestateDeployer.RetryPolicy.FixedDelay("50ms", Int.MAX_VALUE))
+          .withServiceEndpoint(
+              Containers.kotlinServicesContainer(
+                  "intepreter",
+                  "ObjectInterpreterL0",
+                  "ObjectInterpreterL1",
+                  "ObjectInterpreterL2",
+                  "ServiceInterpreterHelper"))
+          .withContainer(
+              "test-driver",
+              GenericContainer("restatedev/e2e-node-services")
+                  .withEnv("SERVICES", "InterpreterDriver")
+                  .withEnv("InterpreterDriverPort", "3000")
+                  .withExposedPorts(3000))
+          .build()
+    }
   }
 }
