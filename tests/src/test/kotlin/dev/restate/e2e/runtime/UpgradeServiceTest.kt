@@ -15,7 +15,7 @@ import dev.restate.admin.model.RegisterDeploymentRequest
 import dev.restate.admin.model.RegisterDeploymentRequestAnyOf
 import dev.restate.e2e.Containers
 import dev.restate.e2e.utils.*
-import dev.restate.sdk.client.IngressClient
+import dev.restate.sdk.client.Client
 import java.net.URL
 import my.restate.e2e.services.*
 import org.assertj.core.api.Assertions.assertThat
@@ -61,10 +61,10 @@ class UpgradeServiceTest {
 
   @Test
   fun executesNewInvocationWithLatestServiceRevisions(
-      @InjectIngressClient ingressClient: IngressClient,
+      @InjectClient ingressClient: Client,
       @InjectMetaURL metaURL: URL
   ) {
-    val upgradeTestClient = UpgradeTestClient.fromIngress(ingressClient)
+    val upgradeTestClient = UpgradeTestClient.fromClient(ingressClient)
 
     // Execute the first request
     val firstResult = upgradeTestClient.executeSimple()
@@ -81,16 +81,13 @@ class UpgradeServiceTest {
   }
 
   @Test
-  fun inFlightInvocation(
-      @InjectIngressClient ingressClient: IngressClient,
-      @InjectMetaURL metaURL: URL
-  ) {
+  fun inFlightInvocation(@InjectClient ingressClient: Client, @InjectMetaURL metaURL: URL) {
     inFlightInvocationtest(ingressClient, metaURL)
   }
 
   @Test
   fun inFlightInvocationStoppingTheRuntime(
-      @InjectIngressClient ingressClient: IngressClient,
+      @InjectClient ingressClient: Client,
       @InjectMetaURL metaURL: URL,
       @InjectContainerHandle(RESTATE_RUNTIME) runtimeContainer: ContainerHandle
   ) {
@@ -98,17 +95,17 @@ class UpgradeServiceTest {
   }
 
   fun inFlightInvocationtest(
-      ingressClient: IngressClient,
+      ingressClient: Client,
       metaURL: URL,
       restartRuntimeFn: () -> Unit = {},
   ) {
-    val upgradeTestClient = UpgradeTestClient.fromIngress(ingressClient)
+    val upgradeTestClient = UpgradeTestClient.fromClient(ingressClient)
 
     // Invoke the upgrade test complex method
     upgradeTestClient.send().executeComplex()
 
     // Await until AwakeableHolder has an awakeable
-    val awakeableHolderClient = AwakeableHolderClient.fromIngress(ingressClient, "upgrade")
+    val awakeableHolderClient = AwakeableHolderClient.fromClient(ingressClient, "upgrade")
     await until { awakeableHolderClient.hasAwakeable() }
 
     // Now register the update
@@ -125,7 +122,7 @@ class UpgradeServiceTest {
     // Let's wait for the list service to contain "v1" once
     await untilAsserted
         {
-          assertThat(ListObjectClient.fromIngress(ingressClient, "upgrade-test").get())
+          assertThat(ListObjectClient.fromClient(ingressClient, "upgrade-test").get())
               .containsOnlyOnce("v1")
         }
   }

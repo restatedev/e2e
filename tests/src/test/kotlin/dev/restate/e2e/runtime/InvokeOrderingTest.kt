@@ -10,10 +10,10 @@
 package dev.restate.e2e.runtime
 
 import dev.restate.e2e.Containers
-import dev.restate.e2e.utils.InjectIngressClient
+import dev.restate.e2e.utils.InjectClient
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
-import dev.restate.sdk.client.IngressClient
+import dev.restate.sdk.client.Client
 import java.util.UUID
 import java.util.stream.Stream
 import my.restate.e2e.services.CoordinatorClient
@@ -56,14 +56,14 @@ class InvokeOrderingTest {
   @Execution(ExecutionMode.CONCURRENT)
   fun ordering(
       ordering: BooleanArray,
-      @InjectIngressClient ingressClient: IngressClient,
+      @InjectClient ingressClient: Client,
   ) {
     val listName = UUID.randomUUID().toString()
 
-    CoordinatorClient.fromIngress(ingressClient)
+    CoordinatorClient.fromClient(ingressClient)
         .invokeSequentially(CoordinatorInvokeSequentiallyRequest(ordering.asList(), listName))
 
-    assertThat(ListObjectClient.fromIngress(ingressClient, listName).clear())
+    assertThat(ListObjectClient.fromClient(ingressClient, listName).clear())
         .containsExactly("0", "1", "2")
   }
 }

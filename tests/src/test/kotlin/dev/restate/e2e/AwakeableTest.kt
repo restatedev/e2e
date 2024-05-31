@@ -9,10 +9,10 @@
 
 package dev.restate.e2e
 
-import dev.restate.e2e.utils.InjectIngressClient
+import dev.restate.e2e.utils.InjectClient
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
-import dev.restate.sdk.client.IngressClient
+import dev.restate.sdk.client.Client
 import my.restate.e2e.services.RandomNumberListGeneratorClient
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Tag
@@ -48,8 +48,8 @@ class NodeAwakeableTest : BaseAwakeableTest() {
 abstract class BaseAwakeableTest {
 
   @Test
-  fun generate(@InjectIngressClient ingressClient: IngressClient) {
-    assertThat(RandomNumberListGeneratorClient.fromIngress(ingressClient).generateNumbers(10))
+  fun generate(@InjectClient ingressClient: Client) {
+    assertThat(RandomNumberListGeneratorClient.fromClient(ingressClient).generateNumbers(10))
         .isSorted
         .hasSize(10)
   }

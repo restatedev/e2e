@@ -13,11 +13,11 @@ import dev.restate.admin.api.ServiceApi
 import dev.restate.admin.client.ApiClient
 import dev.restate.admin.model.ModifyServiceRequest
 import dev.restate.e2e.Containers
-import dev.restate.e2e.utils.InjectIngressClient
+import dev.restate.e2e.utils.InjectClient
 import dev.restate.e2e.utils.InjectMetaURL
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
-import dev.restate.sdk.client.IngressClient
+import dev.restate.sdk.client.Client
 import dev.restate.sdk.client.IngressException
 import java.net.URL
 import java.util.*
@@ -48,11 +48,11 @@ class PrivateServiceTest {
   @Test
   fun privateService(
       @InjectMetaURL metaURL: URL,
-      @InjectIngressClient ingressClient: IngressClient,
+      @InjectClient ingressClient: Client,
   ) {
     val adminServiceClient = ServiceApi(ApiClient().setHost(metaURL.host).setPort(metaURL.port))
     val counterId = UUID.randomUUID().toString()
-    val counterClient = CounterClient.fromIngress(ingressClient, counterId)
+    val counterClient = CounterClient.fromClient(ingressClient, counterId)
 
     counterClient.add(1)
 
@@ -69,7 +69,7 @@ class PrivateServiceTest {
         }
 
     // Send a request through the proxy client
-    ProxyCounterClient.fromIngress(ingressClient)
+    ProxyCounterClient.fromClient(ingressClient)
         .addInBackground(ProxyCounter.AddRequest(counterId, 1))
 
     // Make the service public again

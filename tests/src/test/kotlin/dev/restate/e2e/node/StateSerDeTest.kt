@@ -10,10 +10,10 @@
 package dev.restate.e2e.node
 
 import dev.restate.e2e.Containers
-import dev.restate.e2e.utils.InjectIngressClient
+import dev.restate.e2e.utils.InjectClient
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
-import dev.restate.sdk.client.IngressClient
+import dev.restate.sdk.client.Client
 import my.restate.e2e.services.ListObjectClient
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Tag
@@ -36,9 +36,9 @@ class StateSerDeTest {
 
   @Test
   @Execution(ExecutionMode.CONCURRENT)
-  fun addAndClear(@InjectIngressClient ingressClient: IngressClient) {
-    val listA = ListObjectClient.fromIngress(ingressClient, "list-a")
-    val listB = ListObjectClient.fromIngress(ingressClient, "list-b")
+  fun addAndClear(@InjectClient ingressClient: Client) {
+    val listA = ListObjectClient.fromClient(ingressClient, "list-a")
+    val listB = ListObjectClient.fromClient(ingressClient, "list-b")
 
     listA.append("1")
     listB.append("2")

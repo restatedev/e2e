@@ -9,10 +9,10 @@
 
 package dev.restate.e2e
 
-import dev.restate.e2e.utils.InjectIngressClient
+import dev.restate.e2e.utils.InjectClient
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
-import dev.restate.sdk.client.IngressClient
+import dev.restate.sdk.client.Client
 import my.restate.e2e.services.SideEffectClient
 import my.restate.e2e.services.SideEffectDefinitions
 import org.assertj.core.api.Assertions.assertThat
@@ -55,7 +55,7 @@ abstract class BaseSideEffectTest {
   @DisplayName("Side effect should wait on acknowledgements")
   @Test
   @Execution(ExecutionMode.CONCURRENT)
-  fun sideEffectFlush(@InjectIngressClient ingressClient: IngressClient) {
-    assertThat(SideEffectClient.fromIngress(ingressClient).invokeSideEffects()).isEqualTo(0)
+  fun sideEffectFlush(@InjectClient ingressClient: Client) {
+    assertThat(SideEffectClient.fromClient(ingressClient).invokeSideEffects()).isEqualTo(0)
   }
 }

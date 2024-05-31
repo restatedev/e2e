@@ -14,12 +14,12 @@ import dev.restate.admin.client.ApiClient
 import dev.restate.admin.model.RegisterDeploymentRequest
 import dev.restate.admin.model.RegisterDeploymentRequestAnyOf
 import dev.restate.e2e.Containers
-import dev.restate.e2e.utils.InjectIngressClient
+import dev.restate.e2e.utils.InjectClient
 import dev.restate.e2e.utils.InjectMetaURL
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerForEachExtension
 import dev.restate.sdk.JsonSerdes
-import dev.restate.sdk.client.IngressClient
+import dev.restate.sdk.client.Client
 import java.net.URL
 import java.util.*
 import my.restate.e2e.services.*
@@ -60,26 +60,26 @@ class RetryOnUnknownServiceTest {
 
   @Test
   fun retryOnUnknownServiceUsingCall(
-      @InjectIngressClient ingressClient: IngressClient,
+      @InjectClient ingressClient: Client,
       @InjectMetaURL metaURL: URL
   ) {
     retryOnUnknownTest(ingressClient, metaURL) {
-      VirtualObjectProxyClient.fromIngress(ingressClient).send().call(it)
+      VirtualObjectProxyClient.fromClient(ingressClient).send().call(it)
     }
   }
 
   @Test
   fun retryOnUnknownServiceUsingOneWayCall(
-      @InjectIngressClient ingressClient: IngressClient,
+      @InjectClient ingressClient: Client,
       @InjectMetaURL metaURL: URL
   ) {
     retryOnUnknownTest(ingressClient, metaURL) {
-      VirtualObjectProxyClient.fromIngress(ingressClient).send().oneWayCall(it)
+      VirtualObjectProxyClient.fromClient(ingressClient).send().oneWayCall(it)
     }
   }
 
   private fun retryOnUnknownTest(
-      @InjectIngressClient ingressClient: IngressClient,
+      @InjectClient ingressClient: Client,
       metaURL: URL,
       action: (VirtualObjectProxy.Request) -> Unit
   ) {
@@ -98,7 +98,7 @@ class RetryOnUnknownServiceTest {
     // Await until we got a try count of 2
     await untilCallTo
         {
-          VirtualObjectProxyClient.fromIngress(ingressClient).getRetryCount(request)
+          VirtualObjectProxyClient.fromClient(ingressClient).getRetryCount(request)
         } matches
         { result ->
           result!! >= 2
@@ -110,7 +110,7 @@ class RetryOnUnknownServiceTest {
     // Let's wait for the list service to contain "a" once
     await untilAsserted
         {
-          assertThat(ListObjectClient.fromIngress(ingressClient, list).get())
+          assertThat(ListObjectClient.fromClient(ingressClient, list).get())
               .containsOnlyOnce(valueToAppend)
         }
   }

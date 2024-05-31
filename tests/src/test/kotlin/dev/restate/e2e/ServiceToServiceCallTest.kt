@@ -11,10 +11,10 @@ package dev.restate.e2e
 
 import dev.restate.e2e.Containers.javaServicesContainer
 import dev.restate.e2e.Containers.nodeServicesContainer
-import dev.restate.e2e.utils.InjectIngressClient
+import dev.restate.e2e.utils.InjectClient
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
-import dev.restate.sdk.client.IngressClient
+import dev.restate.sdk.client.Client
 import my.restate.e2e.services.CoordinatorClient
 import my.restate.e2e.services.CoordinatorDefinitions
 import my.restate.e2e.services.ReceiverDefinitions
@@ -83,7 +83,7 @@ abstract class BaseServiceToServiceCallTest {
 
   @Test
   @Execution(ExecutionMode.CONCURRENT)
-  fun synchronousCall(@InjectIngressClient ingressClient: IngressClient) {
-    assertThat(CoordinatorClient.fromIngress(ingressClient).proxy()).isEqualTo("pong")
+  fun synchronousCall(@InjectClient ingressClient: Client) {
+    assertThat(CoordinatorClient.fromClient(ingressClient).proxy()).isEqualTo("pong")
   }
 }
