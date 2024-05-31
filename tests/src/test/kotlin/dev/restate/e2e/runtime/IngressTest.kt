@@ -13,13 +13,13 @@ import dev.restate.admin.api.ServiceApi
 import dev.restate.admin.client.ApiClient
 import dev.restate.admin.model.ModifyServiceRequest
 import dev.restate.e2e.Containers
-import dev.restate.e2e.utils.InjectIngressClient
+import dev.restate.e2e.utils.InjectClient
 import dev.restate.e2e.utils.InjectMetaURL
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
 import dev.restate.sdk.JsonSerdes
 import dev.restate.sdk.client.CallRequestOptions
-import dev.restate.sdk.client.IngressClient
+import dev.restate.sdk.client.Client
 import dev.restate.sdk.client.IngressException
 import dev.restate.sdk.client.SendResponse.SendStatus
 import java.net.URL
@@ -63,7 +63,7 @@ class IngressTest {
   @DisplayName("Idempotent invocation to a virtual object")
   fun idempotentInvokeVirtualObject(
       @InjectMetaURL metaURL: URL,
-      @InjectIngressClient ingressClient: IngressClient
+      @InjectClient ingressClient: Client
   ) {
     // Let's update the idempotency retention time to 3 seconds, to make this test faster
     val adminServiceClient = ServiceApi(ApiClient().setHost(metaURL.host).setPort(metaURL.port))
@@ -74,7 +74,7 @@ class IngressTest {
     val myIdempotencyId = UUID.randomUUID().toString()
     val requestOptions = CallRequestOptions().withIdempotency(myIdempotencyId)
 
-    val counterClient = CounterClient.fromIngress(ingressClient, counterRandomName)
+    val counterClient = CounterClient.fromClient(ingressClient, counterRandomName)
 
     // First call updates the value
     val firstResponse = counterClient.getAndAdd(2, requestOptions)
@@ -105,13 +105,13 @@ class IngressTest {
   @Execution(ExecutionMode.CONCURRENT)
   @Timeout(value = 15, unit = TimeUnit.SECONDS)
   @DisplayName("Idempotent invocation to a service")
-  fun idempotentInvokeService(@InjectIngressClient ingressClient: IngressClient) {
+  fun idempotentInvokeService(@InjectClient ingressClient: Client) {
     val counterRandomName = UUID.randomUUID().toString()
     val myIdempotencyId = UUID.randomUUID().toString()
     val requestOptions = CallRequestOptions().withIdempotency(myIdempotencyId)
 
-    val counterClient = CounterClient.fromIngress(ingressClient, counterRandomName)
-    val proxyCounterClient = ProxyCounterClient.fromIngress(ingressClient)
+    val counterClient = CounterClient.fromClient(ingressClient, counterRandomName)
+    val proxyCounterClient = ProxyCounterClient.fromClient(ingressClient)
 
     // Send request twice
     proxyCounterClient.addInBackground(
@@ -132,12 +132,12 @@ class IngressTest {
   @Execution(ExecutionMode.CONCURRENT)
   @Timeout(value = 15, unit = TimeUnit.SECONDS)
   @DisplayName("Idempotent invocation to a virtual object using send")
-  fun idempotentInvokeSend(@InjectIngressClient ingressClient: IngressClient) {
+  fun idempotentInvokeSend(@InjectClient ingressClient: Client) {
     val counterRandomName = UUID.randomUUID().toString()
     val myIdempotencyId = UUID.randomUUID().toString()
     val requestOptions = CallRequestOptions().withIdempotency(myIdempotencyId)
 
-    val counterClient = CounterClient.fromIngress(ingressClient, counterRandomName)
+    val counterClient = CounterClient.fromClient(ingressClient, counterRandomName)
 
     // Send request twice
     val firstInvocationSendStatus = counterClient.send().add(2, requestOptions)
@@ -163,13 +163,13 @@ class IngressTest {
   @Execution(ExecutionMode.CONCURRENT)
   @Timeout(value = 15, unit = TimeUnit.SECONDS)
   @DisplayName("Idempotent send then attach/getOutput")
-  fun idempotentSendThenAttach(@InjectIngressClient ingressClient: IngressClient) {
+  fun idempotentSendThenAttach(@InjectClient ingressClient: Client) {
     val awakeableKey = UUID.randomUUID().toString()
     val myIdempotencyId = UUID.randomUUID().toString()
     val response = "response"
 
     // Send request
-    val echoClient = EchoClient.fromIngress(ingressClient)
+    val echoClient = EchoClient.fromClient(ingressClient)
     val invocationId =
         echoClient
             .send()
@@ -189,7 +189,7 @@ class IngressTest {
     assertThat(blockedFut).isNotDone
 
     // Unblock
-    val awakeableHolderClient = AwakeableHolderClient.fromIngress(ingressClient, awakeableKey)
+    val awakeableHolderClient = AwakeableHolderClient.fromClient(ingressClient, awakeableKey)
     await until { awakeableHolderClient.hasAwakeable() }
     awakeableHolderClient.unlock(response)
 
@@ -203,12 +203,12 @@ class IngressTest {
   @Test
   @Execution(ExecutionMode.CONCURRENT)
   @Timeout(value = 15, unit = TimeUnit.SECONDS)
-  fun headersPassThrough(@InjectIngressClient ingressClient: IngressClient) {
+  fun headersPassThrough(@InjectClient ingressClient: Client) {
     val headerName = "x-my-custom-header"
     val headerValue = "x-my-custom-value"
 
     assertThat(
-            HeadersPassThroughTestClient.fromIngress(ingressClient)
+            HeadersPassThroughTestClient.fromClient(ingressClient)
                 .echoHeaders(CallRequestOptions().withHeader(headerName, headerValue)))
         .containsEntry(headerName, headerValue)
   }

@@ -12,11 +12,11 @@ package dev.restate.e2e
 import dev.restate.admin.api.InvocationApi
 import dev.restate.admin.client.ApiClient
 import dev.restate.admin.model.TerminationMode
-import dev.restate.e2e.utils.InjectIngressClient
+import dev.restate.e2e.utils.InjectClient
 import dev.restate.e2e.utils.InjectMetaURL
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
-import dev.restate.sdk.client.IngressClient
+import dev.restate.sdk.client.Client
 import java.net.URL
 import java.util.*
 import kotlin.time.Duration.Companion.seconds
@@ -67,16 +67,16 @@ abstract class BaseCancelInvocationTest {
   @EnumSource(value = CancelTest.BlockingOperation::class)
   fun cancelInvocation(
       blockingOperation: CancelTest.BlockingOperation,
-      @InjectIngressClient ingressClient: IngressClient,
+      @InjectClient ingressClient: Client,
       @InjectMetaURL metaURL: URL,
   ) {
     val key = UUID.randomUUID().toString()
-    val cancelTestClient = CancelTestRunnerClient.fromIngress(ingressClient, key)
-    val blockingServiceClient = CancelTestBlockingServiceClient.fromIngress(ingressClient, key)
+    val cancelTestClient = CancelTestRunnerClient.fromClient(ingressClient, key)
+    val blockingServiceClient = CancelTestBlockingServiceClient.fromClient(ingressClient, key)
 
     val id = cancelTestClient.send().startTest(blockingOperation).invocationId
 
-    val awakeableHolderClient = AwakeableHolderClient.fromIngress(ingressClient, "cancel")
+    val awakeableHolderClient = AwakeableHolderClient.fromClient(ingressClient, "cancel")
 
     await until { awakeableHolderClient.hasAwakeable() }
 

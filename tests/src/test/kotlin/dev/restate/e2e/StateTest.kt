@@ -10,10 +10,10 @@
 package dev.restate.e2e
 
 import dev.restate.e2e.Containers.javaServicesContainer
-import dev.restate.e2e.utils.InjectIngressClient
+import dev.restate.e2e.utils.InjectClient
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
-import dev.restate.sdk.client.IngressClient
+import dev.restate.sdk.client.Client
 import java.util.*
 import my.restate.e2e.services.*
 import org.assertj.core.api.Assertions.assertThat
@@ -68,14 +68,14 @@ abstract class BaseStateTest {
 
   @Test
   @Execution(ExecutionMode.CONCURRENT)
-  fun add(@InjectIngressClient ingressClient: IngressClient) {
-    CounterClient.fromIngress(ingressClient, "noReturnValue").add(1)
+  fun add(@InjectClient ingressClient: Client) {
+    CounterClient.fromClient(ingressClient, "noReturnValue").add(1)
   }
 
   @Test
   @Execution(ExecutionMode.CONCURRENT)
-  fun getAndSet(@InjectIngressClient ingressClient: IngressClient) {
-    val counterClient = CounterClient.fromIngress(ingressClient, "getAndSet")
+  fun getAndSet(@InjectClient ingressClient: Client) {
+    val counterClient = CounterClient.fromClient(ingressClient, "getAndSet")
     val res1 = counterClient.getAndAdd(1)
     assertThat(res1.oldValue).isEqualTo(0)
     assertThat(res1.newValue).isEqualTo(1)
@@ -87,9 +87,9 @@ abstract class BaseStateTest {
 
   @Test
   @Execution(ExecutionMode.CONCURRENT)
-  fun setStateViaOneWayCallFromAnotherService(@InjectIngressClient ingressClient: IngressClient) {
+  fun setStateViaOneWayCallFromAnotherService(@InjectClient ingressClient: Client) {
     val counterName = "setStateViaOneWayCallFromAnotherService"
-    val proxyCounter = ProxyCounterClient.fromIngress(ingressClient)
+    val proxyCounter = ProxyCounterClient.fromClient(ingressClient)
 
     proxyCounter.addInBackground(ProxyCounter.AddRequest(counterName, 1))
     proxyCounter.addInBackground(ProxyCounter.AddRequest(counterName, 1))
@@ -97,7 +97,7 @@ abstract class BaseStateTest {
 
     await untilCallTo
         {
-          CounterClient.fromIngress(ingressClient, counterName).get()
+          CounterClient.fromClient(ingressClient, counterName).get()
         } matches
         { num ->
           num!! == 3L
@@ -106,10 +106,10 @@ abstract class BaseStateTest {
 
   @Test
   @Execution(ExecutionMode.CONCURRENT)
-  fun listStateAndClearAll(@InjectIngressClient ingressClient: IngressClient) {
+  fun listStateAndClearAll(@InjectClient ingressClient: Client) {
     val mapName = UUID.randomUUID().toString()
-    val mapObj = MapObjectClient.fromIngress(ingressClient, mapName)
-    val anotherMapObj = MapObjectClient.fromIngress(ingressClient, mapName + "1")
+    val mapObj = MapObjectClient.fromClient(ingressClient, mapName)
+    val anotherMapObj = MapObjectClient.fromClient(ingressClient, mapName + "1")
 
     mapObj.set(MapObject.Entry("my-key-0", "my-value-0"))
     mapObj.set(MapObject.Entry("my-key-1", "my-value-1"))

@@ -9,10 +9,10 @@
 
 package dev.restate.e2e
 
-import dev.restate.e2e.utils.InjectIngressClient
+import dev.restate.e2e.utils.InjectClient
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
-import dev.restate.sdk.client.IngressClient
+import dev.restate.sdk.client.Client
 import java.time.Duration
 import kotlin.system.measureNanoTime
 import my.restate.e2e.services.CoordinatorClient
@@ -41,13 +41,13 @@ abstract class BaseSampleWorkflowTest {
   @Test
   @DisplayName("Sample workflow with sleep, side effect, call and one way call")
   @Execution(ExecutionMode.CONCURRENT)
-  fun sampleWorkflow(@InjectIngressClient ingressClient: IngressClient) {
+  fun sampleWorkflow(@InjectClient ingressClient: Client) {
     val sleepDuration = Duration.ofMillis(100L)
 
     val elapsed = measureNanoTime {
       val value = "foobar"
       val response =
-          CoordinatorClient.fromIngress(ingressClient)
+          CoordinatorClient.fromClient(ingressClient)
               .complex(CoordinatorComplexRequest(sleepDuration.toMillis(), value))
 
       assertThat(response).isEqualTo(value)

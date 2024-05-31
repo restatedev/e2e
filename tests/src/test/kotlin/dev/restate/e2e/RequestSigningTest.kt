@@ -9,10 +9,10 @@
 
 package dev.restate.e2e
 
-import dev.restate.e2e.utils.InjectIngressClient
+import dev.restate.e2e.utils.InjectClient
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
-import dev.restate.sdk.client.IngressClient
+import dev.restate.sdk.client.Client
 import java.util.*
 import my.restate.e2e.services.CounterClient
 import org.assertj.core.api.Assertions.assertThat
@@ -66,9 +66,9 @@ abstract class BaseRequestSigningTest {
 
   @Test
   @Execution(ExecutionMode.CONCURRENT)
-  fun requestSigningPass(@InjectIngressClient ingressClient: IngressClient) {
+  fun requestSigningPass(@InjectClient ingressClient: Client) {
     val counterName = UUID.randomUUID().toString()
-    val client = CounterClient.fromIngress(ingressClient, counterName)
+    val client = CounterClient.fromClient(ingressClient, counterName)
 
     client.add(1)
     assertThat(client.get()).isEqualTo(1)

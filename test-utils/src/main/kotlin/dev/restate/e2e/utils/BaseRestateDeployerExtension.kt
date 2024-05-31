@@ -9,7 +9,7 @@
 
 package dev.restate.e2e.utils
 
-import dev.restate.sdk.client.IngressClient
+import dev.restate.sdk.client.Client
 import java.net.URL
 import org.junit.jupiter.api.extension.*
 import org.junit.jupiter.api.extension.ExtensionContext.Namespace
@@ -25,8 +25,8 @@ abstract class BaseRestateDeployerExtension : ParameterResolver {
       parameterContext: ParameterContext,
       extensionContext: ExtensionContext
   ): Boolean {
-    return (parameterContext.isAnnotated(InjectIngressClient::class.java) &&
-        IngressClient::class.java.isAssignableFrom(parameterContext.parameter.type)) ||
+    return (parameterContext.isAnnotated(InjectClient::class.java) &&
+        Client::class.java.isAssignableFrom(parameterContext.parameter.type)) ||
         (parameterContext.isAnnotated(InjectContainerPort::class.java) &&
             Int::class.java.isAssignableFrom(parameterContext.parameter.type)) ||
         (parameterContext.isAnnotated(InjectIngressURL::class.java) &&
@@ -41,7 +41,7 @@ abstract class BaseRestateDeployerExtension : ParameterResolver {
       parameterContext: ParameterContext,
       extensionContext: ExtensionContext
   ): Any? {
-    return if (parameterContext.isAnnotated(InjectIngressClient::class.java)) {
+    return if (parameterContext.isAnnotated(InjectClient::class.java)) {
       resolveIngressClient(extensionContext)
     } else if (parameterContext.isAnnotated(InjectContainerPort::class.java)) {
       resolveContainerAddress(parameterContext, extensionContext)
@@ -56,8 +56,8 @@ abstract class BaseRestateDeployerExtension : ParameterResolver {
     }
   }
 
-  private fun resolveIngressClient(extensionContext: ExtensionContext): IngressClient {
-    return IngressClient.defaultClient(resolveIngressURL(extensionContext).toString())
+  private fun resolveIngressClient(extensionContext: ExtensionContext): Client {
+    return Client.connect(resolveIngressURL(extensionContext).toString())
   }
 
   private fun resolveContainerAddress(

@@ -9,10 +9,10 @@
 
 package dev.restate.e2e
 
-import dev.restate.e2e.utils.InjectIngressClient
+import dev.restate.e2e.utils.InjectClient
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
-import dev.restate.sdk.client.IngressClient
+import dev.restate.sdk.client.Client
 import java.util.*
 import my.restate.e2e.services.CounterClient
 import my.restate.e2e.services.FailingClient
@@ -42,9 +42,9 @@ class JavaErrorsTest : BaseErrorsTest() {
   @DisplayName("Test propagate failure from sideEffect and internal invoke")
   @Test
   @Execution(ExecutionMode.CONCURRENT)
-  fun sideEffectFailurePropagation(@InjectIngressClient ingressClient: IngressClient) {
+  fun sideEffectFailurePropagation(@InjectClient ingressClient: Client) {
     assertThat(
-            FailingClient.fromIngress(ingressClient, UUID.randomUUID().toString())
+            FailingClient.fromClient(ingressClient, UUID.randomUUID().toString())
                 .invokeExternalAndHandleFailure())
         // We match on this regex because there might be additional parts of the string injected
         // by runtime/sdk in the error message strings
@@ -92,11 +92,11 @@ abstract class BaseErrorsTest {
   @DisplayName("Test calling method that fails terminally")
   @Test
   @Execution(ExecutionMode.CONCURRENT)
-  fun invokeTerminallyFailingCall(@InjectIngressClient ingressClient: IngressClient) {
+  fun invokeTerminallyFailingCall(@InjectClient ingressClient: Client) {
     val errorMessage = "my error"
 
     assertThatThrownBy {
-          FailingClient.fromIngress(ingressClient, UUID.randomUUID().toString())
+          FailingClient.fromClient(ingressClient, UUID.randomUUID().toString())
               .terminallyFailingCall(errorMessage)
         }
         .hasMessageContaining(errorMessage)
@@ -105,7 +105,7 @@ abstract class BaseErrorsTest {
   @DisplayName("Test calling method that fails terminally multiple times")
   @Test
   @Execution(ExecutionMode.CONCURRENT)
-  fun failSeveralTimes(@InjectIngressClient ingressClient: IngressClient) {
+  fun failSeveralTimes(@InjectClient ingressClient: Client) {
     // This test checks the endpoint doesn't become unstable after the first failure
     invokeTerminallyFailingCall(ingressClient)
     invokeTerminallyFailingCall(ingressClient)
@@ -115,9 +115,9 @@ abstract class BaseErrorsTest {
   @DisplayName("Test set then fail should persist the set")
   @Test
   @Execution(ExecutionMode.CONCURRENT)
-  fun setStateThenFailShouldPersistState(@InjectIngressClient ingressClient: IngressClient) {
+  fun setStateThenFailShouldPersistState(@InjectClient ingressClient: Client) {
     val counterName = "my-failure-counter"
-    val counterClient = CounterClient.fromIngress(ingressClient, counterName)
+    val counterClient = CounterClient.fromClient(ingressClient, counterName)
 
     assertThatThrownBy { counterClient.addThenFail(1) }.hasMessageContaining(counterName)
 
@@ -127,9 +127,9 @@ abstract class BaseErrorsTest {
   @DisplayName("Test propagate failure from another service")
   @Test
   @Execution(ExecutionMode.CONCURRENT)
-  fun internalCallFailurePropagation(@InjectIngressClient ingressClient: IngressClient) {
+  fun internalCallFailurePropagation(@InjectClient ingressClient: Client) {
     val errorMessage = "propagated error"
-    val failingClient = FailingClient.fromIngress(ingressClient, UUID.randomUUID().toString())
+    val failingClient = FailingClient.fromClient(ingressClient, UUID.randomUUID().toString())
 
     assertThatThrownBy { failingClient.callTerminallyFailingCall(errorMessage) }
         .hasMessageContaining(errorMessage)
@@ -138,9 +138,9 @@ abstract class BaseErrorsTest {
   @DisplayName("Test side effects are retried until they succeed")
   @Test
   @Execution(ExecutionMode.CONCURRENT)
-  fun sideEffectWithEventualSuccess(@InjectIngressClient ingressClient: IngressClient) {
+  fun sideEffectWithEventualSuccess(@InjectClient ingressClient: Client) {
     assertThat(
-            FailingClient.fromIngress(ingressClient, UUID.randomUUID().toString())
+            FailingClient.fromClient(ingressClient, UUID.randomUUID().toString())
                 .failingCallWithEventualSuccess())
         .isEqualTo(SUCCESS_ATTEMPT)
   }
@@ -148,9 +148,9 @@ abstract class BaseErrorsTest {
   @DisplayName("Test invocations are retried until they succeed")
   @Test
   @Execution(ExecutionMode.CONCURRENT)
-  fun invocationWithEventualSuccess(@InjectIngressClient ingressClient: IngressClient) {
+  fun invocationWithEventualSuccess(@InjectClient ingressClient: Client) {
     assertThat(
-            FailingClient.fromIngress(ingressClient, UUID.randomUUID().toString())
+            FailingClient.fromClient(ingressClient, UUID.randomUUID().toString())
                 .failingCallWithEventualSuccess())
         .isEqualTo(SUCCESS_ATTEMPT)
   }
@@ -158,11 +158,11 @@ abstract class BaseErrorsTest {
   @DisplayName("Test terminal error of side effects is propagated")
   @Test
   @Execution(ExecutionMode.CONCURRENT)
-  fun sideEffectWithTerminalError(@InjectIngressClient ingressClient: IngressClient) {
+  fun sideEffectWithTerminalError(@InjectClient ingressClient: Client) {
     val errorMessage = "failed side effect"
 
     assertThatThrownBy {
-          FailingClient.fromIngress(ingressClient, UUID.randomUUID().toString())
+          FailingClient.fromClient(ingressClient, UUID.randomUUID().toString())
               .terminallyFailingSideEffect(errorMessage)
         }
         .hasMessageContaining(errorMessage)

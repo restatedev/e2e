@@ -14,7 +14,7 @@ import dev.restate.admin.client.ApiClient
 import dev.restate.admin.model.CreateSubscriptionRequest
 import dev.restate.e2e.utils.*
 import dev.restate.e2e.utils.config.*
-import dev.restate.sdk.client.IngressClient
+import dev.restate.sdk.client.Client
 import java.net.URL
 import java.util.*
 import my.restate.e2e.services.CounterClient
@@ -87,7 +87,7 @@ abstract class BaseKafkaIngressTest {
   fun handleEventInCounterService(
       @InjectMetaURL metaURL: URL,
       @InjectContainerPort(hostName = "kafka", port = KafkaContainer.EXTERNAL_PORT) kafkaPort: Int,
-      @InjectIngressClient ingressClient: IngressClient
+      @InjectClient ingressClient: Client
   ) {
     val counter = UUID.randomUUID().toString()
 
@@ -109,7 +109,7 @@ abstract class BaseKafkaIngressTest {
     // Now wait for the update to be visible
     await untilCallTo
         {
-          CounterClient.fromIngress(ingressClient, counter).get()
+          CounterClient.fromClient(ingressClient, counter).get()
         } matches
         { num ->
           num!! == 6L
@@ -121,7 +121,7 @@ abstract class BaseKafkaIngressTest {
   fun handleEventInEventHandler(
       @InjectMetaURL metaURL: URL,
       @InjectContainerPort(hostName = "kafka", port = KafkaContainer.EXTERNAL_PORT) kafkaPort: Int,
-      @InjectIngressClient ingressClient: IngressClient
+      @InjectClient ingressClient: Client
   ) {
     val counter = UUID.randomUUID().toString()
 
@@ -146,7 +146,7 @@ abstract class BaseKafkaIngressTest {
     // Now wait for the update to be visible
     await untilCallTo
         {
-          CounterClient.fromIngress(ingressClient, counter).get()
+          CounterClient.fromClient(ingressClient, counter).get()
         } matches
         { num ->
           num!! == 6L

@@ -9,10 +9,10 @@
 
 package dev.restate.e2e
 
-import dev.restate.e2e.utils.InjectIngressClient
+import dev.restate.e2e.utils.InjectClient
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
-import dev.restate.sdk.client.IngressClient
+import dev.restate.sdk.client.Client
 import java.time.Duration
 import my.restate.e2e.services.CoordinatorClient
 import org.assertj.core.api.Assertions.assertThat
@@ -52,9 +52,9 @@ abstract class BaseAwaitTimeoutTest {
   @Test
   @DisplayName("Test Awaitable#await(Duration)")
   @Execution(ExecutionMode.CONCURRENT)
-  fun timeout(@InjectIngressClient ingressClient: IngressClient) {
+  fun timeout(@InjectClient ingressClient: Client) {
     val timeout = Duration.ofMillis(100L)
 
-    assertThat(CoordinatorClient.fromIngress(ingressClient).timeout(timeout.toMillis())).isTrue
+    assertThat(CoordinatorClient.fromClient(ingressClient).timeout(timeout.toMillis())).isTrue
   }
 }

@@ -44,7 +44,7 @@ abstract class BaseInterpreterTest {
     private val ALPHANUMERIC_ALPHABET: Array<Char> =
         (('0'..'9').toList() + ('a'..'z').toList() + ('A'..'Z').toList()).toTypedArray()
     private val POLL_INTERVAL = 1.seconds.toJavaDuration()
-    private val MAX_POLL_TIME = 100.seconds.toJavaDuration()
+    private val MAX_POLL_TIME = 20.minutes.toJavaDuration()
     private const val E2E_VERIFICATION_SEED_ENV = "E2E_VERIFICATION_SEED"
 
     private val LOG = LogManager.getLogger(BaseInterpreterTest::class.java)
@@ -70,10 +70,10 @@ abstract class BaseInterpreterTest {
       val status: String,
   )
 
-  @Timeout(value = 2, unit = TimeUnit.MINUTES)
+  @Timeout(value = 20, unit = TimeUnit.MINUTES)
   @Test
   fun simple(@InjectContainerPort("test-driver", 3000) testDriverPort: Int) =
-      runTest(timeout = 2.minutes) {
+      runTest(timeout = 20.minutes) {
         val client = client()
         val httpResponse: HttpResponse =
             client.post("http://localhost:$testDriverPort/start") {
@@ -107,7 +107,7 @@ abstract class BaseInterpreterTest {
     LOG.info("Using seed {}", testSeed)
 
     return InterpreterTestConfiguration(
-        "http://$RESTATE_RUNTIME:$RUNTIME_INGRESS_ENDPOINT_PORT/", testSeed, 100, 100, 10)
+        "http://$RESTATE_RUNTIME:$RUNTIME_INGRESS_ENDPOINT_PORT/", testSeed, 1000, 10000, 10)
   }
 }
 

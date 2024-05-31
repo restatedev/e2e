@@ -13,7 +13,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
-import dev.restate.sdk.client.IngressClient;
+import dev.restate.sdk.client.Client;
 import dev.restate.sdk.common.Serde;
 import dev.restate.sdk.serde.jackson.JacksonSerdes;
 import java.io.IOException;
@@ -32,8 +32,8 @@ public class Main implements HttpHandler {
   private static final Logger logger = LogManager.getLogger(Main.class);
   private static final Serde<List<Integer>> LIST_SERDE = JacksonSerdes.of(new TypeReference<>() {});
 
-  private final IngressClient ingressClient =
-      IngressClient.defaultClient(Objects.requireNonNull(System.getenv("RESTATE_URI")));
+  private final Client ingressClient =
+      Client.connect(Objects.requireNonNull(System.getenv("RESTATE_URI")));
 
   public static void main(String[] args) throws IOException {
     HttpServer server =

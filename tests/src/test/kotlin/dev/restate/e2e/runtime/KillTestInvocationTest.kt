@@ -14,7 +14,7 @@ import dev.restate.admin.client.ApiClient
 import dev.restate.admin.model.TerminationMode
 import dev.restate.e2e.Containers
 import dev.restate.e2e.utils.*
-import dev.restate.sdk.client.IngressClient
+import dev.restate.sdk.client.Client
 import java.net.URL
 import my.restate.e2e.services.*
 import org.awaitility.kotlin.await
@@ -39,9 +39,9 @@ class KillTestInvocationTest {
   }
 
   @Test
-  fun kill(@InjectIngressClient ingressClient: IngressClient, @InjectMetaURL metaURL: URL) {
-    val id = KillTestRunnerClient.fromIngress(ingressClient).send().startCallTree().invocationId
-    val awakeableHolderClient = AwakeableHolderClient.fromIngress(ingressClient, "kill")
+  fun kill(@InjectClient ingressClient: Client, @InjectMetaURL metaURL: URL) {
+    val id = KillTestRunnerClient.fromClient(ingressClient).send().startCallTree().invocationId
+    val awakeableHolderClient = AwakeableHolderClient.fromClient(ingressClient, "kill")
 
     // Await until AwakeableHolder has an awakeable and then complete it.
     // With this synchronization point we make sure the call tree has been built before killing it.
@@ -53,6 +53,6 @@ class KillTestInvocationTest {
     client.terminateInvocation(id, TerminationMode.KILL)
 
     // Check that the singleton service is unlocked after killing the call tree
-    KillTestSingletonClient.fromIngress(ingressClient, "").isUnlocked()
+    KillTestSingletonClient.fromClient(ingressClient, "").isUnlocked()
   }
 }

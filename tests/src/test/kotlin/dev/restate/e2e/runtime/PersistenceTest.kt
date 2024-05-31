@@ -11,7 +11,7 @@ package dev.restate.e2e.runtime
 
 import dev.restate.e2e.Containers
 import dev.restate.e2e.utils.*
-import dev.restate.sdk.client.IngressClient
+import dev.restate.sdk.client.Client
 import java.util.concurrent.TimeUnit
 import my.restate.e2e.services.CounterClient
 import org.assertj.core.api.Assertions.assertThat
@@ -34,10 +34,10 @@ class PersistenceTest {
   @Timeout(value = 30, unit = TimeUnit.SECONDS)
   @Test
   fun startAndStopRuntimeRetainsTheState(
-      @InjectIngressClient ingressClient: IngressClient,
+      @InjectClient ingressClient: Client,
       @InjectContainerHandle(RESTATE_RUNTIME) runtimeHandle: ContainerHandle
   ) {
-    val counterClient = CounterClient.fromIngress(ingressClient, "my-key")
+    val counterClient = CounterClient.fromClient(ingressClient, "my-key")
 
     val res1 = counterClient.getAndAdd(1)
     assertThat(res1.oldValue).isEqualTo(0)
@@ -54,10 +54,10 @@ class PersistenceTest {
   @Timeout(value = 30, unit = TimeUnit.SECONDS)
   @Test
   fun startAndKillRuntimeRetainsTheState(
-      @InjectIngressClient ingressClient: IngressClient,
+      @InjectClient ingressClient: Client,
       @InjectContainerHandle(RESTATE_RUNTIME) runtimeHandle: ContainerHandle
   ) {
-    val counterClient = CounterClient.fromIngress(ingressClient, "my-key")
+    val counterClient = CounterClient.fromClient(ingressClient, "my-key")
 
     val res1 = counterClient.getAndAdd(1)
     assertThat(res1.oldValue).isEqualTo(0)

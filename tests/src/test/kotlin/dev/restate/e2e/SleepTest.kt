@@ -10,7 +10,7 @@
 package dev.restate.e2e
 
 import dev.restate.e2e.utils.*
-import dev.restate.sdk.client.IngressClient
+import dev.restate.sdk.client.Client
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 import kotlin.random.nextLong
@@ -62,11 +62,11 @@ abstract class BaseSimpleSleepTest {
 
   @Test
   @Execution(ExecutionMode.CONCURRENT)
-  fun sleep(@InjectIngressClient ingressClient: IngressClient) {
+  fun sleep(@InjectClient ingressClient: Client) {
     val sleepDuration = 10.milliseconds
 
     val elapsed = measureNanoTime {
-      CoordinatorClient.fromIngress(ingressClient).sleep(sleepDuration.inWholeMilliseconds)
+      CoordinatorClient.fromClient(ingressClient).sleep(sleepDuration.inWholeMilliseconds)
     }
 
     assertThat(elapsed.nanoseconds).isGreaterThanOrEqualTo(sleepDuration)
@@ -75,14 +75,14 @@ abstract class BaseSimpleSleepTest {
   @Test
   @Timeout(value = 60, unit = TimeUnit.SECONDS)
   @Execution(ExecutionMode.CONCURRENT)
-  fun manySleeps(@InjectIngressClient ingressClient: IngressClient) =
+  fun manySleeps(@InjectClient ingressClient: Client) =
       runTest(timeout = 60.seconds) {
         val minSleepDuration = 10.milliseconds
         val maxSleepDuration = 50.milliseconds
         val sleepsPerInvocation = 20
         val concurrentSleepInvocations = 50
 
-        val coordinatorClient = CoordinatorClient.fromIngress(ingressClient)
+        val coordinatorClient = CoordinatorClient.fromClient(ingressClient)
 
         // Range is inclusive
         (1..concurrentSleepInvocations)
@@ -138,14 +138,14 @@ abstract class BaseSleepWithFailuresTest {
   }
 
   private suspend fun asyncSleepTest(
-      ingressClient: IngressClient,
+      ingressClient: Client,
       sleepDuration: Duration = DEFAULT_SLEEP_DURATION,
       action: () -> Unit
   ) {
     val start = System.nanoTime()
     val job = coroutineScope {
       launch(Dispatchers.Default) {
-        CoordinatorClient.fromIngress(ingressClient).sleep(sleepDuration.inWholeMilliseconds)
+        CoordinatorClient.fromClient(ingressClient).sleep(sleepDuration.inWholeMilliseconds)
       }
     }
     delay(
@@ -163,7 +163,7 @@ abstract class BaseSleepWithFailuresTest {
   @Timeout(value = 15, unit = TimeUnit.SECONDS)
   @Test
   open fun sleepAndKillServiceEndpoint(
-      @InjectIngressClient ingressClient: IngressClient,
+      @InjectClient ingressClient: Client,
       @InjectContainerHandle(COORDINATOR_HOSTNAME) coordinatorContainer: ContainerHandle
   ) {
     runTest(timeout = 15.seconds) {
@@ -174,7 +174,7 @@ abstract class BaseSleepWithFailuresTest {
   @Timeout(value = 15, unit = TimeUnit.SECONDS)
   @Test
   fun sleepAndTerminateServiceEndpoint(
-      @InjectIngressClient ingressClient: IngressClient,
+      @InjectClient ingressClient: Client,
       @InjectContainerHandle(COORDINATOR_HOSTNAME) coordinatorContainer: ContainerHandle
   ) {
     runTest(timeout = 15.seconds) {

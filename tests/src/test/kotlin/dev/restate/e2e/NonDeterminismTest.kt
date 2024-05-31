@@ -9,10 +9,10 @@
 
 package dev.restate.e2e
 
-import dev.restate.e2e.utils.InjectIngressClient
+import dev.restate.e2e.utils.InjectClient
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
-import dev.restate.sdk.client.IngressClient
+import dev.restate.sdk.client.Client
 import dev.restate.sdk.common.Serde
 import dev.restate.sdk.common.Target
 import my.restate.e2e.services.CounterClient
@@ -73,7 +73,7 @@ abstract class NonDeterminismTest {
               "backgroundInvokeWithDifferentTargets",
               "setDifferentKey"])
   @Execution(ExecutionMode.CONCURRENT)
-  fun method(handlerName: String, @InjectIngressClient ingressClient: IngressClient) {
+  fun method(handlerName: String, @InjectClient ingressClient: Client) {
     Assertions.assertThatThrownBy {
           ingressClient.call(
               Target.virtualObject(
@@ -85,6 +85,6 @@ abstract class NonDeterminismTest {
         .isNotNull()
 
     // Assert the counter was not incremented
-    assertThat(CounterClient.fromIngress(ingressClient, handlerName).get()).isZero()
+    assertThat(CounterClient.fromClient(ingressClient, handlerName).get()).isZero()
   }
 }

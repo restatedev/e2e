@@ -9,10 +9,10 @@
 
 package dev.restate.e2e
 
-import dev.restate.e2e.utils.InjectIngressClient
+import dev.restate.e2e.utils.InjectClient
 import dev.restate.e2e.utils.RestateDeployer
 import dev.restate.e2e.utils.RestateDeployerExtension
-import dev.restate.sdk.client.IngressClient
+import dev.restate.sdk.client.Client
 import dev.restate.sdk.client.SendResponse.SendStatus
 import java.util.*
 import my.restate.e2e.services.WorkflowAPIBlockAndWaitClient
@@ -57,9 +57,9 @@ abstract class BaseWorkflowAPITest {
   @Test
   @DisplayName("Set and resolve durable promise leads to completion")
   @Execution(ExecutionMode.CONCURRENT)
-  fun setAndResolve(@InjectIngressClient ingressClient: IngressClient) {
+  fun setAndResolve(@InjectClient ingressClient: Client) {
     val client =
-        WorkflowAPIBlockAndWaitClient.fromIngress(ingressClient, UUID.randomUUID().toString())
+        WorkflowAPIBlockAndWaitClient.fromClient(ingressClient, UUID.randomUUID().toString())
 
     val sendResponse = client.submit("Francesco")
     assertThat(sendResponse.status).isEqualTo(SendStatus.ACCEPTED)
