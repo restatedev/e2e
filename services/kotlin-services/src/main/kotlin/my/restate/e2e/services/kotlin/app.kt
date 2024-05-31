@@ -24,8 +24,14 @@ fun main() {
   for (svc in services) {
     val fqsn = svc.trim { it <= ' ' }
     when (fqsn) {
-      VerificationTestDefinitions.SERVICE_NAME ->
-          restateHttpEndpointBuilder.bind(VerificationTestImpl())
+      interpreterName(0) ->
+          restateHttpEndpointBuilder.bind(ObjectInterpreterImpl.getInterpreterDefinition(0))
+      interpreterName(1) ->
+          restateHttpEndpointBuilder.bind(ObjectInterpreterImpl.getInterpreterDefinition(1))
+      interpreterName(2) ->
+          restateHttpEndpointBuilder.bind(ObjectInterpreterImpl.getInterpreterDefinition(2))
+      ServiceInterpreterHelperDefinitions.SERVICE_NAME ->
+          restateHttpEndpointBuilder.bind(ServiceInterpreterHelperImpl())
     }
   }
 
