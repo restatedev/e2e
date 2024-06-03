@@ -20,15 +20,12 @@ import dev.restate.e2e.utils.RestateDeployerExtension
 import dev.restate.sdk.JsonSerdes
 import dev.restate.sdk.client.CallRequestOptions
 import dev.restate.sdk.client.Client
-import dev.restate.sdk.client.IngressException
 import dev.restate.sdk.client.SendResponse.SendStatus
 import java.net.URL
 import java.util.*
 import java.util.concurrent.TimeUnit
 import my.restate.e2e.services.*
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatThrownBy
-import org.assertj.core.api.InstanceOfAssertFactories.type
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.until
 import org.awaitility.kotlin.untilAsserted
@@ -181,9 +178,7 @@ class IngressTest {
     val blockedFut = invocationHandle.attachAsync()
 
     // Get output throws exception
-    assertThatThrownBy { invocationHandle.getOutput() }
-        .asInstanceOf(type(IngressException::class.java))
-        .returns(470, IngressException::getStatusCode)
+    assertThat(invocationHandle.output.isReady).isFalse()
 
     // Blocked fut should still be blocked
     assertThat(blockedFut).isNotDone
@@ -197,7 +192,7 @@ class IngressTest {
     assertThat(blockedFut.get()).isEqualTo(response)
 
     // Invoke get output
-    assertThat(invocationHandle.getOutput()).isEqualTo(response)
+    assertThat(invocationHandle.output.value).isEqualTo(response)
   }
 
   @Test
