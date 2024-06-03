@@ -72,12 +72,12 @@ abstract class BaseWorkflowAPITest {
     assertThat(client.workflowHandle().attach()).isEqualTo("Till")
 
     // Can call get output again
-    assertThat(client.workflowHandle().output).isEqualTo("Till")
+    assertThat(client.workflowHandle().output.value).isEqualTo("Till")
 
     // Re-submit should have no effect
     val secondSendResponse = client.submit("Francesco")
     assertThat(secondSendResponse.status).isEqualTo(SendStatus.PREVIOUSLY_ACCEPTED)
     assertThat(secondSendResponse.invocationId).isEqualTo(sendResponse.invocationId)
-    assertThat(client.workflowHandle().output).isEqualTo("Till")
+    assertThat(client.workflowHandle().output.value).isEqualTo("Till")
   }
 }

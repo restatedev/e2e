@@ -30,10 +30,7 @@ public class WorkflowAPIBlockAndWaitImpl implements WorkflowAPIBlockAndWait {
     // Wait on unblock
     String output = context.promise(MY_DURABLE_PROMISE).awaitable().await();
 
-    if (!context.promise(MY_DURABLE_PROMISE).isCompleted()) {
-      throw new TerminalException("Durable promise should be completed");
-    }
-    if (context.promise(MY_DURABLE_PROMISE).peek().isEmpty()) {
+    if (!context.promise(MY_DURABLE_PROMISE).peek().isReady()) {
       throw new TerminalException("Durable promise should be completed");
     }
 
