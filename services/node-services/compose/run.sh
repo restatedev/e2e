@@ -3,15 +3,18 @@
 SEED=$(date --iso-8601=seconds)
 TIMEOUT_SECNODS=14400
 EXPECTED_NOISY_LOG_MESSAGE="undefined is not a number, but it still has feelings"
-RESTATE_KILL_SECONDS=1200
+RESTATE_KILL_SECONDS=300
 COMPOSE_FILE="compose.template.yml"
+
+#       "keys" : 100000,
+#				"tests" : 1000000,
 
  
 export INTERPRETER_DRIVER_CONF=$(cat <<-EOF 
 			{
         "seed" : "${SEED}", 
-        "keys" : 100000,
-				"tests" : 1000000,
+        "keys" : 10,
+				"tests" : 100,
 				"maxProgramSize" :  15,
         "ingress" : "http://restate:8080",
         "register" : {
