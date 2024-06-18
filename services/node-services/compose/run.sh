@@ -6,15 +6,12 @@ EXPECTED_NOISY_LOG_MESSAGE="undefined is not a number, but it still has feelings
 RESTATE_KILL_SECONDS=300
 COMPOSE_FILE="compose.template.yml"
 
-#       "keys" : 100000,
-#				"tests" : 1000000,
-
  
 export INTERPRETER_DRIVER_CONF=$(cat <<-EOF 
 			{
         "seed" : "${SEED}", 
-        "keys" : 10,
-				"tests" : 100,
+				"keys" : 10000,
+				"tests" : 100000,
 				"maxProgramSize" :  15,
         "ingress" : "http://restate:8080",
         "register" : {
