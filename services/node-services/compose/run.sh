@@ -17,7 +17,7 @@ export INTERPRETER_DRIVER_CONF=$(cat <<-EOF
 														"http://interpreter_zero:9000",
 														"http://interpreter_one:9001",
 														"http://interpreter_two:9002",
-														"http://services:9002"
+														"http://services:9003"
 					]
 				}
 			}

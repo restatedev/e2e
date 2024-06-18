@@ -48,7 +48,7 @@ services:
       - 9003:9003
     environment:
       - PORT=9003
-      - RESTATE_LOGGING=ERROR
+      - RESTATE_LOGGING=DEBUG
       - NODE_ENV=production
       - SERVICES=ServiceInterpreterHelper
     restart: always
