@@ -40,7 +40,17 @@ services:
       - PORT=9002
       - RESTATE_LOGGING=ERROR
       - NODE_ENV=production
-      - SERVICES=ObjectInterpreterL2,ServiceInterpreterHelper
+      - SERVICES=ObjectInterpreterL2
+    restart: always
+  services:
+    image: ghcr.io/restatedev/e2e-node-services:main
+    ports:
+      - 9003:9003
+    environment:
+      - PORT=9003
+      - RESTATE_LOGGING=ERROR
+      - NODE_ENV=production
+      - SERVICES=ServiceInterpreterHelper
     restart: always
   restate:
     image: ghcr.io/restatedev/restate:main

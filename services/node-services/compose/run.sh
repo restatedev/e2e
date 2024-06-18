@@ -9,14 +9,15 @@ export INTERPRETER_DRIVER_CONF=$(cat <<-EOF
         "seed" : "${SEED}", 
         "keys" : 100000,
         "tests" : 1000000,
-        "maxProgramSize" : 50,
+        "maxProgramSize" : 100,
         "ingress" : "http://restate:8080",
         "register" : {
 					"adminUrl" : "http://restate:9070",
 					"deployments" : [
 														"http://interpreter_zero:9000",
 														"http://interpreter_one:9001",
-														"http://interpreter_two:9002"
+														"http://interpreter_two:9002",
+														"http://services:9003"
 					]
 				}
 			}
