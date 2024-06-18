@@ -16,7 +16,7 @@ jobs:
     # prevent running on forks
     if: github.repository_owner == 'restatedev'
     runs-on: warp-ubuntu-latest-x64-16x # warpbuild runner
-    timeout-minutes: 70
+    timeout-minutes: 250 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
