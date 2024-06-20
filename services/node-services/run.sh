@@ -20,5 +20,16 @@ export INTERPRETER_DRIVER_CONF=$(cat <<-EOF
 EOF
 )
 
-node dist/app.js 2>1 | grep -v "undefined is not a number, but it still has feelings"
+docker pull ghcr.io/restatedev/e2e-node-services:main 
+
+docker run \
+	--net host\
+	-v /var/run/docker.sock:/var/run/docker.sock	\
+	--env SERVICES	\
+	--env NODE_ENV \
+	--env NODE_OPTIONS \
+	--env AWS_LAMBDA_FUNCTION_NAME \
+	--env DEBUG \
+	--env INTERPRETER_DRIVER_CONF \
+	ghcr.io/restatedev/e2e-node-services:main 2>1 | grep -v "undefined is not a number, but it still has feelings"
 

@@ -228,10 +228,12 @@ export class Test {
         }
         console.log("Killing restate");
         await container.restart({ timeout: 1 });
-        const newIngressUrl = `http://localhost:${container.getMappedPort(
+        const newIngressUrl = `http://${container.getHost()}:${container.getMappedPort(
           8080
         )}`;
-        const newAdminUrl = `http://localhost:${container.getMappedPort(9070)}`;
+        const newAdminUrl = `http://${container.getHost()}:${container.getMappedPort(
+          9070
+        )}`;
         ingress = restate.connect({ url: newIngressUrl });
         console.log(
           `Restate is back:\ningress: ${newIngressUrl}\nadmin:  ${newAdminUrl}`
