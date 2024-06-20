@@ -32,4 +32,4 @@ jobs:
           password: ${{ env.GHCR_REGISTRY_TOKEN }}
 
       - run: ./run.sh
-        working-directory: services/node-services/compose
+        working-directory: services/node-services

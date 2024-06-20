@@ -109,8 +109,12 @@ export async function setupContainers(): Promise<TestEnvironment> {
   const interpreterTwoContainer = await two;
   const servicesContainer = await services;
 
-  const ingressUrl = `http://localhost:${restateContainer.getMappedPort(8080)}`;
-  const adminUrl = `http://localhost:${restateContainer.getMappedPort(9070)}`;
+  const ingressUrl = `http://${restateContainer.getHost()}:${restateContainer.getMappedPort(
+    8080
+  )}`;
+  const adminUrl = `http://${restateContainer.getHost()}:${restateContainer.getMappedPort(
+    9070
+  )}`;
 
   return {
     ingressUrl,

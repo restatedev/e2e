@@ -20,5 +20,18 @@ export INTERPRETER_DRIVER_CONF=$(cat <<-EOF
 EOF
 )
 
-node dist/app.js 2>1 | grep -v "undefined is not a number, but it still has feelings"
+
+docker run \
+	--net host\
+	-v /var/run/docker.sock:/var/run/docker.sock	\
+	--env SERVICES	\
+	--env NODE_ENV \
+	--env NODE_OPTIONS \
+	--env AWS_LAMBDA_FUNCTION_NAME \
+	--env DEBUG \
+	--env INTERPRETER_DRIVER_CONF \
+	-it e2enode | grep -v "undefined is not a number, but it still has feelings"
+
+
+#node dist/app.js 2>1 | grep -v "undefined is not a number, but it still has feelings"
 
