@@ -42,6 +42,8 @@ REGISTRY.add({
 REGISTRY.add({
   fqdn: "InterpreterDriverJob",
   binder: () => {
+    let done = false;
+
     createJob()
       .then((status) => {
         console.log(`Job success! ${status}`);
@@ -50,6 +52,14 @@ REGISTRY.add({
       .catch((e) => {
         console.log(`Job failure ${e}`);
         process.exit(1);
+      })
+      .finally(() => {
+        done = true;
       });
+
+    (function wait() {
+      // prevent node from exiting
+      if (!done) setTimeout(wait, 1000);
+    })();
   },
 });

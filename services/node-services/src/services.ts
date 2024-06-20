@@ -52,7 +52,7 @@ export class ComponentRegistry {
       const c = this.components.get(fqdn);
       if (!c) {
         throw new Error(
-          `unknown fqdn ${fqdn}. Did you rememeber to import the test at app.ts?`
+          `unknown fqdn ${fqdn}. Did you remember to import the test at app.ts?`
         );
       }
       c.binder(e);
