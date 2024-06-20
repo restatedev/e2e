@@ -19,6 +19,7 @@
     "@restatedev/restate-sdk-clients": "dev",
     "express": "^4.18.2",
     "seedrandom": "^3.0.5",
+    "testcontainers": "^10.9.0",
     "ts-proto": "^1.140.0",
     "uuid": "^9.0.0"
   },

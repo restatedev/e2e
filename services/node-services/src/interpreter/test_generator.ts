@@ -33,12 +33,12 @@ const L0 = distribution([
     CommandType.CALL_SERVICE,
     CommandType.CALL_NEXT_LAYER_OBJECT,
   ],
-  [CommandType.THROWING_SIDE_EFFECT, CommandType.RECOVER_TERMINAL_CALL],
   [
     CommandType.INCREMENT_STATE_COUNTER_VIA_AWAKEABLE,
     CommandType.RESOLVE_AWAKEABLE,
     CommandType.REJECT_AWAKEABLE,
   ],
+  [CommandType.THROWING_SIDE_EFFECT, CommandType.RECOVER_TERMINAL_CALL],
   [
     CommandType.CALL_SLOW_SERVICE,
     CommandType.SLOW_SIDE_EFFECT,
@@ -55,18 +55,17 @@ const L1 = distribution([
   [
     CommandType.GET_STATE,
     CommandType.SET_STATE,
-    CommandType.CLEAR_STATE,
     CommandType.SIDE_EFFECT,
     CommandType.INCREMENT_STATE_COUNTER,
   ],
   [CommandType.INCREMENT_STATE_COUNTER_INDIRECTLY, CommandType.CALL_SERVICE],
-  [CommandType.THROWING_SIDE_EFFECT, CommandType.RECOVER_TERMINAL_CALL],
   [
     CommandType.CALL_NEXT_LAYER_OBJECT,
     CommandType.INCREMENT_STATE_COUNTER_VIA_AWAKEABLE,
     CommandType.RESOLVE_AWAKEABLE,
     CommandType.REJECT_AWAKEABLE,
   ],
+  [CommandType.THROWING_SIDE_EFFECT, CommandType.RECOVER_TERMINAL_CALL],
   [
     CommandType.CALL_SLOW_SERVICE,
     CommandType.SLOW_SIDE_EFFECT,
@@ -89,15 +88,10 @@ const L2 = distribution([
   ],
   [CommandType.INCREMENT_STATE_COUNTER_INDIRECTLY, CommandType.CALL_SERVICE],
   [CommandType.THROWING_SIDE_EFFECT, CommandType.RECOVER_TERMINAL_CALL],
-  [
-    CommandType.INCREMENT_STATE_COUNTER_VIA_AWAKEABLE,
-    CommandType.RESOLVE_AWAKEABLE,
-    CommandType.REJECT_AWAKEABLE,
-  ],
+  [CommandType.SLEEP, CommandType.INCREMENT_STATE_COUNTER_VIA_AWAKEABLE],
   [
     CommandType.CALL_SLOW_SERVICE,
     CommandType.SLOW_SIDE_EFFECT,
-    CommandType.SLEEP,
     CommandType.INCREMENT_VIA_DELAYED_CALL,
     CommandType.RECOVER_TERMINAL_MAYBE_UN_AWAITED,
   ],
