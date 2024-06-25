@@ -31,7 +31,7 @@ import "./interpreter/entry_point";
 import "./workflow";
 
 import { REGISTRY } from "./services";
-import { serve as http1Server } from "./h1server";
+import http1Server from "./h1server";
 
 class EndpointWrapper<K extends "fetch" | "lambda" | "node", T> {
   static fromEnvironment() {
