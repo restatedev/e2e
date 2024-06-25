@@ -7,7 +7,12 @@
 // directory of this repository or package, or at
 // https://github.com/restatedev/e2e/blob/main/LICENSE
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import * as restate from "@restatedev/restate-sdk";
+import { endpoint as fetchEndpoint } from "@restatedev/restate-sdk/fetch";
+import { endpoint as lambdaEndpoint } from "@restatedev/restate-sdk/lambda";
+import process from "node:process";
 
 import "./awakeable_holder";
 import "./counter";
@@ -26,19 +31,47 @@ import "./interpreter/entry_point";
 import "./workflow";
 
 import { REGISTRY } from "./services";
+import { serve as http1Server } from "./h1server";
 
-if (!process.env.SERVICES) {
-  throw new Error("Cannot find SERVICES env");
+class EndpointWrapper<K extends "fetch" | "lambda" | "node", T> {
+  static fromEnvironment() {
+    if (process.env.E2E_USE_FETCH) {
+      return new EndpointWrapper("fetch", fetchEndpoint());
+    } else if (process.env.AWS_LAMBDA_FUNCTION_NAME) {
+      return new EndpointWrapper("lambda", lambdaEndpoint());
+    } else {
+      return new EndpointWrapper("node", restate.endpoint());
+    }
+  }
+
+  constructor(readonly kind: K, readonly endpoint: T) {}
 }
-const fqdns = new Set(process.env.SERVICES.split(","));
-const endpoint = restate.endpoint();
-REGISTRY.register(fqdns, endpoint);
+
+const wrapper = EndpointWrapper.fromEnvironment();
+REGISTRY.registerFromEnvironment(wrapper.endpoint);
 
 if (process.env.E2E_REQUEST_SIGNING) {
-  endpoint.withIdentityV1(...process.env.E2E_REQUEST_SIGNING.split(","));
-}
-if (!process.env.AWS_LAMBDA_FUNCTION_NAME) {
-  endpoint.listen();
+  const signing = process.env.E2E_REQUEST_SIGNING;
+  wrapper.endpoint.withIdentityV1(...signing.split(","));
 }
 
-export const handler = endpoint.lambdaHandler();
+switch (wrapper.kind) {
+  case "node": {
+    wrapper.endpoint.listen();
+    break;
+  }
+  case "fetch": {
+    http1Server(wrapper.endpoint.handler());
+    break;
+  }
+  case "lambda": {
+    // do nothing, handler is exported
+    break;
+  }
+  default:
+    throw new Error("Unknown endpoint type");
+}
+
+// export for lambda. it will be only set for a lambda deployment
+export const handler =
+  wrapper.kind == "lambda" ? wrapper.endpoint.handler() : undefined;
