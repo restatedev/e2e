@@ -10,10 +10,29 @@
 import {
   GenericContainer,
   Network,
-  PullPolicy,
   StartedNetwork,
   StartedTestContainer,
 } from "testcontainers";
+
+export interface EnvironmentSpec {
+  restate: {
+    image: string;
+    env: Record<string, string>;
+    pull?: boolean;
+  };
+
+  interpreters: {
+    image: string;
+    env: Record<string, string>;
+    pull?: boolean;
+  };
+
+  service: {
+    image: string;
+    env: Record<string, string>;
+    pull?: boolean;
+  };
+}
 
 export interface TestEnvironment {
   ingressUrl: string;
@@ -31,17 +50,26 @@ export interface Containers {
   servicesContainer: StartedTestContainer;
 }
 
-export async function setupContainers(): Promise<TestEnvironment> {
+export async function setupContainers(
+  env: EnvironmentSpec
+): Promise<TestEnvironment> {
+  console.log(env);
+
   const network = await new Network().start();
 
-  const restate = new GenericContainer("ghcr.io/restatedev/restate:main")
+  const restate = new GenericContainer(env.restate.image)
     .withExposedPorts(8080, 9070)
     .withNetwork(network)
     .withNetworkAliases("restate")
-    .withPullPolicy(PullPolicy.alwaysPull())
+    .withPullPolicy({
+      shouldPull() {
+        return env.restate.pull ?? true;
+      },
+    })
     .withEnvironment({
       RESTATE_LOG_FILTER: "restate=warn",
       RESTATE_LOG_FORMAT: "json",
+      ...(env.restate?.env ?? {}),
     })
     .withUlimits({
       nproc: { soft: 65535, hard: 65535 },
@@ -49,64 +77,64 @@ export async function setupContainers(): Promise<TestEnvironment> {
     })
     .start();
 
-  const zero = new GenericContainer("ghcr.io/restatedev/e2e-node-services:main")
-    .withNetwork(network)
-    .withNetworkAliases("interpreter_zero")
-    .withPullPolicy(PullPolicy.alwaysPull())
-    .withEnvironment({
-      PORT: "9000",
+  const names = ["interpreter_zero", "interpreter_one", "interpreter_two"];
+  const interpreters = [];
+  for (let i = 0; i < 3; i++) {
+    const port = 9000 + i;
+    const auxEnv = {
+      PORT: `${port}`,
       RESTATE_LOGGING: "ERROR",
       NODE_ENV: "production",
-      SERVICES: "ObjectInterpreterL0",
-    })
-    .start();
+      NODE_OPTIONS: "--max-old-space-size=4096",
+      SERVICES: `ObjectInterpreterL${i}`,
+      ...(env.interpreters?.env ?? {}),
+    };
+    const interpreter = new GenericContainer(env.interpreters.image)
+      .withNetwork(network)
+      .withNetworkAliases(names[i])
+      .withExposedPorts(port)
+      .withPullPolicy({
+        shouldPull() {
+          return env.interpreters.pull ?? true;
+        },
+      })
+      .withEnvironment(auxEnv)
+      .withUlimits({
+        nproc: { soft: 65535, hard: 65535 },
+        nofile: { soft: 65535, hard: 65535 },
+      })
+      .start();
 
-  const one = new GenericContainer("ghcr.io/restatedev/e2e-node-services:main")
-    .withNetwork(network)
-    .withNetworkAliases("interpreter_one")
-    .withPullPolicy(PullPolicy.alwaysPull())
+    interpreters.push(interpreter);
+  }
 
-    .withExposedPorts(9001)
-    .withEnvironment({
-      PORT: "9001",
-      RESTATE_LOGGING: "ERROR",
-      NODE_ENV: "production",
-      SERVICES: "ObjectInterpreterL1",
-    })
-    .start();
-
-  const two = new GenericContainer("ghcr.io/restatedev/e2e-node-services:main")
-    .withNetwork(network)
-    .withNetworkAliases("interpreter_two")
-    .withPullPolicy(PullPolicy.alwaysPull())
-    .withExposedPorts(9002)
-    .withEnvironment({
-      PORT: "9002",
-      RESTATE_LOGGING: "ERROR",
-      NODE_ENV: "production",
-      SERVICES: "ObjectInterpreterL2",
-    })
-    .start();
-
-  const services = new GenericContainer(
-    "ghcr.io/restatedev/e2e-node-services:main"
-  )
+  const services = new GenericContainer(env.service.image)
     .withNetwork(network)
     .withNetworkAliases("services")
-    .withPullPolicy(PullPolicy.alwaysPull())
+    .withPullPolicy({
+      shouldPull() {
+        return env.service.pull ?? true;
+      },
+    })
     .withExposedPorts(9003)
     .withEnvironment({
       PORT: "9003",
       RESTATE_LOGGING: "ERROR",
       NODE_ENV: "production",
+      NODE_OPTIONS: "--max-old-space-size=4096",
       SERVICES: "ServiceInterpreterHelper",
+      ...(env.service?.env ?? {}),
+    })
+    .withUlimits({
+      nproc: { soft: 65535, hard: 65535 },
+      nofile: { soft: 65535, hard: 65535 },
     })
     .start();
 
   const restateContainer = await restate;
-  const interpreterZeroContainer = await zero;
-  const interpreterOneContainer = await one;
-  const interpreterTwoContainer = await two;
+  const interpreterZeroContainer = await interpreters[0];
+  const interpreterOneContainer = await interpreters[1];
+  const interpreterTwoContainer = await interpreters[2];
   const servicesContainer = await services;
 
   const ingressUrl = `http://${restateContainer.getHost()}:${restateContainer.getMappedPort(
