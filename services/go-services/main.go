@@ -2,14 +2,13 @@ package main
 
 import (
 	"context"
+	"log/slog"
 	"os"
 	"strings"
 
 	"github.com/restatedev/e2e/services/go-services/interpreter"
 	"github.com/restatedev/e2e/services/go-services/services"
 	"github.com/restatedev/sdk-go/server"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -20,13 +19,12 @@ const (
 
 func init() {
 	interpreter.Register()
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
-	zerolog.SetGlobalLevel(zerolog.DebugLevel)
 }
 
 func main() {
 	if os.Getenv("SERVICES") == "" {
-		log.Fatal().Msg("Cannot find SERVICES env")
+		slog.Error("Cannot find SERVICES env")
+		os.Exit(1)
 	}
 
 	fqdns := strings.Split(os.Getenv("SERVICES"), ",")
@@ -43,7 +41,7 @@ func main() {
 	}
 
 	if err := server.Start(context.Background(), ":"+port); err != nil {
-		log.Fatal().Err(err).Msg("application exited unexpectedly")
+		slog.Error("application exited unexpectedly", "err", err)
 		os.Exit(1)
 	}
 }

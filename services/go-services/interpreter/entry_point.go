@@ -19,7 +19,7 @@ import (
  */
 
 func Register() {
-	services.REGISTRY.AddRouter(ServiceInterpreterHelper, ServiceInterpreterHelperRouter)
+	services.REGISTRY.AddRouter(ServiceInterpreterHelperRouter)
 	services.REGISTRY.AddRouter(createInterpreterObject(0))
 	services.REGISTRY.AddRouter(createInterpreterObject(1))
 	services.REGISTRY.AddRouter(createInterpreterObject(2))

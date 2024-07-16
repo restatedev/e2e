@@ -13,8 +13,6 @@ import (
  * by the interpreter objects
  */
 
-const ServiceInterpreterHelper = "ServiceInterpreterHelper"
-
 type EchoLaterRequest struct {
 	Sleep     time.Duration `json:"sleep"`
 	Parameter string        `json:"parameter"`
@@ -25,70 +23,74 @@ type IncrementViaAwakeableDanceRequest struct {
 	TxPromiseId string        `json:"txPromiseId"`
 }
 
-var ServiceInterpreterHelperRouter = restate.NewServiceRouter().
-	Handler("ping",
-		restate.NewServiceHandler(func(ctx restate.Context, _ restate.Void) (restate.Void, error) {
-			return restate.Void{}, nil
-		})).
-	Handler("echo",
-		restate.NewServiceHandler(func(ctx restate.Context, parameters string) (string, error) {
-			return parameters, nil
-		})).
-	Handler("echoLater",
-		restate.NewServiceHandler(func(ctx restate.Context, parameter EchoLaterRequest) (string, error) {
-			ctx.Sleep(time.Now().Add(parameter.Sleep * time.Second))
-			return parameter.Parameter, nil
-		})).
-	Handler("terminalFailure",
-		restate.NewServiceHandler(func(ctx restate.Context, _ restate.Void) (string, error) {
-			return "", restate.TerminalError(fmt.Errorf("bye"))
-		})).
-	Handler("incrementIndirectly",
-		restate.NewServiceHandler(func(ctx restate.Context, id InterpreterId) (restate.Void, error) {
-			program := Program{
-				Commands: []Command{IncrementStateCounter{}},
-			}
-			obj := interpreterObjectForLayer(id.Layer)
-			log.Printf("sending to interpret obj %s with key %s", obj, id.Key)
-			return restate.Void{}, ctx.Object(obj, id.Key).Method("interpret").Send(program, 0)
-		})).
-	Handler("resolveAwakeable",
-		restate.NewServiceHandler(func(ctx restate.Context, id string) (restate.Void, error) {
-			return restate.Void{}, restate.ResolveAwakeableAs(ctx, id, "ok")
-		})).
-	Handler("rejectAwakeable",
-		restate.NewServiceHandler(func(ctx restate.Context, id string) (restate.Void, error) {
-			return restate.Void{}, ctx.RejectAwakeable(id, fmt.Errorf("error"))
-		})).
-	Handler("incrementViaAwakeableDance",
-		restate.NewServiceHandler(func(ctx restate.Context, input IncrementViaAwakeableDanceRequest) (restate.Void, error) {
-			//
-			// 1. create an awakeable that we will be blocked on
-			//
-			awakeable, err := restate.AwakeableAs[string](ctx)
-			if err != nil {
-				return restate.Void{}, err
-			}
-			//
-			// 2. send our awakeable id to the interpreter via txPromise.
-			//
-			if err := restate.ResolveAwakeableAs[string](ctx, input.TxPromiseId, awakeable.Id()); err != nil {
-				return restate.Void{}, err
-			}
-			//
-			// 3. wait for the interpreter resolve us
-			//
-			<-awakeable.Chan()
-			//
-			// 4. to thank our interpret, let us ask it to inc its state.
-			//
-			program := Program{
-				Commands: []Command{
-					IncrementStateCounter{},
-				},
-			}
+var ServiceInterpreterHelperRouter = restate.Service(ServiceInterpreterHelper{})
 
-			obj := interpreterObjectForLayer(input.Interpreter.Layer)
+type ServiceInterpreterHelper struct {
+}
 
-			return restate.Void{}, ctx.Object(obj, input.Interpreter.Key).Method("interpret").Send(program, 0)
-		}))
+func (s ServiceInterpreterHelper) Ping(ctx restate.Context, _ restate.Void) (restate.Void, error) {
+	return restate.Void{}, nil
+}
+
+func (s ServiceInterpreterHelper) Echo(ctx restate.Context, parameters string) (string, error) {
+	return parameters, nil
+}
+
+func (s ServiceInterpreterHelper) EchoLater(ctx restate.Context, parameter EchoLaterRequest) (string, error) {
+	ctx.Sleep(parameter.Sleep)
+	return parameter.Parameter, nil
+}
+
+func (s ServiceInterpreterHelper) TerminalFailure(ctx restate.Context, _ restate.Void) (string, error) {
+	return "", restate.TerminalError(fmt.Errorf("bye"))
+}
+
+func (s ServiceInterpreterHelper) IncrementIndirectly(ctx restate.Context, id InterpreterId) (restate.Void, error) {
+	program := Program{
+		Commands: []Command{IncrementStateCounter{}},
+	}
+	obj := interpreterObjectForLayer(id.Layer)
+	log.Printf("sending to interpret obj %s with key %s", obj, id.Key)
+	return restate.Void{}, ctx.Object(obj, id.Key, "interpret").Send(program, 0)
+}
+
+func (s ServiceInterpreterHelper) ResolveAwakeable(ctx restate.Context, id string) (restate.Void, error) {
+	return restate.Void{}, ctx.ResolveAwakeable(id, "ok")
+}
+
+func (s ServiceInterpreterHelper) RejectAwakeable(ctx restate.Context, id string) (restate.Void, error) {
+	ctx.RejectAwakeable(id, fmt.Errorf("error"))
+	return restate.Void{}, nil
+}
+
+func (s ServiceInterpreterHelper) IncrementViaAwakeableDance(ctx restate.Context, input IncrementViaAwakeableDanceRequest) (restate.Void, error) {
+	//
+	// 1. create an awakeable that we will be blocked on
+	//
+	awakeable := restate.AwakeableAs[string](ctx)
+
+	//
+	// 2. send our awakeable id to the interpreter via txPromise.
+	//
+	if err := ctx.ResolveAwakeable(input.TxPromiseId, awakeable.Id()); err != nil {
+		return restate.Void{}, err
+	}
+	//
+	// 3. wait for the interpreter resolve us
+	//
+	if _, err := awakeable.Result(); err != nil {
+		return restate.Void{}, err
+	}
+	//
+	// 4. to thank our interpret, let us ask it to inc its state.
+	//
+	program := Program{
+		Commands: []Command{
+			IncrementStateCounter{},
+		},
+	}
+
+	obj := interpreterObjectForLayer(input.Interpreter.Layer)
+
+	return restate.Void{}, ctx.Object(obj, input.Interpreter.Key, "interpret").Send(program, 0)
+}
