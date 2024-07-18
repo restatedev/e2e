@@ -21,6 +21,7 @@ import dev.restate.sdk.JsonSerdes
 import dev.restate.sdk.client.CallRequestOptions
 import dev.restate.sdk.client.Client
 import dev.restate.sdk.client.SendResponse.SendStatus
+import dev.restate.sdk.common.Target
 import java.net.URL
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -173,6 +174,51 @@ class IngressTest {
             .blockThenEcho(awakeableKey, CallRequestOptions().withIdempotency(myIdempotencyId))
             .invocationId
     val invocationHandle = ingressClient.invocationHandle(invocationId, JsonSerdes.STRING)
+
+    // Attach to request
+    val blockedFut = invocationHandle.attachAsync()
+
+    // Get output throws exception
+    assertThat(invocationHandle.output.isReady).isFalse()
+
+    // Blocked fut should still be blocked
+    assertThat(blockedFut).isNotDone
+
+    // Unblock
+    val awakeableHolderClient = AwakeableHolderClient.fromClient(ingressClient, awakeableKey)
+    await until { awakeableHolderClient.hasAwakeable() }
+    awakeableHolderClient.unlock(response)
+
+    // Attach should be completed
+    assertThat(blockedFut.get()).isEqualTo(response)
+
+    // Invoke get output
+    assertThat(invocationHandle.output.value).isEqualTo(response)
+  }
+
+  @Test
+  @Execution(ExecutionMode.CONCURRENT)
+  @Timeout(value = 15, unit = TimeUnit.SECONDS)
+  @DisplayName("Idempotent send then attach/getOutput")
+  fun idempotentSendThenAttachWIthIdempotencyKey(@InjectClient ingressClient: Client) {
+    val awakeableKey = UUID.randomUUID().toString()
+    val myIdempotencyId = UUID.randomUUID().toString()
+    val response = "response"
+
+    // Send request
+    val echoClient = EchoClient.fromClient(ingressClient)
+    assertThat(
+            echoClient
+                .send()
+                .blockThenEcho(awakeableKey, CallRequestOptions().withIdempotency(myIdempotencyId))
+                .status)
+        .isEqualTo(SendStatus.ACCEPTED)
+
+    val invocationHandle =
+        ingressClient.idempotentInvocationHandle(
+            Target.service(EchoDefinitions.SERVICE_NAME, "blockThenEcho"),
+            myIdempotencyId,
+            JsonSerdes.STRING)
 
     // Attach to request
     val blockedFut = invocationHandle.attachAsync()
