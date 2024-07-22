@@ -178,7 +178,7 @@ class IngressTest {
     // Attach to request
     val blockedFut = invocationHandle.attachAsync()
 
-    // Get output throws exception
+    // Output is not ready yet
     assertThat(invocationHandle.output.isReady).isFalse()
 
     // Blocked fut should still be blocked
@@ -223,7 +223,7 @@ class IngressTest {
     // Attach to request
     val blockedFut = invocationHandle.attachAsync()
 
-    // Get output throws exception
+    // Output is not ready yet
     assertThat(invocationHandle.output.isReady).isFalse()
 
     // Blocked fut should still be blocked
