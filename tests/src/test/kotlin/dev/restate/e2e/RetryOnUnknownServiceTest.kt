@@ -7,13 +7,12 @@
 // directory of this repository or package, or at
 // https://github.com/restatedev/e2e/blob/main/LICENSE
 
-package dev.restate.e2e.runtime
+package dev.restate.e2e
 
 import dev.restate.admin.api.DeploymentApi
 import dev.restate.admin.client.ApiClient
 import dev.restate.admin.model.RegisterDeploymentRequest
 import dev.restate.admin.model.RegisterDeploymentRequestAnyOf
-import dev.restate.e2e.Containers
 import dev.restate.e2e.utils.InjectClient
 import dev.restate.e2e.utils.InjectMetaURL
 import dev.restate.e2e.utils.RestateDeployer

@@ -18,17 +18,18 @@ import java.util.Objects;
 public class UpgradeTestImpl implements UpgradeTest {
 
   // Value should be either "v1" or "v2"
-  private final String version =
-      Objects.requireNonNull(System.getenv("E2E_UPGRADETEST_VERSION")).trim();
+  private String version() {
+    return Objects.requireNonNull(System.getenv("E2E_UPGRADETEST_VERSION")).trim();
+  }
 
   @Override
   public String executeSimple(Context context) {
-    return version;
+    return version();
   }
 
   @Handler
   public String executeComplex(Context ctx) {
-    if (!"v1".equals(version)) {
+    if (!"v1".equals(version())) {
       throw new IllegalStateException(
           "executeComplex should not be invoked with version different from 1!");
     }
@@ -41,8 +42,8 @@ public class UpgradeTestImpl implements UpgradeTest {
 
     // Store the result in List service, because this service is invoked with
     // dev.restate.Ingress#Invoke
-    ListObjectClient.fromContext(ctx, "upgrade-test").send().append(version);
+    ListObjectClient.fromContext(ctx, "upgrade-test").send().append(version());
 
-    return version;
+    return version();
   }
 }
