@@ -113,36 +113,6 @@ tasks {
         systemProperties["junit.jupiter.execution.timeout.testable.method.default"] = "30 s"
       }
 
-  val testLazyState by
-      registering(Test::class) {
-        environment =
-            environment +
-                baseRestateEnvironment(name) +
-                mapOf(
-                    "RESTATE_WORKER__INVOKER__DISABLE_EAGER_STATE" to "true",
-                )
-
-        useJUnitPlatform {
-          // Run all the tests with either no tags, or always-suspending tag
-          includeTags("lazy-state")
-        }
-      }
-
-  val testPersistedTimers by
-      registering(Test::class) {
-        environment =
-            environment +
-                baseRestateEnvironment(name) +
-                mapOf("RESTATE_WORKER__NUM_TIMERS_IN_MEMORY_LIMIT" to "1")
-
-        useJUnitPlatform {
-          // Run all the tests with always-suspending or only-always-suspending tag
-          includeTags("timers")
-        }
-        // Increase a bit the default timeout
-        systemProperties["junit.jupiter.execution.timeout.testable.method.default"] = "20 s"
-      }
-
   // Common configuration for all test tasks
   withType<Test>().configureEach {
     dependsOn(":services:http-server:jibDockerBuild")
@@ -156,7 +126,5 @@ tasks {
   check {
     dependsOn(testAlwaysSuspending)
     dependsOn(testSingleThreadSinglePartition)
-    dependsOn(testPersistedTimers)
-    dependsOn(testLazyState)
   }
 }

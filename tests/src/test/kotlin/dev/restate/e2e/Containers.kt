@@ -37,32 +37,10 @@ object Containers {
   val JAVA_COLLECTIONS_SERVICE_SPEC =
       javaServicesContainer("java-collections", ListObjectDefinitions.SERVICE_NAME).build()
 
-  val JAVA_COUNTER_SERVICE_SPEC =
-      javaServicesContainer(
-              "java-counter", CounterDefinitions.SERVICE_NAME, ProxyCounterDefinitions.SERVICE_NAME)
-          .build()
-
-  val JAVA_COORDINATOR_SERVICE_SPEC =
-      javaServicesContainer(
-              "java-coordinator",
-              CoordinatorDefinitions.SERVICE_NAME,
-              ReceiverDefinitions.SERVICE_NAME)
-          .build()
-
   val JAVA_EXTERNALCALL_SERVICE_SPEC =
       javaServicesContainer("java-externalcall", RandomNumberListGeneratorDefinitions.SERVICE_NAME)
           .withEnv(
               "HTTP_SERVER_ADDRESS", "http://${INT_SORTER_HTTP_SERVER_CONTAINER_SPEC.first}:8080")
-          .build()
-
-  val JAVA_ERRORS_SERVICE_SPEC =
-      javaServicesContainer("java-errors", FailingDefinitions.SERVICE_NAME)
-          .withEnv(
-              "HTTP_SERVER_ADDRESS", "http://${INT_SORTER_HTTP_SERVER_CONTAINER_SPEC.first}:8080")
-          .build()
-
-  val JAVA_WORKFLOW_SERVICE_SPEC =
-      javaServicesContainer("java-workflow", WorkflowAPIBlockAndWaitDefinitions.SERVICE_NAME)
           .build()
 
   // -- Node containers
@@ -75,34 +53,11 @@ object Containers {
         .withHostName(hostName)
   }
 
-  val NODE_COUNTER_SERVICE_SPEC =
-      nodeServicesContainer(
-              "node-counter", CounterDefinitions.SERVICE_NAME, ProxyCounterDefinitions.SERVICE_NAME)
-          .build()
-
-  val NODE_COORDINATOR_SERVICE_SPEC =
-      nodeServicesContainer(
-              "node-coordinator",
-              CoordinatorDefinitions.SERVICE_NAME,
-              ReceiverDefinitions.SERVICE_NAME,
-              CoordinatorDefinitions.SERVICE_NAME)
-          .build()
-
-  val NODE_COLLECTIONS_SERVICE_SPEC =
-      nodeServicesContainer("node-collections", ListObjectDefinitions.SERVICE_NAME).build()
-
   val NODE_EXTERNALCALL_SERVICE_SPEC =
       nodeServicesContainer("node-externalcall", RandomNumberListGeneratorDefinitions.SERVICE_NAME)
           .withEnv(
               "HTTP_SERVER_ADDRESS", "http://${INT_SORTER_HTTP_SERVER_CONTAINER_SPEC.first}:8080")
           .build()
-
-  val NODE_ERRORS_SERVICE_SPEC =
-      nodeServicesContainer("node-errors", FailingDefinitions.SERVICE_NAME).build()
-
-  const val WORKFLOW_API_BLOCK_AND_WAIT_SERVICE_NAME = "WorkflowAPIBlockAndWait"
-  val NODE_WORKFLOW_SERVICE_SPEC =
-      nodeServicesContainer("node-workflow", WORKFLOW_API_BLOCK_AND_WAIT_SERVICE_NAME).build()
 
   // --- Kotlin containers
 
