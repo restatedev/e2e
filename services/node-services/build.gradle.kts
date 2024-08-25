@@ -23,7 +23,9 @@ tasks.register<Copy>("prepareDockerBuild") {
   mustRunAfter("npmInstall")
   if (!System.getenv("SDK_TYPESCRIPT_LOCAL_BUILD").isNullOrEmpty()) {
     dependsOn("installLocalSdkTypescript")
-  } else {
+  } else if (System.getenv("CI").isNullOrEmpty()) {
+    // On CI we don't need to update the restate dependency, this is done implicitly by the e2e
+    // workflow.
     dependsOn("updateRestateDependency")
   }
 
