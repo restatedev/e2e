@@ -13,7 +13,12 @@ import {
   interpreterObjectForLayer,
 } from "./interpreter";
 import { Random } from "./random";
-import { setupContainers, tearDown, TestEnvironment } from "./test_containers";
+import {
+  EnvironmentSpec,
+  setupContainers,
+  tearDown,
+  TestEnvironment,
+} from "./test_containers";
 import { ProgramGenerator } from "./test_generator";
 
 import * as restate from "@restatedev/restate-sdk-clients";
@@ -35,6 +40,7 @@ export interface TestConfiguration {
   readonly register?: TestConfigurationDeployments; // auto register the following endpoints
   readonly bootstrap?: boolean;
   readonly crashInterval?: number;
+  readonly bootstrapEnv?: EnvironmentSpec;
 }
 
 export enum TestStatus {
@@ -136,7 +142,11 @@ export class Test {
     console.log(`Ingress is ready.`);
   }
 
-  async registerEndpoints(adminUrl?: string, deployments?: string[]) {
+  async registerEndpoints(
+    useHttp11?: boolean,
+    adminUrl?: string,
+    deployments?: string[]
+  ) {
     if (!adminUrl) {
       throw new Error("Missing adminUrl");
     }
@@ -156,11 +166,13 @@ export class Test {
       await sleep(2000);
     }
     console.log("Admin is ready.");
+
     for (const uri of deployments) {
       const res = await fetch(`${adminUrl}/deployments`, {
         method: "POST",
         body: JSON.stringify({
           uri,
+          use_http_11: useHttp11 ?? false ? true : false,
         }),
         headers: {
           "Content-Type": "application/json",
@@ -191,8 +203,25 @@ export class Test {
     console.log(this.conf);
     this.status = TestStatus.RUNNING;
 
+    const useHttp11 = process.env.E2E_USE_FETCH?.toLocaleLowerCase() == "true";
     if (this.conf.bootstrap) {
-      this.containers = await setupContainers();
+      const env: EnvironmentSpec = this.conf.bootstrapEnv ?? {
+        restate: {
+          image: "ghcr.io/restatedev/restate:main",
+          env: {},
+        },
+
+        interpreters: {
+          image: "ghcr.io/restatedev/e2e-node-services:main",
+          env: {},
+        },
+
+        service: {
+          image: "ghcr.io/restatedev/e2e-node-services:main",
+          env: {},
+        },
+      };
+      this.containers = await setupContainers(env);
       console.log(this.containers);
     }
     const ingressUrl = this.containers?.ingressUrl ?? this.conf.ingress;
@@ -203,7 +232,10 @@ export class Test {
     let ingress = restate.connect({ url: ingressUrl });
 
     if (deployments) {
-      await this.registerEndpoints(adminUrl, deployments);
+      console.log(useHttp11);
+      console.log(adminUrl);
+      console.log(deployments);
+      await this.registerEndpoints(useHttp11, adminUrl, deployments);
     }
     await this.ingressReady(ingressUrl);
 

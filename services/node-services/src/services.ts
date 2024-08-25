@@ -8,7 +8,6 @@
 // https://github.com/restatedev/e2e/blob/main/LICENSE
 
 import {
-  RestateEndpoint,
   ServiceDefinition,
   VirtualObjectDefinition,
   WorkflowDefinition,
@@ -16,7 +15,7 @@ import {
 
 export type IComponent = {
   fqdn: string;
-  binder: (endpoint: RestateEndpoint) => void;
+  binder: (endpoint: { bind: (what: unknown) => void }) => void;
 };
 
 export class ComponentRegistry {
@@ -47,7 +46,12 @@ export class ComponentRegistry {
     });
   }
 
-  register(fqdns: Set<string>, e: RestateEndpoint) {
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+  registerFromEnvironment(e: { bind: (what: any) => any }) {
+    if (!process.env.SERVICES) {
+      throw new Error("Cannot find SERVICES env");
+    }
+    const fqdns = new Set(process.env.SERVICES.split(","));
     fqdns.forEach((fqdn) => {
       const c = this.components.get(fqdn);
       if (!c) {
