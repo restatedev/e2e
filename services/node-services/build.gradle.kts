@@ -68,11 +68,6 @@ tasks.register("installLocalSdkTypescript") {
         .assertNormalExitValue()
     exec {
           workingDir = sdkTypescriptDirectory
-          commandLine("npm", "run", "proto")
-        }
-        .assertNormalExitValue()
-    exec {
-          workingDir = sdkTypescriptDirectory
           commandLine("npm", "run", "build")
         }
         .assertNormalExitValue()
