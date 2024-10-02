@@ -51,7 +51,7 @@ jobs:
   build:
     # prevent e2e running on forks
     if: github.repository_owner == 'restatedev'
-    runs-on: ubuntu-latest
+    runs-on: warp-ubuntu-latest-x64-16x
     timeout-minutes: 30
     permissions:
       contents: read
