@@ -42,29 +42,4 @@ object Containers {
           .withEnv(
               "HTTP_SERVER_ADDRESS", "http://${INT_SORTER_HTTP_SERVER_CONTAINER_SPEC.first}:8080")
           .build()
-
-  // -- Node containers
-
-  fun nodeServicesContainer(hostName: String, vararg services: String): ServiceSpec.Builder {
-    assert(services.isNotEmpty())
-    return ServiceSpec.builder("restatedev/e2e-node-services")
-        .withEnv("SERVICES", services.joinToString(","))
-        .withEnv("RESTATE_LOGGING", "TRACE")
-        .withHostName(hostName)
-  }
-
-  val NODE_EXTERNALCALL_SERVICE_SPEC =
-      nodeServicesContainer("node-externalcall", RandomNumberListGeneratorDefinitions.SERVICE_NAME)
-          .withEnv(
-              "HTTP_SERVER_ADDRESS", "http://${INT_SORTER_HTTP_SERVER_CONTAINER_SPEC.first}:8080")
-          .build()
-
-  // --- Kotlin containers
-
-  fun kotlinServicesContainer(hostName: String, vararg services: String): ServiceSpec.Builder {
-    assert(services.isNotEmpty())
-    return ServiceSpec.builder("restatedev/e2e-kotlin-services")
-        .withEnv("SERVICES", services.joinToString(","))
-        .withHostName(hostName)
-  }
 }

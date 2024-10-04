@@ -15,12 +15,11 @@ import dev.restate.e2e.utils.RestateDeployerExtension
 import dev.restate.sdk.client.Client
 import my.restate.e2e.services.RandomNumberListGeneratorClient
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
-@Tag("always-suspending")
-class JavaAwakeableTest : BaseAwakeableTest() {
+class AwakeableTest {
+
   companion object {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension =
@@ -30,22 +29,6 @@ class JavaAwakeableTest : BaseAwakeableTest() {
                 .withContainer(Containers.INT_SORTER_HTTP_SERVER_CONTAINER_SPEC)
                 .build())
   }
-}
-
-@Tag("always-suspending")
-class NodeAwakeableTest : BaseAwakeableTest() {
-  companion object {
-    @RegisterExtension
-    val deployerExt: RestateDeployerExtension =
-        RestateDeployerExtension(
-            RestateDeployer.Builder()
-                .withServiceEndpoint(Containers.NODE_EXTERNALCALL_SERVICE_SPEC)
-                .withContainer(Containers.INT_SORTER_HTTP_SERVER_CONTAINER_SPEC)
-                .build())
-  }
-}
-
-abstract class BaseAwakeableTest {
 
   @Test
   fun generate(@InjectClient ingressClient: Client) {

@@ -1,57 +1,25 @@
 name: E2E
 
-# Controls when the workflow will run
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
   schedule:
-    - cron: '0 */6 * * *' # Every 6 hours
+    - cron: '0 */12 * * *' # Every 12 hours
   workflow_dispatch: # To start from UI
     inputs:
-      sdkTypescriptCommit:
-        description: 'sdk-typescript commit'
+      restateImage:
+        description: 'restate image'
         required: false
-        default: ''
-        type: string
-      sdkJavaCommit:
-        description: 'sdk-java commit'
-        required: false
-        default: ''
-        type: string
-      restateCommit:
-        description: 'restate commit'
-        required: false
-        default: ''
-        type: string
-  workflow_call:
-    inputs:
-      sdkTypescriptCommit:
-        description: 'sdk-typescript commit'
-        required: false
-        default: ''
-        type: string
-      sdkJavaCommit:
-        description: 'sdk-java commit'
-        required: false
-        default: ''
-        type: string
-      restateCommit:
-        description: 'restate commit'
-        required: false
-        default: ''
-        type: string
-      e2eRef:
-        description: 'e2e repo ref, for cross-repo workflow calls'
-        required: true
+        default: 'ghcr.io/restatedev/restate:main'
         type: string
 
 jobs:
   build:
     # prevent e2e running on forks
     if: github.repository_owner == 'restatedev'
-    runs-on: warp-ubuntu-latest-x64-16x
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
       contents: read
@@ -59,21 +27,11 @@ jobs:
       checks: write
       pull-requests: write
       actions: read
-    services:
-      registry:
-        # if we are building a restate snapshot, start a local docker registry to store it
-        # an empty image skips the service (see https://github.com/actions/runner/issues/822)
-        image: ${{ inputs.restateCommit != '' && 'registry:2' || '' }}
-        ports:
-          - 5000:5000
     steps:
       - uses: actions/checkout@v4
         with:
           repository: restatedev/e2e
           path: e2e
-          # if we are in a workflow_call, use the e2e branch from the workflow call (usually main)
-          # otherwise, defer to the checkout actions default, which depends on the triggering event
-          ref: ${{ inputs.e2eRef || '' }}
 
       - name: "Check license headers"
         run: "./check-license-headers"
@@ -84,119 +42,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-
-      # Setup node
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "18.x"
-          registry-url: 'https://registry.npmjs.org'
-
-      # Setup sdk-typescript snapshot if necessary
-      # Due to https://github.com/actions/upload-artifact/issues/53
-      # We must use download-artifact to get artifacts created during *this* workflow run, ie by workflow call
-      - name: Download sdk-typescript snapshot from in-progress workflow
-        if: ${{ inputs.sdkTypescriptCommit != '' && github.event_name != 'workflow_dispatch' }}
-        uses: actions/download-artifact@v4
-        with:
-          name: restatedev-restate-sdk
-          path: e2e/services/node-services
-
-      - name: Download sdk-typescript-clients snapshot from in-progress workflow
-        if: ${{ inputs.sdkTypescriptCommit != '' && github.event_name != 'workflow_dispatch' }}
-        uses: actions/download-artifact@v4
-        with:
-          name: restatedev-restate-sdk-clients
-          path: e2e/services/node-services 
-      - name: Download sdk-typescript-core snapshot from in-progress workflow
-        if: ${{ inputs.sdkTypescriptCommit != '' && github.event_name != 'workflow_dispatch' }}
-        uses: actions/download-artifact@v4
-        with:
-          name: restatedev-restate-sdk-core
-          path: e2e/services/node-services 
-
-
-      # In the workflow dispatch case where the artifact was created in a previous run, we can download as normal
-      - name: download sdk-typescript snapshot from completed workflow
-        if: ${{ inputs.sdktypescriptcommit != '' && github.event_name == 'workflow_dispatch' }}
-        uses: dawidd6/action-download-artifact@v3
-        with:
-          workflow: test.yml
-          repo: restatedev/sdk-typescript
-          commit: ${{ inputs.sdktypescriptcommit }}
-          name: restatedev-restate-sdk
-          path: e2e/services/node-services
-       
-      - name: download sdk-typescript-clients snapshot from completed workflow
-        if: ${{ inputs.sdktypescriptcommit != '' && github.event_name == 'workflow_dispatch' }}
-        uses: dawidd6/action-download-artifact@v3
-        with:
-          workflow: test.yml
-          repo: restatedev/sdk-typescript
-          commit: ${{ inputs.sdktypescriptcommit }}
-          name: restatedev-restate-sdk-clients
-          path: e2e/services/node-services
-      - name: download sdk-typescript-core snapshot from completed workflow
-        if: ${{ inputs.sdktypescriptcommit != '' && github.event_name == 'workflow_dispatch' }}
-        uses: dawidd6/action-download-artifact@v3
-        with:
-          workflow: test.yml
-          repo: restatedev/sdk-typescript
-          commit: ${{ inputs.sdktypescriptcommit }}
-          name: restatedev-restate-sdk-core
-          path: e2e/services/node-services
-     
-      - name: Install sdk-typescript-core snapshot
-        if: ${{ inputs.sdkTypescriptCommit != '' }}
-        run: npm install restatedev-restate-sdk-core.tgz
-        working-directory: e2e/services/node-services
-
-      - name: Install sdk-typescript snapshot
-        if: ${{ inputs.sdkTypescriptCommit != '' }}
-        run: npm install restatedev-restate-sdk.tgz
-        working-directory: e2e/services/node-services
-
-      - name: Install sdk-typescript-clients snapshot
-        if: ${{ inputs.sdkTypescriptCommit != '' }}
-        run: npm install restatedev-restate-sdk-clients.tgz
-        working-directory: e2e/services/node-services
-
-      # Setup sdk-java snapshot if necessary
-      - name: Checkout sdk-java repo
-        uses: actions/checkout@v4
-        if: ${{ inputs.sdkJavaCommit != '' }}
-        with:
-          repository: restatedev/sdk-java
-          # if we are in a workflow_call, use the e2e branch from the workflow call (usually main)
-          # otherwise, defer to the checkout actions default, which depends on the triggering event
-          ref: ${{ inputs.sdkJavaCommit }}
-          path: "sdk-java"
-
-      # Setup restate snapshot if necessary
-      # Due to https://github.com/actions/upload-artifact/issues/53
-      # We must use download-artifact to get artifacts created during *this* workflow run, ie by workflow call
-      - name: Download restate snapshot from in-progress workflow
-        if: ${{ inputs.restateCommit != '' && github.event_name != 'workflow_dispatch' }}
-        uses: actions/download-artifact@v4
-        with:
-          name: restate.tar
-
-      # In the workflow dispatch case where the artifact was created in a previous run, we can download as normal
-      - name: Download restate snapshot from completed workflow
-        if: ${{ inputs.restateCommit != '' && github.event_name == 'workflow_dispatch' }}
-        uses: dawidd6/action-download-artifact@v3
-        with:
-          repo: restatedev/restate
-          workflow: ci.yml
-          commit: ${{ inputs.restateCommit }}
-          name: restate.tar
-
-      - name: Install restate snapshot
-        if: ${{ inputs.restateCommit != '' }}
-        run: |
-          output=$(docker load --input restate.tar)
-          docker tag "${output#*: }" "localhost:5000/restatedev/restate:latest"
-          docker push localhost:5000/restatedev/restate:latest
-
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
@@ -205,8 +50,7 @@ jobs:
         env:
           E2E_IMAGE_PULL_POLICY: always
           E2E_VERIFICATION_SEED: ${{ github.run_id }}
-          RESTATE_CONTAINER_IMAGE: ${{ inputs.restateCommit != '' && 'localhost:5000/restatedev/restate:latest' || '' }}
-          SDK_JAVA_LOCAL_BUILD: ${{ inputs.sdkJavaCommit != '' && 'true' || '' }}
+          RESTATE_CONTAINER_IMAGE: ${{ inputs.restateImage }}
         working-directory: e2e
         run: ./gradlew --continue -Djib.console=plain check
 

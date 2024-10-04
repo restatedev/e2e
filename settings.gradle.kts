@@ -11,15 +11,7 @@ rootProject.name = "restate-e2e"
 
 plugins { id("org.gradle.toolchains.foojay-resolver-convention") version "0.7.0" }
 
-include(
-    "contracts",
-    "contracts-kt",
-    "services:java-services",
-    "services:kotlin-services",
-    "services:node-services",
-    "services:http-server",
-    "test-utils",
-    "tests")
+include("contracts", "services:java-services", "services:http-server", "test-utils", "tests")
 
 dependencyResolutionManagement {
   repositories {
