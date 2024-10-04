@@ -17,7 +17,6 @@ dependencies {
   testImplementation(kotlin("test"))
   testImplementation(project(":test-utils"))
   testImplementation(project(":contracts"))
-  testImplementation(project(":contracts-kt"))
 
   testImplementation(libs.restate.admin)
 
@@ -117,8 +116,6 @@ tasks {
   withType<Test>().configureEach {
     dependsOn(":services:http-server:jibDockerBuild")
     dependsOn(":services:java-services:jibDockerBuild")
-    dependsOn(":services:kotlin-services:jibDockerBuild")
-    dependsOn(":services:node-services:dockerBuild")
 
     maxParallelForks = 3
   }

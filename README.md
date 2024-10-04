@@ -1,10 +1,11 @@
 # e2e
 E2E tests for Restate
 
+**DEPRECATED**: Please add new tests to https://github.com/restatedev/sdk-test-suite
+
 ## Modules
 
 * `services` contains a collection of services for e2e testing:
-  * [`node-services`](services/node-services) contains the Node SDK services
   * [`java-services`](services/java-services) contains the Java SDK services
 * `test-utils` contains utilities to develop e2e tests
 * `tests` contains the test code
@@ -75,19 +76,6 @@ In order to test local changes to the `sdk-java`, you need to check it out under
 When building the `e2e` project you have to set the environment variable `SDK_JAVA_LOCAL_BUILD=true` 
 to include `sdk-java` as a composite build and substitute the `dev.restate.sdk:sdk-java` dependency with it.
 The build will fail if Gradle cannot find the `sdk-java` project.
-
-### How to test Typescript SDK changes
-
-In order to test local changes to the `sdk-typescript`, you need to check it out under `../sdk-typescript`.
-Then run:
-
-```shell
-gradle :services:node-services:installLocalSdkTypescript 
-```
-
-This will build the Typescript SDK, pack it with `npm pack`, and copy it over to the node-services directory and install it.
-
-You can include `gradle :services:node-services:installLocalSdkTypescript` in the build process by setting `SDK_TYPESCRIPT_LOCAL_BUILD=true`.
 
 ### How to test Restate runtime changes
 
