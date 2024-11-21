@@ -34,7 +34,7 @@ dependencyResolutionManagement {
       library("restate-sdk-request-identity", "dev.restate", "sdk-request-identity")
           .versionRef("restate")
 
-      version("log4j", "2.19.0")
+      version("log4j", "2.24.1")
       library("log4j-api", "org.apache.logging.log4j", "log4j-api").versionRef("log4j")
       library("log4j-core", "org.apache.logging.log4j", "log4j-core").versionRef("log4j")
       library("log4j-slf4j", "org.apache.logging.log4j", "log4j-slf4j-impl").versionRef("log4j")
