@@ -76,7 +76,7 @@ allprojects {
   }
 
   // Configure the java toolchain to use. If not found, it will be downloaded automatically
-  java { toolchain { languageVersion = JavaLanguageVersion.of(11) } }
+  java { toolchain { languageVersion = JavaLanguageVersion.of(17) } }
 }
 
 buildscript {
