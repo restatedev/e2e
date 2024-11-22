@@ -32,6 +32,9 @@
     },
     {
       "moduleLicense": "Bouncy Castle Licence"
+    },
+    {
+      "moduleName": "javax.xml.bind:jaxb-api"
     }
   ]
 }
