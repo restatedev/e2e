@@ -1,0 +1,16 @@
+[versions]
+restate = "2.0.0-SNAPSHOT"
+ktor = "2.3.9"
+
+[libraries]
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-client-java = { module = "io.ktor:ktor-client-java", version.ref = "ktor" }
+ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+mordant = { module = "com.github.ajalt.mordant:mordant", version = "2.7.2" }
+clikt = { module = "com.github.ajalt.clikt:clikt", version = "4.2.2" }
+tomcat-annotations = "org.apache.tomcat:annotations-api:6.0.53"
+google-findbugs-jsr305 = "com.google.code.findbugs:jsr305:3.0.2"
+
+[plugins]
+openapi-generator = "org.openapi.generator:7.5.0"

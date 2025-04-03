@@ -17,3 +17,6 @@ services/node-services/restatedev-restate-sdk-*
 .settings
 .project
 .factorypath
+
+test_report
+.kotlin
