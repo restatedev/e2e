@@ -135,6 +135,7 @@ class ExecutionResult(
 
     for (f in classesFailures) {
       val clzSimpleName = classSimpleName((f.first.source.getOrNull() as ClassSource).className)
+      reportDir.resolve(clzSimpleName).toFile().mkdirs()
       Files.newBufferedWriter(
               reportDir.resolve(clzSimpleName).resolve(TEST_EXCEPTIONS_FILE),
               StandardOpenOption.WRITE,
@@ -146,6 +147,7 @@ class ExecutionResult(
     for (f in testsFailures) {
       // Resolve class name first
       val clzSimpleName = classSimpleName((f.first.source.getOrNull() as MethodSource).className)
+      reportDir.resolve(clzSimpleName).toFile().mkdirs()
       Files.newBufferedWriter(
               reportDir.resolve(clzSimpleName).resolve(TEST_EXCEPTIONS_FILE),
               StandardOpenOption.WRITE,

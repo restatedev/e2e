@@ -37,8 +37,12 @@ class RestateContainer(
     envs: Map<String, String>,
     configSchema: RestateConfigSchema?,
     copyToContainer: List<Pair<String, Transferable>>,
+    overrideContainerImage: String? = null,
+    stateDirectoryMountOverride: String? = null,
     enableLocalPortForward: Boolean = true,
-) : GenericContainer<RestateContainer>(DockerImageName.parse(config.restateContainerImage)) {
+) :
+    GenericContainer<RestateContainer>(
+        DockerImageName.parse(overrideContainerImage ?: config.restateContainerImage)) {
   companion object {
     private val LOG = LogManager.getLogger(RestateContainer::class.java)
     private val TOML_MAPPER = ObjectMapper(TomlFactory())
@@ -69,9 +73,11 @@ class RestateContainer(
         envs: Map<String, String>,
         configSchema: RestateConfigSchema?,
         copyToContainer: List<Pair<String, Transferable>>,
+        overrideContainerImage: String?,
+        overrideStateDirectoryMount: String?,
         nodes: Int
     ): List<RestateContainer> {
-      val clusterId = UUID.randomUUID().toString()
+      val clusterId = envs.get("RESTATE_CLUSTER_NAME") ?: UUID.randomUUID().toString()
       val replicationProperty = if (nodes == 1) 1 else 2
       val effectiveEnvs =
           envs +
@@ -99,7 +105,9 @@ class RestateContainer(
                       "RESTATE_AUTO_PROVISION" to "true",
                       "RESTATE_ADVERTISED_ADDRESS" to "http://$RESTATE_RUNTIME:$RUNTIME_NODE_PORT"),
               configSchema,
-              copyToContainer)) +
+              copyToContainer,
+              overrideContainerImage,
+              overrideStateDirectoryMount)) +
           (1.rangeUntil(nodes)).map {
             RestateContainer(
                 config,
@@ -111,6 +119,8 @@ class RestateContainer(
                             "http://$RESTATE_RUNTIME-$it:$RUNTIME_NODE_PORT"),
                 configSchema,
                 copyToContainer,
+                overrideContainerImage,
+                overrideStateDirectoryMount,
                 // Only the leader gets the privilege of local port forwarding
                 enableLocalPortForward = false)
           }
@@ -136,12 +146,13 @@ class RestateContainer(
       withStartupAttempts(3) // For podman
       waitingFor(WAIT_STARTUP_STRATEGY)
 
-      if (config.stateDirectoryMount != null) {
-        val stateDir = File(config.stateDirectoryMount)
+      val stateDirectoryMount = stateDirectoryMountOverride ?: config.stateDirectoryMount
+      if (stateDirectoryMount != null) {
+        val stateDir = File(stateDirectoryMount)
         stateDir.mkdirs()
 
         LOG.debug("Mounting state directory to '{}'", stateDir.toPath())
-        addFileSystemBind(stateDir.toString(), "/state", BindMode.READ_WRITE, SelinuxContext.SINGLE)
+        addFileSystemBind(stateDir.toString(), "/state", BindMode.READ_WRITE, SelinuxContext.SHARED)
       }
       withEnv("RESTATE_BASE_DIR", "/state")
 

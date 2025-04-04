@@ -19,7 +19,6 @@ import com.github.ajalt.clikt.parameters.groups.cooccurring
 import com.github.ajalt.clikt.parameters.groups.provideDelegate
 import com.github.ajalt.clikt.parameters.options.*
 import com.github.ajalt.clikt.parameters.types.enum
-import com.github.ajalt.clikt.parameters.types.int
 import com.github.ajalt.clikt.parameters.types.path
 import com.github.ajalt.mordant.rendering.TextColors.green
 import com.github.ajalt.mordant.rendering.TextColors.red
@@ -218,89 +217,25 @@ Run test suite, executing the service as container.
       report.printFailuresToTerminal(terminal)
     }
 
-    if (newFailures) {
-      // Exit
-      exitProcess(1)
-    }
+    exitProcess(
+        if (newFailures) {
+          1
+        } else {
+          0
+        })
   }
 }
 
-class Debug :
-    TestRunCommand(
-        """
-Run test suite, without executing the service inside a container.
-"""
-            .trimIndent()) {
-  val testSuite by
-      option()
-          .default(TestSuites.DEFAULT_SUITE.name)
-          .help("Test suite to run. Available: ${TestSuites.allSuites().map { it.name }}")
-  val testName by option().required().help("Name of the test to run for the given suite")
-  val localContainers by
-      argument()
-          .convert { localContainerSpec ->
-            if (localContainerSpec.contains('=')) {
-              localContainerSpec.split('=', limit = 2).let { it[0] to it[1].toInt() }
-            } else {
-              ServiceSpec.DEFAULT_SERVICE_NAME to localContainerSpec.toInt()
-            }
-          }
-          .multiple(required = true)
-          .help(
-              "Local containers name=ports. Example: '9080' (for default-service container), 'otherContainer=9081'")
-  val retainAfterEnd by
-      option()
-          .flag("--dont-retain-after-end", default = false)
-          .help(
-              "Retain the created docker network after the end of the test. You MUST manually clean it up afterwards!")
-  val mountStateDirectory by
-      option()
-          .help(
-              "Mount the given state directory as restate data when starting the runtime container")
-  val localIngressPort by option().int().help("Ingress port to bind the restate container")
-  val localAdminPort by option().int().help("Admin port to bind the restate container")
-  val localNodePort by option().int().help("Node port to bind the restate container")
+fun main(args: Array<String>) {
+  val args =
+      if (args.isEmpty()) {
+        arrayOf("run")
+      } else {
+        args
+      }
 
-  override fun run() {
-    val terminal = Terminal()
-
-    // Register global config of the deployer
-    val restateDeployerConfig =
-        RestateDeployerConfig(
-            localContainers.associate {
-              it.first to LocalForwardServiceDeploymentConfig(it.second)
-            },
-            localAdminPort = this.localAdminPort,
-            localIngressPort = this.localIngressPort,
-            localNodePort = this.localNodePort,
-            stateDirectoryMount = this.mountStateDirectory,
-            retainAfterEnd = this.retainAfterEnd)
-    registerGlobalConfig(testRunnerOptions.applyToDeployerConfig(restateDeployerConfig))
-
-    if (restateDeployerConfig.retainAfterEnd) {
-      // Disable ryuk, as it will otherwise cleanup the network after the JVM goes away.
-      //      System.getenv().put("TESTCONTAINERS_RYUK_DISABLED", "true")
-
-    }
-
-    // Resolve test configurations
-    val testSuite = TestSuites.resolveSuites(testSuite)[0]
-    val testFilters =
-        listOf(ClassNameFilter.includeClassNamePatterns(testClassNameToFQCN(testName)))
-
-    val report = testSuite.runTests(terminal, testRunnerOptions.reportDir, testFilters, true, false)
-
-    report.printFailuresToTerminal(terminal)
-    report.printFailuresToFiles(testRunnerOptions.reportDir)
-
-    if (report.failedTests.isNotEmpty()) {
-      // Exit
-      exitProcess(1)
-    }
-  }
+  RestateSdkTestSuite().subcommands(Run()).main(args)
 }
-
-fun main(args: Array<String>) = RestateSdkTestSuite().subcommands(Run(), Debug()).main(args)
 
 private fun testClassNameToFQCN(className: String): String {
   if (className.contains('.')) {

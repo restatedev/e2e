@@ -9,7 +9,8 @@
 package dev.restate.sdktesting.junit
 
 object TestSuites {
-  val DEFAULT_SUITE = TestSuite("default", emptyMap(), "none() | always-suspending")
+  val DEFAULT_SUITE =
+      TestSuite("default", emptyMap(), "none() | always-suspending | only-single-node")
   val THREE_NODES_SUITE =
       TestSuite(
           "threeNodes",
@@ -22,7 +23,7 @@ object TestSuites {
       TestSuite(
           "alwaysSuspending",
           mapOf("RESTATE_WORKER__INVOKER__INACTIVITY_TIMEOUT" to "0s"),
-          "always-suspending | only-always-suspending")
+          "always-suspending | only-always-suspending | only-single-node")
   private val THREE_NODES_ALWAYS_SUSPENDING_SUITE =
       TestSuite(
           "threeNodesAlwaysSuspending",

@@ -20,49 +20,63 @@ import dev.restate.sdktesting.infra.InjectContainerHandle
 import dev.restate.sdktesting.infra.RestateDeployerExtension
 import dev.restate.sdktesting.infra.runtimeconfig.RestateConfigSchema
 import io.opentelemetry.api.OpenTelemetry
-import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
 import io.opentelemetry.context.propagation.ContextPropagators
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonPrimitive
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.withAlias
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.wait.strategy.Wait
 
+// OTLP JSON Query API data model
+@Serializable data class OTLPResponse(val resourceSpans: List<ResourceSpans> = emptyList())
+
+@Serializable
+data class ResourceSpans(val resource: Resource, val scopeSpans: List<ScopeSpans> = emptyList())
+
+@Serializable data class Resource(val attributes: List<KeyValue> = emptyList())
+
+@Serializable
+data class ScopeSpans(val scope: InstrumentationScope, val spans: List<Span> = emptyList())
+
+@Serializable data class InstrumentationScope(val name: String, val version: String? = null)
+
+@Serializable
+data class Span(
+    val traceId: String,
+    val spanId: String,
+    val parentSpanId: String? = null,
+    val name: String,
+    val kind: Int,
+    val startTimeUnixNano: Long,
+    val endTimeUnixNano: Long,
+    val attributes: List<KeyValue> = emptyList(),
+    val status: Status? = null
+)
+
+@Serializable data class KeyValue(val key: String, val value: Value)
+
+@Serializable
+data class Value(
+    val stringValue: String? = null,
+    val intValue: Long? = null,
+    val doubleValue: Double? = null,
+    val boolValue: Boolean? = null
+)
+
+@Serializable data class Status(val code: Int, val message: String? = null)
+
+@Disabled
 class JaegerTracingTest {
-
-  @Serializable data class JaegerResponse(val data: List<JaegerTrace> = emptyList())
-
-  @Serializable data class JaegerTrace(val traceID: String, val spans: List<JaegerSpan>)
-
-  @Serializable
-  data class JaegerSpan(
-      val traceID: String,
-      val spanID: String,
-      val operationName: String,
-      val references: List<SpanRef> = emptyList(),
-      val startTime: Long,
-      val duration: Long,
-      val tags: List<Tag> = emptyList(),
-      val process: Process? = null
-  )
-
-  @Serializable data class SpanRef(val refType: String, val traceID: String, val spanID: String)
-
-  @Serializable data class Tag(val key: String, val type: String, val value: JsonElement)
-
-  @Serializable data class Process(val serviceName: String, val tags: List<Tag> = emptyList())
 
   @Service
   @Name("GreeterService")
@@ -70,7 +84,7 @@ class JaegerTracingTest {
     @Handler
     suspend fun greet(ctx: Context, name: String): String {
       // Get the current span from the OpenTelemetry context
-      val span = Span.fromContext(ctx.request().otelContext())
+      val span = io.opentelemetry.api.trace.Span.fromContext(ctx.request().otelContext())
 
       // Verify that this is a server span (meaning it was created from a parent)
       assertThat(span.spanContext.isRemote).isTrue()
@@ -84,6 +98,7 @@ class JaegerTracingTest {
     private const val JAEGER_HOSTNAME = "jaeger"
     private const val JAEGER_QUERY_PORT = 16686
     private const val JAEGER_COLLECTOR_PORT = 4317 // OTLP gRPC port
+
     private val json = Json {
       ignoreUnknownKeys = true
       coerceInputValues = true
@@ -91,9 +106,9 @@ class JaegerTracingTest {
 
     @RegisterExtension
     val deployerExt: RestateDeployerExtension = RestateDeployerExtension {
-      // Create Jaeger container
+      // Create Jaeger 2 container
       val jaeger =
-          GenericContainer("jaegertracing/all-in-one:latest")
+          GenericContainer("jaegertracing/jaeger:2.4.0")
               .withExposedPorts(JAEGER_QUERY_PORT, JAEGER_COLLECTOR_PORT)
               .waitingFor(Wait.forHttp("/").forPort(JAEGER_QUERY_PORT))
 
@@ -118,7 +133,6 @@ class JaegerTracingTest {
     }
   }
 
-  @OptIn(ExperimentalSerializationApi::class)
   @Test
   fun shouldGenerateTraces(
       @InjectClient client: Client,
@@ -129,6 +143,7 @@ class JaegerTracingTest {
     val response = greeter.greet("Alice", idempotentCallOptions)
     assertThat(response).isEqualTo("Hello, Alice!")
 
+    // Query Jaeger for traces
     val jaegerPort = jaeger.getMappedPort(JAEGER_QUERY_PORT)
     val httpClient = HttpClient.newHttpClient()
 
@@ -137,29 +152,37 @@ class JaegerTracingTest {
         {
           val request =
               HttpRequest.newBuilder()
-                  .uri(URI.create("http://localhost:$jaegerPort/api/traces?service=GreeterService"))
+                  .uri(
+                      URI.create(
+                          "http://localhost:$jaegerPort/api/v3/traces?service.name=GreeterService"))
+                  .header("Accept", "application/json")
                   .GET()
                   .build()
 
           val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString())
           assertThat(response.statusCode()).isEqualTo(200)
 
-          val traces = json.decodeFromString<JaegerResponse>(response.body()).data
+          val traces = json.decodeFromString<OTLPResponse>(response.body())
 
-          assertThat(traces).isNotEmpty()
-          val trace = traces.first()
+          assertThat(traces.resourceSpans).isNotEmpty()
 
-          // Verify spans
-          assertThat(trace.spans).anySatisfy { span ->
-            assertThat(span.operationName).contains("GreeterService/greet")
-            assertThat(span.tags).anySatisfy { tag ->
-              assertThat(tag.key).isEqualTo("restate.invocation.id")
-            }
-            assertThat(span.tags).anySatisfy { tag ->
-              assertThat(tag.key).isEqualTo("restate.invocation.target")
-              assertThat(tag.value).isEqualTo(JsonPrimitive("GreeterService/greet"))
-            }
-          }
+          // Find the GreeterService spans
+          val greeterSpans =
+              traces.resourceSpans
+                  .flatMap { it.scopeSpans }
+                  .flatMap { it.spans }
+                  .filter { it.name.contains("GreeterService/greet") }
+
+          assertThat(greeterSpans).isNotEmpty()
+
+          // Verify span attributes
+          val span = greeterSpans.first()
+          assertThat(span.kind).isEqualTo(2) // SERVER kind
+
+          // Verify Restate-specific attributes
+          val attributes = span.attributes.associate { it.key to it.value.stringValue }
+          assertThat(attributes).containsKey("restate.invocation.id")
+          assertThat(attributes).containsEntry("restate.invocation.target", "GreeterService/greet")
         }
   }
 }

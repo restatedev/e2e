@@ -35,6 +35,8 @@ abstract class BaseRestateDeployerExtension : ParameterResolver {
             URI::class.java.isAssignableFrom(parameterContext.parameter.type)) ||
         (parameterContext.isAnnotated(InjectAdminURI::class.java) &&
             URI::class.java.isAssignableFrom(parameterContext.parameter.type)) ||
+        (parameterContext.isAnnotated(InjectLocalEndpointURI::class.java) &&
+            URI::class.java.isAssignableFrom(parameterContext.parameter.type)) ||
         (parameterContext.isAnnotated(InjectContainerHandle::class.java) &&
             ContainerHandle::class.java.isAssignableFrom(parameterContext.parameter.type))
   }
@@ -51,6 +53,8 @@ abstract class BaseRestateDeployerExtension : ParameterResolver {
       resolveIngressURI(extensionContext)
     } else if (parameterContext.isAnnotated(InjectAdminURI::class.java)) {
       resolveAdminURI(extensionContext)
+    } else if (parameterContext.isAnnotated(InjectLocalEndpointURI::class.java)) {
+      resolveLocalEndpointURI(extensionContext)
     } else if (parameterContext.isAnnotated(InjectContainerHandle::class.java)) {
       resolveContainerHandle(parameterContext, extensionContext)
     } else {
@@ -75,6 +79,10 @@ abstract class BaseRestateDeployerExtension : ParameterResolver {
     return URI.create(
         "http://127.0.0.1:${ getDeployer(extensionContext)
       .getContainerPort(RESTATE_RUNTIME, RUNTIME_INGRESS_ENDPOINT_PORT)}/")
+  }
+
+  private fun resolveLocalEndpointURI(extensionContext: ExtensionContext): URI {
+    return getDeployer(extensionContext).getLocalEndpointURI()
   }
 
   private fun resolveAdminURI(extensionContext: ExtensionContext): URI {

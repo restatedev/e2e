@@ -44,8 +44,8 @@ dependencyResolutionManagement {
 
       library("vertx", "io.vertx:vertx-core:4.5.14")
 
-      version("junit-jupiter", "5.12.0")
-      version("junit-platform", "1.12.0")
+      version("junit-jupiter", "5.12.1")
+      version("junit-platform", "1.12.1")
       library("junit-all", "org.junit.jupiter", "junit-jupiter").versionRef("junit-jupiter")
       library("junit-launcher", "org.junit.platform", "junit-platform-launcher")
           .versionRef("junit-platform")

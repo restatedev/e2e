@@ -9,12 +9,27 @@
 package dev.restate.sdktesting.infra
 
 import org.junit.jupiter.api.extension.*
+import org.junit.platform.commons.support.AnnotationSupport
 
-class RestateDeployerExtension(private val deployerFactory: RestateDeployer.Builder.() -> Unit) :
-    BeforeAllCallback, BaseRestateDeployerExtension() {
+class RestateDeployerExtension(
+    private val deployerFactory: (RestateDeployer.Builder.() -> Unit)? = null
+) : BeforeAllCallback, BaseRestateDeployerExtension() {
 
   override fun beforeAll(context: ExtensionContext) {
     val builder = RestateDeployer.builder()
+
+    val deployerFactory =
+        this.deployerFactory
+            ?: (AnnotationSupport.findAnnotatedFieldValues(
+                    context.requiredTestInstance, Deployer::class.java)
+                .firstOrNull() as? RestateDeployer.Builder.() -> Unit)
+    if (deployerFactory == null) {
+      throw IllegalStateException(
+          "The class " +
+              context.requiredTestClass.getName() +
+              " has no deployer factory configured")
+    }
+
     deployerFactory.invoke(builder)
     val deployer =
         builder.build(

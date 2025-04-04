@@ -53,7 +53,9 @@ private constructor(
     private val additionalContainers: Map<String, GenericContainer<*>>,
     runtimeContainerEnvs: Map<String, String>,
     copyToContainer: List<Pair<String, Transferable>>,
-    configSchema: RestateConfigSchema?
+    configSchema: RestateConfigSchema?,
+    overrideRestateContainerImage: String?,
+    overrideRestateStateDirectoryMount: String?,
 ) : AutoCloseable, ExtensionContext.Store.CloseableResource {
 
   companion object {
@@ -82,7 +84,9 @@ private constructor(
       private var runtimeContainerEnvs: MutableMap<String, String> = mutableMapOf(),
       private var invokerRetryPolicy: RetryPolicy? = null,
       private var configSchema: RestateConfigSchema? = null,
-      private var copyToContainer: MutableList<Pair<String, Transferable>> = mutableListOf()
+      private var copyToContainer: MutableList<Pair<String, Transferable>> = mutableListOf(),
+      private var overrideRestateContainerImage: String? = null,
+      private var overrideRestateStateDirectoryMount: String? = null,
   ) {
 
     fun withEndpoint(endpoint: Endpoint) = apply { this.localEndpoint = endpoint }
@@ -132,6 +136,14 @@ private constructor(
       this.copyToContainer += (name to Transferable.of(value))
     }
 
+    fun withOverrideRestateContainerImage(containerImage: String) = apply {
+      this.overrideRestateContainerImage = containerImage
+    }
+
+    fun withOverrideRestateStateDirectoryMount(stateDirectory: String) = apply {
+      this.overrideRestateStateDirectoryMount = stateDirectory
+    }
+
     fun build(testReportDir: String): RestateDeployer {
       val defaultLogFilters =
           mapOf(
@@ -165,7 +177,9 @@ private constructor(
               getGlobalConfig().additionalRuntimeEnvs +
               (invokerRetryPolicy?.toInvokerSetupEnv() ?: emptyMap()),
           copyToContainer,
-          configSchema)
+          configSchema,
+          overrideRestateContainerImage,
+          overrideRestateStateDirectoryMount)
     }
   }
 
@@ -194,7 +208,14 @@ private constructor(
           .associate { it.second.first to (it.first to it.second.second) }
   private val runtimeContainers: List<RestateContainer> =
       RestateContainer.createRestateContainers(
-          config, network, runtimeContainerEnvs, configSchema, copyToContainer, config.restateNodes)
+          config,
+          network,
+          runtimeContainerEnvs,
+          configSchema,
+          copyToContainer,
+          overrideRestateContainerImage,
+          overrideRestateStateDirectoryMount,
+          config.restateNodes)
 
   private val deployedContainers: Map<String, ContainerHandle> =
       (runtimeContainers.map {
@@ -494,6 +515,12 @@ private constructor(
     return deployedContainers[hostName]?.getMappedPort(port)
         ?: throw java.lang.IllegalStateException(
             "Requested port for container $hostName, but the container or the port was not found")
+  }
+
+  internal fun getLocalEndpointURI(): URI {
+    return localEndpointServer?.let {
+      URI.create("http://host.testcontainers.internal:${it.actualPort()}")
+    } ?: throw java.lang.IllegalStateException("No local endpoint was deployed for this test")
   }
 
   fun getContainerHandle(hostName: String): ContainerHandle {
