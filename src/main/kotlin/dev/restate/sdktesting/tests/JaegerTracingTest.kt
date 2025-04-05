@@ -31,7 +31,6 @@ import kotlinx.serialization.json.Json
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.withAlias
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.testcontainers.containers.GenericContainer
@@ -75,7 +74,6 @@ data class Value(
 
 @Serializable data class Status(val code: Int, val message: String? = null)
 
-@Disabled
 class JaegerTracingTest {
 
   @Service
