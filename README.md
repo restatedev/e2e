@@ -1,90 +1,88 @@
-# e2e
-E2E tests for Restate
+# Restate SDK test suite
 
-**DEPRECATED**: Please add new tests to https://github.com/restatedev/sdk-test-suite
+This tool is a test suite/conformance suite runner for Restate SDKs.
 
-## Modules
+## Architecture
 
-* `services` contains a collection of services for e2e testing:
-  * [`java-services`](services/java-services) contains the Java SDK services
-* `test-utils` contains utilities to develop e2e tests
-* `tests` contains the test code
-* `contracts` contains the different protobuf definitions, used by services and tests
+This tool requires the SDK developer to implement a well-defined set of services, specified [here](./src/main/kotlin/dev/restate/sdktesting/contracts), and package the application as docker container. 
+For an example implementation, look [here](https://github.com/restatedev/sdk-java/tree/main/test-services/src/main/kotlin/dev/restate/sdk/testservices).
 
-## Run tests
+The tool then starts for each test class Restate alongside with the service deployment container, and sends some requests to it.
 
-To run tests, just execute:
+The tool is split into test suite, test classes and test methods. 
+A test suite is composed by multiple test classes, which itself is composed by multiple test methods. 
+Test methods usually run in parallel wrt the other methods in the same class, and each individual class deploys an isolated docker network with its own runtime and its own service deployment container. 
+Test suites run the same set of test classes, with different parameters of the runtime tuned.
+
+## CI usage
+
+Check as example: https://github.com/restatedev/sdk-python/blob/main/.github/workflows/integration.yaml
+
+## Running locally
+
+You need a JVM >= 21, and the test tool. You can get the test tool from the [releases page](https://github.com/restatedev/sdk-test-suite/releases). If you're investigating a CI failure, you might need the exact tool version the CI is currently using (which is usually printed in the title of the CI task).
+
+To run all the tests:
 
 ```shell
-gradle build
+java -jar restate-sdk-test-suite.jar run <TEST_SERVICES_IMAGE>
 ```
 
-This will populate your local image registry with the various service containers, required for testing, and then execute the tests.
+To run an individual test:
 
-In the default configuration, testcontainers will try to pull the Restate container frequently during tests.
-To prevent this behavior, e.g. when working offline, set the environment variable `E2E_IMAGE_PULL_POLICY=cached` to use the image available in the local container registry.
+```shell
+java -jar restate-sdk-test-suite.jar run --test-suite=<SUITE> --test-name=<TEST_NAME> <TEST_SERVICES_IMAGE>
+```
 
-### Tests
+To change the runtime container image, use `--restate-container-image=<RUNTIME_CONTAINER_IMAGE>`.
 
-Source code of test runners is located in the [Tests project](tests), in particular:
+By default, the tool will always pull images, unless they have the repository prefix `restate.local` or `localhost`. To always try to use the local cache, use `--image-pull-policy=CACHED`.
 
-* [`dev.restate.e2e`](tests/src/test/kotlin/dev/restate/e2e) contains common tests to all SDKs, testing the various SDK features
-* [`dev.restate.e2e.runtime`](tests/src/test/kotlin/dev/restate/e2e/runtime) contains tests for some specific runtime behavior
-* [`dev.restate.e2e.java`](tests/src/test/kotlin/dev/restate/e2e/java) contains tests for Java SDK specific features
-* [`dev.restate.e2e.node`](tests/src/test/kotlin/dev/restate/e2e/node) contains tests for Node SDK specific features
+All the environment variables prefixed with `RUST_` and `RESTATE_` will be propagated to every deployed runtime container. 
 
-### Test configurations
+### Exclusions
 
-Currently, we run tests in the following configurations:
+Some SDKs might not implement all the features. For this purpose, the tool allows to configure the excluded test classes in an ad-hoc file. To run with the exclusions file:
 
-* `gradle :tests:test`: Default runtime configuration
-* `gradle :tests:testAlwaysSuspending`: Runtime setup to always suspend after replay, to mimic the behavior of RequestResponse stream type
-* `gradle :tests:testSingleThreadSinglePartition`: Runtime setup with a single thread and single partition
-* `gradle :tests:testPersistedTimers`: Runtime setup with timers in memory = 1, to trigger timer queue spilling to disk
-* `gradle :tests:testLazyState`: Runtime setup disabling eager state when invoking the service endpoint
+```shell
+java -jar restate-sdk-test-suite.jar run --exclusions-file exclusions.yaml <TEST_SERVICES_IMAGE>
+```
 
-## Developing tests
+After every run a new exclusions file is generated in the test report, with the failed/skipped tests.
 
-### Parallel test execution
+## Local debug
 
-The test setup uses Gradle's `maxParallelForks` to distribute the test classes among different JVMs, providing parallelism per class.
+You can debug the service deployment by exposing it to a local port, and ask the tool to use a local port instead of deploying a container. To do so:
 
-Within the test classes, it is possible to tag individual test methods to be executed in parallel.
-Usually a test method is considered safe to execute in parallel when:
+* Run the service with your IDE and the debugger
+* Run `java -jar restate-sdk-test-suite.jar debug --test-suite=<TEST_SUITE> --test-name=<TEST_NAME> default-service=<PORT>`
 
-* Doesn't invoke directly or transitively singleton services
-* When invoking directly or transitively keyed services, it uses a key with a random component, e.g. like a UUID
-* Doesn't use additional stateful containers
-* The containing test class uses `RestateDeployerExtension`
+When the test starts, it will also print to console the environment variables the service deployment should be started with.
 
-To tag a test method to be executed in parallel, use the annotation `@Execution(ExecutionMode.CONCURRENT)`.
+Using the `debug` command, you can also:
 
-## Debugging
+* Expose the environment to your localhost (e.g. to use the CLI to introspect the state) and keep it up and running after the end of the test using:
 
-### `VerificationTest` seed
+```shell
+java -jar restate-sdk-test-suite.jar debug \
+  --local-ingress-port=8080 --local-admin-port=9070 --retain-after-end \
+  --test-suite=<TEST_SUITE> --test-name=<TEST_NAME> \
+  default-service=<PORT>
+```
 
-`VerificationTest` is using a random seed to generate the execution tree, logged at the beginning of the test. 
-You can fix the seed to use setting the environment variable `E2E_VERIFICATION_SEED`.
+Please note, some tests requiring to kill/stop the service deployment won't work with the `debug` command.
 
-### Test report and container logs
+## Building this tool
 
-For each deployment of `RestateDeployer`, the `stdout` and `stderr` of the containers and the `docker inspect` info are written in `tests/build/test-results/[test-configuration]/container-logs/[test-name]`.
+```shell
+./gradlew shadowJar
+```
 
-### How to test Java SDK changes
+## Releasing this tool
 
-In order to test local changes to the `sdk-java`, you need to check it out under `../sdk-java`.
-When building the `e2e` project you have to set the environment variable `SDK_JAVA_LOCAL_BUILD=true` 
-to include `sdk-java` as a composite build and substitute the `dev.restate.sdk:sdk-java` dependency with it.
-The build will fail if Gradle cannot find the `sdk-java` project.
+Just push a new git tag:
 
-### How to test Restate runtime changes
-
-You can manually build a docker image in the restate project using `just docker`. Then set the environment variable `RESTATE_CONTAINER_IMAGE` with the tag of the newly created image (printed at the end of the docker build log).
-
-### Retain runtime state after test
-
-To retain the runtime RocksDB and Meta state, set the environment variable `E2E_MOUNT_STATE_DIRECTORY=true` to mount the state directory in the same directory of the [container logs](#test-report-and-container-logs).
-
-## Running the services
-
-For running the services see [services/README.md](services/README.md).
+```shell
+git tag v1.1 
+git push --tags
+```

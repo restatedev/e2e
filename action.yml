@@ -1,0 +1,63 @@
+name: 'Restate E2E'
+description: 'Run the Restate E2E Test suite'
+inputs:
+  envVars:
+    required: false
+    description: list of vars and values used when running the test tool
+  testArtifactOutput:
+    required: true
+    description: Name of the test artifact output to upload
+  restateContainerImage:
+    required: false
+    description: Container image to use for Restate
+    default: 'ghcr.io/restatedev/restate:main'
+outputs: {}
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+
+    - name: Download tool
+      env:
+        # https://github.com/orgs/community/discussions/49245
+        GH_ACTION_REF: ${{ github.action_ref || github.ref_name }}
+      shell: bash
+      run: wget --no-verbose https://github.com/restatedev/sdk-test-suite/releases/download/$GH_ACTION_REF/restate-e2e.jar
+
+    - name: Set environment variables
+      if: ${{ inputs.envVars }}
+      shell: bash
+      run: |
+        for env in "${{ inputs.envVars }}"
+        do
+          printf "%s\n" $env >> $GITHUB_ENV
+        done
+
+    # Pre-emptively pull the Kafka docker image, because it's slow and impedes the test execution
+    - name: Pull Kafka docker image
+      shell: bash
+      run: docker pull confluentinc/cp-kafka:7.1.0-1-ubi8
+
+    - name: Run test suite
+      env:
+        RESTATE_CONTAINER_IMAGE: ${{ inputs.restateContainerImage }}
+      shell: bash
+      run: java -jar restate-e2e.jar run ${{ inputs.exclusionsFile != '' && format('--exclusions-file={0}', inputs.exclusionsFile) || '' }} ${{ inputs.serviceContainerEnvFile != '' && format('--service-container-env-file={0}', inputs.serviceContainerEnvFile) || '' }} --report-dir=test-report ${{ inputs.serviceContainerImage }}
+
+    # Upload logs and publish test result
+    - uses: actions/upload-artifact@v4
+      if: always() # Make sure this is run even when test fails
+      with:
+        name: ${{ inputs.testArtifactOutput }}
+        path: test-report
+    - name: Publish Test Results
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      if: always()
+      with:
+        files: |
+          test-report/*/*.xml
+
