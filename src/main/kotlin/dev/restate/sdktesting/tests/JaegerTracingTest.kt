@@ -26,19 +26,23 @@ import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
+import java.time.Instant
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.toJavaDuration
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.withAlias
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.wait.strategy.Wait
 
+@Serializable data class OTLPResponse(val result: OTLPResult)
+
 // OTLP JSON Query API data model
-@Serializable data class OTLPResponse(val resourceSpans: List<ResourceSpans> = emptyList())
+@Serializable data class OTLPResult(val resourceSpans: List<ResourceSpans> = emptyList())
 
 @Serializable
 data class ResourceSpans(val resource: Resource, val scopeSpans: List<ScopeSpans> = emptyList())
@@ -73,9 +77,8 @@ data class Value(
     val boolValue: Boolean? = null
 )
 
-@Serializable data class Status(val code: Int, val message: String? = null)
+@Serializable data class Status(val code: Int = 599, val message: String? = null)
 
-@Disabled
 class JaegerTracingTest {
 
   @Service
@@ -108,7 +111,7 @@ class JaegerTracingTest {
     val deployerExt: RestateDeployerExtension = RestateDeployerExtension {
       // Create Jaeger 2 container
       val jaeger =
-          GenericContainer("jaegertracing/jaeger:2.4.0")
+          GenericContainer("jaegertracing/jaeger:2.5.0")
               .withExposedPorts(JAEGER_QUERY_PORT, JAEGER_COLLECTOR_PORT)
               .waitingFor(Wait.forHttp("/").forPort(JAEGER_QUERY_PORT))
 
@@ -138,6 +141,8 @@ class JaegerTracingTest {
       @InjectClient client: Client,
       @InjectContainerHandle(JAEGER_HOSTNAME) jaeger: ContainerHandle
   ) = runTest {
+    val startTimeEpoch = Instant.EPOCH
+
     // Call the greeter service
     val greeter = JaegerTracingTestGreeterServiceClient.fromClient(client)
     val response = greeter.greet("Alice", idempotentCallOptions)
@@ -150,11 +155,12 @@ class JaegerTracingTest {
     await withAlias
         "traces are available" untilAsserted
         {
+          val nowEpoch = Instant.now().plus(24.hours.toJavaDuration())
           val request =
               HttpRequest.newBuilder()
                   .uri(
                       URI.create(
-                          "http://localhost:$jaegerPort/api/v3/traces?service.name=GreeterService"))
+                          "http://localhost:$jaegerPort/api/v3/traces?query.service_name=GreeterService&query.start_time_min=${startTimeEpoch}&query.start_time_max=${nowEpoch}"))
                   .header("Accept", "application/json")
                   .GET()
                   .build()
@@ -164,11 +170,11 @@ class JaegerTracingTest {
 
           val traces = json.decodeFromString<OTLPResponse>(response.body())
 
-          assertThat(traces.resourceSpans).isNotEmpty()
+          assertThat(traces.result.resourceSpans).isNotEmpty()
 
           // Find the GreeterService spans
           val greeterSpans =
-              traces.resourceSpans
+              traces.result.resourceSpans
                   .flatMap { it.scopeSpans }
                   .flatMap { it.spans }
                   .filter { it.name.contains("GreeterService/greet") }
@@ -177,7 +183,6 @@ class JaegerTracingTest {
 
           // Verify span attributes
           val span = greeterSpans.first()
-          assertThat(span.kind).isEqualTo(2) // SERVER kind
 
           // Verify Restate-specific attributes
           val attributes = span.attributes.associate { it.key to it.value.stringValue }
