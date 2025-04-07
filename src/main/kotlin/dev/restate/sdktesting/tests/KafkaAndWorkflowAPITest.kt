@@ -12,6 +12,7 @@ import dev.restate.admin.api.SubscriptionApi
 import dev.restate.admin.client.ApiClient
 import dev.restate.admin.model.CreateSubscriptionRequest
 import dev.restate.client.Client
+import dev.restate.client.kotlin.attachSuspend
 import dev.restate.client.kotlin.getOutputSuspend
 import dev.restate.sdk.annotation.Workflow
 import dev.restate.sdk.endpoint.Endpoint
@@ -52,8 +53,7 @@ class KafkaAndWorkflowAPITest {
 
   @Workflow
   class MyWorkflow {
-    @Workflow
-    suspend fun run(ctx: WorkflowContext, myTask: String) = "Run $myTask"
+    @Workflow suspend fun run(ctx: WorkflowContext, myTask: String) = "Run $myTask"
   }
 
   companion object {
@@ -80,36 +80,46 @@ class KafkaAndWorkflowAPITest {
     subscriptionsClient.createSubscription(
         CreateSubscriptionRequest()
             .source("kafka://my-cluster/$EVENT_HANDLER_TOPIC")
-            .sink("service://${KafkaAndWorkflowAPITestMyWorkflowHandlers.Metadata.SERVICE_NAME}/run")
+            .sink(
+                "service://${KafkaAndWorkflowAPITestMyWorkflowHandlers.Metadata.SERVICE_NAME}/run")
             .options(mapOf("auto.offset.reset" to "earliest")))
 
-    val keyMessages = linkedMapOf(
-      "a" to "1",
-      "b" to "2",
-      "c" to "3"
-    )
+    val keyMessages = linkedMapOf("a" to "1", "b" to "2", "c" to "3")
 
     // Produce message to kafka
     produceMessageToKafka(
         "PLAINTEXT://localhost:$kafkaPort",
         EVENT_HANDLER_TOPIC,
-      keyMessages.map { it.key to Json.encodeToString(it.value) }
-    )
+        keyMessages.map { it.key to Json.encodeToString(it.value) })
 
     // Now assert that those invocations are stored there, let's do this twice just for the sake of.
-    for (i in 0..2)  {
-      for (keyMessage in keyMessages) {
-        await withAlias
-            "Workflow invocations from Kafka" untilAsserted
-            {
-              assertThat(
-                KafkaAndWorkflowAPITestMyWorkflowClient.fromClient(ingressClient, keyMessage.key)
-                  .workflowHandle()
-                  .getOutputSuspend()
-                  .response().value
-              ).isEqualTo(keyMessage.value)
-            }
-      }
+    for (keyMessage in keyMessages) {
+      await withAlias
+          "Workflow invocations from Kafka" untilAsserted
+          {
+            assertThat(
+                    KafkaAndWorkflowAPITestMyWorkflowClient.fromClient(
+                            ingressClient, keyMessage.key)
+                        .workflowHandle()
+                        .attachSuspend()
+                        .response())
+                .isEqualTo("Run ${keyMessage.value}")
+          }
+    }
+
+    for (keyMessage in keyMessages) {
+      await withAlias
+          "Workflow invocations from Kafka" untilAsserted
+          {
+            assertThat(
+                    KafkaAndWorkflowAPITestMyWorkflowClient.fromClient(
+                            ingressClient, keyMessage.key)
+                        .workflowHandle()
+                        .getOutputSuspend()
+                        .response()
+                        .value)
+                .isEqualTo("Run ${keyMessage.value}")
+          }
     }
   }
 }
