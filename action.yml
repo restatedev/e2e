@@ -39,7 +39,7 @@ runs:
     # because pulling them counts toward the test timeout.
     - name: Pull images needed in tests
       shell: bash
-      run: docker pull confluentinc/cp-kafka:7.1.0-1-ubi8 jaegertracing/jaeger:2.5.0
+      run: docker pull confluentinc/cp-kafka:7.1.0-1-ubi8 & docker pull jaegertracing/jaeger:2.5.0
 
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
