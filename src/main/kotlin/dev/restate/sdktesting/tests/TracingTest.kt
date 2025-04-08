@@ -13,7 +13,7 @@ import dev.restate.sdk.annotation.Handler
 import dev.restate.sdk.annotation.Name
 import dev.restate.sdk.annotation.Service
 import dev.restate.sdk.endpoint.Endpoint
-import dev.restate.sdk.kotlin.Context
+import dev.restate.sdk.kotlin.*
 import dev.restate.sdktesting.infra.InjectClient
 import dev.restate.sdktesting.infra.InjectContainerPort
 import dev.restate.sdktesting.infra.RestateDeployerExtension
