@@ -22,10 +22,6 @@ import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.kotlin.additionalLoggingContext
 import org.awaitility.core.ConditionFactory
 
-val idempotentCallOptions: RequestBuilder<*, *>.() -> Unit = {
-  idempotencyKey = UUID.randomUUID().toString()
-}
-
 private val LOG = LogManager.getLogger("dev.restate.sdktesting.tests")
 
 suspend infix fun ConditionFactory.untilAsserted(fn: suspend () -> Unit) {
@@ -40,3 +36,7 @@ suspend infix fun ConditionFactory.untilAsserted(fn: suspend () -> Unit) {
 
 fun runTest(timeout: Duration = 60.seconds, testBody: suspend TestScope.() -> Unit) =
     runTest(context = additionalLoggingContext(), timeout = timeout, testBody = testBody)
+
+val idempotentCallOptions: RequestBuilder<*, *>.() -> Unit = {
+  idempotencyKey = UUID.randomUUID().toString()
+}
