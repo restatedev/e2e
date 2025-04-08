@@ -11,7 +11,6 @@ plugins {
   alias(libs.plugins.openapi.generator)
 
   id("com.diffplug.spotless") version "6.25.0"
-  id("com.gradleup.shadow") version "8.3.5"
   id("com.github.jk1.dependency-license-report") version "2.9"
 }
 
@@ -122,10 +121,6 @@ tasks {
   }
 
   test { useJUnitPlatform() }
-
-  withType<Zip>().configureEach { isZip64 = true }
-
-  named("check") { dependsOn("checkLicense") }
 }
 
 afterEvaluate { tasks.named("kspKotlin").configure { mustRunAfter("openApiGenerate") } }
