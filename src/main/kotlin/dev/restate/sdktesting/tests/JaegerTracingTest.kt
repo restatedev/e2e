@@ -87,7 +87,7 @@ class JaegerTracingTest {
     @Handler
     suspend fun greet(ctx: Context, name: String): String {
       // Get the current span from the OpenTelemetry context
-      val span = io.opentelemetry.api.trace.Span.fromContext(ctx.request().otelContext())
+      val span = io.opentelemetry.api.trace.Span.fromContext(ctx.request().openTelemetryContext)
 
       // Verify that this is a server span (meaning it was created from a parent)
       assertThat(span.spanContext.isRemote).isTrue()
