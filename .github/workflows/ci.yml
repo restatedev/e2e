@@ -38,12 +38,18 @@ jobs:
       - name: Run
         run: ./gradlew run --args='run'
 
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
+      # Upload logs and publish test result
+      - uses: actions/upload-artifact@v4
+        if: always() # Make sure this is run even when test fails
         with:
-          name: Test results (Java ${{ matrix.java }})
-          path: "**/test-results/test/*.xml"
+          name: e2e-test-report
+          path: test-report
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: |
+            test-report/*/*.xml
 
   event_file:
     name: "Event File"
