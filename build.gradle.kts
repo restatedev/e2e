@@ -31,8 +31,8 @@ dependencies {
   implementation(libs.clikt)
   implementation(libs.mordant)
 
-  ksp(libs.restate.sdk.api.kotlin.gen)
-  implementation(libs.restate.sdk.kotlin.http)
+  ksp(libs.restate.sdk.api.kotlin.gen) { isChanging = true }
+  implementation(libs.restate.sdk.kotlin.http) { isChanging = true }
   implementation(libs.vertx)
 
   implementation(libs.junit.all)
