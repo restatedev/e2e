@@ -14,6 +14,7 @@ import dev.restate.admin.model.CreateSubscriptionRequest
 import dev.restate.client.Client
 import dev.restate.client.kotlin.attachSuspend
 import dev.restate.client.kotlin.getOutputSuspend
+import dev.restate.sdk.annotation.Shared
 import dev.restate.sdk.annotation.Workflow
 import dev.restate.sdk.endpoint.Endpoint
 import dev.restate.sdk.kotlin.*
@@ -35,8 +36,8 @@ import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 
-private const val COUNTER_TOPIC = "counter"
-private const val EVENT_HANDLER_TOPIC = "event-handler"
+private const val SHARED_HANDLER_TOPIC = "shared-handler"
+private const val WORKFLOW_TOPIC = "workflow"
 
 private fun kafkaClusterOptions(): RestateConfigSchema {
   return RestateConfigSchema()
@@ -53,13 +54,26 @@ class KafkaAndWorkflowAPITest {
 
   @Workflow
   class MyWorkflow {
+
+    companion object {
+      val PROMISE = durablePromiseKey<String>("promise")
+    }
+
     @Workflow suspend fun run(ctx: WorkflowContext, myTask: String) = "Run $myTask"
+
+    @Shared
+    suspend fun setPromise(ctx: SharedWorkflowContext, myValue: String) {
+      ctx.promiseHandle(PROMISE).resolve(myValue)
+    }
+
+    @Shared
+    suspend fun getPromise(ctx: SharedWorkflowContext) = ctx.promise(PROMISE).future().await()
   }
 
   companion object {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension = RestateDeployerExtension {
-      withContainer("kafka", KafkaContainer(COUNTER_TOPIC, EVENT_HANDLER_TOPIC))
+      withContainer("kafka", KafkaContainer(SHARED_HANDLER_TOPIC, WORKFLOW_TOPIC))
       withConfig(kafkaClusterOptions())
       withEndpoint(Endpoint.bind(MyWorkflow()))
     }
@@ -67,19 +81,17 @@ class KafkaAndWorkflowAPITest {
 
   @Test
   @Execution(ExecutionMode.CONCURRENT)
-  fun handleEventInEventHandler(
+  fun callWorkflowHandler(
       @InjectAdminURI adminURI: URI,
       @InjectContainerPort(hostName = "kafka", port = KafkaContainer.EXTERNAL_PORT) kafkaPort: Int,
       @InjectClient ingressClient: Client
   ) = runTest {
-    val counter = UUID.randomUUID().toString()
-
     // Create subscription
     val subscriptionsClient =
         SubscriptionApi(ApiClient().setHost(adminURI.host).setPort(adminURI.port))
     subscriptionsClient.createSubscription(
         CreateSubscriptionRequest()
-            .source("kafka://my-cluster/$EVENT_HANDLER_TOPIC")
+            .source("kafka://my-cluster/$WORKFLOW_TOPIC")
             .sink(
                 "service://${KafkaAndWorkflowAPITestMyWorkflowHandlers.Metadata.SERVICE_NAME}/run")
             .options(mapOf("auto.offset.reset" to "earliest")))
@@ -89,7 +101,7 @@ class KafkaAndWorkflowAPITest {
     // Produce message to kafka
     produceMessageToKafka(
         "PLAINTEXT://localhost:$kafkaPort",
-        EVENT_HANDLER_TOPIC,
+        WORKFLOW_TOPIC,
         keyMessages.map { it.key to Json.encodeToString(it.value) })
 
     // Now assert that those invocations are stored there, let's do this twice just for the sake of.
@@ -119,6 +131,45 @@ class KafkaAndWorkflowAPITest {
                         .response()
                         .value)
                 .isEqualTo("Run ${keyMessage.value}")
+          }
+    }
+  }
+
+  @Test
+  @Execution(ExecutionMode.CONCURRENT)
+  fun callSharedWorkflowHandler(
+      @InjectAdminURI adminURI: URI,
+      @InjectContainerPort(hostName = "kafka", port = KafkaContainer.EXTERNAL_PORT) kafkaPort: Int,
+      @InjectClient ingressClient: Client
+  ) = runTest {
+    // Create subscription
+    val subscriptionsClient =
+        SubscriptionApi(ApiClient().setHost(adminURI.host).setPort(adminURI.port))
+    subscriptionsClient.createSubscription(
+        CreateSubscriptionRequest()
+            .source("kafka://my-cluster/$SHARED_HANDLER_TOPIC")
+            .sink(
+                "service://${KafkaAndWorkflowAPITestMyWorkflowHandlers.Metadata.SERVICE_NAME}/setPromise")
+            .options(mapOf("auto.offset.reset" to "earliest")))
+
+    val keyMessages = linkedMapOf("a" to "a", "b" to "b", "c" to "c")
+
+    // Produce message to kafka
+    produceMessageToKafka(
+        "PLAINTEXT://localhost:$kafkaPort",
+        SHARED_HANDLER_TOPIC,
+        keyMessages.map { it.key to Json.encodeToString(it.value) })
+
+    // Now assert that the promises are fulfilled.
+    for (keyMessage in keyMessages) {
+      await withAlias
+          "Workflow invocations from Kafka" untilAsserted
+          {
+            assertThat(
+                    KafkaAndWorkflowAPITestMyWorkflowClient.fromClient(
+                            ingressClient, keyMessage.key)
+                        .getPromise())
+                .isEqualTo(keyMessage.value)
           }
     }
   }
