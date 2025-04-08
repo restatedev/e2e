@@ -14,8 +14,7 @@ import dev.restate.admin.model.UpdateDeploymentRequest
 import dev.restate.admin.model.UpdateDeploymentRequestAnyOf
 import dev.restate.client.Client
 import dev.restate.client.SendResponse
-import dev.restate.client.kotlin.attachSuspend
-import dev.restate.client.kotlin.resolveSuspend
+import dev.restate.client.kotlin.*
 import dev.restate.sdk.annotation.Handler
 import dev.restate.sdk.annotation.Name
 import dev.restate.sdk.annotation.Service
@@ -285,11 +284,10 @@ class FrontCompatibilityTest {
             idempotencyKey = idempotencyKeyRunBlockTest
           }
 
-      assertThat(result.status).isEqualTo(SendResponse.SendStatus.PREVIOUSLY_ACCEPTED)
+      assertThat(result.sendStatus).isEqualTo(SendResponse.SendStatus.PREVIOUSLY_ACCEPTED)
 
       // The operation should now complete successfully with the fixed implementation
-      assertThat(result.invocationHandle.attachSuspend().response)
-          .isEqualTo("Success in new version!")
+      assertThat(result.attachSuspend().response).isEqualTo("Success in new version!")
     }
 
     @Test
@@ -298,10 +296,10 @@ class FrontCompatibilityTest {
 
       val result = retryableClient.send().proxy { idempotencyKey = idempotencyKeyCallTest }
 
-      assertThat(result.status).isEqualTo(SendResponse.SendStatus.PREVIOUSLY_ACCEPTED)
+      assertThat(result.sendStatus).isEqualTo(SendResponse.SendStatus.PREVIOUSLY_ACCEPTED)
 
       // The operation should now complete successfully with the fixed implementation
-      assertThat(result.invocationHandle.attachSuspend().response).isEqualTo("Hello from callee!")
+      assertThat(result.attachSuspend().response).isEqualTo("Hello from callee!")
     }
 
     @Test
@@ -311,10 +309,10 @@ class FrontCompatibilityTest {
       val result =
           retryableClient.send().proxyOneWay { idempotencyKey = idempotencyKeyOneWayCallTest }
 
-      assertThat(result.status).isEqualTo(SendResponse.SendStatus.PREVIOUSLY_ACCEPTED)
+      assertThat(result.sendStatus).isEqualTo(SendResponse.SendStatus.PREVIOUSLY_ACCEPTED)
 
       // The operation should now complete successfully with the fixed implementation
-      assertThat(result.invocationHandle.attachSuspend().response).isEqualTo("Done")
+      assertThat(result.attachSuspend().response).isEqualTo("Done")
     }
   }
 }

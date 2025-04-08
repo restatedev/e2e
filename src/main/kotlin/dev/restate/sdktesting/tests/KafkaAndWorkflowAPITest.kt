@@ -8,26 +8,19 @@
 // https://github.com/restatedev/sdk-test-suite/blob/main/LICENSE
 package dev.restate.sdktesting.tests
 
-import dev.restate.admin.api.SubscriptionApi
-import dev.restate.admin.client.ApiClient
-import dev.restate.admin.model.CreateSubscriptionRequest
 import dev.restate.client.Client
 import dev.restate.client.kotlin.attachSuspend
 import dev.restate.client.kotlin.getOutputSuspend
 import dev.restate.sdk.annotation.Shared
 import dev.restate.sdk.annotation.Workflow
 import dev.restate.sdk.endpoint.Endpoint
-import dev.restate.sdk.kotlin.*
+import dev.restate.sdk.kotlin.SharedWorkflowContext
+import dev.restate.sdk.kotlin.WorkflowContext
+import dev.restate.sdk.kotlin.durablePromiseKey
 import dev.restate.sdktesting.infra.*
-import dev.restate.sdktesting.infra.runtimeconfig.IngressOptions
-import dev.restate.sdktesting.infra.runtimeconfig.KafkaClusterOptions
 import dev.restate.sdktesting.infra.runtimeconfig.RestateConfigSchema
 import java.net.URI
-import java.util.*
 import kotlinx.serialization.json.Json
-import org.apache.kafka.clients.producer.KafkaProducer
-import org.apache.kafka.clients.producer.Producer
-import org.apache.kafka.clients.producer.ProducerRecord
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.withAlias
@@ -35,20 +28,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
-
-private const val SHARED_HANDLER_TOPIC = "shared-handler"
-private const val WORKFLOW_TOPIC = "workflow"
-
-private fun kafkaClusterOptions(): RestateConfigSchema {
-  return RestateConfigSchema()
-      .withIngress(
-          IngressOptions()
-              .withKafkaClusters(
-                  listOf(
-                      KafkaClusterOptions()
-                          .withName("my-cluster")
-                          .withBrokers(listOf("PLAINTEXT://kafka:9092")))))
-}
 
 class KafkaAndWorkflowAPITest {
 
@@ -71,10 +50,13 @@ class KafkaAndWorkflowAPITest {
   }
 
   companion object {
+    private const val SHARED_HANDLER_TOPIC = "shared-handler"
+    private const val WORKFLOW_TOPIC = "workflow"
+
     @RegisterExtension
     val deployerExt: RestateDeployerExtension = RestateDeployerExtension {
       withContainer("kafka", KafkaContainer(SHARED_HANDLER_TOPIC, WORKFLOW_TOPIC))
-      withConfig(kafkaClusterOptions())
+      withConfig(RestateConfigSchema().apply(Kafka.configSchema))
       withEndpoint(Endpoint.bind(MyWorkflow()))
     }
   }
@@ -87,22 +69,17 @@ class KafkaAndWorkflowAPITest {
       @InjectClient ingressClient: Client
   ) = runTest {
     // Create subscription
-    val subscriptionsClient =
-        SubscriptionApi(ApiClient().setHost(adminURI.host).setPort(adminURI.port))
-    subscriptionsClient.createSubscription(
-        CreateSubscriptionRequest()
-            .source("kafka://my-cluster/$WORKFLOW_TOPIC")
-            .sink(
-                "service://${KafkaAndWorkflowAPITestMyWorkflowHandlers.Metadata.SERVICE_NAME}/run")
-            .options(mapOf("auto.offset.reset" to "earliest")))
+    Kafka.createKafkaSubscription(
+        adminURI,
+        WORKFLOW_TOPIC,
+        KafkaAndWorkflowAPITestMyWorkflowHandlers.Metadata.SERVICE_NAME,
+        "run")
 
     val keyMessages = linkedMapOf("a" to "1", "b" to "2", "c" to "3")
 
     // Produce message to kafka
-    produceMessageToKafka(
-        "PLAINTEXT://localhost:$kafkaPort",
-        WORKFLOW_TOPIC,
-        keyMessages.map { it.key to Json.encodeToString(it.value) })
+    Kafka.produceMessagesToKafka(
+        kafkaPort, WORKFLOW_TOPIC, keyMessages.map { it.key to Json.encodeToString(it.value) })
 
     // Now assert that those invocations are stored there, let's do this twice just for the sake of.
     for (keyMessage in keyMessages) {
@@ -143,20 +120,17 @@ class KafkaAndWorkflowAPITest {
       @InjectClient ingressClient: Client
   ) = runTest {
     // Create subscription
-    val subscriptionsClient =
-        SubscriptionApi(ApiClient().setHost(adminURI.host).setPort(adminURI.port))
-    subscriptionsClient.createSubscription(
-        CreateSubscriptionRequest()
-            .source("kafka://my-cluster/$SHARED_HANDLER_TOPIC")
-            .sink(
-                "service://${KafkaAndWorkflowAPITestMyWorkflowHandlers.Metadata.SERVICE_NAME}/setPromise")
-            .options(mapOf("auto.offset.reset" to "earliest")))
+    Kafka.createKafkaSubscription(
+        adminURI,
+        SHARED_HANDLER_TOPIC,
+        KafkaAndWorkflowAPITestMyWorkflowHandlers.Metadata.SERVICE_NAME,
+        "setPromise")
 
     val keyMessages = linkedMapOf("a" to "a", "b" to "b", "c" to "c")
 
     // Produce message to kafka
-    produceMessageToKafka(
-        "PLAINTEXT://localhost:$kafkaPort",
+    Kafka.produceMessagesToKafka(
+        kafkaPort,
         SHARED_HANDLER_TOPIC,
         keyMessages.map { it.key to Json.encodeToString(it.value) })
 
@@ -173,21 +147,4 @@ class KafkaAndWorkflowAPITest {
           }
     }
   }
-}
-
-private fun produceMessageToKafka(
-    bootstrapServer: String,
-    topic: String,
-    values: List<Pair<String, String>>
-) {
-  val props = Properties()
-  props["bootstrap.servers"] = bootstrapServer
-  props["key.serializer"] = "org.apache.kafka.common.serialization.StringSerializer"
-  props["value.serializer"] = "org.apache.kafka.common.serialization.StringSerializer"
-
-  val producer: Producer<String, String> = KafkaProducer(props)
-  for (value in values) {
-    producer.send(ProducerRecord(topic, value.first, value.second))
-  }
-  producer.close()
 }
