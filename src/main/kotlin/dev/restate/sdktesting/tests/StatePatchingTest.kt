@@ -22,8 +22,8 @@ import dev.restate.sdk.kotlin.set
 import dev.restate.sdktesting.infra.InjectAdminURI
 import dev.restate.sdktesting.infra.InjectClient
 import dev.restate.sdktesting.infra.RestateDeployerExtension
-import kotlinx.serialization.json.Json
 import java.net.URI
+import kotlinx.serialization.json.Json
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.withAlias
@@ -73,9 +73,11 @@ class StatePatchingTest {
 
     // Patch the state
     val newState = "patched-state"
-    val request = ModifyServiceStateRequest()
-        .objectKey("test-key")
-        .newState(mapOf("state" to Json.encodeToString(newState).toByteArray().map { it.toInt() }))
+    val request =
+        ModifyServiceStateRequest()
+            .objectKey("test-key")
+            .newState(
+                mapOf("state" to Json.encodeToString(newState).toByteArray().map { it.toInt() }))
 
     serviceApi.modifyServiceState("StateObject", request)
 
