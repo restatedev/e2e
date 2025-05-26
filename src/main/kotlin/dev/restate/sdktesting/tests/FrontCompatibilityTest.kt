@@ -268,11 +268,15 @@ class FrontCompatibilityTest {
     fun completeAwakeable(@InjectClient ingressClient: Client) = runTest {
       val client = FrontCompatibilityTestMyServiceClient.fromClient(ingressClient, awakeableKey)
 
-      val awakeableId = client.getAwakeable()
-      assertThat(client.getAwakeable()).isNotBlank()
+      val awakeableId = client.getAwakeable(idempotentCallOptions)
+      assertThat(client.getAwakeable(idempotentCallOptions)).isNotBlank()
 
       val expectedResult = "solved!"
-      ingressClient.awakeableHandle(awakeableId).resolveSuspend(jsonSerde(), expectedResult)
+      await withAlias
+          "resolve awakeable" untilAsserted
+          {
+            ingressClient.awakeableHandle(awakeableId).resolveSuspend(jsonSerde(), expectedResult)
+          }
     }
 
     @Test

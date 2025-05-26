@@ -64,10 +64,15 @@ class AwakeableIngressEndpoint {
           assertThat(client.getAwakeable()).isNotBlank()
         }
 
-    val awakeableId = client.getAwakeable()
+    val awakeableId = client.getAwakeable(idempotentCallOptions)
 
     val expectedResult = "solved!"
-    ingressClient.awakeableHandle(awakeableId).resolveSuspend(jsonSerde(), expectedResult)
+
+    await withAlias
+        "resolve awakeable" untilAsserted
+        {
+          ingressClient.awakeableHandle(awakeableId).resolveSuspend(jsonSerde(), expectedResult)
+        }
 
     assertThat(runResult.await()).isEqualTo(expectedResult)
   }
@@ -86,10 +91,15 @@ class AwakeableIngressEndpoint {
           assertThat(client.getAwakeable()).isNotBlank()
         }
 
-    val awakeableId = client.getAwakeable()
+    val awakeableId = client.getAwakeable(idempotentCallOptions)
 
     val expectedReason = "my bad!"
-    ingressClient.awakeableHandle(awakeableId).rejectSuspend(expectedReason)
+
+    await withAlias
+        "reject awakeable" untilAsserted
+        {
+          ingressClient.awakeableHandle(awakeableId).rejectSuspend(expectedReason)
+        }
 
     assertThat(runResult.await()).hasMessageContaining(expectedReason)
   }

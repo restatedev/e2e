@@ -63,10 +63,10 @@ class StatePatchingTest {
 
     // Set initial state
     val initialState = "initial-state"
-    client.setState(initialState)
+    client.setState(initialState, idempotentCallOptions)
 
     // Verify initial state
-    assertThat(client.getState()).isEqualTo(initialState)
+    assertThat(client.getState(idempotentCallOptions)).isEqualTo(initialState)
 
     // Create admin client for state patching
     val serviceApi = ServiceApi(ApiClient().setHost(adminURI.host).setPort(adminURI.port))
@@ -79,7 +79,11 @@ class StatePatchingTest {
             .newState(
                 mapOf("state" to Json.encodeToString(newState).toByteArray().map { it.toInt() }))
 
-    serviceApi.modifyServiceState("StateObject", request)
+    await withAlias
+        "modify service state" untilAsserted
+        {
+          serviceApi.modifyServiceState("StateObject", request)
+        }
 
     // Verify patched state
     await withAlias
