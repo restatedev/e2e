@@ -144,7 +144,7 @@ class FrontCompatibilityTest {
     @Deployer
     val deployerExt: RestateDeployer.Builder.() -> Unit = {
       withEnv("RESTATE_CLUSTER_NAME", "front-compat-test")
-      withOverrideRestateContainerImage("ghcr.io/restatedev/restate:1.2.2")
+      withOverrideRestateContainerImage("ghcr.io/restatedev/restate:1.3.2")
       withOverrideRestateStateDirectoryMount(stateDir.toString())
       withEndpoint(Endpoint.bind(MyService()).bind(FailingRetryableService()).bind(ProxyService()))
     }
