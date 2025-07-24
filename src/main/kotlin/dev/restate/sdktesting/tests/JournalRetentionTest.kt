@@ -19,13 +19,12 @@ import dev.restate.sdktesting.infra.InjectClient
 import dev.restate.sdktesting.infra.RestateDeployerExtension
 import java.net.URI
 import kotlin.time.Duration.Companion.days
-import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.milliseconds
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.withAlias
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
-import kotlin.time.Duration.Companion.milliseconds
 
 class JournalRetentionTest {
 
@@ -57,8 +56,8 @@ class JournalRetentionTest {
     await withAlias
         "got the invocation completed, with the journal retained" untilAsserted
         {
-          assertThat(getInvocationStatus(adminURI, invocationId).rows)
-              .contains(SysInvocationEntry(id = invocationId, status = "completed"))
+          assertThat(getInvocationStatus(adminURI, invocationId))
+              .isEqualTo(SysInvocationEntry(id = invocationId, status = "completed"))
           assertThat(getJournal(adminURI, invocationId).rows)
               .containsExactly(
                   SysJournalEntry(0, "Command: Input"),
