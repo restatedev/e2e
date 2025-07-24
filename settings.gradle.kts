@@ -3,11 +3,6 @@ plugins { id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
 rootProject.name = "restate-e2e"
 
 dependencyResolutionManagement {
-  repositories {
-    mavenCentral()
-    //    maven { url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/") }
-  }
-
   versionCatalogs {
     create("libs") {
       library("restate-sdk-client", "dev.restate", "client").versionRef("restate")
@@ -44,8 +39,8 @@ dependencyResolutionManagement {
 
       library("vertx", "io.vertx:vertx-core:4.5.14")
 
-      version("junit-jupiter", "5.12.1")
-      version("junit-platform", "1.12.1")
+      version("junit-jupiter", "5.13.4")
+      version("junit-platform", "1.13.4")
       library("junit-all", "org.junit.jupiter", "junit-jupiter").versionRef("junit-jupiter")
       library("junit-launcher", "org.junit.platform", "junit-platform-launcher")
           .versionRef("junit-platform")
@@ -55,7 +50,7 @@ dependencyResolutionManagement {
       version("assertj", "3.27.3")
       library("assertj", "org.assertj", "assertj-core").versionRef("assertj")
 
-      version("testcontainers", "1.20.5")
+      version("testcontainers", "1.21.3")
       library("testcontainers-core", "org.testcontainers", "testcontainers")
           .versionRef("testcontainers")
       library("testcontainers-kafka", "org.testcontainers", "kafka").versionRef("testcontainers")

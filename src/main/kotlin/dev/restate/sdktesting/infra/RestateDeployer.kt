@@ -69,8 +69,8 @@ private constructor(
       return Builder()
     }
 
-    fun reportDirectory(baseReportDir: Path, testClass: Class<*>): String {
-      val dir = baseReportDir.resolve(testClass.simpleName).toAbsolutePath().toString()
+    fun reportDirectory(baseReportDir: Path, className: String): String {
+      val dir = baseReportDir.resolve(className).toAbsolutePath().toString()
       File(dir).mkdirs()
       return dir
     }
