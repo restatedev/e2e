@@ -23,6 +23,7 @@ class RestateDeployerExtension(
                 listOf(context.requiredTestClass.simpleName))
             .joinToString("$")
 
+    @Suppress("UNCHECKED_CAST")
     val deployerFactory =
         this.deployerFactory
             ?: (AnnotationSupport.findAnnotatedFieldValues(

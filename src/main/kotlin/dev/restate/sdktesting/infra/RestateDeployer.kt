@@ -13,7 +13,7 @@ import dev.restate.admin.api.DeploymentApi
 import dev.restate.admin.client.ApiClient
 import dev.restate.admin.client.ApiException
 import dev.restate.admin.model.RegisterDeploymentRequest
-import dev.restate.admin.model.RegisterDeploymentRequestAnyOf
+import dev.restate.admin.model.RegisterHttpDeploymentRequest
 import dev.restate.sdk.endpoint.Endpoint
 import dev.restate.sdk.http.vertx.RestateHttpServer
 import dev.restate.sdktesting.infra.runtimeconfig.IngressOptions
@@ -35,7 +35,6 @@ import kotlin.time.toJavaDuration
 import org.apache.logging.log4j.CloseableThreadContext
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.ThreadContext
-import org.junit.jupiter.api.extension.ExtensionContext
 import org.rnorth.ducttape.unreliables.Unreliables
 import org.testcontainers.Testcontainers
 import org.testcontainers.containers.*
@@ -56,7 +55,7 @@ private constructor(
     configSchema: RestateConfigSchema?,
     overrideRestateContainerImage: String?,
     overrideRestateStateDirectoryMount: String?,
-) : AutoCloseable, ExtensionContext.Store.CloseableResource {
+) : AutoCloseable {
 
   companion object {
     internal const val RESTATE_URI_ENV = "RESTATE_URI"
@@ -391,7 +390,7 @@ private constructor(
   }
 
   private fun discoverDeployment(client: DeploymentApi, uri: String) {
-    val request = RegisterDeploymentRequest(RegisterDeploymentRequestAnyOf().uri(uri).force(false))
+    val request = RegisterDeploymentRequest(RegisterHttpDeploymentRequest().uri(uri).force(false))
 
     val response =
         Unreliables.retryUntilSuccess(20, TimeUnit.SECONDS) {

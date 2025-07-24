@@ -248,11 +248,14 @@ class BackCompatibilityTest {
                     .dryRun(false))
 
         try {
-          adminApi.updateDeployment(deployment.id, updateRequest)
+          adminApi.updateDeployment(deployment.httpDeploymentResponse.id, updateRequest)
           LOG.info(
-              "Successfully updated deployment {} to use URI {}", deployment.id, localEndpointURI)
+              "Successfully updated deployment {} to use URI {}",
+              deployment.httpDeploymentResponse.id,
+              localEndpointURI)
         } catch (e: Exception) {
-          LOG.error("Failed to update deployment {}: {}", deployment.id, e.message)
+          LOG.error(
+              "Failed to update deployment {}: {}", deployment.httpDeploymentResponse.id, e.message)
           throw e
         }
       }

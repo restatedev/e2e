@@ -27,7 +27,7 @@ import org.awaitility.kotlin.withAlias
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
-class AwakeableIngressEndpoint {
+class AwakeableIngressEndpointTest {
 
   @VirtualObject
   class MyService {
@@ -51,9 +51,11 @@ class AwakeableIngressEndpoint {
   }
 
   @Test
-  fun completeWithSuccess(@InjectClient ingressClient: Client) = runTest {
+  fun completeWithSuccess(
+      @InjectClient ingressClient: Client,
+  ) = runTest {
     val key = UUID.randomUUID().toString()
-    val client = AwakeableIngressEndpointMyServiceClient.fromClient(ingressClient, key)
+    val client = AwakeableIngressEndpointTestMyServiceClient.fromClient(ingressClient, key)
 
     val runResult = async { client.run(idempotentCallOptions) }
 
@@ -80,7 +82,7 @@ class AwakeableIngressEndpoint {
   @Test
   fun completeWithFailure(@InjectClient ingressClient: Client) = runTest {
     val key = UUID.randomUUID().toString()
-    val client = AwakeableIngressEndpointMyServiceClient.fromClient(ingressClient, key)
+    val client = AwakeableIngressEndpointTestMyServiceClient.fromClient(ingressClient, key)
 
     val runResult = async { runCatching { client.run(idempotentCallOptions) }.exceptionOrNull() }
 
