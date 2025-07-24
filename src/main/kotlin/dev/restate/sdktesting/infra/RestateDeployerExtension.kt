@@ -18,22 +18,22 @@ class RestateDeployerExtension(
   override fun beforeAll(context: ExtensionContext) {
     val builder = RestateDeployer.builder()
 
+    val className =
+        (context.enclosingTestClasses.map { it.simpleName } +
+                listOf(context.requiredTestClass.simpleName))
+            .joinToString("$")
+
     val deployerFactory =
         this.deployerFactory
             ?: (AnnotationSupport.findAnnotatedFieldValues(
                     context.requiredTestInstance, Deployer::class.java)
                 .firstOrNull() as? RestateDeployer.Builder.() -> Unit)
     if (deployerFactory == null) {
-      throw IllegalStateException(
-          "The class " +
-              context.requiredTestClass.getName() +
-              " has no deployer factory configured")
+      throw IllegalStateException("The class $className has no deployer factory configured")
     }
 
     deployerFactory.invoke(builder)
-    val deployer =
-        builder.build(
-            RestateDeployer.reportDirectory(getReportPath(context), context.requiredTestClass))
+    val deployer = builder.build(RestateDeployer.reportDirectory(getReportPath(context), className))
     context.getStore(NAMESPACE).put(DEPLOYER_KEY, deployer)
     deployer.deployAll()
   }

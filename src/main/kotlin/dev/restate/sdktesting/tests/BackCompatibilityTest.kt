@@ -37,14 +37,7 @@ import org.apache.logging.log4j.LogManager
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.withAlias
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.ClassOrderer
-import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Order
-import org.junit.jupiter.api.Tag
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestClassOrder
-import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.*
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
@@ -54,7 +47,7 @@ import org.junit.jupiter.api.parallel.Isolated
 @Isolated
 @Execution(ExecutionMode.SAME_THREAD)
 @TestClassOrder(ClassOrderer.OrderAnnotation::class)
-class FrontCompatibilityTest {
+class BackCompatibilityTest {
 
   @VirtualObject
   class MyService {
@@ -96,13 +89,13 @@ class FrontCompatibilityTest {
     @Handler
     suspend fun proxy(ctx: Context): String {
       callRetryCounter.incrementAndGet()
-      return FrontCompatibilityTestCalleeServiceClient.fromContext(ctx).call().await()
+      return BackCompatibilityTestCalleeServiceClient.fromContext(ctx).call().await()
     }
 
     @Handler
     suspend fun proxyOneWay(ctx: Context): String {
       oneWayCallRetryCounter.incrementAndGet()
-      FrontCompatibilityTestCalleeServiceClient.fromContext(ctx).send().call()
+      BackCompatibilityTestCalleeServiceClient.fromContext(ctx).send().call()
       return "Done"
     }
   }
@@ -114,8 +107,8 @@ class FrontCompatibilityTest {
   }
 
   companion object {
-    private val LOG = LogManager.getLogger(FrontCompatibilityTest::class.java)
-    private val stateDir = Files.createTempDirectory("front-compat-test").toAbsolutePath()
+    private val LOG = LogManager.getLogger(BackCompatibilityTest::class.java)
+    private val stateDir = Files.createTempDirectory("back-compat-test").toAbsolutePath()
 
     private val awakeableKey = UUID.randomUUID().toString()
 
@@ -128,7 +121,7 @@ class FrontCompatibilityTest {
     private val oneWayCallRetryCounter = AtomicInteger(0)
 
     init {
-      LOG.info("Using state directory for front compatibility test: {}", stateDir)
+      LOG.info("Using state directory for back compatibility test: {}", stateDir)
     }
   }
 
@@ -139,20 +132,18 @@ class FrontCompatibilityTest {
   @Execution(ExecutionMode.SAME_THREAD)
   @TestInstance(TestInstance.Lifecycle.PER_CLASS)
   @ExtendWith(RestateDeployerExtension::class)
-  inner class OldVersion {
+  inner class NewVersion {
 
     @Deployer
     val deployerExt: RestateDeployer.Builder.() -> Unit = {
-      withEnv("RESTATE_CLUSTER_NAME", "front-compat-test")
-      withOverrideRestateContainerImage(
-          "ghcr.io/restatedev/restate:${Constants.LAST_COMPATIBLE_RESTATE_SERVER_VERSION}")
+      withEnv("RESTATE_CLUSTER_NAME", "back-compat-test")
       withOverrideRestateStateDirectoryMount(stateDir.toString())
       withEndpoint(Endpoint.bind(MyService()).bind(FailingRetryableService()).bind(ProxyService()))
     }
 
     @Test
     fun createAwakeable(@InjectClient ingressClient: Client) = runTest {
-      val client = FrontCompatibilityTestMyServiceClient.fromClient(ingressClient, awakeableKey)
+      val client = BackCompatibilityTestMyServiceClient.fromClient(ingressClient, awakeableKey)
 
       client.send().run(init = idempotentCallOptions)
 
@@ -166,7 +157,7 @@ class FrontCompatibilityTest {
 
     @Test
     fun startRetryableOperation(@InjectClient ingressClient: Client) = runTest {
-      val retryableClient = FrontCompatibilityTestRetryableServiceClient.fromClient(ingressClient)
+      val retryableClient = BackCompatibilityTestRetryableServiceClient.fromClient(ingressClient)
 
       // Send the request and expect it to fail
       retryableClient.send().runRetryableOperation { idempotencyKey = idempotencyKeyRunBlockTest }
@@ -183,7 +174,7 @@ class FrontCompatibilityTest {
 
     @Test
     fun startProxyCall(@InjectClient ingressClient: Client) = runTest {
-      val retryableClient = FrontCompatibilityTestProxyServiceClient.fromClient(ingressClient)
+      val retryableClient = BackCompatibilityTestProxyServiceClient.fromClient(ingressClient)
 
       retryableClient.send().proxy { idempotencyKey = idempotencyKeyCallTest }
 
@@ -197,7 +188,7 @@ class FrontCompatibilityTest {
 
     @Test
     fun startOneWayProxyCall(@InjectClient ingressClient: Client) = runTest {
-      val retryableClient = FrontCompatibilityTestProxyServiceClient.fromClient(ingressClient)
+      val retryableClient = BackCompatibilityTestProxyServiceClient.fromClient(ingressClient)
 
       retryableClient.send().proxyOneWay { idempotencyKey = idempotencyKeyOneWayCallTest }
 
@@ -217,11 +208,13 @@ class FrontCompatibilityTest {
   @Execution(ExecutionMode.SAME_THREAD)
   @TestInstance(TestInstance.Lifecycle.PER_CLASS)
   @ExtendWith(RestateDeployerExtension::class)
-  inner class NewVersion {
+  inner class OldVersion {
 
     @Deployer
     val deployerExt: RestateDeployer.Builder.() -> Unit = {
-      withEnv("RESTATE_CLUSTER_NAME", "front-compat-test")
+      withEnv("RESTATE_CLUSTER_NAME", "back-compat-test")
+      withOverrideRestateContainerImage(
+          "ghcr.io/restatedev/restate:${Constants.LAST_COMPATIBLE_RESTATE_SERVER_VERSION}")
       withOverrideRestateStateDirectoryMount(stateDir.toString())
       withEndpoint(
           Endpoint.bind(MyService())
@@ -267,7 +260,7 @@ class FrontCompatibilityTest {
 
     @Test
     fun completeAwakeable(@InjectClient ingressClient: Client) = runTest {
-      val client = FrontCompatibilityTestMyServiceClient.fromClient(ingressClient, awakeableKey)
+      val client = BackCompatibilityTestMyServiceClient.fromClient(ingressClient, awakeableKey)
 
       val awakeableId = client.getAwakeable(idempotentCallOptions)
       assertThat(client.getAwakeable(idempotentCallOptions)).isNotBlank()
@@ -282,7 +275,7 @@ class FrontCompatibilityTest {
 
     @Test
     fun completeRetryableOperation(@InjectClient ingressClient: Client) = runTest {
-      val retryableClient = FrontCompatibilityTestRetryableServiceClient.fromClient(ingressClient)
+      val retryableClient = BackCompatibilityTestRetryableServiceClient.fromClient(ingressClient)
 
       val result =
           retryableClient.send().runRetryableOperation {
@@ -297,7 +290,7 @@ class FrontCompatibilityTest {
 
     @Test
     fun proxyCallShouldBeDone(@InjectClient ingressClient: Client) = runTest {
-      val retryableClient = FrontCompatibilityTestProxyServiceClient.fromClient(ingressClient)
+      val retryableClient = BackCompatibilityTestProxyServiceClient.fromClient(ingressClient)
 
       val result = retryableClient.send().proxy { idempotencyKey = idempotencyKeyCallTest }
 
@@ -309,7 +302,7 @@ class FrontCompatibilityTest {
 
     @Test
     fun proxyOneWayCallShouldBeDone(@InjectClient ingressClient: Client) = runTest {
-      val retryableClient = FrontCompatibilityTestProxyServiceClient.fromClient(ingressClient)
+      val retryableClient = BackCompatibilityTestProxyServiceClient.fromClient(ingressClient)
 
       val result =
           retryableClient.send().proxyOneWay { idempotencyKey = idempotencyKeyOneWayCallTest }

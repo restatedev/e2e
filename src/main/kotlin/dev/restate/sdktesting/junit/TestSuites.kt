@@ -33,13 +33,16 @@ object TestSuites {
           ),
           "(always-suspending | only-always-suspending) & !only-single-node",
           3)
+  private val VERSION_COMPATIBILITY_SUITE =
+      TestSuite("versionCompat", emptyMap(), "version-compatibility")
 
   fun allSuites(): List<TestSuite> {
     return listOf(
         DEFAULT_SUITE,
         THREE_NODES_SUITE,
         ALWAYS_SUSPENDING_SUITE,
-        THREE_NODES_ALWAYS_SUSPENDING_SUITE)
+        THREE_NODES_ALWAYS_SUSPENDING_SUITE,
+        VERSION_COMPATIBILITY_SUITE)
   }
 
   fun resolveSuites(suite: String?): List<TestSuite> {
@@ -56,6 +59,7 @@ object TestSuites {
                     ALWAYS_SUSPENDING_SUITE.name -> listOf(ALWAYS_SUSPENDING_SUITE)
                     THREE_NODES_ALWAYS_SUSPENDING_SUITE.name ->
                         listOf(THREE_NODES_ALWAYS_SUSPENDING_SUITE)
+                    VERSION_COMPATIBILITY_SUITE.name -> listOf(VERSION_COMPATIBILITY_SUITE)
                     else -> {
                       throw IllegalArgumentException("Unexpected suite name $suite")
                     }
