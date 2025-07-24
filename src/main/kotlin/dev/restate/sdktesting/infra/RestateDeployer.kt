@@ -13,7 +13,7 @@ import dev.restate.admin.api.DeploymentApi
 import dev.restate.admin.client.ApiClient
 import dev.restate.admin.client.ApiException
 import dev.restate.admin.model.RegisterDeploymentRequest
-import dev.restate.admin.model.RegisterDeploymentRequestAnyOf
+import dev.restate.admin.model.RegisterHttpDeploymentRequest
 import dev.restate.sdk.endpoint.Endpoint
 import dev.restate.sdk.http.vertx.RestateHttpServer
 import dev.restate.sdktesting.infra.runtimeconfig.IngressOptions
@@ -391,7 +391,7 @@ private constructor(
   }
 
   private fun discoverDeployment(client: DeploymentApi, uri: String) {
-    val request = RegisterDeploymentRequest(RegisterDeploymentRequestAnyOf().uri(uri).force(false))
+    val request = RegisterDeploymentRequest(RegisterHttpDeploymentRequest().uri(uri).force(false))
 
     val response =
         Unreliables.retryUntilSuccess(20, TimeUnit.SECONDS) {
