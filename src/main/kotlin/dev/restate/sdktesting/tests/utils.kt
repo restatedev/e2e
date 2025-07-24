@@ -28,6 +28,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.kotlin.additionalLoggingContext
+import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.core.ConditionFactory
 
 private val LOG = LogManager.getLogger("dev.restate.sdktesting.tests")
@@ -100,7 +101,7 @@ suspend fun getJournal(adminURI: URI, invocationId: String): JournalQueryResult 
  * @param adminURI The URI of the Restate admin API
  * @return The parsed result of the query containing invocation status information
  */
-suspend fun getInvocationStatus(adminURI: URI, invocationId: String): InvocationQueryResult {
+suspend fun getInvocationStatus(adminURI: URI, invocationId: String): SysInvocationEntry {
   // Create the HTTP request to query sys_invocation
   val request =
       HttpRequest.newBuilder()
@@ -117,5 +118,7 @@ suspend fun getInvocationStatus(adminURI: URI, invocationId: String): Invocation
       HttpClient.newHttpClient().sendAsync(request, HttpResponse.BodyHandlers.ofString()).await()
 
   // Parse the response using Kotlin serialization
-  return sysQueryJson.decodeFromString<InvocationQueryResult>(response.body())
+  val queryResult = sysQueryJson.decodeFromString<InvocationQueryResult>(response.body())
+  assertThat(queryResult.rows).size().isEqualTo(1)
+  return queryResult.rows[0]
 }
