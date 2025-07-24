@@ -10,6 +10,9 @@ package dev.restate.sdktesting.infra
 
 import com.github.dockerjava.api.command.InspectContainerResponse
 import org.testcontainers.utility.DockerImageName
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.toJavaDuration
 
 /**
  * This class overrides the testcontainers [org.testcontainers.containers.KafkaContainer] to
@@ -29,6 +32,7 @@ class KafkaContainer(private vararg val topics: String) :
   init {
     // Make sure we have auto.create.topics.enable as true
     withEnv("KAFKA_AUTO_CREATE_TOPICS_ENABLE", "true")
+    withStartupTimeout(2.minutes.toJavaDuration())
   }
 
   // This is copied and pasted from KafkaContainer original class to add the listeners from the
