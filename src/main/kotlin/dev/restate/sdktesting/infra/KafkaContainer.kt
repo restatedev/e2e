@@ -9,10 +9,9 @@
 package dev.restate.sdktesting.infra
 
 import com.github.dockerjava.api.command.InspectContainerResponse
-import org.testcontainers.utility.DockerImageName
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
+import org.testcontainers.utility.DockerImageName
 
 /**
  * This class overrides the testcontainers [org.testcontainers.containers.KafkaContainer] to
