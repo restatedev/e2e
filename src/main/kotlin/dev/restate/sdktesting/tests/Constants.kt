@@ -10,5 +10,5 @@ package dev.restate.sdktesting.tests
 
 object Constants {
 
-  val LAST_COMPATIBLE_RESTATE_SERVER_VERSION = "1.3.2"
+  val LAST_COMPATIBLE_RESTATE_SERVER_VERSION = "1.4.4"
 }
