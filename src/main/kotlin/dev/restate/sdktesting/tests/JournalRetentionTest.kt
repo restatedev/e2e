@@ -56,8 +56,8 @@ class JournalRetentionTest {
     await withAlias
         "got the invocation completed, with the journal retained" untilAsserted
         {
-          assertThat(getInvocationStatus(adminURI, invocationId).rows)
-              .contains(SysInvocationEntry(id = invocationId, status = "completed"))
+          assertThat(getInvocationStatus(adminURI, invocationId))
+              .isEqualTo(SysInvocationEntry(id = invocationId, status = "completed"))
           assertThat(getJournal(adminURI, invocationId).rows)
               .containsExactly(
                   SysJournalEntry(0, "Command: Input"),
