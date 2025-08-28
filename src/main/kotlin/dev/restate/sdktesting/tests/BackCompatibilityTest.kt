@@ -22,6 +22,8 @@ import dev.restate.sdk.annotation.Shared
 import dev.restate.sdk.annotation.VirtualObject
 import dev.restate.sdk.endpoint.Endpoint
 import dev.restate.sdk.kotlin.*
+import dev.restate.sdk.kotlin.endpoint.inactivityTimeout
+import dev.restate.sdk.kotlin.endpoint.journalRetention
 import dev.restate.sdktesting.infra.Deployer
 import dev.restate.sdktesting.infra.InjectAdminURI
 import dev.restate.sdktesting.infra.InjectClient
@@ -42,6 +44,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.api.parallel.Isolated
+import kotlin.time.Duration.Companion.minutes
 
 @Tag("version-compatibility")
 @Isolated
@@ -138,7 +141,10 @@ class BackCompatibilityTest {
     val deployerExt: RestateDeployer.Builder.() -> Unit = {
       withEnv("RESTATE_CLUSTER_NAME", "back-compat-test")
       withOverrideRestateStateDirectoryMount(stateDir.toString())
-      withEndpoint(Endpoint.bind(MyService()).bind(FailingRetryableService()).bind(ProxyService()))
+      withEndpoint(Endpoint.bind(MyService()).bind(FailingRetryableService()).bind(ProxyService(), {
+        it.journalRetention = 10.minutes
+        it.inactivityTimeout = 2.minutes
+      }))
     }
 
     @Test
@@ -219,8 +225,14 @@ class BackCompatibilityTest {
       withEndpoint(
           Endpoint.bind(MyService())
               .bind(FixedRetryableService())
-              .bind(ProxyService())
-              .bind(CalleeService()))
+              .bind(ProxyService(), {
+                it.journalRetention = 10.minutes
+                it.inactivityTimeout = 2.minutes
+              })
+              .bind(CalleeService(), {
+                it.journalRetention = 20.minutes
+                it.inactivityTimeout = 2.minutes
+              }))
     }
 
     // We need to patch the service deployments, otherwise restate will continue retrying to the old
