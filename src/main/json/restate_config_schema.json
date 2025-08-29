@@ -175,6 +175,7 @@
       "description": "Defines the roles which this Restate node should run, by default the node starts with all roles.",
       "default": [
         "worker",
+        "http-ingress",
         "admin",
         "metadata-store",
         "log-server"
