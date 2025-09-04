@@ -1,0 +1,110 @@
+// Copyright (c) 2023 - Restate Software, Inc., Restate GmbH
+//
+// This file is part of the Restate SDK Test suite tool,
+// which is released under the MIT license.
+//
+// You can find a copy of the license in file LICENSE in the root
+// directory of this repository or package, or at
+// https://github.com/restatedev/sdk-test-suite/blob/main/LICENSE
+package dev.restate.sdktesting.tests
+
+import dev.restate.admin.api.InvocationApi
+import dev.restate.admin.client.ApiClient
+import dev.restate.client.Client
+import dev.restate.sdk.annotation.Handler
+import dev.restate.sdk.annotation.Name
+import dev.restate.sdk.annotation.Service
+import dev.restate.sdk.endpoint.Endpoint
+import dev.restate.sdk.kotlin.Context
+import dev.restate.sdk.kotlin.runBlock
+import dev.restate.sdktesting.infra.InjectAdminURI
+import dev.restate.sdktesting.infra.InjectClient
+import dev.restate.sdktesting.infra.RestateDeployerExtension
+import java.net.URI
+import org.apache.logging.log4j.LogManager
+import org.assertj.core.api.Assertions.assertThat
+import org.awaitility.kotlin.await
+import org.awaitility.kotlin.withAlias
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.RegisterExtension
+
+class PauseResumeTest {
+
+  @Service
+  @Name("RetryableService")
+  interface RetryableService {
+    @Handler suspend fun runRetryableOperation(ctx: Context): String
+  }
+
+  class FailingRetryableService : RetryableService {
+    override suspend fun runRetryableOperation(ctx: Context): String {
+      return ctx.runBlock { throw RuntimeException("This should fail in old version") }
+    }
+  }
+
+  class FixedRetryableService : RetryableService {
+    override suspend fun runRetryableOperation(ctx: Context): String {
+      return ctx.runBlock { "Success in new version!" }
+    }
+  }
+
+  companion object {
+    private val LOG = LogManager.getLogger(PauseResumeTest::class.java)
+
+    @RegisterExtension
+    @JvmField
+    val deployerExt: RestateDeployerExtension = RestateDeployerExtension {
+      // Enable pause on max attempts with fast retries
+      withEnv("RESTATE_DEFAULT_RETRY_POLICY__INITIAL_INTERVAL", "10ms")
+      withEnv("RESTATE_DEFAULT_RETRY_POLICY__MAX_INTERVAL", "10ms")
+      withEnv("RESTATE_DEFAULT_RETRY_POLICY__MAX_ATTEMPTS", "10")
+      withEnv("RESTATE_DEFAULT_RETRY_POLICY__ON_MAX_ATTEMPTS", "pause")
+
+      // Deploy only the failing implementation initially
+      withEndpoint(Endpoint.bind(FailingRetryableService()))
+    }
+  }
+
+  @Test
+  fun pauseAndResumeInvocation(
+      @InjectClient ingressClient: Client,
+      @InjectAdminURI adminURI: URI,
+  ) = runTest {
+    // Create client for RetryableService
+    val retryClient = PauseResumeTestRetryableServiceClient.fromClient(ingressClient)
+
+    // Send idempotent request to trigger retries and pause
+    val sendResult = retryClient.send().runRetryableOperation(init = idempotentCallOptions)
+    val invocationId = sendResult.invocationId()
+
+    // Wait until the invocation is paused (or suspended) by the runtime
+    await withAlias
+        "invocation is paused or suspended" untilAsserted
+        {
+          val status = getInvocationStatus(adminURI, invocationId)
+          assertThat(status.status).isIn("paused", "suspended")
+        }
+
+    // Start a new local endpoint exposing the fixed implementation and keep it alive
+    startAndRegisterLocalEndpoint(Endpoint.bind(FixedRetryableService()).build(), adminURI).use {
+        local ->
+      // Resume the paused invocation
+      val adminClient = ApiClient().setHost(adminURI.host).setPort(adminURI.port)
+      val invocationApi = InvocationApi(adminClient)
+      try {
+        invocationApi.resumeInvocation(invocationId, "latest")
+      } catch (e: Exception) {
+        LOG.error("Failed to resume invocation {}: {}", invocationId, e.message)
+        throw e
+      }
+
+      // Wait until status transitions to completed after resume
+      await withAlias
+          "invocation completed" untilAsserted
+          {
+            val status = getInvocationStatus(adminURI, invocationId)
+            assertThat(status.status).isEqualTo("completed")
+          }
+    }
+  }
+}
