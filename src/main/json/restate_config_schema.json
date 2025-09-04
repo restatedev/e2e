@@ -4,23 +4,20 @@
   "description": "Configuration for Restate server.",
   "type": "object",
   "required": [
-    "tracing-filter",
-    "tracing-headers"
+    "tracing-filter"
   ],
   "properties": {
     "worker": {
       "default": {
         "cleanup-interval": "1h",
-        "experimental-feature-disable-idempotency-table": false,
-        "experimental-feature-invocation-status-killed": false,
         "internal-queue-length": 1000,
         "invoker": {
           "abort-timeout": "1m",
-          "concurrent-invocations-limit": 100,
+          "concurrent-invocations-limit": 1000,
           "in-memory-queue-length-limit": 66049,
           "inactivity-timeout": "1m",
           "message-size-limit": null,
-          "message-size-warning": "10.0 MB",
+          "message-size-warning": "10.0 MiB",
           "retry-policy": {
             "factor": 2.0,
             "initial-interval": "50ms",
@@ -30,15 +27,20 @@
           },
           "tmp-dir": null
         },
-        "max-command-batch-size": 4,
+        "max-command-batch-size": 32,
         "num-timers-in-memory-limit": null,
         "snapshots": {
           "destination": null,
+          "object-store-retry-policy": {
+            "factor": 2.0,
+            "initial-interval": "100ms",
+            "max-attempts": 10,
+            "max-interval": "10s",
+            "type": "exponential"
+          },
           "snapshot-interval-num-records": null
         },
         "storage": {
-          "persist-lsn-interval": "1h",
-          "persist-lsn-threshold": 1000,
           "rocksdb-disable-wal": true,
           "rocksdb-log-keep-file-num": null,
           "rocksdb-log-level": null,
@@ -50,18 +52,15 @@
     },
     "admin": {
       "default": {
-        "advertised-ingress-endpoint": "http://localhost:8080/",
+        "advertised-admin-endpoint": null,
         "bind-address": "0.0.0.0:9070",
         "concurrent-api-requests-limit": null,
-        "default-partition-replication": "everywhere",
         "disable-cluster-controller": false,
+        "disable-web-ui": false,
         "heartbeat-interval": "1s 500ms",
-        "log-tail-update-interval": "5m",
-        "log-trim-interval": "1h",
-        "log-trim-threshold": null,
+        "log-trim-check-interval": "1h",
         "query-engine": {
-          "memory-size": "4.0 GB",
-          "pgsql-bind-address": "0.0.0.0:9071",
+          "memory-size": "4.0 GiB",
           "query-parallelism": null,
           "tmp-dir": null
         }
@@ -70,10 +69,9 @@
     },
     "ingress": {
       "default": {
+        "advertised-ingress-endpoint": null,
         "bind-address": "0.0.0.0:8080",
         "concurrent-api-requests-limit": null,
-        "experimental-feature-enable-separate-ingress-role": false,
-        "experimental-feature-kafka-ingress-next": false,
         "kafka-clusters": []
       },
       "$ref": "#/definitions/IngressOptions"
@@ -82,8 +80,9 @@
       "default": {
         "append-retry-max-interval": "1s",
         "append-retry-min-interval": "10ms",
-        "auto-recovery-interval": "3s",
-        "default-provider": "local",
+        "auto-recovery-interval": "15s",
+        "default-provider": "replicated",
+        "disable-auto-improvement": false,
         "local": {
           "rocksdb-disable-wal": false,
           "rocksdb-disable-wal-fsync": false,
@@ -101,9 +100,8 @@
           "max-interval": "1s",
           "type": "exponential"
         },
-        "record-cache-memory-size": "20.0 MB",
+        "record-cache-memory-size": "250.0 MiB",
         "replicated-loglet": {
-          "default-log-replication": "{node: 1}",
           "log-server-retry-policy": {
             "factor": 2.0,
             "initial-interval": "250ms",
@@ -113,7 +111,8 @@
           },
           "log-server-rpc-timeout": "2s",
           "maximum-inflight-records": 1000,
-          "readahead-records": 100,
+          "read-batch-size": "32.0 KiB",
+          "readahead-records": 20,
           "readahead-trigger-ratio": 0.5,
           "sequencer-inactivity-timeout": "15s",
           "sequencer-retry-policy": {
@@ -130,13 +129,18 @@
     },
     "metadata-server": {
       "default": {
+        "auto-join": true,
+        "log-trim-threshold": 1000,
+        "raft-election-tick": 10,
+        "raft-heartbeat-tick": 2,
+        "raft-tick-interval": "100ms",
         "request-queue-length": 32,
         "rocksdb-disable-wal": false,
         "rocksdb-log-keep-file-num": null,
         "rocksdb-log-level": null,
         "rocksdb-log-max-file-size": null,
         "rocksdb-memory-ratio": 0.009999999776482582,
-        "type": "local"
+        "status-update-interval": "5s"
       },
       "$ref": "#/definitions/MetadataServerOptions"
     },
@@ -150,11 +154,12 @@
           "type": "exponential"
         },
         "connect-timeout": "3s",
+        "data-stream-window-size": "2.0 MiB",
+        "disable-compression": false,
         "handshake-timeout": "3s",
         "http2-adaptive-window": true,
-        "http2-keep-alive-interval": "5s",
-        "http2-keep-alive-timeout": "5s",
-        "outbound-queue-length": 1000
+        "http2-keep-alive-interval": "1s",
+        "http2-keep-alive-timeout": "3s"
       },
       "$ref": "#/definitions/NetworkingOptions"
     },
@@ -166,6 +171,7 @@
         "rocksdb-log-keep-file-num": null,
         "rocksdb-log-level": null,
         "rocksdb-log-max-file-size": null,
+        "rocksdb-max-sub-compactions": 0,
         "rocksdb-memory-ratio": 0.5,
         "writer-batch-commit-count": 5000
       },
@@ -175,10 +181,10 @@
       "description": "Defines the roles which this Restate node should run, by default the node starts with all roles.",
       "default": [
         "worker",
-        "http-ingress",
         "admin",
-        "metadata-store",
-        "log-server"
+        "metadata-server",
+        "log-server",
+        "http-ingress"
       ],
       "type": "array",
       "items": {
@@ -236,16 +242,16 @@
           "http://127.0.0.1:5122/"
         ],
         "backoff-policy": {
-          "factor": 2.0,
-          "initial-interval": "250ms",
+          "factor": 1.399999976158142,
+          "initial-interval": "100ms",
           "max-attempts": 10,
-          "max-interval": "3s",
+          "max-interval": "1s",
           "type": "exponential"
         },
         "connect-timeout": "3s",
         "keep-alive-interval": "5s",
         "keep-alive-timeout": "5s",
-        "type": "native"
+        "type": "replicated"
       },
       "$ref": "#/definitions/MetadataClientOptions"
     },
@@ -264,7 +270,13 @@
       "default": 24,
       "type": "integer",
       "format": "uint16",
-      "minimum": 1.0
+      "minimum": 0.0
+    },
+    "default-replication": {
+      "title": "Default replication factor",
+      "description": "Configures the global default replication factor to be used by the the system.\n\nNote that this value only impacts the cluster initial provisioning and will not be respected after the cluster has been provisioned.\n\nTo update existing clusters use the `restatectl` utility.",
+      "default": 1,
+      "type": "string"
     },
     "shutdown-timeout": {
       "title": "Shutdown grace timeout",
@@ -305,14 +317,6 @@
       "description": "Address to bind for the tokio-console tracing subscriber. If unset and restate-server is built with tokio-console support, it'll listen on `0.0.0.0:6669`.",
       "type": "string"
     },
-    "histogram-inactivity-timeout": {
-      "description": "Timeout for idle histograms.\n\nThe duration after which a histogram is considered idle and will be removed from metric responses to save memory. Unsetting means that histograms will never be removed.",
-      "default": null,
-      "type": [
-        "string",
-        "null"
-      ]
-    },
     "disable-prometheus": {
       "description": "Disable prometheus metric recording and reporting. Default is `false`.",
       "default": false,
@@ -339,7 +343,7 @@
     "rocksdb-total-memory-size": {
       "title": "Total memory limit for rocksdb caches and memtables.",
       "description": "This includes memory for uncompressed block cache and all memtables by all open databases. The memory size used for rocksdb caches.",
-      "default": "6.0 GB",
+      "default": "6.0 GiB",
       "$ref": "#/definitions/NonZeroHumanBytes"
     },
     "rocksdb-total-memtables-ratio": {
@@ -369,7 +373,7 @@
     },
     "rocksdb-write-stall-threshold": {
       "title": "Rocksdb stall detection threshold",
-      "description": "This defines the duration afterwhich a write is to be considered in \"stall\" state. For every write that meets this threshold, the system will increment the `restate.rocksdb_stall_flare` gauge, if the write is unstalled, the guage will be updated accordingly.",
+      "description": "This defines the duration after which a write is to be considered in \"stall\" state. For every write that meets this threshold, the system will increment the `restate.rocksdb_stall_flare` gauge, if the write is unstalled, the guage will be updated accordingly.",
       "default": "3s",
       "type": "string"
     },
@@ -387,7 +391,13 @@
     },
     "metadata-update-interval": {
       "title": "Metadata update interval",
-      "description": "The interval at which each node checks for metadata updates it has observed from different nodes or other sources.",
+      "description": "The idle time after which the node will check for metadata updates from metadata store. This helps the node detect if it has been operating with stale metadata for extended period of time, primarily because it didn't interact with other peers in the cluster during that period.",
+      "default": "10s",
+      "type": "string"
+    },
+    "metadata-fetch-from-peer-timeout": {
+      "title": "Timeout for metadata peer-to-peer fetching",
+      "description": "When a node detects that a new metadata version exists, it'll attempt to fetch it from its peers. After this timeout duration has passed, the node will attempt to fetch the metadata from metadata store as well. This is to ensure that the nodes converge quickly while reducing the load on the metadata store.",
       "default": "3s",
       "type": "string"
     },
@@ -469,6 +479,17 @@
         "null"
       ]
     },
+    "additional-request-headers": {
+      "title": "Additional request headers",
+      "description": "Headers that should be applied to all outgoing requests (HTTP and Lambda). Defaults to `x-restate-cluster-name: <cluster name>`.",
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
     "http-keep-alive-options": {
       "title": "HTTP/2 Keep-alive",
       "description": "Configuration for the HTTP/2 keep-alive mechanism, using PING frames. If unset, HTTP/2 keep-alive are disabled.",
@@ -502,6 +523,17 @@
       "default": "10s",
       "type": "string"
     },
+    "initial-max-send-streams": {
+      "title": "Initial Max Send Streams",
+      "description": "Sets the initial maximum of locally initiated (send) streams.\n\nThis value will be overwritten by the value included in the initial SETTINGS frame received from the peer as part of a [connection preface].\n\nDefault: None\n\n**NOTE**: Setting this value to None (default) users the default recommended value from HTTP2 specs",
+      "default": null,
+      "type": [
+        "integer",
+        "null"
+      ],
+      "format": "uint",
+      "minimum": 0.0
+    },
     "aws-profile": {
       "title": "AWS Profile",
       "description": "Name of the AWS profile to select. Defaults to 'AWS_PROFILE' env var, or otherwise the `default` profile.",
@@ -518,6 +550,19 @@
       "type": [
         "string",
         "null"
+      ]
+    },
+    "request-compression-threshold": {
+      "title": "Request Compression threshold",
+      "description": "Request minimum size to enable compression. The request size includes the total of the journal replay and its framing using Restate service protocol, without accounting for the json envelope and the base 64 encoding.\n\nDefault: 4MB (The default AWS Lambda Limit is 6MB, 4MB roughly accounts for +33% of Base64 and the json envelope).",
+      "default": "4.0 MiB",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/HumanBytes"
+        },
+        {
+          "type": "null"
+        }
       ]
     },
     "rocksdb-disable-direct-io-for-reads": {
@@ -621,6 +666,121 @@
           "type": "null"
         }
       ]
+    },
+    "rocksdb-block-size": {
+      "title": "RocksDB block size",
+      "description": "Uncompressed block size\n\nDefault: 64KiB",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/NonZeroHumanBytes"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "gossip-tick-interval": {
+      "title": "Gossip tick interval",
+      "description": "The interval at which the failure detector will tick. Decrease this value for faster reaction to node failures. Note, that every tick comes with an overhead.",
+      "default": "100ms",
+      "type": "string"
+    },
+    "gossip-failure-threshold": {
+      "title": "Gossip failure threshold",
+      "description": "Specifies how many gossip intervals of inactivity need to pass before considering a node as dead.",
+      "default": 10,
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 1.0
+    },
+    "gossip-num-peers": {
+      "title": "Number of peers to gossip",
+      "description": "On every gossip interval, how many peers each node attempts to gossip with. The default is optimized for small clusters (<5). On larger clusters, if gossip overhead is noticeable, consider reducing this value to 1.",
+      "default": 2,
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 1.0
+    },
+    "gossip-fd-stability-threshold": {
+      "title": "Gossips before failure detector is stable",
+      "default": 3,
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 1.0
+    },
+    "gossip-suspect-interval": {
+      "title": "Suspect duration",
+      "description": "How long to keep a node in a transient state (suspect) before marking it as available. Larger values mean that the cluster is less prone to flaky nodes but extends the time it takes for a node to participate.\n\nA node becomes a suspect if it has been previously marked as dead for a given generation number. If the node incremented its generation number, it will not be impacted by this threshold.",
+      "default": "5s",
+      "type": "string"
+    },
+    "gossip-loneliness-threshold": {
+      "title": "Gossip loneliness threshold",
+      "description": "How many intervals need to pass without receiving any gossip messages before considering this node as potentially isolated/dead. This threshold is used in the case where the node can still send gossip messages but did not receive any. This can rarely happen in asymmetric network partitions.\n\nIn this case, the node will advertise itself as dead in the gossip messages it sends out.\n\nNote: this threshold does not apply to a cluster that's configured with a single node.",
+      "default": 30,
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 1.0
+    },
+    "gossip-extras-exchange-frequency": {
+      "title": "Gossip extras exchange frequency",
+      "description": "In addition to basic health/liveness information, the gossip protocol is used to exchange extra information about the roles hosted by this node. For instance, which partitions are currently running, their configuration versions, and the durable LSN of the corresponding partition databases. This information is sent every Nth gossip message. This setting controls the frequency of this exchange. For instance, `10` means that every 10th gossip message will contain the extra information about.",
+      "default": 10,
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 1.0
+    },
+    "gossip-time-skew-threshold": {
+      "title": "Gossips time skew threshold",
+      "description": "The time skew is the maximum acceptable time difference between the local node and the time reported by peers via gossip messages. The time skew is also used to ignore gossip messages that are too old.",
+      "default": "1s",
+      "type": "string"
+    },
+    "default-journal-retention": {
+      "title": "Default journal retention",
+      "description": "Default journal retention for all invocations. A value of `0` or `None` means no retention by default.\n\nIn production setups, it is advisable to disable default journal retention, and configure journal retention per service using the respective SDK APIs.",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/DurationString"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "max-journal-retention": {
+      "title": "Maximum journal retention duration",
+      "description": "Maximum journal retention duration that can be configured. When discovering a service deployment, or when modifying the journal retention using the Admin API, the given value will be clamped.\n\n`None` means no limit.",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/DurationString"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "default-retry-policy": {
+      "title": "Default retry policy",
+      "description": "The default retry policy to use for invocations.\n\nThe retry policy can be customized on a service/handler basis, using the respective SDK APIs.",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/InvocationRetryPolicyOptions"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "max-retry-policy-max-attempts": {
+      "title": "Max configurable value for retry policy max attempts",
+      "description": "Maximum max attempts configurable in an invocation retry policy. When discovering a service deployment with configured retry policies, or when modifying the invocation retry policy using the Admin API, the given value will be clamped.\n\n`None` means no limit, that is infinite retries is enabled.",
+      "type": [
+        "integer",
+        "null"
+      ],
+      "format": "uint",
+      "minimum": 0.0
     }
   },
   "definitions": {
@@ -654,8 +814,6 @@
         },
         "storage": {
           "default": {
-            "persist-lsn-interval": "1h",
-            "persist-lsn-threshold": 1000,
             "rocksdb-disable-wal": true,
             "rocksdb-log-keep-file-num": null,
             "rocksdb-log-level": null,
@@ -667,11 +825,11 @@
         "invoker": {
           "default": {
             "abort-timeout": "1m",
-            "concurrent-invocations-limit": 100,
+            "concurrent-invocations-limit": 1000,
             "in-memory-queue-length-limit": 66049,
             "inactivity-timeout": "1m",
             "message-size-limit": null,
-            "message-size-warning": "10.0 MB",
+            "message-size-warning": "10.0 MiB",
             "retry-policy": {
               "factor": 2.0,
               "initial-interval": "50ms",
@@ -686,7 +844,7 @@
         "max-command-batch-size": {
           "title": "Maximum command batch size for partition processors",
           "description": "The maximum number of commands a partition processor will apply in a batch. The larger this value is, the higher the throughput and latency are.",
-          "default": 4,
+          "default": 32,
           "type": "integer",
           "format": "uint",
           "minimum": 1.0
@@ -696,6 +854,13 @@
           "description": "Snapshots provide a mechanism for safely trimming the log and efficient bootstrapping of new worker nodes.",
           "default": {
             "destination": null,
+            "object-store-retry-policy": {
+              "factor": 2.0,
+              "initial-interval": "100ms",
+              "max-attempts": 10,
+              "max-interval": "10s",
+              "type": "exponential"
+            },
             "snapshot-interval-num-records": null
           },
           "$ref": "#/definitions/SnapshotsOptions"
@@ -707,7 +872,7 @@
       "type": "object",
       "properties": {
         "num-partitions-to-share-memory-budget": {
-          "description": "How many partitions to divide memory across?\n\nBy default this uses the value defined in `bootstrap-num-partitions` in the common section of the config.",
+          "description": "How many partitions to divide memory across?\n\nBy default this uses the value defined in `default-num-partitions` in the common section of the config.",
           "type": [
             "integer",
             "null"
@@ -733,19 +898,24 @@
           "format": "float"
         },
         "persist-lsn-interval": {
-          "title": "Persist lsn interval",
-          "description": "Controls the interval at which worker tries to persist the last applied lsn. Lsn persisting can be disabled by setting it to \"\".",
-          "default": "1h",
+          "title": "Persist LSN interval (deprecated)",
+          "description": "This configuration option is deprecated and ignored in Restate >= 1.3.3.",
+          "deprecated": true,
+          "writeOnly": true,
           "type": [
             "string",
             "null"
           ]
         },
         "persist-lsn-threshold": {
-          "title": "Persist lsn threshold",
-          "description": "Minimum number of applied log entries before persisting the lsn. The worker will only persist a lsn if the partition processor has applied at least #threshold log entries since the last persisting. This prevents the worker from flushing the RocksDB memtables too often.",
-          "default": 1000,
-          "type": "integer",
+          "title": "Persist LSN threshold (deprecated)",
+          "description": "This configuration option is deprecated and ignored in Restate >= 1.3.3.",
+          "deprecated": true,
+          "writeOnly": true,
+          "type": [
+            "integer",
+            "null"
+          ],
           "format": "uint64",
           "minimum": 0.0
         },
@@ -842,6 +1012,18 @@
           "title": "RocksDB log max file size",
           "description": "Max size of info LOG file\n\nDefault: 64MB",
           "default": null,
+          "anyOf": [
+            {
+              "$ref": "#/definitions/NonZeroHumanBytes"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rocksdb-block-size": {
+          "title": "RocksDB block size",
+          "description": "Uncompressed block size\n\nDefault: 64KiB",
           "anyOf": [
             {
               "$ref": "#/definitions/NonZeroHumanBytes"
@@ -926,15 +1108,17 @@
       "properties": {
         "retry-policy": {
           "title": "Retry policy",
-          "description": "Retry policy to use for all the invocations handled by this invoker.",
-          "default": {
-            "factor": 2.0,
-            "initial-interval": "50ms",
-            "max-attempts": null,
-            "max-interval": "10s",
-            "type": "exponential"
-          },
-          "$ref": "#/definitions/RetryPolicy"
+          "description": "This is **deprecated** and will be removed in the next Restate releases.\n\nPlease refer to [`InvocationOptions.retry_policy`] for the new configuration options.",
+          "default": null,
+          "deprecated": true,
+          "anyOf": [
+            {
+              "$ref": "#/definitions/RetryPolicy"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "inactivity-timeout": {
           "title": "Inactivity timeout",
@@ -951,7 +1135,7 @@
         "message-size-warning": {
           "title": "Message size warning",
           "description": "Threshold to log a warning in case protocol messages coming from a service are larger than the specified amount.",
-          "default": "10.0 MB",
+          "default": "10.0 MiB",
           "$ref": "#/definitions/NonZeroHumanBytes"
         },
         "message-size-limit": {
@@ -987,7 +1171,7 @@
         "concurrent-invocations-limit": {
           "title": "Limit number of concurrent invocations from this node",
           "description": "Number of concurrent invocations that can be processed by the invoker.",
-          "default": 100,
+          "default": 1000,
           "type": [
             "integer",
             "null"
@@ -1034,8 +1218,8 @@
             },
             "interval": {
               "title": "Interval",
-              "description": "Interval between retries.\n\nCan be configured using the [`humantime`](https://docs.rs/humantime/latest/humantime/fn.parse_duration.html) format.",
-              "type": "string"
+              "description": "Interval between retries.\n\nCan be configured using the [`jiff::fmt::friendly`](https://docs.rs/jiff/latest/jiff/fmt/friendly/index.html) format or ISO8601, for example `5 hours`.",
+              "$ref": "#/definitions/DurationString"
             },
             "max_attempts": {
               "title": "Max attempts",
@@ -1067,8 +1251,8 @@
             },
             "initial_interval": {
               "title": "Initial Interval",
-              "description": "Initial interval for the first retry attempt.\n\nCan be configured using the [`humantime`](https://docs.rs/humantime/latest/humantime/fn.parse_duration.html) format.",
-              "type": "string"
+              "description": "Initial interval for the first retry attempt.\n\nCan be configured using the [`jiff::fmt::friendly`](https://docs.rs/jiff/latest/jiff/fmt/friendly/index.html) format or ISO8601, for example `5 hours`.",
+              "$ref": "#/definitions/DurationString"
             },
             "factor": {
               "title": "Factor",
@@ -1088,24 +1272,39 @@
             },
             "max_interval": {
               "title": "Max interval",
-              "description": "Maximum interval between retries.",
-              "type": [
-                "string",
-                "null"
+              "description": "Maximum interval between retries.\n\nCan be configured using the [`jiff::fmt::friendly`](https://docs.rs/jiff/latest/jiff/fmt/friendly/index.html) format or ISO8601, for example `5 hours`.",
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/DurationString"
+                },
+                {
+                  "type": "null"
+                }
               ]
             }
           }
         }
       ]
     },
+    "DurationString": {
+      "title": "DurationString",
+      "description": "Duration string in either jiff human friendly or ISO8601 format. Check https://docs.rs/jiff/latest/jiff/struct.Span.html#parsing-and-printing for more details.",
+      "examples": [
+        "10 hours",
+        "5 days",
+        "P40D"
+      ],
+      "type": "string",
+      "minLength": 1
+    },
     "SnapshotsOptions": {
       "title": "Snapshot options.",
-      "description": "Partition store snapshotting settings.",
+      "description": "Partition store snapshotting settings. At a minimum, set `destination` and `snapshot-interval-num-records` to enable snapshotting. For a complete example, see [Snapshots](https://docs.restate.dev/operate/snapshots).",
       "type": "object",
       "properties": {
         "destination": {
-          "title": "Destination",
-          "description": "Newly produced snapshots are published to this location. Supports `s3://` and `file://` protocol scheme.\n\nFor S3 bucket destinations, Restate will use the AWS credentials available from the environment, or the configuration profile specified by `AWS_PROFILE` environment variable, falling back to the default AWS profile.\n\nExample: `s3://bucket/prefix` will put snapshots in the specified bucket and (optional) prefix.\n\nDefault: `None`",
+          "title": "Snapshot destination URL",
+          "description": "Base URL for cluster snapshots. Supports `s3://` and `file://` protocol scheme. S3-compatible object stores must support ETag-based conditional writes.\n\nDefault: `None`",
           "default": null,
           "type": [
             "string",
@@ -1114,7 +1313,7 @@
         },
         "snapshot-interval-num-records": {
           "title": "Automatic snapshot creation frequency",
-          "description": "Number of log records that trigger a snapshot to be created.\n\nAs snapshots are created asynchronously, the actual number of new records that will trigger a snapshot will vary. The counter for the subsequent snapshot begins from the LSN at which the previous snapshot export was initiated. Only leader Partition Processors will take snapshots for a given partition.\n\nThis setting does not influence explicitly requested snapshots triggered using `restatectl`.\n\nDefault: `None` - automatic snapshots are disabled by default",
+          "description": "Number of log records that trigger a snapshot to be created.\n\nAs snapshots are created asynchronously, the actual number of new records that will trigger a snapshot will vary. The counter for the subsequent snapshot begins from the LSN at which the previous snapshot export was initiated. Only leader Partition Processors will take snapshots for a given partition.\n\nThis setting does not influence explicitly requested snapshots triggered using `restatectl`.\n\nDefault: `None` - automatic snapshots are disabled",
           "default": null,
           "type": [
             "integer",
@@ -1122,6 +1321,74 @@
           ],
           "format": "uint64",
           "minimum": 1.0
+        },
+        "object-store-retry-policy": {
+          "title": "Error retry policy",
+          "description": "A retry policy for dealing with retryable object store errors.",
+          "default": {
+            "factor": 2.0,
+            "initial-interval": "100ms",
+            "max-attempts": 10,
+            "max-interval": "10s",
+            "type": "exponential"
+          },
+          "$ref": "#/definitions/RetryPolicy"
+        },
+        "aws-profile": {
+          "title": "AWS profile",
+          "description": "The AWS configuration profile to use for S3 object store destinations. If you use named profiles in your AWS configuration, you can replace all the other settings with a single profile reference. See the [AWS documentation on profiles] (https://docs.aws.amazon.com/sdkref/latest/guide/file-format.html) for more.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "aws-region": {
+          "title": "AWS region",
+          "description": "AWS region to use with S3 object store destinations. This may be inferred from the environment, for example the current region when running in EC2. Because of the request signing algorithm this must have a value. For Minio, you can generally set this to any string, such as `us-east-1`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "aws-access-key-id": {
+          "title": "AWS access key",
+          "description": "Username for Minio, or consult the service documentation for other S3-compatible stores.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "aws-secret-access-key": {
+          "title": "AWS secret key",
+          "description": "Password for Minio, or consult the service documentation for other S3-compatible stores.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "aws-session-token": {
+          "title": "AWS session token",
+          "description": "This is only needed with short-term STS session credentials.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "aws-endpoint-url": {
+          "title": "Object store API endpoint URL override",
+          "description": "When you use Amazon S3, this is typically inferred from the region and there is no need to set it. With other object stores, you will have to provide an appropriate HTTP(S) endpoint. If *not* using HTTPS, also set `aws-allow-http` to `true`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "aws-allow-http": {
+          "title": "Allow insecure HTTP",
+          "description": "Allow plain HTTP to be used with the object store endpoint. Required when the endpoint URL that isn't using HTTPS.",
+          "type": [
+            "boolean",
+            "null"
+          ]
         }
       }
     },
@@ -1134,6 +1401,13 @@
           "description": "Address to bind for the Admin APIs.",
           "default": "0.0.0.0:9070",
           "type": "string"
+        },
+        "advertised-admin-endpoint": {
+          "title": "Advertised Admin endpoint",
+          "description": "Optional advertised Admin API endpoint.",
+          "default": null,
+          "type": "string",
+          "format": "uri"
         },
         "concurrent-api-requests-limit": {
           "title": "Concurrency limit",
@@ -1148,8 +1422,7 @@
         },
         "query-engine": {
           "default": {
-            "memory-size": "4.0 GB",
-            "pgsql-bind-address": "0.0.0.0:9071",
+            "memory-size": "4.0 GiB",
             "query-parallelism": null,
             "tmp-dir": null
           },
@@ -1161,48 +1434,20 @@
           "default": "1s 500ms",
           "type": "string"
         },
-        "log-trim-interval": {
-          "title": "Log trim interval",
-          "description": "Controls the interval at which cluster controller tries to trim the logs. Log trimming can be disabled by setting it to \"\".",
+        "log-trim-check-interval": {
+          "title": "Log trim check interval",
+          "description": "Controls the interval at which cluster controller tries to trim the logs. Log trimming can be disabled by setting it to \"0s\".\n\nNote that this is only the interval at which logs are checked, and does not guarantee that trim will be performed. The conditions for safely trim the log vary depending on the deployment. For single nodes, the log records must be durably persisted to disk. In distributed deployments, automatic trimming requires an external snapshot destination - see `worker.snapshots` for more.",
           "default": "1h",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "log-trim-threshold": {
-          "title": "Log trim threshold (deprecated)",
-          "description": "This configuration option is deprecated and ignored in Restate >= 1.2.",
-          "default": null,
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint64",
-          "minimum": 0.0
-        },
-        "log-tail-update-interval": {
-          "title": "Log Tail Update interval",
-          "description": "Controls the interval at which cluster controller tries to refind the tails of logs. This is a safety-net check in case of a concurrent cluster controller crash.",
-          "default": "5m",
           "type": "string"
         },
-        "default-partition-replication": {
-          "title": "Default partition replication factor",
-          "description": "[__PREVIEW FEATURE__] The default replication factor for partition processors, this impacts how many replicas each partition will have across the worker nodes of the cluster.\n\nNote that this value only impacts the cluster initial provisioning and will not be respected after the cluster has been provisioned.\n\nTo update existing clusters use the `restatectl` utility.",
-          "default": "everywhere",
-          "type": "string"
+        "disable-web-ui": {
+          "description": "Disable serving the Restate Web UI on the admin port. Default is `false`.",
+          "default": false,
+          "type": "boolean"
         },
         "disable-cluster-controller": {
           "default": false,
           "type": "boolean"
-        },
-        "advertised-ingress-endpoint": {
-          "title": "Ingress endpoint",
-          "description": "Ingress endpoint that the Web UI should use to interact with.",
-          "default": "http://localhost:8080/",
-          "type": "string",
-          "format": "uri"
         }
       }
     },
@@ -1213,7 +1458,7 @@
         "memory-size": {
           "title": "Memory size limit",
           "description": "The total memory in bytes that can be used to preform sql queries",
-          "default": "4.0 GB",
+          "default": "4.0 GiB",
           "$ref": "#/definitions/NonZeroHumanBytes"
         },
         "tmp-dir": {
@@ -1227,7 +1472,7 @@
         },
         "query-parallelism": {
           "title": "Default query parallelism",
-          "description": "The number of parallel partitions to use for a query execution",
+          "description": "The degree of parallelism to use for query execution (Defaults to the number of available cores).",
           "default": null,
           "type": [
             "integer",
@@ -1235,12 +1480,6 @@
           ],
           "format": "uint",
           "minimum": 1.0
-        },
-        "pgsql-bind-address": {
-          "title": "Pgsql Bind address",
-          "description": "The address to bind for the psql service.",
-          "default": "0.0.0.0:9071",
-          "type": "string"
         }
       }
     },
@@ -1271,6 +1510,13 @@
           "items": {
             "$ref": "#/definitions/KafkaClusterOptions"
           }
+        },
+        "advertised-ingress-endpoint": {
+          "title": "Ingress endpoint",
+          "description": "Ingress endpoint that the Web UI should use to interact with.",
+          "default": null,
+          "type": "string",
+          "format": "uri"
         }
       }
     },
@@ -1303,8 +1549,8 @@
       "properties": {
         "default-provider": {
           "title": "The default kind of loglet to be used",
-          "description": "Default: Local",
-          "default": "local",
+          "description": "Default: Replicated",
+          "default": "replicated",
           "$ref": "#/definitions/ProviderKind"
         },
         "local": {
@@ -1324,7 +1570,6 @@
         "replicated-loglet": {
           "description": "Configuration of replicated loglet provider",
           "default": {
-            "default-log-replication": "{node: 1}",
             "log-server-retry-policy": {
               "factor": 2.0,
               "initial-interval": "250ms",
@@ -1334,7 +1579,8 @@
             },
             "log-server-rpc-timeout": "2s",
             "maximum-inflight-records": 1000,
-            "readahead-records": 100,
+            "read-batch-size": "32.0 KiB",
+            "readahead-records": 20,
             "readahead-trigger-ratio": 0.5,
             "sequencer-inactivity-timeout": "15s",
             "sequencer-retry-policy": {
@@ -1368,7 +1614,7 @@
         "auto-recovery-interval": {
           "title": "Auto recovery threshold",
           "description": "Time interval after which bifrost's auto-recovery mechanism will kick in. This is triggered in scenarios where the control plane took too long to complete loglet reconfigurations.",
-          "default": "3s",
+          "default": "15s",
           "type": "string"
         },
         "append-retry-min-interval": {
@@ -1385,9 +1631,15 @@
         },
         "record-cache-memory-size": {
           "title": "In-memory RecordCache memory limit",
-          "description": "Optional size of record cache in bytes. If set to 0, record cache will be disabled. Defaults: 20M",
-          "default": "20.0 MB",
+          "description": "Optional size of record cache in bytes. If set to 0, record cache will be disabled. Defaults: 250MB",
+          "default": "250.0 MiB",
           "$ref": "#/definitions/HumanBytes"
+        },
+        "disable-auto-improvement": {
+          "title": "Disable Automatic Improvement",
+          "description": "When enabled, automatic improvement periodically checks with the loglet provider if the loglet configuration can be improved by performing a reconfiguration.\n\nThis allows the log to pick up replication property changes, apply better placement of replicas, or for other reasons.",
+          "default": false,
+          "type": "string"
         }
       }
     },
@@ -1402,7 +1654,7 @@
           ]
         },
         {
-          "description": "[__PREVIEW FEATURE__] Replicated loglets are restate's native log replication system. This requires `log-server` role to run on enough nodes in the cluster.",
+          "description": "Replicated loglets are restate's native log replication system. This requires `log-server` role to run on enough nodes in the cluster.",
           "type": "string",
           "enum": [
             "replicated"
@@ -1454,22 +1706,22 @@
         },
         "readahead-records": {
           "description": "Maximum number of records to prefetch from log servers\n\nThe number of records bifrost will attempt to prefetch from replicated loglet's log-servers for every loglet reader (e.g. partition processor). Note that this mainly impacts readers that are not co-located with the loglet sequencer (i.e. partition processor followers).",
-          "default": 100,
+          "default": 20,
           "type": "integer",
-          "format": "uint",
+          "format": "uint16",
           "minimum": 1.0
+        },
+        "read-batch-size": {
+          "title": "Limits memory per remote batch read",
+          "description": "When reading from a log-server, the server stops reading if the next record will tip over the total number of bytes allowed in this configuration option.\n\nNote the limit is not strict and the server will always allow at least a single record to be read even if that record exceeds the stated budget.",
+          "default": "32.0 KiB",
+          "$ref": "#/definitions/NonZeroHumanBytes"
         },
         "readahead-trigger-ratio": {
           "description": "Trigger to prefetch more records\n\nWhen read-ahead is used (readahead-records), this value (percentage in float) will determine when readers should trigger a prefetch for another batch to fill up the buffer. For instance, if this value is 0.3, then bifrost will trigger a prefetch when 30% or more of the read-ahead slots become available (e.g. partition processor consumed records and freed up enough slots).\n\nThe higher the value is, the longer bifrost will wait before it triggers the next fetch, potentially fetching more records as a result.\n\nTo illustrate, if readahead-records is set to 100 and readahead-trigger-ratio is 1.0. Then bifrost will prefetch up to 100 records from log-servers and will not trigger the next prefetch unless the consumer consumes 100% of this buffer. This means that bifrost will read in batches but will not do while the consumer is still reading the previous batch.\n\nValue must be between 0 and 1. It will be clamped at `1.0`.",
           "default": 0.5,
           "type": "number",
           "format": "float"
-        },
-        "default-log-replication": {
-          "title": "Default log replication factor",
-          "description": "Configures the default replication factor to be used by the replicated loglets.\n\nNote that this value only impacts the cluster initial provisioning and will not be respected after the cluster has been provisioned.\n\nTo update existing clusters use the `restatectl` utility.",
-          "default": "{node: 1}",
-          "type": "string"
         }
       }
     },
@@ -1485,60 +1737,6 @@
     "MetadataServerOptions": {
       "title": "Metadata store options",
       "type": "object",
-      "oneOf": [
-        {
-          "type": "object",
-          "required": [
-            "type"
-          ],
-          "properties": {
-            "type": {
-              "type": "string",
-              "enum": [
-                "local"
-              ]
-            }
-          }
-        },
-        {
-          "type": "object",
-          "required": [
-            "type"
-          ],
-          "properties": {
-            "type": {
-              "type": "string",
-              "enum": [
-                "replicated"
-              ]
-            },
-            "raft-election-tick": {
-              "description": "The number of ticks before triggering an election\n\nThe number of ticks before triggering an election. The value must be larger than `raft_heartbeat_tick`. It's recommended to set `raft_election_tick = 10 * raft_heartbeat_tick`. Decrease this value if you want to react faster to failed leaders. Note, decreasing this value too much can lead to cluster instabilities due to falsely detecting dead leaders.",
-              "default": 20,
-              "type": "integer",
-              "format": "uint",
-              "minimum": 1.0
-            },
-            "raft-heartbeat-tick": {
-              "description": "The number of ticks before sending a heartbeat\n\nA leader sends heartbeat messages to maintain its leadership every heartbeat ticks. Decrease this value to send heartbeats more often.",
-              "default": 2,
-              "type": "integer",
-              "format": "uint",
-              "minimum": 1.0
-            },
-            "raft-tick-interval": {
-              "description": "The raft tick interval\n\nThe interval at which the raft node will tick. Decrease this value in order to let the Raft node react more quickly to changes. Note, that every tick comes with an overhead. Moreover, the tick interval directly affects the election timeout. If the election timeout becomes too small, then this can cause cluster instabilities due to frequent leader changes.",
-              "default": "100ms",
-              "type": "string"
-            },
-            "status-update-interval": {
-              "description": "The status update interval\n\nThe interval at which the raft node will update its status. Decrease this value in order to see more recent status updates.",
-              "default": "5s",
-              "type": "string"
-            }
-          }
-        }
-      ],
       "properties": {
         "request-queue-length": {
           "description": "Limit number of in-flight requests\n\nNumber of in-flight metadata store requests.",
@@ -1563,6 +1761,11 @@
           "default": 0.009999999776482582,
           "type": "number",
           "format": "float"
+        },
+        "auto-join": {
+          "description": "Auto join the metadata cluster when being started\n\nDefines whether this node should auto join the metadata store cluster when being started for the first time.",
+          "default": true,
+          "type": "boolean"
         },
         "rocksdb-disable-direct-io-for-reads": {
           "title": "Disable Direct IO for reads",
@@ -1665,6 +1868,53 @@
               "type": "null"
             }
           ]
+        },
+        "rocksdb-block-size": {
+          "title": "RocksDB block size",
+          "description": "Uncompressed block size\n\nDefault: 64KiB",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/NonZeroHumanBytes"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "raft-election-tick": {
+          "description": "The number of ticks before triggering an election\n\nThe number of ticks before triggering an election. The value must be larger than `raft_heartbeat_tick`. It's recommended to set `raft_election_tick = 10 * raft_heartbeat_tick`. Decrease this value if you want to react faster to failed leaders. Note, decreasing this value too much can lead to cluster instabilities due to falsely detecting dead leaders.",
+          "default": 10,
+          "type": "integer",
+          "format": "uint",
+          "minimum": 1.0
+        },
+        "raft-heartbeat-tick": {
+          "description": "The number of ticks before sending a heartbeat\n\nA leader sends heartbeat messages to maintain its leadership every heartbeat ticks. Decrease this value to send heartbeats more often.",
+          "default": 2,
+          "type": "integer",
+          "format": "uint",
+          "minimum": 1.0
+        },
+        "raft-tick-interval": {
+          "description": "The raft tick interval\n\nThe interval at which the raft node will tick. Decrease this value in order to let the Raft node react more quickly to changes. Note, that every tick comes with an overhead. Moreover, the tick interval directly affects the election timeout. If the election timeout becomes too small, then this can cause cluster instabilities due to frequent leader changes.",
+          "default": "100ms",
+          "type": "string"
+        },
+        "status-update-interval": {
+          "description": "The status update interval\n\nThe interval at which the raft node will update its status. Decrease this value in order to see more recent status updates.",
+          "default": "5s",
+          "type": "string"
+        },
+        "log-trim-threshold": {
+          "title": "The raft log trim threshold",
+          "description": "The threshold for trimming the raft log. The log will be trimmed if the number of apply entries exceeds this threshold. The default value is `1000`.",
+          "default": 1000,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0.0
         }
       }
     },
@@ -1699,12 +1949,12 @@
         },
         "http2-keep-alive-interval": {
           "title": "HTTP/2 Keep Alive Interval",
-          "default": "5s",
+          "default": "1s",
           "type": "string"
         },
         "http2-keep-alive-timeout": {
           "title": "HTTP/2 Keep Alive Timeout",
-          "default": "5s",
+          "default": "3s",
           "type": "string"
         },
         "http2-adaptive-window": {
@@ -1712,13 +1962,17 @@
           "default": true,
           "type": "boolean"
         },
-        "outbound-queue-length": {
-          "title": "Connection Send Buffer",
-          "description": "The number of messages that can be queued on the outbound stream of a single connection.",
-          "default": 1000,
-          "type": "integer",
-          "format": "uint",
-          "minimum": 1.0
+        "disable-compression": {
+          "title": "Disable Compression",
+          "description": "Disables Zstd compression for internal gRPC network connections",
+          "default": false,
+          "type": "boolean"
+        },
+        "data-stream-window-size": {
+          "title": "Data Stream Window Size",
+          "description": "Controls the number of bytes the can be sent on every data stream before inducing back pressure. Data streams are used for sending messages between nodes.\n\nThe value should is often derived from BDP (Bandwidth Delay Product) of the network. For instance, if the network has a bandwidth of 10 Gbps with a round-trip time of 5 ms, the BDP is 10 Gbps * 0.005 s = 6.25 MB. This means that the window size should be at least 6.25 MB to fully utilize the network bandwidth assuming the latency is constant. Our recommendation is to set the window size to 2x the BDP to account for any variations in latency.\n\nIf network latency is high, it's recommended to set this to a higher value. Maximum theoretical value is 2^31-1 (2 GiB - 1), but we will sanitize this value to 500 MiB.",
+          "default": "2.0 MiB",
+          "$ref": "#/definitions/NonZeroHumanBytes"
         }
       }
     },
@@ -1748,6 +2002,17 @@
           "description": "Disable fsync of WAL on every batch",
           "default": false,
           "type": "boolean"
+        },
+        "rocksdb-max-sub-compactions": {
+          "description": "The maximum number of subcompactions to run in parallel.\n\nSetting this to 1 means no sub-compactions are allowed (i.e. only 1 thread will do the compaction).\n\nDefault is 0 which maps to floor(number of CPU cores / 2)",
+          "default": 0,
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "rocksdb-max-wal-size": {
+          "description": "The size limit of all WAL files\n\nUse this to limit the size of WAL files. If the size of all WAL files exceeds this limit, the oldest WAL file will be deleted and if needed, memtable flush will be triggered.\n\nNote: RocksDB internally counts the uncompressed bytes to determine the WAL size, and since the WAL is compressed, the actual size on disk will be significantly smaller than this value (~1/4 depending on the compression ratio). For instance, if this is set to \"1 MiB\", then rocksdb might decide to flush if the total WAL (on disk) reached ~260 KiB (compressed).\n\nDefault is `0` which translates into 6 times the memory allocated for membtables for this database.",
+          "$ref": "#/definitions/HumanBytes"
         },
         "writer-batch-commit-count": {
           "description": "Trigger a commit when the batch size exceeds this threshold.\n\nSet to 0 or 1 to commit the write batch on every command.",
@@ -1864,17 +2129,23 @@
               "type": "null"
             }
           ]
+        },
+        "rocksdb-block-size": {
+          "title": "RocksDB block size",
+          "description": "Uncompressed block size\n\nDefault: 64KiB",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/NonZeroHumanBytes"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
     "Role": {
       "oneOf": [
-        {
-          "type": "string",
-          "enum": [
-            "http-ingress"
-          ]
-        },
         {
           "description": "A worker runs partition processor (journal, state, and drives invocations)",
           "type": "string",
@@ -1897,10 +2168,17 @@
           ]
         },
         {
-          "description": "[PREVIEW FEATURE] Serves a log-server for replicated loglets",
+          "description": "Serves a log-server for replicated loglets",
           "type": "string",
           "enum": [
             "log-server"
+          ]
+        },
+        {
+          "description": "Serves HTTP ingress requests",
+          "type": "string",
+          "enum": [
+            "http-ingress"
           ]
         }
       ]
@@ -1911,7 +2189,7 @@
       "type": "object",
       "oneOf": [
         {
-          "description": "Store metadata on the native metadata store that runs on nodes with the metadata-server role.",
+          "description": "Store metadata on the replicated metadata store that runs on nodes with the metadata-server role.",
           "type": "object",
           "required": [
             "addresses",
@@ -1921,10 +2199,11 @@
             "type": {
               "type": "string",
               "enum": [
-                "native"
+                "replicated"
               ]
             },
             "addresses": {
+              "title": "Restate metadata server address list",
               "type": "array",
               "items": {
                 "type": "string"
@@ -1947,6 +2226,7 @@
               ]
             },
             "addresses": {
+              "title": "Etcd cluster node address list",
               "type": "string"
             }
           }
@@ -1955,8 +2235,7 @@
           "description": "Store metadata on an external object store.",
           "type": "object",
           "required": [
-            "bucket",
-            "credentials",
+            "path",
             "type"
           ],
           "properties": {
@@ -1966,12 +2245,77 @@
                 "object-store"
               ]
             },
-            "credentials": {
-              "$ref": "#/definitions/ObjectStoreCredentials"
-            },
-            "bucket": {
-              "title": "The bucket name to use for storage",
+            "path": {
+              "title": "Object store path for metadata storage",
+              "description": "This location will be used to persist cluster metadata. Takes the form of a URL with `s3://` as the protocol and bucket name as the authority, plus an optional prefix specified as the path component.\n\nExample: `s3://bucket/prefix`",
               "type": "string"
+            },
+            "object_store_retry_policy": {
+              "title": "Error retry policy",
+              "default": {
+                "factor": 2.0,
+                "initial-interval": "100ms",
+                "max-attempts": 10,
+                "max-interval": "10s",
+                "type": "exponential"
+              },
+              "$ref": "#/definitions/RetryPolicy"
+            },
+            "aws-profile": {
+              "title": "AWS profile",
+              "description": "The AWS configuration profile to use for S3 object store destinations. If you use named profiles in your AWS configuration, you can replace all the other settings with a single profile reference. See the [AWS documentation on profiles] (https://docs.aws.amazon.com/sdkref/latest/guide/file-format.html) for more.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "aws-region": {
+              "title": "AWS region",
+              "description": "AWS region to use with S3 object store destinations. This may be inferred from the environment, for example the current region when running in EC2. Because of the request signing algorithm this must have a value. For Minio, you can generally set this to any string, such as `us-east-1`.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "aws-access-key-id": {
+              "title": "AWS access key",
+              "description": "Username for Minio, or consult the service documentation for other S3-compatible stores.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "aws-secret-access-key": {
+              "title": "AWS secret key",
+              "description": "Password for Minio, or consult the service documentation for other S3-compatible stores.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "aws-session-token": {
+              "title": "AWS session token",
+              "description": "This is only needed with short-term STS session credentials.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "aws-endpoint-url": {
+              "title": "Object store API endpoint URL override",
+              "description": "When you use Amazon S3, this is typically inferred from the region and there is no need to set it. With other object stores, you will have to provide an appropriate HTTP(S) endpoint. If *not* using HTTPS, also set `aws-allow-http` to `true`.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "aws-allow-http": {
+              "title": "Allow insecure HTTP",
+              "description": "Allow plain HTTP to be used with the object store endpoint. Required when the endpoint URL that isn't using HTTPS.",
+              "type": [
+                "boolean",
+                "null"
+              ]
             }
           }
         }
@@ -1997,37 +2341,15 @@
           "title": "Backoff policy used by the metadata client",
           "description": "Backoff policy used by the metadata client when it encounters concurrent modifications.",
           "default": {
-            "factor": 2.0,
-            "initial-interval": "250ms",
+            "factor": 1.399999976158142,
+            "initial-interval": "100ms",
             "max-attempts": 10,
-            "max-interval": "3s",
+            "max-interval": "1s",
             "type": "exponential"
           },
           "$ref": "#/definitions/RetryPolicy"
         }
       }
-    },
-    "ObjectStoreCredentials": {
-      "title": "Metadata Store",
-      "description": "Definition of a bootstrap metadata store",
-      "oneOf": [
-        {
-          "title": "Use standard AWS environment variables",
-          "description": "Configure the object store by setting the standard AWS env variables (prefixed with AWS_)",
-          "type": "object",
-          "required": [
-            "type"
-          ],
-          "properties": {
-            "type": {
-              "type": "string",
-              "enum": [
-                "aws-env"
-              ]
-            }
-          }
-        }
-      ]
     },
     "LogFormat": {
       "title": "Log format",
@@ -2115,6 +2437,72 @@
           "type": "string"
         }
       }
+    },
+    "InvocationRetryPolicyOptions": {
+      "type": "object",
+      "properties": {
+        "initial-interval": {
+          "title": "Initial Interval",
+          "description": "Initial interval for the first retry attempt.",
+          "default": "500ms",
+          "$ref": "#/definitions/DurationString"
+        },
+        "exponentiation-factor": {
+          "title": "Factor",
+          "description": "The factor to use to compute the next retry attempt. Default: `2.0`.",
+          "default": 2.0,
+          "type": "number",
+          "format": "float"
+        },
+        "max-attempts": {
+          "title": "Max attempts",
+          "description": "Number of maximum attempts before giving up. Infinite retries if unset. No retries if set to 0.",
+          "default": 20,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint",
+          "minimum": 0.0
+        },
+        "on-max-attempts": {
+          "title": "On max attempts",
+          "description": "Behavior when max attempts are reached.",
+          "default": "pause",
+          "$ref": "#/definitions/OnMaxAttempts"
+        },
+        "max-interval": {
+          "title": "Max interval",
+          "description": "Maximum interval between retries.",
+          "default": null,
+          "anyOf": [
+            {
+              "$ref": "#/definitions/DurationString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "OnMaxAttempts": {
+      "oneOf": [
+        {
+          "description": "Pause the invocation when max attempts are reached.",
+          "type": "string",
+          "enum": [
+            "pause"
+          ]
+        },
+        {
+          "description": "Kill the invocation when max attempts are reached.",
+          "type": "string",
+          "enum": [
+            "kill"
+          ]
+        }
+      ]
     }
   }
 }

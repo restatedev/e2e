@@ -466,6 +466,7 @@ private constructor(
     if (runtimeContainers[0].isRunning) {
       dumpSQLTable("sys_invocation")
       dumpSQLTable("sys_journal")
+      dumpSQLTable("sys_journal_events")
       dumpSQLTable("state")
     }
 

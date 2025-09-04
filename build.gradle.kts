@@ -59,7 +59,7 @@ dependencies {
   implementation(libs.log4j.jul)
 
   implementation("org.apache.kafka:kafka-clients:3.5.0")
-  implementation("org.openapitools:openapi-generator:7.12.0")
+  implementation("org.openapitools:openapi-generator:7.15.0")
 
   implementation(libs.kotlinx.serialization.core)
   implementation(libs.kotlinx.serialization.json)

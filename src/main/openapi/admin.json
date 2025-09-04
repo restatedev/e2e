@@ -3,7 +3,7 @@
   "info": {
     "title": "Admin API",
     "description": "This API exposes the admin operations of a Restate cluster, such as registering new service deployments, interacting with running invocations, register Kafka subscriptions, retrieve service metadata. For an overview, check out the [Operate documentation](https://docs.restate.dev/operate/). If you're looking for how to call your services, check out the [Ingress HTTP API](https://docs.restate.dev/invoke/http) instead.",
-    "version": "1.4.3-dev"
+    "version": "1.5.0-dev"
   },
   "paths": {
     "/cluster-health": {
@@ -980,6 +980,91 @@
         }
       }
     },
+    "/invocations/{invocation_id}/resume": {
+      "patch": {
+        "tags": [
+          "invocation"
+        ],
+        "summary": "Resume an invocation",
+        "description": "Resume the given invocation. In case the invocation is backing-off, this will immediately trigger the retry timer. If the invocation is suspended or paused, this will resume it.",
+        "operationId": "resume_invocation",
+        "parameters": [
+          {
+            "name": "invocation_id",
+            "in": "path",
+            "description": "Invocation identifier.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "deployment",
+            "in": "query",
+            "description": "When resuming from paused/suspended, provide a deployment id to use to replace the currently pinned deployment id. If latest, use the latest deployment id. When not provided, the invocation will resume on the pinned deployment id. When provided and the invocation is either running, or no deployment is pinned, this operation will fail.",
+            "style": "simple",
+            "schema": {
+              "$ref": "#/components/schemas/ResumeInvocationDeploymentId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "404 Not Found": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDescriptionResponse"
+                }
+              }
+            }
+          },
+          "503 Service Unavailable": {
+            "description": "Error when routing the request within restate.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDescriptionResponse"
+                }
+              }
+            }
+          },
+          "400 Bad Request": {
+            "description": "\nThe given deployment was not found.\nThe selected deployment id to resume the invocation doesn't support the currently pinned service protocol version.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDescriptionResponse"
+                }
+              }
+            }
+          },
+          "425 Too Early": {
+            "description": "The invocation is either inboxed or scheduled. An invocation can be resumed only when running, paused or suspended.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDescriptionResponse"
+                }
+              }
+            }
+          },
+          "409 Conflict": {
+            "description": "The invocation is completed. An invocation can be resumed only when running, paused or suspended.\nThe invocation is still running or the deployment id is not pinned yet, deployment id cannot be changed. The deployment id can be changed only if the invocation is paused or suspended, and a deployment id is already pinned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDescriptionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/openapi": {
       "get": {
         "tags": [
@@ -1186,7 +1271,7 @@
           "service"
         ],
         "summary": "Modify a service",
-        "description": "Modify a registered service.",
+        "description": "Modify a registered service configuration. NOTE: Service re-discovery will update the settings based on the service endpoint configuration.",
         "operationId": "modify_service",
         "parameters": [
           {
@@ -2192,6 +2277,16 @@
                 "type": "string",
                 "nullable": true
               },
+              "compression": {
+                "title": "Compression",
+                "description": "Compression algorithm used for invoking Lambda.",
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/EndpointLambdaCompression"
+                  }
+                ],
+                "nullable": true
+              },
               "additional_headers": {
                 "title": "Additional headers",
                 "description": "Additional headers used to invoke this service deployment.",
@@ -2263,6 +2358,13 @@
       "LambdaARN": {
         "type": "string",
         "format": "arn"
+      },
+      "EndpointLambdaCompression": {
+        "description": "Lambda compression",
+        "type": "string",
+        "enum": [
+          "Zstd"
+        ]
       },
       "RegisterDeploymentRequest": {
         "anyOf": [
@@ -2396,7 +2498,6 @@
           "deployment_id",
           "handlers",
           "name",
-          "public",
           "revision",
           "ty"
         ],
@@ -2406,14 +2507,22 @@
             "description": "Fully qualified name of the service",
             "type": "string"
           },
+          "ty": {
+            "title": "Type",
+            "description": "Service type",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ServiceType"
+              }
+            ]
+          },
           "handlers": {
+            "title": "Handlers",
+            "description": "Handlers for this service.",
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/HandlerMetadata"
             }
-          },
-          "ty": {
-            "$ref": "#/components/schemas/ServiceType"
           },
           "documentation": {
             "title": "Documentation",
@@ -2432,7 +2541,11 @@
           "deployment_id": {
             "title": "Deployment Id",
             "description": "Deployment exposing the latest revision of the service.",
-            "type": "string"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/String"
+              }
+            ]
           },
           "revision": {
             "title": "Revision",
@@ -2444,58 +2557,89 @@
           "public": {
             "title": "Public",
             "description": "If true, the service can be invoked through the ingress. If false, the service can be invoked only from another Restate service.",
+            "default": true,
             "type": "boolean"
           },
           "idempotency_retention": {
             "title": "Idempotency retention",
-            "description": "The retention duration of idempotent requests for this service.",
-            "type": "string",
-            "nullable": true
+            "description": "The retention duration of idempotent requests for this service.\n\nIf not configured, this returns the default idempotency retention.\n\nCan be configured using the [`jiff::fmt::friendly`](https://docs.rs/jiff/latest/jiff/fmt/friendly/index.html) format or ISO8601, for example `5 hours`.",
+            "default": "1d",
+            "type": "string"
           },
           "workflow_completion_retention": {
             "title": "Workflow completion retention",
-            "description": "The retention duration of workflows. Only available on workflow services.",
+            "description": "The retention duration of workflows. Only available on workflow services.\n\nCan be configured using the [`jiff::fmt::friendly`](https://docs.rs/jiff/latest/jiff/fmt/friendly/index.html) format or ISO8601, for example `5 hours`.",
             "type": "string",
             "nullable": true
           },
           "journal_retention": {
             "title": "Journal retention",
-            "description": "The journal retention. When set, this applies to all requests to all handlers of this service.\n\nIn case the request has an idempotency key, the `idempotency_retention` caps the maximum `journal_retention` time. In case the request targets a workflow handler, the `workflow_completion_retention` caps the maximum `journal_retention` time.",
+            "description": "The journal retention. When set, this applies to all requests to all handlers of this service.\n\nIn case the invocation has an idempotency key, the `idempotency_retention` caps the maximum `journal_retention` time. In case the invocation targets a workflow handler, the `workflow_completion_retention` caps the maximum `journal_retention` time.\n\nCan be configured using the [`jiff::fmt::friendly`](https://docs.rs/jiff/latest/jiff/fmt/friendly/index.html) format or ISO8601, for example `5 hours`.",
             "type": "string",
             "nullable": true
           },
           "inactivity_timeout": {
             "title": "Inactivity timeout",
-            "description": "This timer guards against stalled service/handler invocations. Once it expires, Restate triggers a graceful termination by asking the service invocation to suspend (which preserves intermediate progress).\n\nThe 'abort timeout' is used to abort the invocation, in case it doesn't react to the request to suspend.\n\nCan be configured using the [`jiff::fmt::friendly`](https://docs.rs/jiff/latest/jiff/fmt/friendly/index.html) format or ISO8601.\n\nThis overrides the default inactivity timeout set in invoker options.",
-            "type": "string",
-            "nullable": true
+            "description": "This timer guards against stalled service/handler invocations. Once it expires, Restate triggers a graceful termination by asking the service invocation to suspend (which preserves intermediate progress).\n\nThe 'abort timeout' is used to abort the invocation, in case it doesn't react to the request to suspend.\n\nCan be configured using the [`jiff::fmt::friendly`](https://docs.rs/jiff/latest/jiff/fmt/friendly/index.html) format or ISO8601, for example `5 hours`.\n\nIf unset, this returns the default inactivity timeout configured in invoker options.",
+            "default": "1m",
+            "type": "string"
           },
           "abort_timeout": {
             "title": "Abort timeout",
-            "description": "This timer guards against stalled service/handler invocations that are supposed to terminate. The abort timeout is started after the 'inactivity timeout' has expired and the service/handler invocation has been asked to gracefully terminate. Once the timer expires, it will abort the service/handler invocation.\n\nThis timer potentially **interrupts** user code. If the user code needs longer to gracefully terminate, then this value needs to be set accordingly.\n\nCan be configured using the [`jiff::fmt::friendly`](https://docs.rs/jiff/latest/jiff/fmt/friendly/index.html) format or ISO8601.\n\nThis overrides the default abort timeout set in invoker options.",
-            "type": "string",
-            "nullable": true
+            "description": "This timer guards against stalled service/handler invocations that are supposed to terminate. The abort timeout is started after the 'inactivity timeout' has expired and the service/handler invocation has been asked to gracefully terminate. Once the timer expires, it will abort the service/handler invocation.\n\nThis timer potentially **interrupts** user code. If the user code needs longer to gracefully terminate, then this value needs to be set accordingly.\n\nCan be configured using the [`jiff::fmt::friendly`](https://docs.rs/jiff/latest/jiff/fmt/friendly/index.html) format or ISO8601, for example `5 hours`.\n\nIf unset, this returns the default abort timeout configured in invoker options.",
+            "default": "1m",
+            "type": "string"
           },
           "enable_lazy_state": {
             "title": "Enable lazy state",
             "description": "If true, lazy state will be enabled for all invocations to this service. This is relevant only for Workflows and Virtual Objects.",
-            "type": "boolean",
-            "nullable": true
+            "default": false,
+            "type": "boolean"
+          },
+          "retry_policy": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ServiceRetryPolicyMetadata"
+              },
+              { "title": "Retry policy",
+                "description": "Retry policy applied to invocations of this service.\n\nIf unset, it returns the default values configured in the Restate configuration.",
+                "default": {
+                  "exponentiation_factor": 2.0,
+                  "initial_interval": "100ms",
+                  "max_attempts": null,
+                  "max_interval": null,
+                  "on_max_attempts": "Pause"
+                }
+              }
+            ]
           }
         }
+      },
+      "ServiceType": {
+        "type": "string",
+        "enum": [
+          "Service",
+          "VirtualObject",
+          "Workflow"
+        ]
       },
       "HandlerMetadata": {
         "type": "object",
         "required": [
           "input_description",
           "name",
-          "output_description"
+          "output_description",
+          "retry_policy"
         ],
         "properties": {
           "name": {
+            "title": "Name",
+            "description": "The handler name.",
             "type": "string"
           },
           "ty": {
+            "title": "Type",
+            "description": "The handler type.",
             "allOf": [
               {
                 "$ref": "#/components/schemas/HandlerMetadataType"
@@ -2519,37 +2663,31 @@
           },
           "idempotency_retention": {
             "title": "Idempotency retention",
-            "description": "The retention duration of idempotent requests for this service.",
-            "type": "string",
-            "nullable": true
-          },
-          "workflow_completion_retention": {
-            "title": "Workflow completion retention",
-            "description": "The retention duration of workflows. Only available on workflow services.",
+            "description": "The retention duration of idempotent requests for this handler. If set, it overrides the value set in the service.\n\nCan be configured using the [`jiff::fmt::friendly`](https://docs.rs/jiff/latest/jiff/fmt/friendly/index.html) format or ISO8601, for example `5 hours`.",
             "type": "string",
             "nullable": true
           },
           "journal_retention": {
             "title": "Journal retention",
-            "description": "The journal retention. When set, this applies to all requests to this handler.\n\nIn case the request has an idempotency key, the `idempotency_retention` caps the maximum `journal_retention` time. In case this handler is a workflow handler, the `workflow_completion_retention` caps the maximum `journal_retention` time.",
+            "description": "The journal retention. When set, this applies to all requests to this handler.\n\nIn case the invocation has an idempotency key, the `idempotency_retention` caps the maximum `journal_retention` time. In case this handler is a workflow handler, the `workflow_completion_retention` caps the maximum `journal_retention` time.\n\nCan be configured using the [`jiff::fmt::friendly`](https://docs.rs/jiff/latest/jiff/fmt/friendly/index.html) format or ISO8601, for example `5 hours`.\n\nIf set, it overrides the value set in the service.",
             "type": "string",
             "nullable": true
           },
           "inactivity_timeout": {
             "title": "Inactivity timeout",
-            "description": "This timer guards against stalled service/handler invocations. Once it expires, Restate triggers a graceful termination by asking the service invocation to suspend (which preserves intermediate progress).\n\nThe 'abort timeout' is used to abort the invocation, in case it doesn't react to the request to suspend.\n\nCan be configured using the [`humantime`](https://docs.rs/humantime/latest/humantime/fn.parse_duration.html) format.\n\nThis overrides the default inactivity timeout set in invoker options.",
+            "description": "This timer guards against stalled service/handler invocations. Once it expires, Restate triggers a graceful termination by asking the service invocation to suspend (which preserves intermediate progress).\n\nThe 'abort timeout' is used to abort the invocation, in case it doesn't react to the request to suspend.\n\nCan be configured using the [`jiff::fmt::friendly`](https://docs.rs/jiff/latest/jiff/fmt/friendly/index.html) format or ISO8601, for example `5 hours`.\n\nIf set, it overrides the value set in the service.",
             "type": "string",
             "nullable": true
           },
           "abort_timeout": {
             "title": "Abort timeout",
-            "description": "This timer guards against stalled service/handler invocations that are supposed to terminate. The abort timeout is started after the 'inactivity timeout' has expired and the service/handler invocation has been asked to gracefully terminate. Once the timer expires, it will abort the service/handler invocation.\n\nThis timer potentially **interrupts** user code. If the user code needs longer to gracefully terminate, then this value needs to be set accordingly.\n\nCan be configured using the [`humantime`](https://docs.rs/humantime/latest/humantime/fn.parse_duration.html) format.\n\nThis overrides the default abort timeout set in invoker options.",
+            "description": "This timer guards against stalled service/handler invocations that are supposed to terminate. The abort timeout is started after the 'inactivity timeout' has expired and the service/handler invocation has been asked to gracefully terminate. Once the timer expires, it will abort the service/handler invocation.\n\nThis timer potentially **interrupts** user code. If the user code needs longer to gracefully terminate, then this value needs to be set accordingly.\n\nCan be configured using the [`jiff::fmt::friendly`](https://docs.rs/jiff/latest/jiff/fmt/friendly/index.html) format or ISO8601, for example `5 hours`.\n\nIf set, it overrides the value set in the service.",
             "type": "string",
             "nullable": true
           },
           "enable_lazy_state": {
             "title": "Enable lazy state",
-            "description": "If true, lazy state will be enabled for all invocations to this service. This is relevant only for Workflows and Virtual Objects.",
+            "description": "If true, lazy state will be enabled for all invocations to this service. This is relevant only for Workflows and Virtual Objects.\n\nIf set, it overrides the value set in the service.",
             "type": "boolean",
             "nullable": true
           },
@@ -2578,6 +2716,17 @@
             "title": "Output JSON Schema",
             "description": "JSON Schema of the handler output",
             "nullable": true
+          },
+          "retry_policy": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HandlerRetryPolicyMetadata"
+              },
+              {
+                "title": "Retry policy",
+                "description": "Retry policy overrides applied for this handler."
+              }
+            ]
           }
         }
       },
@@ -2589,13 +2738,103 @@
           "Workflow"
         ]
       },
-      "ServiceType": {
+      "HandlerRetryPolicyMetadata": {
+        "title": "Handler retry policy overrides",
+        "type": "object",
+        "properties": {
+          "initial_interval": {
+            "title": "Initial Interval",
+            "description": "Initial interval for the first retry attempt.\n\nCan be configured using the [`jiff::fmt::friendly`](https://docs.rs/jiff/latest/jiff/fmt/friendly/index.html) format or ISO8601, for example `5 hours`.",
+            "type": "string"
+          },
+          "exponentiation_factor": {
+            "title": "Factor",
+            "description": "The factor to use to compute the next retry attempt.",
+            "type": "number",
+            "format": "float",
+            "nullable": true
+          },
+          "max_attempts": {
+            "title": "Max attempts",
+            "description": "Number of maximum attempts before giving up. Infinite retries if unset.",
+            "type": "integer",
+            "format": "uint",
+            "minimum": 0.0,
+            "nullable": true
+          },
+          "max_interval": {
+            "title": "Max interval",
+            "description": "Maximum interval between retries.\n\nCan be configured using the [`jiff::fmt::friendly`](https://docs.rs/jiff/latest/jiff/fmt/friendly/index.html) format or ISO8601, for example `5 hours`.",
+            "type": "string",
+            "nullable": true
+          },
+          "on_max_attempts": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OnMaxAttempts"
+              },
+              {
+                "title": "On max attempts",
+                "description": "Behavior when max attempts are reached.",
+                "nullable": true
+              }
+            ]
+          }
+        }
+      },
+      "OnMaxAttempts": {
         "type": "string",
         "enum": [
-          "Service",
-          "VirtualObject",
-          "Workflow"
+          "Pause",
+          "Kill"
         ]
+      },
+      "ServiceRetryPolicyMetadata": {
+        "title": "Service retry policy",
+        "type": "object",
+        "properties": {
+          "initial_interval": {
+            "title": "Initial Interval",
+            "description": "Initial interval for the first retry attempt.\n\nCan be configured using the [`jiff::fmt::friendly`](https://docs.rs/jiff/latest/jiff/fmt/friendly/index.html) format or ISO8601, for example `5 hours`.",
+            "default": "100ms",
+            "type": "string"
+          },
+          "exponentiation_factor": {
+            "title": "Factor",
+            "description": "The factor to use to compute the next retry attempt. Default: `2.0`.",
+            "default": 2.0,
+            "type": "number",
+            "format": "float"
+          },
+          "max_attempts": {
+            "title": "Max attempts",
+            "description": "Number of maximum attempts before giving up. Infinite retries if unset.",
+            "default": null,
+            "type": "integer",
+            "format": "uint",
+            "minimum": 0.0,
+            "nullable": true
+          },
+          "max_interval": {
+            "title": "Max interval",
+            "description": "Maximum interval between retries.\n\nCan be configured using the [`jiff::fmt::friendly`](https://docs.rs/jiff/latest/jiff/fmt/friendly/index.html) format or ISO8601, for example `5 hours`.",
+            "default": null,
+            "type": "string",
+            "nullable": true
+          },
+          "on_max_attempts": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OnMaxAttempts"
+              },
+              {
+                "title": "On max attempts",
+                "description": "Behavior when max attempts are reached.",
+                "default": "Pause"
+              }
+            ]
+          }
+        }
       },
       "DetailedDeploymentResponse": {
         "anyOf": [
@@ -2714,6 +2953,16 @@
                 "title": "Assume role ARN",
                 "description": "Assume role ARN used to invoke this deployment. Check https://docs.restate.dev/category/aws-lambda for more details.",
                 "type": "string",
+                "nullable": true
+              },
+              "compression": {
+                "title": "Compression",
+                "description": "Compression algorithm used for invoking Lambda.",
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/EndpointLambdaCompression"
+                  }
+                ],
                 "nullable": true
               },
               "additional_headers": {
@@ -2853,6 +3102,13 @@
           }
         }
       },
+      "ResumeInvocationDeploymentId": {
+        "title": "ResumeInvocationDeploymentId",
+        "description": "Deployment id to replace the currently pinned deployment id. If 'keep', the pinned deployment will be left untouched. If 'latest', the latest deployment for the service will be used instead.",
+        "type": "string",
+        "minLength": 1,
+        "example": "keep"
+      },
       "ListServicesResponse": {
         "type": "object",
         "required": [
@@ -2879,28 +3135,35 @@
           },
           "idempotency_retention": {
             "title": "Idempotency retention",
-            "description": "Modify the retention of idempotent requests for this service.\n\nCan be configured using the [`jiff::fmt::friendly`](https://docs.rs/jiff/latest/jiff/fmt/friendly/index.html) format or ISO8601.",
+            "description": "Modify the retention of idempotent requests for this service.\n\nCan be configured using the [`jiff::fmt::friendly`](https://docs.rs/jiff/latest/jiff/fmt/friendly/index.html) format or ISO8601, for example `5 hours`.",
             "default": null,
             "type": "string",
             "nullable": true
           },
           "workflow_completion_retention": {
             "title": "Workflow completion retention",
-            "description": "Modify the retention of the workflow completion. This can be modified only for workflow services!\n\nCan be configured using the [`jiff::fmt::friendly`](https://docs.rs/jiff/latest/jiff/fmt/friendly/index.html) format or ISO8601.",
+            "description": "Modify the retention of the workflow completion. This can be modified only for workflow services!\n\nCan be configured using the [`jiff::fmt::friendly`](https://docs.rs/jiff/latest/jiff/fmt/friendly/index.html) format or ISO8601, for example `5 hours`.",
+            "default": null,
+            "type": "string",
+            "nullable": true
+          },
+          "journal_retention": {
+            "title": "Journal retention",
+            "description": "Modify the journal retention for this service. When set, this applies to all requests to all handlers of this service.\n\nIn case the invocation has an idempotency key, the `idempotency_retention` caps the maximum `journal_retention` time. In case the invocation targets a workflow handler, the `workflow_completion_retention` caps the maximum `journal_retention` time.\n\nCan be configured using the [`jiff::fmt::friendly`](https://docs.rs/jiff/latest/jiff/fmt/friendly/index.html) format or ISO8601, for example `5 hours`.",
             "default": null,
             "type": "string",
             "nullable": true
           },
           "inactivity_timeout": {
             "title": "Inactivity timeout",
-            "description": "This timer guards against stalled service/handler invocations. Once it expires, Restate triggers a graceful termination by asking the service invocation to suspend (which preserves intermediate progress).\n\nThe 'abort timeout' is used to abort the invocation, in case it doesn't react to the request to suspend.\n\nCan be configured using the [`jiff::fmt::friendly`](https://docs.rs/jiff/latest/jiff/fmt/friendly/index.html) format or ISO8601.\n\nThis overrides the default inactivity timeout set in invoker options.",
+            "description": "This timer guards against stalled service/handler invocations. Once it expires, Restate triggers a graceful termination by asking the service invocation to suspend (which preserves intermediate progress).\n\nThe 'abort timeout' is used to abort the invocation, in case it doesn't react to the request to suspend.\n\nCan be configured using the [`jiff::fmt::friendly`](https://docs.rs/jiff/latest/jiff/fmt/friendly/index.html) format or ISO8601, for example `5 hours`.\n\nThis overrides the default inactivity timeout set in invoker options.",
             "default": null,
             "type": "string",
             "nullable": true
           },
           "abort_timeout": {
             "title": "Abort timeout",
-            "description": "This timer guards against stalled service/handler invocations that are supposed to terminate. The abort timeout is started after the 'inactivity timeout' has expired and the service/handler invocation has been asked to gracefully terminate. Once the timer expires, it will abort the service/handler invocation.\n\nThis timer potentially **interrupts** user code. If the user code needs longer to gracefully terminate, then this value needs to be set accordingly.\n\nCan be configured using the [`jiff::fmt::friendly`](https://docs.rs/jiff/latest/jiff/fmt/friendly/index.html) format or ISO8601.\n\nThis overrides the default abort timeout set in invoker options.",
+            "description": "This timer guards against stalled service/handler invocations that are supposed to terminate. The abort timeout is started after the 'inactivity timeout' has expired and the service/handler invocation has been asked to gracefully terminate. Once the timer expires, it will abort the service/handler invocation.\n\nThis timer potentially **interrupts** user code. If the user code needs longer to gracefully terminate, then this value needs to be set accordingly.\n\nCan be configured using the [`jiff::fmt::friendly`](https://docs.rs/jiff/latest/jiff/fmt/friendly/index.html) format or ISO8601, for example `5 hours`.\n\nThis overrides the default abort timeout set in invoker options.",
             "default": null,
             "type": "string",
             "nullable": true

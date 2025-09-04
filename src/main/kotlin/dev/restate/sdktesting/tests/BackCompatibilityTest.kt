@@ -35,6 +35,7 @@ import java.net.URI
 import java.nio.file.Files
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.Duration.Companion.minutes
 import org.apache.logging.log4j.LogManager
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
@@ -44,7 +45,6 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.api.parallel.Isolated
-import kotlin.time.Duration.Companion.minutes
 
 @Tag("version-compatibility")
 @Isolated
@@ -141,10 +141,15 @@ class BackCompatibilityTest {
     val deployerExt: RestateDeployer.Builder.() -> Unit = {
       withEnv("RESTATE_CLUSTER_NAME", "back-compat-test")
       withOverrideRestateStateDirectoryMount(stateDir.toString())
-      withEndpoint(Endpoint.bind(MyService()).bind(FailingRetryableService()).bind(ProxyService(), {
-        it.journalRetention = 10.minutes
-        it.inactivityTimeout = 2.minutes
-      }))
+      withEndpoint(
+          Endpoint.bind(MyService())
+              .bind(FailingRetryableService())
+              .bind(
+                  ProxyService(),
+                  {
+                    it.journalRetention = 10.minutes
+                    it.inactivityTimeout = 2.minutes
+                  }))
     }
 
     @Test
@@ -225,14 +230,18 @@ class BackCompatibilityTest {
       withEndpoint(
           Endpoint.bind(MyService())
               .bind(FixedRetryableService())
-              .bind(ProxyService(), {
-                it.journalRetention = 10.minutes
-                it.inactivityTimeout = 2.minutes
-              })
-              .bind(CalleeService(), {
-                it.journalRetention = 20.minutes
-                it.inactivityTimeout = 2.minutes
-              }))
+              .bind(
+                  ProxyService(),
+                  {
+                    it.journalRetention = 10.minutes
+                    it.inactivityTimeout = 2.minutes
+                  })
+              .bind(
+                  CalleeService(),
+                  {
+                    it.journalRetention = 20.minutes
+                    it.inactivityTimeout = 2.minutes
+                  }))
     }
 
     // We need to patch the service deployments, otherwise restate will continue retrying to the old
