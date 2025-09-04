@@ -11,6 +11,7 @@ package dev.restate.sdktesting.tests
 import dev.restate.admin.api.InvocationApi
 import dev.restate.admin.client.ApiClient
 import dev.restate.client.Client
+import dev.restate.client.kotlin.attachSuspend
 import dev.restate.sdk.annotation.Handler
 import dev.restate.sdk.annotation.Name
 import dev.restate.sdk.annotation.Service
@@ -92,19 +93,16 @@ class PauseResumeTest {
       val adminClient = ApiClient().setHost(adminURI.host).setPort(adminURI.port)
       val invocationApi = InvocationApi(adminClient)
       try {
-        invocationApi.resumeInvocation(invocationId, "latest")
+        invocationApi.resumeInvocation(invocationId, local.deploymentId)
       } catch (e: Exception) {
         LOG.error("Failed to resume invocation {}: {}", invocationId, e.message)
         throw e
       }
 
-      // Wait until status transitions to completed after resume
-      await withAlias
-          "invocation completed" untilAsserted
-          {
-            val status = getInvocationStatus(adminURI, invocationId)
-            assertThat(status.status).isEqualTo("completed")
-          }
+      assertThat(sendResult.attachSuspend().response()).isEqualTo("Success in new version!")
+
+      val status = getInvocationStatus(adminURI, invocationId)
+      assertThat(status.status).isEqualTo("completed")
     }
   }
 }
