@@ -26,10 +26,12 @@ import org.apache.logging.log4j.LogManager
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.withAlias
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
-class PauseResumeTest {
+@Tag("only-single-node" /* This test depends on metadata propagation happening immediately */)
+class PauseResumeChangingDeploymentTest {
 
   @Service
   @Name("RetryableService")
@@ -50,7 +52,7 @@ class PauseResumeTest {
   }
 
   companion object {
-    private val LOG = LogManager.getLogger(PauseResumeTest::class.java)
+    private val LOG = LogManager.getLogger(PauseResumeChangingDeploymentTest::class.java)
 
     @RegisterExtension
     @JvmField
@@ -72,7 +74,8 @@ class PauseResumeTest {
       @InjectAdminURI adminURI: URI,
   ) = runTest {
     // Create client for RetryableService
-    val retryClient = PauseResumeTestRetryableServiceClient.fromClient(ingressClient)
+    val retryClient =
+        PauseResumeChangingDeploymentTestRetryableServiceClient.fromClient(ingressClient)
 
     // Send idempotent request to trigger retries and pause
     val sendResult = retryClient.send().runRetryableOperation(init = idempotentCallOptions)
@@ -89,7 +92,7 @@ class PauseResumeTest {
     // Start a new local endpoint exposing the fixed implementation and keep it alive
     startAndRegisterLocalEndpoint(Endpoint.bind(FixedRetryableService()).build(), adminURI).use {
         local ->
-      // Resume the paused invocation
+      // Resume the paused invocation on the specific endpoint
       val adminClient = ApiClient().setHost(adminURI.host).setPort(adminURI.port)
       val invocationApi = InvocationApi(adminClient)
       try {
