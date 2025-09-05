@@ -23,6 +23,7 @@ import java.net.http.HttpResponse
 import java.util.UUID
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.toJavaDuration
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.future.await
@@ -40,6 +41,9 @@ import org.awaitility.core.ConditionFactory
 import org.testcontainers.Testcontainers
 
 private val LOG = LogManager.getLogger("dev.restate.sdktesting.tests")
+
+infix fun ConditionFactory.withTimeout(timeout: Duration): ConditionFactory =
+    this.timeout(timeout.toJavaDuration())
 
 suspend infix fun ConditionFactory.untilAsserted(fn: suspend () -> Unit) {
   withContext(currentCoroutineContext() + Dispatchers.IO) {
