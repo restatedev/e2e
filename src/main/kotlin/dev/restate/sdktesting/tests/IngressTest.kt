@@ -8,7 +8,11 @@
 // https://github.com/restatedev/sdk-test-suite/blob/main/LICENSE
 package dev.restate.sdktesting.tests
 
+import dev.restate.admin.api.ServiceApi
+import dev.restate.admin.client.ApiClient
+import dev.restate.admin.model.ModifyServiceRequest
 import dev.restate.client.Client
+import dev.restate.client.IngressException
 import dev.restate.client.SendResponse.SendStatus
 import dev.restate.client.kotlin.getOutputSuspend
 import dev.restate.client.kotlin.response
@@ -25,28 +29,38 @@ import dev.restate.sdk.kotlin.Context
 import dev.restate.sdk.kotlin.ObjectContext
 import dev.restate.sdk.kotlin.SharedObjectContext
 import dev.restate.sdk.kotlin.awakeable
+import dev.restate.sdk.kotlin.call
 import dev.restate.sdk.kotlin.endpoint.idempotencyRetention
+import dev.restate.sdk.kotlin.endpoint.ingressPrivate
 import dev.restate.sdk.kotlin.endpoint.journalRetention
 import dev.restate.sdk.kotlin.get
 import dev.restate.sdk.kotlin.resolve
 import dev.restate.sdk.kotlin.send
 import dev.restate.sdk.kotlin.set
 import dev.restate.sdk.kotlin.stateKey
+import dev.restate.sdktesting.infra.InjectAdminURI
 import dev.restate.sdktesting.infra.InjectClient
 import dev.restate.sdktesting.infra.RestateDeployerExtension
-import dev.restate.sdktesting.tests.IdempotentInvocationTest.Counter.CounterUpdateResponse
+import dev.restate.sdktesting.tests.IngressTest.Counter.CounterUpdateResponse
+import java.net.URI
 import java.util.*
+import kotlin.text.get
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.future.await
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.assertj.core.api.InstanceOfAssertFactories
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.withAlias
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
-class IdempotentInvocationTest {
+/** Assorted tests checking the ingress behavior */
+class IngressTest {
 
   @VirtualObject
   @Name("Counter")
@@ -77,7 +91,7 @@ class IdempotentInvocationTest {
 
     @Handler
     suspend fun proxyThrough(context: Context, request: ProxyRequest) {
-      IdempotentInvocationTestCounterHandlers.add(request.key, request.value).send(context)
+      IngressTestCounterHandlers.add(request.key, request.value).send(context)
     }
   }
 
@@ -104,6 +118,18 @@ class IdempotentInvocationTest {
     }
   }
 
+  @Service
+  class PrivateGreeter {
+    @Handler fun greet(ctx: Context, name: String) = "Hello $name"
+  }
+
+  @Service
+  class ProxyGreeter {
+    @Handler
+    suspend fun greet(ctx: Context, name: String): String =
+        IngressTestPrivateGreeterHandlers.greet(name).call(ctx).await()
+  }
+
   companion object {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension = RestateDeployerExtension {
@@ -118,7 +144,10 @@ class IdempotentInvocationTest {
                     }
                   })
               .bind(CounterProxy())
-              .bind(AwakeableHolder()))
+              .bind(AwakeableHolder())
+              .bind(PrivateGreeter(), { it.ingressPrivate = true })
+              .bind(ProxyGreeter()))
+
       // We need the short cleanup interval b/c of the tests with the idempotent invoke.
       withEnv("RESTATE_WORKER__CLEANUP_INTERVAL", "1s")
     }
@@ -130,8 +159,7 @@ class IdempotentInvocationTest {
     val counterRandomName = UUID.randomUUID().toString()
     val myIdempotencyId = UUID.randomUUID().toString()
 
-    val counterClient =
-        IdempotentInvocationTestCounterClient.fromClient(ingressClient, counterRandomName)
+    val counterClient = IngressTestCounterClient.fromClient(ingressClient, counterRandomName)
 
     // First call updates the value
     val firstResponse = counterClient.add(2) { idempotencyKey = myIdempotencyId }
@@ -170,9 +198,8 @@ class IdempotentInvocationTest {
     val counterRandomName = UUID.randomUUID().toString()
     val myIdempotencyId = UUID.randomUUID().toString()
 
-    val counterClient =
-        IdempotentInvocationTestCounterClient.fromClient(ingressClient, counterRandomName)
-    val proxyCounterClient = IdempotentInvocationTestCounterProxyClient.fromClient(ingressClient)
+    val counterClient = IngressTestCounterClient.fromClient(ingressClient, counterRandomName)
+    val proxyCounterClient = IngressTestCounterProxyClient.fromClient(ingressClient)
 
     // Send request twice with same idempotency key. Should proxy the request only once!
     proxyCounterClient.proxyThrough(CounterProxy.ProxyRequest(counterRandomName, 2)) {
@@ -197,8 +224,7 @@ class IdempotentInvocationTest {
     val counterRandomName = UUID.randomUUID().toString()
     val myIdempotencyId = UUID.randomUUID().toString()
 
-    val counterClient =
-        IdempotentInvocationTestCounterClient.fromClient(ingressClient, counterRandomName)
+    val counterClient = IngressTestCounterClient.fromClient(ingressClient, counterRandomName)
 
     // Send request twice with same idempotency key
     val firstInvocationSendStatus = counterClient.send().add(2) { idempotencyKey = myIdempotencyId }
@@ -229,19 +255,16 @@ class IdempotentInvocationTest {
     val interpreterId = UUID.randomUUID().toString()
 
     // Send request
-    val awakeableHolder =
-        IdempotentInvocationTestAwakeableHolderClient.fromClient(ingressClient, interpreterId)
+    val awakeableHolder = IngressTestAwakeableHolderClient.fromClient(ingressClient, interpreterId)
     assertThat(awakeableHolder.send().run { idempotencyKey = myIdempotencyId }.sendStatus())
         .isEqualTo(SendStatus.ACCEPTED)
 
     val invocationHandle =
         ingressClient.idempotentInvocationHandle(
             Target.virtualObject(
-                IdempotentInvocationTestAwakeableHolderHandlers.Metadata.SERVICE_NAME,
-                interpreterId,
-                "run"),
+                IngressTestAwakeableHolderHandlers.Metadata.SERVICE_NAME, interpreterId, "run"),
             myIdempotencyId,
-            IdempotentInvocationTestAwakeableHolderHandlers.Metadata.Serde.RUN_OUTPUT)
+            IngressTestAwakeableHolderHandlers.Metadata.Serde.RUN_OUTPUT)
 
     // Attach to request
     val blockedFut = invocationHandle.attachAsync()
@@ -265,5 +288,44 @@ class IdempotentInvocationTest {
 
     // Invoke get output
     assertThat(invocationHandle.getOutputSuspend().response().value).isEqualTo(response)
+  }
+
+  @Test
+  @DisplayName(
+      "Make a handler ingress private and try to call it both directly and through a proxy service")
+  fun privateService(
+      @InjectAdminURI adminURI: URI,
+      @InjectClient ingressClient: Client,
+  ) = runTest {
+    val adminServiceClient = ServiceApi(ApiClient().setHost(adminURI.host).setPort(adminURI.port))
+    val greeterClient = IngressTestPrivateGreeterClient.fromClient(ingressClient)
+
+    // Wait for the service to be private
+    await withAlias
+        "the service is private" untilAsserted
+        {
+          val ctx = currentCoroutineContext()
+          assertThatThrownBy { runBlocking(ctx) { greeterClient.greet("Francesco") } }
+              .asInstanceOf(InstanceOfAssertFactories.type(IngressException::class.java))
+              .returns(400, IngressException::getStatusCode)
+        }
+
+    // Send a request through the proxy client
+    assertThat(
+            IngressTestProxyGreeterClient.fromClient(ingressClient)
+                .greet("Francesco", init = idempotentCallOptions))
+        .isEqualTo("Hello Francesco")
+
+    // Make the service public again
+    adminServiceClient.modifyService(
+        IngressTestPrivateGreeterHandlers.Metadata.SERVICE_NAME,
+        ModifyServiceRequest()._public(true))
+
+    // Wait to get the correct count
+    await withAlias
+        "the service becomes public again" untilAsserted
+        {
+          assertThat(greeterClient.greet("Francesco")).isEqualTo("Hello Francesco")
+        }
   }
 }
