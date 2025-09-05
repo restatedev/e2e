@@ -20,14 +20,13 @@ import dev.restate.sdktesting.infra.InjectAdminURI
 import dev.restate.sdktesting.infra.InjectClient
 import dev.restate.sdktesting.infra.RestateDeployerExtension
 import java.net.URI
+import java.util.concurrent.atomic.AtomicBoolean
 import org.apache.logging.log4j.LogManager
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.withAlias
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
-import java.util.concurrent.atomic.AtomicBoolean
 
 class PauseResumeTest {
 
@@ -72,11 +71,10 @@ class PauseResumeTest {
       @InjectAdminURI adminURI: URI,
   ) = runTest {
     // First attempt should fail
-FailingService.shouldFail.set(true)
+    FailingService.shouldFail.set(true)
 
     // Create client for RetryableService
-    val retryClient =
-      PauseResumeTestFailingServiceClient.fromClient(ingressClient)
+    val retryClient = PauseResumeTestFailingServiceClient.fromClient(ingressClient)
 
     // Send idempotent request to trigger retries and pause
     val sendResult = retryClient.send().echo("input", init = idempotentCallOptions)
