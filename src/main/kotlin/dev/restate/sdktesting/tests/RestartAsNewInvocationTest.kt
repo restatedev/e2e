@@ -61,6 +61,7 @@ class RestartAsNewInvocationTest {
   companion object {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension = RestateDeployerExtension {
+      withEnv("RESTATE_WORKER__INVOKER__experimental_features_allow_protocol_v6", "true")
       withEndpoint(Endpoint.bind(RestartInvocation()) { it.journalRetention = 1.days })
     }
   }
