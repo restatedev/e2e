@@ -883,7 +883,7 @@
           "invocation"
         ],
         "summary": "Restart as new invocation",
-        "description": "Restart the given invocation as new. This will restart the invocation, given its input is available, as a new invocation with a different invocation id.",
+        "description": "Restart the given invocation as new. This will restart the invocation as a new invocation with a different invocation id. By using the 'from' query parameter, some of the partial progress can be copied over to the new invocation.",
         "operationId": "restart_as_new_invocation",
         "parameters": [
           {
@@ -893,6 +893,26 @@
             "required": true,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "description": "From which entry index the invocation should restart from. By default the invocation restarts from the beginning (equivalent to 'from = 0'), retaining only the input of the original invocation. When greater than 0, the new invocation will copy the old journal prefix up to 'from' included, plus eventual completions for commands in the given prefix. If the journal prefix contains commands that have not been completed, this operation will fail.",
+            "style": "simple",
+            "schema": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            }
+          },
+          {
+            "name": "deployment",
+            "in": "query",
+            "description": "When restarting from journal prefix, provide a deployment id to use to replace the currently pinned deployment id. If 'latest', use the latest deployment id. If 'keep', keeps the pinned deployment id. When not provided, the invocation will resume on latest. Note: this parameter can be used only in combination with 'from'.",
+            "style": "simple",
+            "schema": {
+              "$ref": "#/components/schemas/PatchDeploymentId"
             }
           }
         ],
@@ -928,7 +948,7 @@
             }
           },
           "400 Bad Request": {
-            "description": "",
+            "description": "\nThe given journal index is out of range.\nThe given journal prefix contains some Commands without respective Completions.\nThe given deployment was not found.\nThe selected deployment id to restart as new the invocation doesn't support the currently pinned service protocol version.",
             "content": {
               "application/json": {
                 "schema": {
@@ -938,7 +958,7 @@
             }
           },
           "409 Conflict": {
-            "description": "The invocation is still running. An invocation can be restarted only when completed.",
+            "description": "The invocation is still running. An invocation can be restarted only when completed.\nThe invocation is still running or the deployment id is not pinned yet, deployment id cannot be changed. The deployment id can be changed only if the invocation is paused or suspended, and a deployment id is already pinned.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1001,10 +1021,10 @@
           {
             "name": "deployment",
             "in": "query",
-            "description": "When resuming from paused/suspended, provide a deployment id to use to replace the currently pinned deployment id. If latest, use the latest deployment id. When not provided, the invocation will resume on the pinned deployment id. When provided and the invocation is either running, or no deployment is pinned, this operation will fail.",
+            "description": "When resuming from paused/suspended, provide a deployment id to use to replace the currently pinned deployment id. If 'latest', use the latest deployment id. If 'keep', keeps the pinned deployment id. When not provided, the invocation will resume on the pinned deployment id.When provided and the invocation is either running, or no deployment is pinned, this operation will fail.",
             "style": "simple",
             "schema": {
-              "$ref": "#/components/schemas/ResumeInvocationDeploymentId"
+              "$ref": "#/components/schemas/PatchDeploymentId"
             }
           }
         ],
@@ -2628,8 +2648,7 @@
         "required": [
           "input_description",
           "name",
-          "output_description",
-          "retry_policy"
+          "output_description"
         ],
         "properties": {
           "name": {
@@ -3102,8 +3121,8 @@
           }
         }
       },
-      "ResumeInvocationDeploymentId": {
-        "title": "ResumeInvocationDeploymentId",
+      "PatchDeploymentId": {
+        "title": "PatchDeploymentId",
         "description": "Deployment id to replace the currently pinned deployment id. If 'keep', the pinned deployment will be left untouched. If 'latest', the latest deployment for the service will be used instead.",
         "type": "string",
         "minLength": 1,
