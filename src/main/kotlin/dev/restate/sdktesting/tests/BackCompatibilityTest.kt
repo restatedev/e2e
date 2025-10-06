@@ -266,6 +266,8 @@ class BackCompatibilityTest {
                 UpdateDeploymentRequestAnyOf()
                     .uri(localEndpointURI.toString())
                     .useHttp11(false)
+                    // TODO uncomment this when bumping minimum restate version
+                    // .overwrite(true)
                     .dryRun(false))
 
         try {

@@ -20,10 +20,10 @@ version = "1.0-SNAPSHOT"
 
 repositories {
   // Snapshots repo
-    maven {
-      name = "Central Portal Snapshots"
-      url = uri("https://central.sonatype.com/repository/maven-snapshots/")
-    }
+  maven {
+    name = "Central Portal Snapshots"
+    url = uri("https://central.sonatype.com/repository/maven-snapshots/")
+  }
 
   // Maven local for local testing
   //  mavenLocal()

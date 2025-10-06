@@ -273,6 +273,7 @@ class FrontCompatibilityTest {
                 UpdateDeploymentRequestAnyOf()
                     .uri(localEndpointURI.toString())
                     .useHttp11(false)
+                    .overwrite(true)
                     .dryRun(false))
 
         try {
