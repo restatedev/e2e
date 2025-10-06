@@ -25,6 +25,7 @@ import dev.restate.sdktesting.infra.InjectClient
 import dev.restate.sdktesting.infra.RestateDeployerExtension
 import java.net.URI
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.time.Duration.Companion.days
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.InstanceOfAssertFactories.STRING
@@ -33,7 +34,6 @@ import org.awaitility.kotlin.await
 import org.awaitility.kotlin.withAlias
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
-import java.util.concurrent.atomic.AtomicReference
 
 class RestartAsNewInvocationTest {
 
@@ -123,8 +123,8 @@ class RestartAsNewInvocationTest {
 
   @Test
   fun restartFromPrefix(
-    @InjectClient ingressClient: Client,
-    @InjectAdminURI adminURI: URI,
+      @InjectClient ingressClient: Client,
+      @InjectAdminURI adminURI: URI,
   ) = runTest {
     // First attempt should fail
     RestartInvocation.shouldFail.set(true)
@@ -141,10 +141,10 @@ class RestartAsNewInvocationTest {
 
     // Should fail with terminal exception
     assertThat(runCatching { sendResult.attach() })
-      .extracting { it.exceptionOrNull() }
-      .asInstanceOf(type(IngressException::class.java))
-      .extracting({ it.message }, STRING)
-      .contains("Sorry, can't make any progress")
+        .extracting { it.exceptionOrNull() }
+        .asInstanceOf(type(IngressException::class.java))
+        .extracting({ it.message }, STRING)
+        .contains("Sorry, can't make any progress")
 
     // Next attempt must not fail
     RestartInvocation.shouldFail.set(false)
@@ -154,11 +154,11 @@ class RestartAsNewInvocationTest {
     val adminClient = ApiClient().setHost(adminURI.host).setPort(adminURI.port)
     val invocationApi = InvocationApi(adminClient)
     val newInvocationId =
-      invocationApi.restartAsNewInvocation(sendResult.invocationId(), 1, null).newInvocationId
+        invocationApi.restartAsNewInvocation(sendResult.invocationId(), 1, null).newInvocationId
 
     // Assert this returns the input
     val newInvocationResult =
-      ingressClient.invocationHandle(newInvocationId, String::class.java).attachSuspend()
+        ingressClient.invocationHandle(newInvocationId, String::class.java).attachSuspend()
     assertThat(newInvocationResult.response).isEqualTo("$input from old")
 
     // Assert we both got invocation status completed
@@ -166,13 +166,13 @@ class RestartAsNewInvocationTest {
         "got the two invocation status completed" untilAsserted
         {
           assertThat(getInvocationStatus(adminURI, initialInvocationId))
-            .isEqualTo(
-              SysInvocationEntry(id = initialInvocationId, status = "completed"),
-            )
+              .isEqualTo(
+                  SysInvocationEntry(id = initialInvocationId, status = "completed"),
+              )
           assertThat(getInvocationStatus(adminURI, newInvocationId))
-            .isEqualTo(
-              SysInvocationEntry(id = newInvocationId, status = "completed"),
-            )
+              .isEqualTo(
+                  SysInvocationEntry(id = newInvocationId, status = "completed"),
+              )
         }
   }
 }
