@@ -11,7 +11,7 @@ package dev.restate.sdktesting.tests
 object Constants {
 
   // TODO When bumping this to 1.6, uncomment usage of
-  //  .overwrite(true)
-  //  in BackCompatiblityTest
+  //  .setBasePath("/v2")
+  //  in Back and Front CompatiblityTest
   val LAST_COMPATIBLE_RESTATE_SERVER_VERSION = "1.5.1"
 }

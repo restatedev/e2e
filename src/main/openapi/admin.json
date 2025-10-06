@@ -401,7 +401,7 @@
           }
         }
       },
-      "patch": {
+      "put": {
         "tags": [
           "deployment"
         ],
@@ -3100,6 +3100,8 @@
       "UpdateDeploymentRequest": {
         "anyOf": [
           {
+            "title": "UpdateHttpDeploymentRequest",
+            "description": "Update HTTP deployment request",
             "type": "object",
             "properties": {
               "uri": {
@@ -3138,6 +3140,8 @@
             }
           },
           {
+            "title": "UpdateLambdaDeploymentRequest",
+            "description": "Update Lambda deployment request",
             "type": "object",
             "properties": {
               "arn": {

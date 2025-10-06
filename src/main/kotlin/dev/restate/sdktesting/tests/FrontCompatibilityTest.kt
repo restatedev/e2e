@@ -11,7 +11,7 @@ package dev.restate.sdktesting.tests
 import dev.restate.admin.api.DeploymentApi
 import dev.restate.admin.client.ApiClient
 import dev.restate.admin.model.UpdateDeploymentRequest
-import dev.restate.admin.model.UpdateDeploymentRequestAnyOf
+import dev.restate.admin.model.UpdateHttpDeploymentRequest
 import dev.restate.client.Client
 import dev.restate.client.SendResponse
 import dev.restate.client.kotlin.*
@@ -259,7 +259,13 @@ class FrontCompatibilityTest {
         @InjectLocalEndpointURI localEndpointURI: URI
     ) {
       // Create Admin API client with the provided admin URI
-      val adminApi = DeploymentApi(ApiClient().setHost(adminURI.host).setPort(adminURI.port))
+      val adminApi =
+          DeploymentApi(
+              ApiClient()
+                  .setHost(adminURI.host)
+                  // TODO remove basePath
+                  .setBasePath("/v2")
+                  .setPort(adminURI.port))
 
       // List all deployments
       val deployments = adminApi.listDeployments()
@@ -269,12 +275,7 @@ class FrontCompatibilityTest {
       // For each deployment, update its URI
       for (deployment in deployments.deployments) {
         val updateRequest =
-            UpdateDeploymentRequest(
-                UpdateDeploymentRequestAnyOf()
-                    .uri(localEndpointURI.toString())
-                    .useHttp11(false)
-                    .overwrite(true)
-                    .dryRun(false))
+            UpdateDeploymentRequest(UpdateHttpDeploymentRequest().uri(localEndpointURI.toString()))
 
         try {
           adminApi.updateDeployment(deployment.httpDeploymentResponse.id, updateRequest)
