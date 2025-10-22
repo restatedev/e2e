@@ -48,9 +48,12 @@ runs:
       uses: gradle/actions/setup-gradle@v4
 
     - name: Create exclusions file
-      if: ${{ inputs.exclusions }}
+      if: ${{ inputs.exclusions != '' }}
       shell: bash
-      run: echo "${{ inputs.exclusions }}" > exclusions.yaml
+      run: |
+        cat > exclusions.yaml << 'EOF'
+        ${{ inputs.exclusions }}
+        EOF
 
     - name: Run
       shell: bash
@@ -58,7 +61,7 @@ runs:
         RESTATE_CONTAINER_IMAGE: ${{ inputs.restateContainerImage }}
       run: |
         ARGS='run --report-dir=test-report'
-        if [ -n "${{ inputs.exclusions }}" ]; then
+        if [ -f exclusions.yaml ]; then
           ARGS="$ARGS --exclusions exclusions.yaml"
         fi
         ./gradlew run --args="$ARGS"
