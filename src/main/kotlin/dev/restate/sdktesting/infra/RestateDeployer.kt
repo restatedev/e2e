@@ -467,6 +467,8 @@ private constructor(
       dumpSQLTable("sys_invocation")
       dumpSQLTable("sys_journal")
       dumpSQLTable("sys_journal_events")
+      dumpSQLTable("sys_deployment")
+      dumpSQLTable("sys_service")
       dumpSQLTable("state")
     }
 
