@@ -54,17 +54,15 @@ runs:
         cat > exclusions.yaml << 'EOF'
         ${{ inputs.exclusions }}
         EOF
+        echo "Exclusions file"
+        cat exclusions.yaml
+        echo "TEST_EXCLUSIONS_FILE=exclusions.yaml" >> $GITHUB_ENV
 
     - name: Run
       shell: bash
       env:
         RESTATE_CONTAINER_IMAGE: ${{ inputs.restateContainerImage }}
-      run: |
-        ARGS='run --report-dir=test-report'
-        if [ -f exclusions.yaml ]; then
-          ARGS="$ARGS --exclusions exclusions.yaml"
-        fi
-        ./gradlew run --args="$ARGS"
+      run: ./gradlew run --args="run --report-dir=test-report"
 
     # Upload logs and publish test result
     - uses: actions/upload-artifact@v4

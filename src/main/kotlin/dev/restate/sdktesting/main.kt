@@ -115,7 +115,8 @@ Run test suite, executing the service as container.
             .trimIndent()) {
   val filter by FilterOptions().cooccurring()
   val exclusionsFile by
-      option("--exclusions", "--exclusions-file").help("File containing the excluded tests")
+      option("--exclusions", "--exclusions-file", envvar = "TEST_EXCLUSIONS_FILE")
+          .help("File containing the excluded tests")
   val parallel by
       option(help = "Enable parallel testing")
           .help(
@@ -139,7 +140,12 @@ Run test suite, executing the service as container.
     // Load exclusions file
     val loadedExclusions: ExclusionsFile =
         if (exclusionsFile != null) {
-          FileInputStream(File(exclusionsFile!!)).use { Yaml.default.decodeFromStream(it) }
+          FileInputStream(File(exclusionsFile!!))
+              .use { Yaml.default.decodeFromStream<ExclusionsFile>(it) }
+              .also { exclusions ->
+                println("Using exclusions file $exclusionsFile")
+                println("Loaded exclusions: ${exclusions.exclusions}")
+              }
         } else {
           ExclusionsFile()
         }
