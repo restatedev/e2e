@@ -11,6 +11,9 @@ inputs:
     required: false
     description: Container image to use for Restate
     default: 'ghcr.io/restatedev/restate:main'
+  exclusions:
+    required: false
+    description: Test exclusions file content
 outputs: {}
 runs:
   using: "composite"
@@ -44,11 +47,21 @@ runs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
 
+    - name: Create exclusions file
+      if: ${{ inputs.exclusions }}
+      shell: bash
+      run: echo "${{ inputs.exclusions }}" > exclusions.yaml
+
     - name: Run
       shell: bash
       env:
         RESTATE_CONTAINER_IMAGE: ${{ inputs.restateContainerImage }}
-      run: ./gradlew run --args='run --report-dir=test-report'
+      run: |
+        ARGS='run --report-dir=test-report'
+        if [ -n "${{ inputs.exclusions }}" ]; then
+          ARGS="$ARGS --exclusions exclusions.yaml"
+        fi
+        ./gradlew run --args="$ARGS"
 
     # Upload logs and publish test result
     - uses: actions/upload-artifact@v4
