@@ -62,7 +62,8 @@ runs:
       shell: bash
       env:
         RESTATE_CONTAINER_IMAGE: ${{ inputs.restateContainerImage }}
-      run: ./gradlew run --args="run --report-dir=test-report"
+        TEST_REPORT_DIR: test-report
+      run: ./gradlew run
 
     # Upload logs and publish test result
     - uses: actions/upload-artifact@v4

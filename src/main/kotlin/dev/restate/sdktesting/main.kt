@@ -42,7 +42,7 @@ import org.junit.platform.engine.discovery.ClassNameFilter
 import org.junit.platform.engine.support.descriptor.MethodSource
 import org.junit.platform.launcher.MethodFilter
 
-@Serializable data class ExclusionsFile(val exclusions: Map<String, List<String>> = emptyMap())
+@Serializable data class ExclusionsFile(val exclusions: Map<String, List<String>>? = emptyMap())
 
 class RestateSdkTestSuite : CliktCommand() {
   override fun run() {
@@ -154,8 +154,14 @@ Run test suite, executing the service as container.
     val newExclusions = mutableMapOf<String, List<String>>()
     var newFailures = false
     for (testSuite in testSuites) {
-      val exclusions = loadedExclusions.exclusions[testSuite.name] ?: emptyList()
-      val exclusionsFilters = exclusions.map { MethodFilter.excludeMethodNamePatterns(it) }
+      val exclusions = loadedExclusions.exclusions?.get(testSuite.name) ?: emptyList()
+      val exclusionsFilters =
+          if (exclusions.isNotEmpty()) {
+            listOf(MethodFilter.excludeMethodNamePatterns(exclusions))
+          } else {
+            listOf()
+          }
+
       val cliOptionFilter =
           filter?.testName?.let {
             listOf(ClassNameFilter.includeClassNamePatterns(testClassNameToFQCN(it)))
