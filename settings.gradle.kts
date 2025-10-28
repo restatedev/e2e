@@ -39,23 +39,23 @@ dependencyResolutionManagement {
 
       library("vertx", "io.vertx:vertx-core:4.5.14")
 
-      version("junit-jupiter", "5.14.0")
-      version("junit-platform", "1.14.0")
+      version("junit-jupiter", "6.0.0")
+      version("junit-platform", "6.0.0")
       library("junit-all", "org.junit.jupiter", "junit-jupiter").versionRef("junit-jupiter")
       library("junit-launcher", "org.junit.platform", "junit-platform-launcher")
           .versionRef("junit-platform")
       library("junit-reporting", "org.junit.platform", "junit-platform-reporting")
           .versionRef("junit-platform")
 
-      version("assertj", "3.27.3")
+      version("assertj", "3.27.6")
       library("assertj", "org.assertj", "assertj-core").versionRef("assertj")
 
-      version("testcontainers", "1.21.3")
+      version("testcontainers", "2.0.1")
       library("testcontainers-core", "org.testcontainers", "testcontainers")
           .versionRef("testcontainers")
-      library("testcontainers-kafka", "org.testcontainers", "kafka").versionRef("testcontainers")
+      library("testcontainers-kafka", "org.testcontainers", "testcontainers-kafka").versionRef("testcontainers")
       // Keep this in sync with the version used by testcontainers
-      library("docker", "com.github.docker-java:docker-java:3.4.1")
+      library("docker", "com.github.docker-java:docker-java:3.6.0")
 
       library("dotenv", "io.github.cdimascio:dotenv-kotlin:6.5.1")
 
@@ -63,10 +63,10 @@ dependencyResolutionManagement {
       library("awaitility", "org.awaitility", "awaitility-kotlin").versionRef("awaitility")
 
       library("kotlinx-serialization-core", "org.jetbrains.kotlinx", "kotlinx-serialization-core")
-          .version("1.8.0")
+          .version("1.9.0")
       library("kotlinx-serialization-json", "org.jetbrains.kotlinx", "kotlinx-serialization-json")
-          .version("1.8.0")
-      library("kaml", "com.charleskorn.kaml:kaml:0.72.0")
+          .version("1.9.0")
+      library("kaml", "com.charleskorn.kaml:kaml:0.102.0")
       library("kotlinx-coroutines-core", "org.jetbrains.kotlinx", "kotlinx-coroutines-core")
           .version("1.10.1")
       library("kotlinx-coroutines-test", "org.jetbrains.kotlinx", "kotlinx-coroutines-test")

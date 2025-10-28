@@ -1,6 +1,6 @@
 [versions]
 restate = "2.4.0"
-ktor = "2.3.9"
+ktor = "2.3.13"
 
 [libraries]
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
