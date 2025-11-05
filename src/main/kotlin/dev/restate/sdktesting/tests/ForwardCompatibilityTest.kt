@@ -46,11 +46,14 @@ import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.api.parallel.Isolated
 
+/**
+ * Tests to verify forward compatibility (older version can read data written by newer version).
+ */
 @Tag("version-compatibility")
 @Isolated
 @Execution(ExecutionMode.SAME_THREAD)
 @TestClassOrder(ClassOrderer.OrderAnnotation::class)
-class BackCompatibilityTest {
+class ForwardCompatibilityTest {
 
   @VirtualObject
   class MyService {
@@ -92,13 +95,13 @@ class BackCompatibilityTest {
     @Handler
     suspend fun proxy(ctx: Context): String {
       callRetryCounter.incrementAndGet()
-      return BackCompatibilityTestCalleeServiceClient.fromContext(ctx).call().await()
+      return ForwardCompatibilityTestCalleeServiceClient.fromContext(ctx).call().await()
     }
 
     @Handler
     suspend fun proxyOneWay(ctx: Context): String {
       oneWayCallRetryCounter.incrementAndGet()
-      BackCompatibilityTestCalleeServiceClient.fromContext(ctx).send().call()
+      ForwardCompatibilityTestCalleeServiceClient.fromContext(ctx).send().call()
       return "Done"
     }
   }
@@ -110,8 +113,8 @@ class BackCompatibilityTest {
   }
 
   companion object {
-    private val LOG = LogManager.getLogger(BackCompatibilityTest::class.java)
-    private val stateDir = Files.createTempDirectory("back-compat-test").toAbsolutePath()
+    private val LOG = LogManager.getLogger(ForwardCompatibilityTest::class.java)
+    private val stateDir = Files.createTempDirectory("forward-compatibility-test").toAbsolutePath()
 
     private val awakeableKey = UUID.randomUUID().toString()
 
@@ -124,7 +127,7 @@ class BackCompatibilityTest {
     private val oneWayCallRetryCounter = AtomicInteger(0)
 
     init {
-      LOG.info("Using state directory for back compatibility test: {}", stateDir)
+      LOG.info("Using state directory for forward compatibility test: {}", stateDir)
     }
   }
 
@@ -139,7 +142,7 @@ class BackCompatibilityTest {
 
     @Deployer
     val deployerExt: RestateDeployer.Builder.() -> Unit = {
-      withEnv("RESTATE_CLUSTER_NAME", "back-compat-test")
+      withEnv("RESTATE_CLUSTER_NAME", "forward-compatibility-test")
       withOverrideRestateStateDirectoryMount(stateDir.toString())
       withEndpoint(
           Endpoint.bind(MyService())
@@ -154,7 +157,7 @@ class BackCompatibilityTest {
 
     @Test
     fun createAwakeable(@InjectClient ingressClient: Client) = runTest {
-      val client = BackCompatibilityTestMyServiceClient.fromClient(ingressClient, awakeableKey)
+      val client = ForwardCompatibilityTestMyServiceClient.fromClient(ingressClient, awakeableKey)
 
       client.send().run(init = idempotentCallOptions)
 
@@ -168,7 +171,7 @@ class BackCompatibilityTest {
 
     @Test
     fun startRetryableOperation(@InjectClient ingressClient: Client) = runTest {
-      val retryableClient = BackCompatibilityTestRetryableServiceClient.fromClient(ingressClient)
+      val retryableClient = ForwardCompatibilityTestRetryableServiceClient.fromClient(ingressClient)
 
       // Send the request and expect it to fail
       retryableClient.send().runRetryableOperation { idempotencyKey = idempotencyKeyRunBlockTest }
@@ -185,7 +188,7 @@ class BackCompatibilityTest {
 
     @Test
     fun startProxyCall(@InjectClient ingressClient: Client) = runTest {
-      val retryableClient = BackCompatibilityTestProxyServiceClient.fromClient(ingressClient)
+      val retryableClient = ForwardCompatibilityTestProxyServiceClient.fromClient(ingressClient)
 
       retryableClient.send().proxy { idempotencyKey = idempotencyKeyCallTest }
 
@@ -199,7 +202,7 @@ class BackCompatibilityTest {
 
     @Test
     fun startOneWayProxyCall(@InjectClient ingressClient: Client) = runTest {
-      val retryableClient = BackCompatibilityTestProxyServiceClient.fromClient(ingressClient)
+      val retryableClient = ForwardCompatibilityTestProxyServiceClient.fromClient(ingressClient)
 
       retryableClient.send().proxyOneWay { idempotencyKey = idempotencyKeyOneWayCallTest }
 
@@ -223,7 +226,7 @@ class BackCompatibilityTest {
 
     @Deployer
     val deployerExt: RestateDeployer.Builder.() -> Unit = {
-      withEnv("RESTATE_CLUSTER_NAME", "back-compat-test")
+      withEnv("RESTATE_CLUSTER_NAME", "forward-compatibility-test")
       withOverrideRestateContainerImage(
           "ghcr.io/restatedev/restate:${Constants.LAST_COMPATIBLE_RESTATE_SERVER_VERSION}")
       withOverrideRestateStateDirectoryMount(stateDir.toString())
@@ -286,7 +289,7 @@ class BackCompatibilityTest {
 
     @Test
     fun completeAwakeable(@InjectClient ingressClient: Client) = runTest {
-      val client = BackCompatibilityTestMyServiceClient.fromClient(ingressClient, awakeableKey)
+      val client = ForwardCompatibilityTestMyServiceClient.fromClient(ingressClient, awakeableKey)
 
       val awakeableId = client.getAwakeable(idempotentCallOptions)
       assertThat(client.getAwakeable(idempotentCallOptions)).isNotBlank()
@@ -301,7 +304,7 @@ class BackCompatibilityTest {
 
     @Test
     fun completeRetryableOperation(@InjectClient ingressClient: Client) = runTest {
-      val retryableClient = BackCompatibilityTestRetryableServiceClient.fromClient(ingressClient)
+      val retryableClient = ForwardCompatibilityTestRetryableServiceClient.fromClient(ingressClient)
 
       val result =
           retryableClient.send().runRetryableOperation {
@@ -316,7 +319,7 @@ class BackCompatibilityTest {
 
     @Test
     fun proxyCallShouldBeDone(@InjectClient ingressClient: Client) = runTest {
-      val retryableClient = BackCompatibilityTestProxyServiceClient.fromClient(ingressClient)
+      val retryableClient = ForwardCompatibilityTestProxyServiceClient.fromClient(ingressClient)
 
       val result = retryableClient.send().proxy { idempotencyKey = idempotencyKeyCallTest }
 
@@ -328,7 +331,7 @@ class BackCompatibilityTest {
 
     @Test
     fun proxyOneWayCallShouldBeDone(@InjectClient ingressClient: Client) = runTest {
-      val retryableClient = BackCompatibilityTestProxyServiceClient.fromClient(ingressClient)
+      val retryableClient = ForwardCompatibilityTestProxyServiceClient.fromClient(ingressClient)
 
       val result =
           retryableClient.send().proxyOneWay { idempotencyKey = idempotencyKeyOneWayCallTest }
