@@ -53,7 +53,8 @@ dependencyResolutionManagement {
       version("testcontainers", "2.0.3")
       library("testcontainers-core", "org.testcontainers", "testcontainers")
           .versionRef("testcontainers")
-      library("testcontainers-kafka", "org.testcontainers", "testcontainers-kafka").versionRef("testcontainers")
+      library("testcontainers-kafka", "org.testcontainers", "testcontainers-kafka")
+          .versionRef("testcontainers")
       // Keep this in sync with the version used by testcontainers
       library("docker", "com.github.docker-java:docker-java:3.7.0")
 
