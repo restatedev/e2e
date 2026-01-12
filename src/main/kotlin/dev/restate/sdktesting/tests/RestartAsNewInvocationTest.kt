@@ -99,7 +99,10 @@ class RestartAsNewInvocationTest {
     val adminClient = ApiClient().setHost(adminURI.host).setPort(adminURI.port)
     val invocationApi = InvocationApi(adminClient)
     val newInvocationId =
-        invocationApi.restartAsNewInvocation(sendResult.invocationId(), null, null).newInvocationId
+        retryOnServiceUnavailable {
+              invocationApi.restartAsNewInvocation(sendResult.invocationId(), null, null)
+            }
+            .newInvocationId
 
     // Assert this returns the input
     val newInvocationResult =
@@ -154,7 +157,10 @@ class RestartAsNewInvocationTest {
     val adminClient = ApiClient().setHost(adminURI.host).setPort(adminURI.port)
     val invocationApi = InvocationApi(adminClient)
     val newInvocationId =
-        invocationApi.restartAsNewInvocation(sendResult.invocationId(), 1, null).newInvocationId
+        retryOnServiceUnavailable {
+              invocationApi.restartAsNewInvocation(sendResult.invocationId(), 1, null)
+            }
+            .newInvocationId
 
     // Assert this returns the input
     val newInvocationResult =

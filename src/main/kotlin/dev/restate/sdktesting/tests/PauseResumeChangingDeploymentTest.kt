@@ -22,7 +22,6 @@ import dev.restate.sdktesting.infra.InjectAdminURI
 import dev.restate.sdktesting.infra.InjectClient
 import dev.restate.sdktesting.infra.RestateDeployerExtension
 import java.net.URI
-import org.apache.logging.log4j.LogManager
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.withAlias
@@ -52,8 +51,6 @@ class PauseResumeChangingDeploymentTest {
   }
 
   companion object {
-    private val LOG = LogManager.getLogger(PauseResumeChangingDeploymentTest::class.java)
-
     @RegisterExtension
     @JvmField
     val deployerExt: RestateDeployerExtension = RestateDeployerExtension {
@@ -95,12 +92,7 @@ class PauseResumeChangingDeploymentTest {
       // Resume the paused invocation on the specific endpoint
       val adminClient = ApiClient().setHost(adminURI.host).setPort(adminURI.port)
       val invocationApi = InvocationApi(adminClient)
-      try {
-        invocationApi.resumeInvocation(invocationId, local.deploymentId)
-      } catch (e: Exception) {
-        LOG.error("Failed to resume invocation {}: {}", invocationId, e.message)
-        throw e
-      }
+      retryOnServiceUnavailable { invocationApi.resumeInvocation(invocationId, local.deploymentId) }
 
       assertThat(sendResult.attachSuspend().response()).isEqualTo("Success in new version!")
 
