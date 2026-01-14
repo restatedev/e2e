@@ -46,9 +46,7 @@ import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.api.parallel.Isolated
 
-/**
- * Tests to verify forward compatibility (older version can read data written by newer version).
- */
+/** Tests to verify forward compatibility (older version can read data written by newer version). */
 @Tag("version-compatibility")
 @Isolated
 @Execution(ExecutionMode.SAME_THREAD)

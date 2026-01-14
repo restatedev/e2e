@@ -54,7 +54,8 @@ import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.api.parallel.Isolated
 
 /**
- * Tests verifying backward compatibility (newer Restate version can read data written by older version).
+ * Tests verifying backward compatibility (newer Restate version can read data written by older
+ * version).
  */
 @Tag("version-compatibility")
 @Isolated
@@ -180,7 +181,8 @@ class BackwardCompatibilityTest {
 
     @Test
     fun startRetryableOperation(@InjectClient ingressClient: Client) = runTest {
-      val retryableClient = BackwardCompatibilityTestRetryableServiceClient.fromClient(ingressClient)
+      val retryableClient =
+          BackwardCompatibilityTestRetryableServiceClient.fromClient(ingressClient)
 
       // Send the request and expect it to fail
       retryableClient.send().runRetryableOperation { idempotencyKey = idempotencyKeyRunBlockTest }
@@ -311,7 +313,8 @@ class BackwardCompatibilityTest {
 
     @Test
     fun completeRetryableOperation(@InjectClient ingressClient: Client) = runTest {
-      val retryableClient = BackwardCompatibilityTestRetryableServiceClient.fromClient(ingressClient)
+      val retryableClient =
+          BackwardCompatibilityTestRetryableServiceClient.fromClient(ingressClient)
 
       val result =
           retryableClient.send().runRetryableOperation {
