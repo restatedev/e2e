@@ -65,7 +65,8 @@ class KafkaAndWorkflowAPITest {
   @Execution(ExecutionMode.CONCURRENT)
   fun callWorkflowHandler(
       @InjectAdminURI adminURI: URI,
-      @InjectContainerPort(hostName = "kafka", port = KafkaContainer.EXTERNAL_PORT) kafkaPort: Int,
+      @InjectContainerPort(hostName = "kafka", port = KafkaContainer.KAFKA_EXTERNAL_PORT)
+      kafkaPort: Int,
       @InjectClient ingressClient: Client
   ) = runTest {
     // Create subscription
@@ -116,7 +117,8 @@ class KafkaAndWorkflowAPITest {
   @Execution(ExecutionMode.CONCURRENT)
   fun callSharedWorkflowHandler(
       @InjectAdminURI adminURI: URI,
-      @InjectContainerPort(hostName = "kafka", port = KafkaContainer.EXTERNAL_PORT) kafkaPort: Int,
+      @InjectContainerPort(hostName = "kafka", port = KafkaContainer.KAFKA_EXTERNAL_PORT)
+      kafkaPort: Int,
       @InjectClient ingressClient: Client
   ) = runTest {
     // Create subscription

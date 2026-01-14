@@ -11,6 +11,7 @@ package dev.restate.sdktesting.tests
 import dev.restate.admin.api.SubscriptionApi
 import dev.restate.admin.client.ApiClient
 import dev.restate.admin.model.CreateSubscriptionRequest
+import dev.restate.sdktesting.infra.KafkaContainer
 import dev.restate.sdktesting.infra.runtimeconfig.IngressOptions
 import dev.restate.sdktesting.infra.runtimeconfig.KafkaClusterOptions
 import dev.restate.sdktesting.infra.runtimeconfig.RestateConfigSchema
@@ -56,6 +57,7 @@ object Kafka {
                 listOf(
                     KafkaClusterOptions()
                         .withName("my-cluster")
-                        .withBrokers(listOf("PLAINTEXT://kafka:9092")))))
+                        .withBrokers(
+                            listOf("PLAINTEXT://kafka:${KafkaContainer.KAFKA_NETWORK_PORT}")))))
   }
 }

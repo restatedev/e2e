@@ -69,7 +69,8 @@ class KafkaTracingTest {
       @InjectClient ingressClient: Client,
       @InjectAdminURI adminURI: URI,
       @InjectContainerPort(hostName = JAEGER_HOSTNAME, port = JAEGER_QUERY_PORT) jaegerPort: Int,
-      @InjectContainerPort(hostName = "kafka", port = KafkaContainer.EXTERNAL_PORT) kafkaPort: Int,
+      @InjectContainerPort(hostName = "kafka", port = KafkaContainer.KAFKA_EXTERNAL_PORT)
+      kafkaPort: Int,
   ) = runTest {
     Kafka.createKafkaSubscription(
         adminURI, TOPIC, KafkaTracingTestCounterHandlers.Metadata.SERVICE_NAME, "set")
