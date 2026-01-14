@@ -10,6 +10,7 @@ package dev.restate.sdktesting.tests
 
 import dev.restate.admin.api.DeploymentApi
 import dev.restate.admin.client.ApiClient
+import dev.restate.admin.client.ApiException
 import dev.restate.admin.model.RegisterDeploymentRequest
 import dev.restate.admin.model.RegisterHttpDeploymentRequest
 import dev.restate.common.RequestBuilder
@@ -21,6 +22,7 @@ import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
@@ -37,6 +39,7 @@ import kotlinx.serialization.json.Json
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.kotlin.additionalLoggingContext
 import org.assertj.core.api.Assertions.assertThat
+import org.awaitility.Awaitility
 import org.awaitility.core.ConditionFactory
 import org.testcontainers.Testcontainers
 
@@ -60,6 +63,19 @@ fun runTest(timeout: Duration = 60.seconds, testBody: suspend TestScope.() -> Un
 
 val idempotentCallOptions: RequestBuilder<*, *>.() -> Unit = {
   idempotencyKey = UUID.randomUUID().toString()
+}
+
+/**
+ * Retries a block that may throw ApiException with 503 status due to leadership changes. Uses a
+ * 30-second timeout to stay well under the default 60-second test timeout. Only retries on 503
+ * errors; other errors are propagated immediately.
+ */
+fun <T> retryOnServiceUnavailable(block: () -> T): T {
+  return Awaitility.await()
+      .atMost(30, TimeUnit.SECONDS)
+      .pollInterval(100, TimeUnit.MILLISECONDS)
+      .ignoreExceptionsMatching { e -> e is ApiException && e.code == 503 }
+      .until({ block() }) { true }
 }
 
 /** Data classes for sys_journal query result */
