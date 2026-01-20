@@ -10,6 +10,7 @@ package dev.restate.sdktesting.tests
 
 import dev.restate.admin.api.InvocationApi
 import dev.restate.admin.client.ApiClient
+import dev.restate.admin.model.RestartAsNewInvocationDeploymentParameter
 import dev.restate.client.Client
 import dev.restate.client.IngressException
 import dev.restate.client.kotlin.*
@@ -100,7 +101,10 @@ class RestartAsNewInvocationTest {
     val invocationApi = InvocationApi(adminClient)
     val newInvocationId =
         retryOnServiceUnavailable {
-              invocationApi.restartAsNewInvocation(sendResult.invocationId(), null, null)
+              invocationApi.restartAsNewInvocation(
+                  sendResult.invocationId(),
+                  null,
+                  RestartAsNewInvocationDeploymentParameter("latest"))
             }
             .newInvocationId
 
@@ -158,7 +162,8 @@ class RestartAsNewInvocationTest {
     val invocationApi = InvocationApi(adminClient)
     val newInvocationId =
         retryOnServiceUnavailable {
-              invocationApi.restartAsNewInvocation(sendResult.invocationId(), 1, null)
+              invocationApi.restartAsNewInvocation(
+                  sendResult.invocationId(), 1, RestartAsNewInvocationDeploymentParameter("latest"))
             }
             .newInvocationId
 
