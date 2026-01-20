@@ -45,8 +45,8 @@ object Kafka {
         SubscriptionApi(ApiClient().setHost(adminURI.host).setPort(adminURI.port))
     subscriptionsClient.createSubscription(
         CreateSubscriptionRequest()
-            .source("kafka://my-cluster/$topic")
-            .sink("service://$serviceName/$handlerName")
+            .source(URI.create("kafka://my-cluster/$topic"))
+            .sink(URI.create("service://$serviceName/$handlerName"))
             .options(mapOf("auto.offset.reset" to "earliest")))
   }
 
