@@ -10,6 +10,7 @@ package dev.restate.sdktesting.tests
 
 import dev.restate.admin.api.InvocationApi
 import dev.restate.admin.client.ApiClient
+import dev.restate.admin.model.RestartAsNewInvocationDeploymentParameter
 import dev.restate.client.Client
 import dev.restate.client.kotlin.attachSuspend
 import dev.restate.sdk.annotation.Handler
@@ -90,7 +91,10 @@ class PauseResumeTest {
     // Resume the paused invocation on the specific endpoint
     val adminClient = ApiClient().setHost(adminURI.host).setPort(adminURI.port)
     val invocationApi = InvocationApi(adminClient)
-    retryOnServiceUnavailable { invocationApi.resumeInvocation(invocationId, null) }
+    retryOnServiceUnavailable {
+      invocationApi.resumeInvocation(
+          invocationId, RestartAsNewInvocationDeploymentParameter("keep"))
+    }
 
     assertThat(sendResult.attachSuspend().response()).isEqualTo("input")
 
