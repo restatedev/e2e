@@ -8,8 +8,10 @@
 // https://github.com/restatedev/sdk-test-suite/blob/main/LICENSE
 package dev.restate.sdktesting.tests
 
+import dev.restate.admin.api.KafkaClusterApi
 import dev.restate.admin.api.SubscriptionApi
 import dev.restate.admin.client.ApiClient
+import dev.restate.admin.model.CreateKafkaClusterRequest
 import dev.restate.admin.model.CreateSubscriptionRequest
 import dev.restate.sdktesting.infra.KafkaContainer
 import dev.restate.sdktesting.infra.runtimeconfig.IngressOptions
@@ -22,7 +24,7 @@ import org.apache.kafka.clients.producer.Producer
 import org.apache.kafka.clients.producer.ProducerRecord
 
 object Kafka {
-  fun produceMessagesToKafka(port: Int, topic: String, values: List<Pair<String, String>>) {
+  fun produceMessagesToKafka(port: Int, topic: String, values: List<Pair<String?, String>>) {
     val props = Properties()
     props["bootstrap.servers"] = "PLAINTEXT://localhost:$port"
     props["key.serializer"] = "org.apache.kafka.common.serialization.StringSerializer"
@@ -33,6 +35,20 @@ object Kafka {
       producer.send(ProducerRecord(topic, value.first, value.second))
     }
     producer.close()
+  }
+
+  fun registerKafkaCluster(
+      adminURI: URI,
+  ) {
+    val kafkaClustersClient =
+        KafkaClusterApi(ApiClient().setHost(adminURI.host).setPort(adminURI.port))
+    kafkaClustersClient.createKafkaCluster(
+        CreateKafkaClusterRequest()
+            .name("my-cluster")
+            .properties(
+                mapOf(
+                    "bootstrap.servers" to
+                        "PLAINTEXT://kafka:${KafkaContainer.KAFKA_NETWORK_PORT}")))
   }
 
   fun createKafkaSubscription(
