@@ -45,6 +45,10 @@ import org.testcontainers.Testcontainers
 
 private val LOG = LogManager.getLogger("dev.restate.sdktesting.tests")
 
+/** Convert an Int to its value in bytes (kilobytes). */
+inline val Int.kb: Int
+  get() = this * 1024
+
 infix fun ConditionFactory.withTimeout(timeout: Duration): ConditionFactory =
     this.timeout(timeout.toJavaDuration())
 
@@ -76,6 +80,12 @@ fun <T> retryOnServiceUnavailable(block: () -> T): T {
       .pollInterval(100, TimeUnit.MILLISECONDS)
       .ignoreExceptionsMatching { e -> e is ApiException && e.code == 503 }
       .until({ block() }) { true }
+}
+
+/** Generate a random alphanumeric string of the given length. Resists compression. */
+fun randomString(length: Int): String {
+  val allowedChars = ('A'..'Z') + ('a'..'z') + ('0'..'9')
+  return String(CharArray(length) { allowedChars.random() })
 }
 
 /** Data classes for sys_journal query result */
