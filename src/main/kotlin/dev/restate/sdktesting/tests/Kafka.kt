@@ -42,13 +42,15 @@ object Kafka {
   ) {
     val kafkaClustersClient =
         KafkaClusterApi(ApiClient().setHost(adminURI.host).setPort(adminURI.port))
-    kafkaClustersClient.createKafkaCluster(
-        CreateKafkaClusterRequest()
-            .name("my-cluster")
-            .properties(
-                mapOf(
-                    "bootstrap.servers" to
-                        "PLAINTEXT://kafka:${KafkaContainer.KAFKA_NETWORK_PORT}")))
+    retryOnServiceUnavailable {
+      kafkaClustersClient.createKafkaCluster(
+          CreateKafkaClusterRequest()
+              .name("my-cluster")
+              .properties(
+                  mapOf(
+                      "bootstrap.servers" to
+                          "PLAINTEXT://kafka:${KafkaContainer.KAFKA_NETWORK_PORT}")))
+    }
   }
 
   fun createKafkaSubscription(
@@ -59,11 +61,13 @@ object Kafka {
   ) {
     val subscriptionsClient =
         SubscriptionApi(ApiClient().setHost(adminURI.host).setPort(adminURI.port))
-    subscriptionsClient.createSubscription(
-        CreateSubscriptionRequest()
-            .source(URI.create("kafka://my-cluster/$topic"))
-            .sink(URI.create("service://$serviceName/$handlerName"))
-            .options(mapOf("auto.offset.reset" to "earliest")))
+    retryOnServiceUnavailable {
+      subscriptionsClient.createSubscription(
+          CreateSubscriptionRequest()
+              .source(URI.create("kafka://my-cluster/$topic"))
+              .sink(URI.create("service://$serviceName/$handlerName"))
+              .options(mapOf("auto.offset.reset" to "earliest")))
+    }
   }
 
   val configSchema: RestateConfigSchema.() -> Unit = {
