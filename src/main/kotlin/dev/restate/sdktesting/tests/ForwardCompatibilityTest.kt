@@ -10,8 +10,6 @@ package dev.restate.sdktesting.tests
 
 import dev.restate.admin.api.DeploymentApi
 import dev.restate.admin.client.ApiClient
-import dev.restate.admin.model.UpdateDeploymentRequest
-import dev.restate.admin.model.UpdateHttpDeploymentRequest
 import dev.restate.client.Client
 import dev.restate.client.SendResponse
 import dev.restate.client.kotlin.*
@@ -253,33 +251,48 @@ class ForwardCompatibilityTest {
         @InjectLocalEndpointURI localEndpointURI: URI
     ) {
       // Create Admin API client with the provided admin URI
-      val adminApi =
-          DeploymentApi(
-              ApiClient()
-                  .setHost(adminURI.host)
-                  // TODO remove basePath
-                  .setBasePath("/v2")
-                  .setPort(adminURI.port))
+      val adminClient =
+          ApiClient()
+              .setHost(adminURI.host)
+              // TODO remove basePath
+              .setBasePath("/v2")
+              .setPort(adminURI.port)
+      val adminApi = DeploymentApi(adminClient)
 
       // List all deployments
       val deployments = adminApi.listDeployments()
 
       LOG.info("Patching all deployments to use endpoint URI: {}", localEndpointURI)
 
-      // For each deployment, update its URI
+      // For each deployment, update its URI.
+      // NOTE: We use a raw PUT request here instead of adminApi.updateDeployment() because
+      // the generated client uses PATCH (per the current OpenAPI spec), but this test runs
+      // against an OLDER server version that only supports PUT on this endpoint.
+      // When the minimum supported version includes PATCH support, replace this block with:
+      //   adminApi.updateDeployment(deployment.httpDeploymentResponse.id, updateRequest)
+      val httpClient = java.net.http.HttpClient.newHttpClient()
       for (deployment in deployments.deployments) {
-        val updateRequest =
-            UpdateDeploymentRequest(UpdateHttpDeploymentRequest().uri(localEndpointURI.toString()))
+        val deploymentId = deployment.httpDeploymentResponse.id
+        val body = """{"uri":"$localEndpointURI"}"""
+        val request =
+            java.net.http.HttpRequest.newBuilder()
+                .uri(
+                    URI.create(
+                        "http://${adminURI.host}:${adminURI.port}/v2/deployments/$deploymentId"))
+                .header("Content-Type", "application/json")
+                .PUT(java.net.http.HttpRequest.BodyPublishers.ofString(body))
+                .build()
 
         try {
-          adminApi.updateDeployment(deployment.httpDeploymentResponse.id, updateRequest)
+          val response =
+              httpClient.send(request, java.net.http.HttpResponse.BodyHandlers.ofString())
+          check(response.statusCode() / 100 == 2) {
+            "updateDeployment call failed with: ${response.statusCode()} - ${response.body()}"
+          }
           LOG.info(
-              "Successfully updated deployment {} to use URI {}",
-              deployment.httpDeploymentResponse.id,
-              localEndpointURI)
+              "Successfully updated deployment {} to use URI {}", deploymentId, localEndpointURI)
         } catch (e: Exception) {
-          LOG.error(
-              "Failed to update deployment {}: {}", deployment.httpDeploymentResponse.id, e.message)
+          LOG.error("Failed to update deployment {}: {}", deploymentId, e.message)
           throw e
         }
       }

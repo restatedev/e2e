@@ -19,7 +19,7 @@ dependencyResolutionManagement {
       library("log4j-jul", "org.apache.logging.log4j", "log4j-jul").versionRef("log4j")
       library("log4j-kotlin", "org.apache.logging.log4j", "log4j-api-kotlin").version("1.5.0")
 
-      version("jackson", "2.18.2")
+      version("jackson", "2.21.2")
       library("jackson-core", "com.fasterxml.jackson.core", "jackson-core").versionRef("jackson")
       library("jackson-databind", "com.fasterxml.jackson.core", "jackson-databind")
           .versionRef("jackson")
@@ -39,18 +39,16 @@ dependencyResolutionManagement {
 
       library("vertx", "io.vertx:vertx-core:4.5.14")
 
-      version("junit-jupiter", "6.0.0")
-      version("junit-platform", "6.0.0")
-      library("junit-all", "org.junit.jupiter", "junit-jupiter").versionRef("junit-jupiter")
-      library("junit-launcher", "org.junit.platform", "junit-platform-launcher")
-          .versionRef("junit-platform")
+      version("junit", "6.0.3")
+      library("junit-all", "org.junit.jupiter", "junit-jupiter").versionRef("junit")
+      library("junit-launcher", "org.junit.platform", "junit-platform-launcher").versionRef("junit")
       library("junit-reporting", "org.junit.platform", "junit-platform-reporting")
-          .versionRef("junit-platform")
+          .versionRef("junit")
 
       version("assertj", "3.27.6")
       library("assertj", "org.assertj", "assertj-core").versionRef("assertj")
 
-      version("testcontainers", "2.0.3")
+      version("testcontainers", "2.0.4")
       library("testcontainers-core", "org.testcontainers", "testcontainers")
           .versionRef("testcontainers")
       library("testcontainers-kafka", "org.testcontainers", "testcontainers-kafka")

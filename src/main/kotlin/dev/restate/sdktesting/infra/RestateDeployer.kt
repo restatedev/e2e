@@ -390,7 +390,8 @@ private constructor(
   }
 
   private fun discoverDeployment(client: DeploymentApi, uri: String) {
-    val request = RegisterDeploymentRequest(RegisterHttpDeploymentRequest().uri(uri).force(false))
+    val request =
+        RegisterDeploymentRequest(RegisterHttpDeploymentRequest().uri(URI.create(uri)).force(false))
 
     val response =
         Unreliables.retryUntilSuccess(20, TimeUnit.SECONDS) {
