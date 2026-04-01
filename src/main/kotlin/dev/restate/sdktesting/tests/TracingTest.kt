@@ -9,11 +9,14 @@
 package dev.restate.sdktesting.tests
 
 import dev.restate.client.Client
+import dev.restate.client.kotlin.response
+import dev.restate.client.kotlin.toService
 import dev.restate.sdk.annotation.Handler
 import dev.restate.sdk.annotation.Name
 import dev.restate.sdk.annotation.Service
 import dev.restate.sdk.endpoint.Endpoint
-import dev.restate.sdk.kotlin.*
+import dev.restate.sdk.kotlin.openTelemetryContext
+import dev.restate.sdk.kotlin.request
 import dev.restate.sdktesting.infra.InjectClient
 import dev.restate.sdktesting.infra.InjectContainerPort
 import dev.restate.sdktesting.infra.RestateDeployerExtension
@@ -35,9 +38,9 @@ class TracingTest {
   @Name("GreeterService")
   class GreeterService {
     @Handler
-    suspend fun greet(ctx: Context, name: String): String {
+    suspend fun greet(name: String): String {
       // Get the current span from the OpenTelemetry context
-      val span = io.opentelemetry.api.trace.Span.fromContext(ctx.request().openTelemetryContext)
+      val span = io.opentelemetry.api.trace.Span.fromContext(request().openTelemetryContext)
 
       // Verify that this is a server span (meaning it was created from a parent)
       assertThat(span.spanContext.isRemote).isTrue()
@@ -74,8 +77,8 @@ class TracingTest {
       @InjectContainerPort(hostName = JAEGER_HOSTNAME, port = JAEGER_QUERY_PORT) jaegerPort: Int,
   ) = runTest {
     // Call the greeter service
-    val greeter = TracingTestGreeterServiceClient.fromClient(client)
-    val response = greeter.greet("Alice", idempotentCallOptions)
+    val greeter = client.toService<GreeterService>()
+    val response = greeter.request { greet("Alice") }.options(idempotentCallOptions).call().response
     assertThat(response).isEqualTo("Hello, Alice!")
 
     await withAlias

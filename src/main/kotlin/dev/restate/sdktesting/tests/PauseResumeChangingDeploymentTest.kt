@@ -12,11 +12,11 @@ import dev.restate.admin.api.InvocationApi
 import dev.restate.admin.client.ApiClient
 import dev.restate.client.Client
 import dev.restate.client.kotlin.attachSuspend
+import dev.restate.client.kotlin.toService
 import dev.restate.sdk.annotation.Handler
 import dev.restate.sdk.annotation.Name
 import dev.restate.sdk.annotation.Service
 import dev.restate.sdk.endpoint.Endpoint
-import dev.restate.sdk.kotlin.Context
 import dev.restate.sdk.kotlin.runBlock
 import dev.restate.sdktesting.infra.InjectAdminURI
 import dev.restate.sdktesting.infra.InjectClient
@@ -35,18 +35,18 @@ class PauseResumeChangingDeploymentTest {
   @Service
   @Name("RetryableService")
   interface RetryableService {
-    @Handler suspend fun runRetryableOperation(ctx: Context): String
+    @Handler suspend fun runRetryableOperation(): String
   }
 
   class FailingRetryableService : RetryableService {
-    override suspend fun runRetryableOperation(ctx: Context): String {
-      return ctx.runBlock { throw RuntimeException("This should fail in old version") }
+    override suspend fun runRetryableOperation(): String {
+      return runBlock { throw RuntimeException("This should fail in old version") }
     }
   }
 
   class FixedRetryableService : RetryableService {
-    override suspend fun runRetryableOperation(ctx: Context): String {
-      return ctx.runBlock { "Success in new version!" }
+    override suspend fun runRetryableOperation(): String {
+      return runBlock { "Success in new version!" }
     }
   }
 
@@ -71,11 +71,11 @@ class PauseResumeChangingDeploymentTest {
       @InjectAdminURI adminURI: URI,
   ) = runTest {
     // Create client for RetryableService
-    val retryClient =
-        PauseResumeChangingDeploymentTestRetryableServiceClient.fromClient(ingressClient)
+    val retryClient = ingressClient.toService<RetryableService>()
 
     // Send idempotent request to trigger retries and pause
-    val sendResult = retryClient.send().runRetryableOperation(init = idempotentCallOptions)
+    val sendResult =
+        retryClient.request { runRetryableOperation() }.options(idempotentCallOptions).send()
     val invocationId = sendResult.invocationId()
 
     // Wait until the invocation is paused (or suspended) by the runtime

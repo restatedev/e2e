@@ -11,11 +11,16 @@ package dev.restate.sdktesting.tests
 import dev.restate.client.Client
 import dev.restate.client.kotlin.rejectSuspend
 import dev.restate.client.kotlin.resolveSuspend
+import dev.restate.client.kotlin.response
+import dev.restate.client.kotlin.toVirtualObject
 import dev.restate.sdk.annotation.Handler
 import dev.restate.sdk.annotation.Shared
 import dev.restate.sdk.annotation.VirtualObject
 import dev.restate.sdk.endpoint.Endpoint
-import dev.restate.sdk.kotlin.*
+import dev.restate.sdk.kotlin.awakeable
+import dev.restate.sdk.kotlin.get
+import dev.restate.sdk.kotlin.set
+import dev.restate.sdk.kotlin.state
 import dev.restate.sdktesting.infra.InjectClient
 import dev.restate.sdktesting.infra.RestateDeployerExtension
 import dev.restate.serde.kotlinx.jsonSerde
@@ -33,14 +38,13 @@ class AwakeableIngressEndpointTest {
   class MyService {
 
     @Handler
-    suspend fun run(ctx: ObjectContext): String {
-      val awk = ctx.awakeable<String>()
-      ctx.set<String>("awk", awk.id)
+    suspend fun run(): String {
+      val awk = awakeable<String>()
+      state().set("awk", awk.id)
       return awk.await()
     }
 
-    @Shared
-    suspend fun getAwakeable(ctx: SharedObjectContext): String = ctx.get<String>("awk") ?: ""
+    @Shared suspend fun getAwakeable(): String = state().get<String>("awk") ?: ""
   }
 
   companion object {
@@ -55,18 +59,21 @@ class AwakeableIngressEndpointTest {
       @InjectClient ingressClient: Client,
   ) = runTest {
     val key = UUID.randomUUID().toString()
-    val client = AwakeableIngressEndpointTestMyServiceClient.fromClient(ingressClient, key)
+    val client = ingressClient.toVirtualObject<MyService>(key)
 
-    val runResult = async { client.run(idempotentCallOptions) }
+    val runResult = async {
+      client.request { run() }.options(idempotentCallOptions).call().response
+    }
 
     // Wait for awakeable to be registered
     await withAlias
         "awakeable is registered" untilAsserted
         {
-          assertThat(client.getAwakeable()).isNotBlank()
+          assertThat(client.request { getAwakeable() }.call().response).isNotBlank()
         }
 
-    val awakeableId = client.getAwakeable(idempotentCallOptions)
+    val awakeableId =
+        client.request { getAwakeable() }.options(idempotentCallOptions).call().response
 
     val expectedResult = "solved!"
 
@@ -82,18 +89,22 @@ class AwakeableIngressEndpointTest {
   @Test
   fun completeWithFailure(@InjectClient ingressClient: Client) = runTest {
     val key = UUID.randomUUID().toString()
-    val client = AwakeableIngressEndpointTestMyServiceClient.fromClient(ingressClient, key)
+    val client = ingressClient.toVirtualObject<MyService>(key)
 
-    val runResult = async { runCatching { client.run(idempotentCallOptions) }.exceptionOrNull() }
+    val runResult = async {
+      runCatching { client.request { run() }.options(idempotentCallOptions).call().response }
+          .exceptionOrNull()
+    }
 
     // Wait for awakeable to be registered
     await withAlias
         "awakeable is registered" untilAsserted
         {
-          assertThat(client.getAwakeable()).isNotBlank()
+          assertThat(client.request { getAwakeable() }.call().response).isNotBlank()
         }
 
-    val awakeableId = client.getAwakeable(idempotentCallOptions)
+    val awakeableId =
+        client.request { getAwakeable() }.options(idempotentCallOptions).call().response
 
     val expectedReason = "my bad!"
 

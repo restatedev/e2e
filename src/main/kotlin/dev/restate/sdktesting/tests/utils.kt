@@ -13,7 +13,7 @@ import dev.restate.admin.client.ApiClient
 import dev.restate.admin.client.ApiException
 import dev.restate.admin.model.RegisterDeploymentRequest
 import dev.restate.admin.model.RegisterHttpDeploymentRequest
-import dev.restate.common.RequestBuilder
+import dev.restate.common.InvocationOptions
 import dev.restate.sdk.endpoint.Endpoint
 import dev.restate.sdk.http.vertx.RestateHttpServer
 import io.vertx.core.http.HttpServer
@@ -61,7 +61,7 @@ suspend infix fun ConditionFactory.untilAsserted(fn: suspend () -> Unit) {
 fun runTest(timeout: Duration = 60.seconds, testBody: suspend TestScope.() -> Unit) =
     runTest(context = additionalLoggingContext(), timeout = timeout, testBody = testBody)
 
-val idempotentCallOptions: RequestBuilder<*, *>.() -> Unit = {
+val idempotentCallOptions: InvocationOptions.Builder.() -> Unit = {
   idempotencyKey = UUID.randomUUID().toString()
 }
 

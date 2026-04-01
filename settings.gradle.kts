@@ -5,12 +5,8 @@ rootProject.name = "restate-e2e"
 dependencyResolutionManagement {
   versionCatalogs {
     create("libs") {
-      library("restate-sdk-client", "dev.restate", "client").versionRef("restate")
       library("restate-sdk-client-kotlin", "dev.restate", "client-kotlin").versionRef("restate")
-      library("restate-sdk-api-kotlin", "dev.restate", "sdk-api-kotlin").versionRef("restate")
       library("restate-sdk-kotlin-http", "dev.restate", "sdk-kotlin-http").versionRef("restate")
-      library("restate-sdk-api-kotlin-gen", "dev.restate", "sdk-api-kotlin-gen")
-          .versionRef("restate")
 
       version("log4j", "2.24.3")
       library("log4j-api", "org.apache.logging.log4j", "log4j-api").versionRef("log4j")
@@ -70,11 +66,6 @@ dependencyResolutionManagement {
           .version("1.10.1")
       library("kotlinx-coroutines-test", "org.jetbrains.kotlinx", "kotlinx-coroutines-test")
           .version("1.10.1")
-
-      version("ksp", "2.1.10-1.0.31")
-      library("symbol-processing-api", "com.google.devtools.ksp", "symbol-processing-api")
-          .versionRef("ksp")
-      plugin("ksp", "com.google.devtools.ksp").versionRef("ksp")
     }
   }
 }

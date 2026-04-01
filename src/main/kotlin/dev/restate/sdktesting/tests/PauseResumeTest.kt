@@ -12,10 +12,10 @@ import dev.restate.admin.api.InvocationApi
 import dev.restate.admin.client.ApiClient
 import dev.restate.client.Client
 import dev.restate.client.kotlin.attachSuspend
+import dev.restate.client.kotlin.toService
 import dev.restate.sdk.annotation.Handler
 import dev.restate.sdk.annotation.Service
 import dev.restate.sdk.endpoint.Endpoint
-import dev.restate.sdk.kotlin.Context
 import dev.restate.sdktesting.infra.InjectAdminURI
 import dev.restate.sdktesting.infra.InjectClient
 import dev.restate.sdktesting.infra.RestateDeployerExtension
@@ -36,7 +36,7 @@ class PauseResumeTest {
     }
 
     @Handler
-    suspend fun echo(ctx: Context, input: String): String {
+    suspend fun echo(input: String): String {
       // Load if we should fail
       val shouldFail = shouldFail.get()
       if (shouldFail) {
@@ -71,10 +71,10 @@ class PauseResumeTest {
     FailingService.shouldFail.set(true)
 
     // Create client for RetryableService
-    val retryClient = PauseResumeTestFailingServiceClient.fromClient(ingressClient)
+    val retryClient = ingressClient.toService<FailingService>()
 
     // Send idempotent request to trigger retries and pause
-    val sendResult = retryClient.send().echo("input", init = idempotentCallOptions)
+    val sendResult = retryClient.request { echo("input") }.options(idempotentCallOptions).send()
     val invocationId = sendResult.invocationId()
 
     // Wait until the invocation is paused (or suspended) by the runtime

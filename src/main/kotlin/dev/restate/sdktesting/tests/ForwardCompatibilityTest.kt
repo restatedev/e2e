@@ -13,15 +13,22 @@ import dev.restate.admin.client.ApiClient
 import dev.restate.client.Client
 import dev.restate.client.SendResponse
 import dev.restate.client.kotlin.*
+import dev.restate.client.kotlin.response
+import dev.restate.client.kotlin.toService
+import dev.restate.client.kotlin.toVirtualObject
 import dev.restate.sdk.annotation.Handler
 import dev.restate.sdk.annotation.Name
 import dev.restate.sdk.annotation.Service
 import dev.restate.sdk.annotation.Shared
 import dev.restate.sdk.annotation.VirtualObject
 import dev.restate.sdk.endpoint.Endpoint
-import dev.restate.sdk.kotlin.*
+import dev.restate.sdk.kotlin.awakeable
 import dev.restate.sdk.kotlin.endpoint.inactivityTimeout
 import dev.restate.sdk.kotlin.endpoint.journalRetention
+import dev.restate.sdk.kotlin.get
+import dev.restate.sdk.kotlin.runBlock
+import dev.restate.sdk.kotlin.set
+import dev.restate.sdk.kotlin.state
 import dev.restate.sdktesting.infra.Deployer
 import dev.restate.sdktesting.infra.InjectAdminURI
 import dev.restate.sdktesting.infra.InjectClient
@@ -54,25 +61,24 @@ class ForwardCompatibilityTest {
   @VirtualObject
   class MyService {
     @Handler
-    suspend fun run(ctx: ObjectContext): String {
-      val awk = ctx.awakeable<String>()
-      ctx.set<String>("awk", awk.id)
+    suspend fun run(): String {
+      val awk = awakeable<String>()
+      state().set("awk", awk.id)
       return awk.await()
     }
 
-    @Shared
-    suspend fun getAwakeable(ctx: SharedObjectContext): String = ctx.get<String>("awk") ?: ""
+    @Shared suspend fun getAwakeable(): String = state().get<String>("awk") ?: ""
   }
 
   @Service
   @Name("RetryableService")
   interface RetryableService {
-    @Handler suspend fun runRetryableOperation(ctx: Context): String
+    @Handler suspend fun runRetryableOperation(): String
   }
 
   class FailingRetryableService : RetryableService {
-    override suspend fun runRetryableOperation(ctx: Context): String {
-      return ctx.runBlock {
+    override suspend fun runRetryableOperation(): String {
+      return runBlock {
         runBlockRetryCounter.incrementAndGet()
         throw RuntimeException("This should fail in old version")
       }
@@ -80,8 +86,8 @@ class ForwardCompatibilityTest {
   }
 
   class FixedRetryableService : RetryableService {
-    override suspend fun runRetryableOperation(ctx: Context): String {
-      return ctx.runBlock { "Success in new version!" }
+    override suspend fun runRetryableOperation(): String {
+      return runBlock { "Success in new version!" }
     }
   }
 
@@ -89,15 +95,15 @@ class ForwardCompatibilityTest {
   @Name("ProxyService")
   class ProxyService {
     @Handler
-    suspend fun proxy(ctx: Context): String {
+    suspend fun proxy(): String {
       callRetryCounter.incrementAndGet()
-      return ForwardCompatibilityTestCalleeServiceClient.fromContext(ctx).call().await()
+      return dev.restate.sdk.kotlin.toService<CalleeService>().request { call() }.call().await()
     }
 
     @Handler
-    suspend fun proxyOneWay(ctx: Context): String {
+    suspend fun proxyOneWay(): String {
       oneWayCallRetryCounter.incrementAndGet()
-      ForwardCompatibilityTestCalleeServiceClient.fromContext(ctx).send().call()
+      dev.restate.sdk.kotlin.toService<CalleeService>().request { call() }.send()
       return "Done"
     }
   }
@@ -105,7 +111,7 @@ class ForwardCompatibilityTest {
   @Service
   @Name("CalleeService")
   class CalleeService {
-    @Handler fun call(ctx: Context) = "Hello from callee!"
+    @Handler fun call() = "Hello from callee!"
   }
 
   companion object {
@@ -153,24 +159,27 @@ class ForwardCompatibilityTest {
 
     @Test
     fun createAwakeable(@InjectClient ingressClient: Client) = runTest {
-      val client = ForwardCompatibilityTestMyServiceClient.fromClient(ingressClient, awakeableKey)
+      val client = ingressClient.toVirtualObject<MyService>(awakeableKey)
 
-      client.send().run(init = idempotentCallOptions)
+      client.request { run() }.options(idempotentCallOptions).send()
 
       // Wait for awakeable to be registered
       await withAlias
           "awakeable is registered" untilAsserted
           {
-            assertThat(client.getAwakeable()).isNotBlank()
+            assertThat(client.request { getAwakeable() }.call().response).isNotBlank()
           }
     }
 
     @Test
     fun startRetryableOperation(@InjectClient ingressClient: Client) = runTest {
-      val retryableClient = ForwardCompatibilityTestRetryableServiceClient.fromClient(ingressClient)
+      val retryableClient = ingressClient.toService<RetryableService>()
 
       // Send the request and expect it to fail
-      retryableClient.send().runRetryableOperation { idempotencyKey = idempotencyKeyRunBlockTest }
+      retryableClient
+          .request { runRetryableOperation() }
+          .options { idempotencyKey = idempotencyKeyRunBlockTest }
+          .send()
 
       // Wait for at least one retry
       await withAlias
@@ -184,9 +193,9 @@ class ForwardCompatibilityTest {
 
     @Test
     fun startProxyCall(@InjectClient ingressClient: Client) = runTest {
-      val retryableClient = ForwardCompatibilityTestProxyServiceClient.fromClient(ingressClient)
+      val retryableClient = ingressClient.toService<ProxyService>()
 
-      retryableClient.send().proxy { idempotencyKey = idempotencyKeyCallTest }
+      retryableClient.request { proxy() }.options { idempotencyKey = idempotencyKeyCallTest }.send()
 
       // Wait for at least one retry
       await withAlias
@@ -198,9 +207,12 @@ class ForwardCompatibilityTest {
 
     @Test
     fun startOneWayProxyCall(@InjectClient ingressClient: Client) = runTest {
-      val retryableClient = ForwardCompatibilityTestProxyServiceClient.fromClient(ingressClient)
+      val retryableClient = ingressClient.toService<ProxyService>()
 
-      retryableClient.send().proxyOneWay { idempotencyKey = idempotencyKeyOneWayCallTest }
+      retryableClient
+          .request { proxyOneWay() }
+          .options { idempotencyKey = idempotencyKeyOneWayCallTest }
+          .send()
 
       // Wait for at least one retry
       await withAlias
@@ -300,10 +312,12 @@ class ForwardCompatibilityTest {
 
     @Test
     fun completeAwakeable(@InjectClient ingressClient: Client) = runTest {
-      val client = ForwardCompatibilityTestMyServiceClient.fromClient(ingressClient, awakeableKey)
+      val client = ingressClient.toVirtualObject<MyService>(awakeableKey)
 
-      val awakeableId = client.getAwakeable(idempotentCallOptions)
-      assertThat(client.getAwakeable(idempotentCallOptions)).isNotBlank()
+      val awakeableId =
+          client.request { getAwakeable() }.options(idempotentCallOptions).call().response
+      assertThat(client.request { getAwakeable() }.options(idempotentCallOptions).call().response)
+          .isNotBlank()
 
       val expectedResult = "solved!"
       await withAlias
@@ -315,12 +329,13 @@ class ForwardCompatibilityTest {
 
     @Test
     fun completeRetryableOperation(@InjectClient ingressClient: Client) = runTest {
-      val retryableClient = ForwardCompatibilityTestRetryableServiceClient.fromClient(ingressClient)
+      val retryableClient = ingressClient.toService<RetryableService>()
 
       val result =
-          retryableClient.send().runRetryableOperation {
-            idempotencyKey = idempotencyKeyRunBlockTest
-          }
+          retryableClient
+              .request { runRetryableOperation() }
+              .options { idempotencyKey = idempotencyKeyRunBlockTest }
+              .send()
 
       assertThat(result.sendStatus).isEqualTo(SendResponse.SendStatus.PREVIOUSLY_ACCEPTED)
 
@@ -330,9 +345,13 @@ class ForwardCompatibilityTest {
 
     @Test
     fun proxyCallShouldBeDone(@InjectClient ingressClient: Client) = runTest {
-      val retryableClient = ForwardCompatibilityTestProxyServiceClient.fromClient(ingressClient)
+      val retryableClient = ingressClient.toService<ProxyService>()
 
-      val result = retryableClient.send().proxy { idempotencyKey = idempotencyKeyCallTest }
+      val result =
+          retryableClient
+              .request { proxy() }
+              .options { idempotencyKey = idempotencyKeyCallTest }
+              .send()
 
       assertThat(result.sendStatus).isEqualTo(SendResponse.SendStatus.PREVIOUSLY_ACCEPTED)
 
@@ -342,10 +361,13 @@ class ForwardCompatibilityTest {
 
     @Test
     fun proxyOneWayCallShouldBeDone(@InjectClient ingressClient: Client) = runTest {
-      val retryableClient = ForwardCompatibilityTestProxyServiceClient.fromClient(ingressClient)
+      val retryableClient = ingressClient.toService<ProxyService>()
 
       val result =
-          retryableClient.send().proxyOneWay { idempotencyKey = idempotencyKeyOneWayCallTest }
+          retryableClient
+              .request { proxyOneWay() }
+              .options { idempotencyKey = idempotencyKeyOneWayCallTest }
+              .send()
 
       assertThat(result.sendStatus).isEqualTo(SendResponse.SendStatus.PREVIOUSLY_ACCEPTED)
 

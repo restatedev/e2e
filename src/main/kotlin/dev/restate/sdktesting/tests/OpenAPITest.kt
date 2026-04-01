@@ -12,7 +12,6 @@ import dev.restate.sdk.annotation.Handler
 import dev.restate.sdk.annotation.Name
 import dev.restate.sdk.annotation.Service
 import dev.restate.sdk.endpoint.Endpoint
-import dev.restate.sdk.kotlin.Context
 import dev.restate.sdktesting.infra.InjectAdminURI
 import dev.restate.sdktesting.infra.RestateDeployerExtension
 import java.net.URI
@@ -32,7 +31,7 @@ class OpenAPITest {
   @Name("GreeterService")
   class GreeterService {
     @Handler
-    suspend fun greet(ctx: Context, name: String): String {
+    suspend fun greet(name: String): String {
       return "Hello, $name!"
     }
   }
