@@ -100,7 +100,7 @@ class RestartAsNewInvocationTest {
     val invocationApi = InvocationApi(adminClient)
     val newInvocationId =
         retryOnServiceUnavailable {
-              invocationApi.restartAsNewInvocation(sendResult.invocationId(), null, null)
+              invocationApi.restartAsNewInvocation(sendResult.invocationId(), null, "latest")
             }
             .newInvocationId
 
@@ -158,7 +158,7 @@ class RestartAsNewInvocationTest {
     val invocationApi = InvocationApi(adminClient)
     val newInvocationId =
         retryOnServiceUnavailable {
-              invocationApi.restartAsNewInvocation(sendResult.invocationId(), 1, null)
+              invocationApi.restartAsNewInvocation(sendResult.invocationId(), 1, "latest")
             }
             .newInvocationId
 

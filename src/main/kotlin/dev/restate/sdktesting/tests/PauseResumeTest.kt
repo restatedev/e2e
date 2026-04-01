@@ -90,7 +90,7 @@ class PauseResumeTest {
     // Resume the paused invocation on the specific endpoint
     val adminClient = ApiClient().setHost(adminURI.host).setPort(adminURI.port)
     val invocationApi = InvocationApi(adminClient)
-    retryOnServiceUnavailable { invocationApi.resumeInvocation(invocationId, null) }
+    retryOnServiceUnavailable { invocationApi.resumeInvocation(invocationId, "keep") }
 
     assertThat(sendResult.attachSuspend().response()).isEqualTo("input")
 

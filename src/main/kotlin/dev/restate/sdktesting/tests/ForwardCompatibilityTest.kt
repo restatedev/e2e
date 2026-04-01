@@ -269,7 +269,8 @@ class ForwardCompatibilityTest {
       // For each deployment, update its URI
       for (deployment in deployments.deployments) {
         val updateRequest =
-            UpdateDeploymentRequest(UpdateHttpDeploymentRequest().uri(localEndpointURI.toString()))
+            UpdateDeploymentRequest(
+                UpdateHttpDeploymentRequest().uri(URI.create(localEndpointURI.toString())))
 
         try {
           adminApi.updateDeployment(deployment.httpDeploymentResponse.id, updateRequest)
