@@ -9,15 +9,17 @@
 package dev.restate.sdktesting.tests
 
 import dev.restate.client.Client
+import dev.restate.client.kotlin.response
+import dev.restate.client.kotlin.toVirtualObject
+import dev.restate.common.reflections.ReflectionUtils.extractServiceName
 import dev.restate.sdk.annotation.Handler
 import dev.restate.sdk.annotation.Name
 import dev.restate.sdk.annotation.Shared
 import dev.restate.sdk.annotation.VirtualObject
 import dev.restate.sdk.endpoint.Endpoint
-import dev.restate.sdk.kotlin.ObjectContext
-import dev.restate.sdk.kotlin.SharedObjectContext
 import dev.restate.sdk.kotlin.get
 import dev.restate.sdk.kotlin.set
+import dev.restate.sdk.kotlin.state
 import dev.restate.sdktesting.infra.InjectAdminURI
 import dev.restate.sdktesting.infra.InjectClient
 import dev.restate.sdktesting.infra.InjectContainerPort
@@ -40,12 +42,12 @@ class KafkaTracingTest {
   @Name("Counter")
   class Counter {
     @Handler
-    suspend fun set(ctx: ObjectContext, value: String) {
-      check(ctx.get<String>("state") == null)
-      ctx.set("state", value)
+    suspend fun set(value: String) {
+      check(state().get<String>("state") == null)
+      state().set("state", value)
     }
 
-    @Shared suspend fun get(ctx: SharedObjectContext) = ctx.get<String>("state")
+    @Shared suspend fun get() = state().get<String>("state")
   }
 
   companion object {
@@ -72,22 +74,24 @@ class KafkaTracingTest {
       @InjectContainerPort(hostName = "kafka", port = KafkaContainer.KAFKA_EXTERNAL_PORT)
       kafkaPort: Int,
   ) = runTest {
-    Kafka.createKafkaSubscription(
-        adminURI, TOPIC, KafkaTracingTestCounterHandlers.Metadata.SERVICE_NAME, "set")
+    Kafka.createKafkaSubscription(adminURI, TOPIC, extractServiceName(Counter::class.java), "set")
 
     // Produce message to kafka
     Kafka.produceMessagesToKafka(kafkaPort, TOPIC, listOf("a" to Json.encodeToString("a")))
 
     // Await that state is updated
-    val client = KafkaTracingTestCounterClient.fromClient(ingressClient, "a")
-    await withAlias "state is updated" untilAsserted { assertThat(client.get()).isEqualTo("a") }
+    val client = ingressClient.toVirtualObject<Counter>("a")
+    await withAlias
+        "state is updated" untilAsserted
+        {
+          assertThat(client.request { get() }.call().response).isEqualTo("a")
+        }
 
     // Check the traces
     await withAlias
         "traces are available" untilAsserted
         {
-          val traces =
-              Tracing.getTraces(jaegerPort, KafkaTracingTestCounterHandlers.Metadata.SERVICE_NAME)
+          val traces = Tracing.getTraces(jaegerPort, extractServiceName(Counter::class.java))
 
           assertThat(traces.result.resourceSpans).isNotEmpty()
 

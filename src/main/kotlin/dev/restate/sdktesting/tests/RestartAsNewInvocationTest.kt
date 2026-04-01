@@ -14,12 +14,13 @@ import dev.restate.client.Client
 import dev.restate.client.IngressException
 import dev.restate.client.kotlin.*
 import dev.restate.client.kotlin.attachSuspend
+import dev.restate.client.kotlin.toService
 import dev.restate.sdk.annotation.Handler
 import dev.restate.sdk.annotation.Service
 import dev.restate.sdk.common.TerminalException
 import dev.restate.sdk.endpoint.Endpoint
-import dev.restate.sdk.kotlin.*
 import dev.restate.sdk.kotlin.endpoint.journalRetention
+import dev.restate.sdk.kotlin.runBlock
 import dev.restate.sdktesting.infra.InjectAdminURI
 import dev.restate.sdktesting.infra.InjectClient
 import dev.restate.sdktesting.infra.RestateDeployerExtension
@@ -45,8 +46,8 @@ class RestartAsNewInvocationTest {
     }
 
     @Handler
-    suspend fun echo(ctx: Context, input: String): String {
-      val from = ctx.runBlock { ctxRunResult.get() }
+    suspend fun echo(input: String): String {
+      val from = runBlock { ctxRunResult.get() }
 
       // Load if we should fail
       val shouldFail = shouldFail.get()
@@ -78,10 +79,10 @@ class RestartAsNewInvocationTest {
     val input = "my-input"
 
     // Create clients for the services
-    val restartClient = RestartAsNewInvocationTestRestartInvocationClient.fromClient(ingressClient)
+    val restartClient = ingressClient.toService<RestartInvocation>()
 
     // Send request first time
-    val sendResult = restartClient.send().echo(input, init = idempotentCallOptions)
+    val sendResult = restartClient.request { echo(input) }.options(idempotentCallOptions).send()
     val initialInvocationId = sendResult.invocationId()
 
     // Should fail with terminal exception
@@ -136,10 +137,10 @@ class RestartAsNewInvocationTest {
     val input = "my-input"
 
     // Create clients for the services
-    val restartClient = RestartAsNewInvocationTestRestartInvocationClient.fromClient(ingressClient)
+    val restartClient = ingressClient.toService<RestartInvocation>()
 
     // Send request first time
-    val sendResult = restartClient.send().echo(input, init = idempotentCallOptions)
+    val sendResult = restartClient.request { echo(input) }.options(idempotentCallOptions).send()
     val initialInvocationId = sendResult.invocationId()
 
     // Should fail with terminal exception

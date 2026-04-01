@@ -11,12 +11,16 @@ package dev.restate.sdktesting.tests
 import dev.restate.client.Client
 import dev.restate.client.kotlin.attachSuspend
 import dev.restate.client.kotlin.getOutputSuspend
+import dev.restate.client.kotlin.response
+import dev.restate.client.kotlin.toWorkflow
+import dev.restate.client.kotlin.workflowHandle
+import dev.restate.common.reflections.ReflectionUtils.extractServiceName
 import dev.restate.sdk.annotation.Shared
 import dev.restate.sdk.annotation.Workflow
 import dev.restate.sdk.endpoint.Endpoint
-import dev.restate.sdk.kotlin.SharedWorkflowContext
-import dev.restate.sdk.kotlin.WorkflowContext
 import dev.restate.sdk.kotlin.durablePromiseKey
+import dev.restate.sdk.kotlin.promise
+import dev.restate.sdk.kotlin.promiseHandle
 import dev.restate.sdktesting.infra.*
 import dev.restate.sdktesting.infra.runtimeconfig.RestateConfigSchema
 import java.net.URI
@@ -38,15 +42,14 @@ class KafkaAndWorkflowAPITest {
       val PROMISE = durablePromiseKey<String>("promise")
     }
 
-    @Workflow suspend fun run(ctx: WorkflowContext, myTask: String) = "Run $myTask"
+    @Workflow suspend fun run(myTask: String) = "Run $myTask"
 
     @Shared
-    suspend fun setPromise(ctx: SharedWorkflowContext, myValue: String) {
-      ctx.promiseHandle(PROMISE).resolve(myValue)
+    suspend fun setPromise(myValue: String) {
+      promiseHandle(PROMISE).resolve(myValue)
     }
 
-    @Shared
-    suspend fun getPromise(ctx: SharedWorkflowContext) = ctx.promise(PROMISE).future().await()
+    @Shared suspend fun getPromise() = promise(PROMISE).future().await()
   }
 
   companion object {
@@ -71,10 +74,7 @@ class KafkaAndWorkflowAPITest {
   ) = runTest {
     // Create subscription
     Kafka.createKafkaSubscription(
-        adminURI,
-        WORKFLOW_TOPIC,
-        KafkaAndWorkflowAPITestMyWorkflowHandlers.Metadata.SERVICE_NAME,
-        "run")
+        adminURI, WORKFLOW_TOPIC, extractServiceName(MyWorkflow::class.java), "run")
 
     val keyMessages = linkedMapOf("a" to "1", "b" to "2", "c" to "3")
 
@@ -88,11 +88,11 @@ class KafkaAndWorkflowAPITest {
           "Workflow invocations from Kafka" untilAsserted
           {
             assertThat(
-                    KafkaAndWorkflowAPITestMyWorkflowClient.fromClient(
-                            ingressClient, keyMessage.key)
-                        .workflowHandle()
+                    ingressClient
+                        .workflowHandle<String>(
+                            extractServiceName(MyWorkflow::class.java), keyMessage.key)
                         .attachSuspend()
-                        .response())
+                        .response)
                 .isEqualTo("Run ${keyMessage.value}")
           }
     }
@@ -102,11 +102,11 @@ class KafkaAndWorkflowAPITest {
           "Workflow invocations from Kafka" untilAsserted
           {
             assertThat(
-                    KafkaAndWorkflowAPITestMyWorkflowClient.fromClient(
-                            ingressClient, keyMessage.key)
-                        .workflowHandle()
+                    ingressClient
+                        .workflowHandle<String>(
+                            extractServiceName(MyWorkflow::class.java), keyMessage.key)
                         .getOutputSuspend()
-                        .response()
+                        .response
                         .value)
                 .isEqualTo("Run ${keyMessage.value}")
           }
@@ -123,10 +123,7 @@ class KafkaAndWorkflowAPITest {
   ) = runTest {
     // Create subscription
     Kafka.createKafkaSubscription(
-        adminURI,
-        SHARED_HANDLER_TOPIC,
-        KafkaAndWorkflowAPITestMyWorkflowHandlers.Metadata.SERVICE_NAME,
-        "setPromise")
+        adminURI, SHARED_HANDLER_TOPIC, extractServiceName(MyWorkflow::class.java), "setPromise")
 
     val keyMessages = linkedMapOf("a" to "a", "b" to "b", "c" to "c")
 
@@ -142,9 +139,11 @@ class KafkaAndWorkflowAPITest {
           "Workflow invocations from Kafka" untilAsserted
           {
             assertThat(
-                    KafkaAndWorkflowAPITestMyWorkflowClient.fromClient(
-                            ingressClient, keyMessage.key)
-                        .getPromise())
+                    ingressClient
+                        .toWorkflow<MyWorkflow>(keyMessage.key)
+                        .request { getPromise() }
+                        .call()
+                        .response)
                 .isEqualTo(keyMessage.value)
           }
     }

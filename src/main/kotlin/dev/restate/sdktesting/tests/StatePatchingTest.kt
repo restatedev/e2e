@@ -12,13 +12,15 @@ import dev.restate.admin.api.ServiceApi
 import dev.restate.admin.client.ApiClient
 import dev.restate.admin.model.ModifyServiceStateRequest
 import dev.restate.client.Client
+import dev.restate.client.kotlin.response
+import dev.restate.client.kotlin.toVirtualObject
 import dev.restate.sdk.annotation.Handler
 import dev.restate.sdk.annotation.Name
 import dev.restate.sdk.annotation.VirtualObject
 import dev.restate.sdk.endpoint.Endpoint
-import dev.restate.sdk.kotlin.ObjectContext
 import dev.restate.sdk.kotlin.get
 import dev.restate.sdk.kotlin.set
+import dev.restate.sdk.kotlin.state
 import dev.restate.sdktesting.infra.InjectAdminURI
 import dev.restate.sdktesting.infra.InjectClient
 import dev.restate.sdktesting.infra.RestateDeployerExtension
@@ -36,13 +38,13 @@ class StatePatchingTest {
   @Name("StateObject")
   class StateObject {
     @Handler
-    suspend fun setState(ctx: ObjectContext, value: String) {
-      ctx.set("state", value)
+    suspend fun setState(value: String) {
+      state().set("state", value)
     }
 
     @Handler
-    suspend fun getState(ctx: ObjectContext): String? {
-      return ctx.get<String>("state")
+    suspend fun getState(): String? {
+      return state().get<String>("state")
     }
   }
 
@@ -59,14 +61,15 @@ class StatePatchingTest {
       @InjectAdminURI adminURI: URI,
   ) = runTest {
     // Create a client for the StateObject
-    val client = StatePatchingTestStateObjectClient.fromClient(ingressClient, "test-key")
+    val client = ingressClient.toVirtualObject<StateObject>("test-key")
 
     // Set initial state
     val initialState = "initial-state"
-    client.setState(initialState, idempotentCallOptions)
+    client.request { setState(initialState) }.options(idempotentCallOptions).call()
 
     // Verify initial state
-    assertThat(client.getState(idempotentCallOptions)).isEqualTo(initialState)
+    assertThat(client.request { getState() }.options(idempotentCallOptions).call().response)
+        .isEqualTo(initialState)
 
     // Create admin client for state patching
     val serviceApi = ServiceApi(ApiClient().setHost(adminURI.host).setPort(adminURI.port))
@@ -89,7 +92,7 @@ class StatePatchingTest {
     await withAlias
         "state is patched" untilAsserted
         {
-          assertThat(client.getState()).isEqualTo(newState)
+          assertThat(client.request { getState() }.call().response).isEqualTo(newState)
         }
   }
 }

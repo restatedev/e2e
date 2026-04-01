@@ -5,8 +5,8 @@ plugins {
   application
   kotlin("jvm") version "2.1.10"
   kotlin("plugin.serialization") version "2.1.10"
+  kotlin("plugin.allopen") version "2.1.10"
 
-  alias(libs.plugins.ksp)
   id("org.jsonschema2pojo") version "1.2.2"
   alias(libs.plugins.openapi.generator)
 
@@ -38,8 +38,7 @@ dependencies {
   implementation(libs.clikt)
   implementation(libs.mordant)
 
-  ksp(libs.restate.sdk.api.kotlin.gen) { isChanging = true }
-  implementation(libs.restate.sdk.kotlin.http) { isChanging = true }
+  implementation(libs.restate.sdk.kotlin.http)
   implementation(libs.vertx)
 
   implementation(libs.junit.all)
@@ -123,14 +122,13 @@ openApiGenerate {
 
 tasks {
   withType<KotlinCompile>().configureEach {
+    dependsOn(openApiGenerate)
     dependsOn(generateJsonSchema2Pojo)
     dependsOn(withType<GenerateTask>())
   }
 
   test { useJUnitPlatform() }
 }
-
-afterEvaluate { tasks.named("kspKotlin").configure { mustRunAfter("openApiGenerate") } }
 
 spotless {
   kotlin {
@@ -139,6 +137,12 @@ spotless {
     licenseHeaderFile("$rootDir/config/license-header")
   }
   kotlinGradle { ktfmt() }
+}
+
+allOpen {
+  annotation("dev.restate.sdk.annotation.Service")
+  annotation("dev.restate.sdk.annotation.VirtualObject")
+  annotation("dev.restate.sdk.annotation.Workflow")
 }
 
 licenseReport {

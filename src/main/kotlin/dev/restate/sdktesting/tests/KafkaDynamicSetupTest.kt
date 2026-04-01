@@ -9,14 +9,15 @@
 package dev.restate.sdktesting.tests
 
 import dev.restate.client.Client
+import dev.restate.client.kotlin.response
+import dev.restate.client.kotlin.toVirtualObject
 import dev.restate.sdk.annotation.Handler
 import dev.restate.sdk.annotation.Name
 import dev.restate.sdk.annotation.Service
 import dev.restate.sdk.annotation.VirtualObject
 import dev.restate.sdk.common.StateKey
 import dev.restate.sdk.endpoint.Endpoint
-import dev.restate.sdk.kotlin.Context
-import dev.restate.sdk.kotlin.ObjectContext
+import dev.restate.sdk.kotlin.state
 import dev.restate.sdk.kotlin.stateKey
 import dev.restate.sdktesting.infra.*
 import dev.restate.sdktesting.tests.Kafka.createKafkaSubscription
@@ -49,16 +50,16 @@ class KafkaDynamicSetupTest {
     }
 
     @Handler
-    suspend fun add(ctx: ObjectContext, value: Long): Long {
-      val current = ctx.get(COUNTER_KEY) ?: 0L
+    suspend fun add(value: Long): Long {
+      val current = state().get(COUNTER_KEY) ?: 0L
       val newValue = current + value
-      ctx.set(COUNTER_KEY, newValue)
+      state().set(COUNTER_KEY, newValue)
       return newValue
     }
 
     @Handler
-    suspend fun get(ctx: ObjectContext): Long {
-      return ctx.get(COUNTER_KEY) ?: 0L
+    suspend fun get(): Long {
+      return state().get(COUNTER_KEY) ?: 0L
     }
   }
 
@@ -68,8 +69,11 @@ class KafkaDynamicSetupTest {
     @Serializable data class ProxyRequest(val key: String, val value: Long)
 
     @Handler
-    suspend fun oneWayCall(ctx: Context, request: ProxyRequest) {
-      KafkaDynamicSetupTestCounterClient.fromContext(ctx, request.key).send().add(request.value)
+    suspend fun oneWayCall(request: ProxyRequest) {
+      dev.restate.sdk.kotlin
+          .toVirtualObject<Counter>(request.key)
+          .request { add(request.value) }
+          .send()
     }
   }
 
@@ -112,7 +116,8 @@ class KafkaDynamicSetupTest {
     await withAlias
         "Updates from Kafka are visible in the counter" untilAsserted
         {
-          assertThat(KafkaDynamicSetupTestCounterClient.fromClient(ingressClient, counter).get())
+          assertThat(
+                  ingressClient.toVirtualObject<Counter>(counter).request { get() }.call().response)
               .isEqualTo(6L)
         }
   }
@@ -142,7 +147,8 @@ class KafkaDynamicSetupTest {
     await withAlias
         "Updates from Kafka are visible in the counter" untilAsserted
         {
-          assertThat(KafkaDynamicSetupTestCounterClient.fromClient(ingressClient, counter).get())
+          assertThat(
+                  ingressClient.toVirtualObject<Counter>(counter).request { get() }.call().response)
               .isEqualTo(6L)
         }
   }

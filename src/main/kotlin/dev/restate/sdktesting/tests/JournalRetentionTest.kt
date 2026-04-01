@@ -9,11 +9,12 @@
 package dev.restate.sdktesting.tests
 
 import dev.restate.client.Client
+import dev.restate.client.kotlin.toService
 import dev.restate.sdk.annotation.Handler
 import dev.restate.sdk.annotation.Service
 import dev.restate.sdk.endpoint.Endpoint
-import dev.restate.sdk.kotlin.*
 import dev.restate.sdk.kotlin.endpoint.*
+import dev.restate.sdk.kotlin.sleep
 import dev.restate.sdktesting.infra.InjectAdminURI
 import dev.restate.sdktesting.infra.InjectClient
 import dev.restate.sdktesting.infra.RestateDeployerExtension
@@ -32,8 +33,8 @@ class JournalRetentionTest {
   class MyService {
 
     @Handler
-    suspend fun greet(ctx: Context, input: String): String {
-      ctx.sleep(100.milliseconds)
+    suspend fun greet(input: String): String {
+      sleep(100.milliseconds)
       return input
     }
   }
@@ -50,8 +51,9 @@ class JournalRetentionTest {
       @InjectClient ingressClient: Client,
       @InjectAdminURI adminURI: URI,
   ) = runTest {
-    val client = JournalRetentionTestMyServiceClient.fromClient(ingressClient)
-    val invocationId = client.send().greet("Francesco", init = idempotentCallOptions).invocationId()
+    val client = ingressClient.toService<MyService>()
+    val invocationId =
+        client.request { greet("Francesco") }.options(idempotentCallOptions).send().invocationId()
 
     await withAlias
         "got the invocation completed, with the journal retained" untilAsserted
