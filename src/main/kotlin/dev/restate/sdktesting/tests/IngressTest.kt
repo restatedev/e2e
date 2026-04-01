@@ -123,7 +123,7 @@ class IngressTest {
 
   @Service
   class PrivateGreeter {
-    @Handler fun greet(name: String) = "Hello $name"
+    @Handler suspend fun greet(name: String) = "Hello $name"
   }
 
   @Service

@@ -111,7 +111,7 @@ class ForwardCompatibilityTest {
   @Service
   @Name("CalleeService")
   class CalleeService {
-    @Handler fun call() = "Hello from callee!"
+    @Handler suspend fun call() = "Hello from callee!"
   }
 
   companion object {

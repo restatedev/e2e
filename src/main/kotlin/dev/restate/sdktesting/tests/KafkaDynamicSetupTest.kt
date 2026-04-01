@@ -117,11 +117,7 @@ class KafkaDynamicSetupTest {
         "Updates from Kafka are visible in the counter" untilAsserted
         {
           assertThat(
-                  ingressClient
-                      .toVirtualObject<Counter>(counter)
-                      .request { get() }
-                      .call()
-                      .response)
+                  ingressClient.toVirtualObject<Counter>(counter).request { get() }.call().response)
               .isEqualTo(6L)
         }
   }
@@ -152,11 +148,7 @@ class KafkaDynamicSetupTest {
         "Updates from Kafka are visible in the counter" untilAsserted
         {
           assertThat(
-                  ingressClient
-                      .toVirtualObject<Counter>(counter)
-                      .request { get() }
-                      .call()
-                      .response)
+                  ingressClient.toVirtualObject<Counter>(counter).request { get() }.call().response)
               .isEqualTo(6L)
         }
   }
