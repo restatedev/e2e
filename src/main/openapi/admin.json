@@ -2344,24 +2344,97 @@
         "type": "string"
       },
       "DeploymentResponse": {
-        "anyOf": [
+        "oneOf": [
           {
-            "$ref": "#/components/schemas/HttpDeploymentResponse"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpDeploymentResponse"
+              },
+              {
+                "type": "object",
+                "required": [
+                  "type"
+                ],
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "http"
+                    ]
+                  }
+                }
+              }
+            ]
           },
           {
-            "$ref": "#/components/schemas/LambdaDeploymentResponse"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LambdaDeploymentResponse"
+              },
+              {
+                "type": "object",
+                "required": [
+                  "type"
+                ],
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "lambda"
+                    ]
+                  }
+                }
+              }
+            ]
           }
         ]
       },
       "DetailedDeploymentResponse": {
-        "anyOf": [
+        "oneOf": [
           {
-            "$ref": "#/components/schemas/HttpDetailedDeploymentResponse"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpDetailedDeploymentResponse"
+              },
+              {
+                "type": "object",
+                "required": [
+                  "type"
+                ],
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "http"
+                    ]
+                  }
+                }
+              }
+            ]
           },
           {
-            "$ref": "#/components/schemas/LambdaDetailedDeploymentResponse"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LambdaDetailedDeploymentResponse"
+              },
+              {
+                "type": "object",
+                "required": [
+                  "type"
+                ],
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "lambda"
+                    ]
+                  }
+                }
+              }
+            ]
           }
-        ]
+        ],
+        "description": "Detailed information about Restate deployments"
       },
       "EmbeddedMetadataClusterHealth": {
         "type": "object",
