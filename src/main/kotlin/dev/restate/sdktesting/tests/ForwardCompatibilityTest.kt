@@ -284,7 +284,7 @@ class ForwardCompatibilityTest {
       //   adminApi.updateDeployment(deployment.httpDeploymentResponse.id, updateRequest)
       val httpClient = java.net.http.HttpClient.newHttpClient()
       for (deployment in deployments.deployments) {
-        val deploymentId = deployment.deploymentResponseOneOf.id
+        val deploymentId = deployment.httpDeploymentResponse.id
         val body = """{"uri":"$localEndpointURI"}"""
         val request =
             java.net.http.HttpRequest.newBuilder()

@@ -2346,95 +2346,36 @@
       "DeploymentResponse": {
         "oneOf": [
           {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/HttpDeploymentResponse"
-              },
-              {
-                "type": "object",
-                "required": [
-                  "type"
-                ],
-                "properties": {
-                  "type": {
-                    "type": "string",
-                    "enum": [
-                      "http"
-                    ]
-                  }
-                }
-              }
-            ]
+            "$ref": "#/components/schemas/HttpDeploymentResponse"
           },
           {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/LambdaDeploymentResponse"
-              },
-              {
-                "type": "object",
-                "required": [
-                  "type"
-                ],
-                "properties": {
-                  "type": {
-                    "type": "string",
-                    "enum": [
-                      "lambda"
-                    ]
-                  }
-                }
-              }
-            ]
+            "$ref": "#/components/schemas/LambdaDeploymentResponse"
           }
-        ]
+        ],
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "http": "#/components/schemas/HttpDeploymentResponse",
+            "lambda": "#/components/schemas/LambdaDeploymentResponse"
+          }
+        }
       },
       "DetailedDeploymentResponse": {
         "oneOf": [
           {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/HttpDetailedDeploymentResponse"
-              },
-              {
-                "type": "object",
-                "required": [
-                  "type"
-                ],
-                "properties": {
-                  "type": {
-                    "type": "string",
-                    "enum": [
-                      "http"
-                    ]
-                  }
-                }
-              }
-            ]
+            "$ref": "#/components/schemas/HttpDetailedDeploymentResponse"
           },
           {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/LambdaDetailedDeploymentResponse"
-              },
-              {
-                "type": "object",
-                "required": [
-                  "type"
-                ],
-                "properties": {
-                  "type": {
-                    "type": "string",
-                    "enum": [
-                      "lambda"
-                    ]
-                  }
-                }
-              }
-            ]
+            "$ref": "#/components/schemas/LambdaDetailedDeploymentResponse"
           }
         ],
-        "description": "Detailed information about Restate deployments"
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "http": "#/components/schemas/HttpDetailedDeploymentResponse",
+            "lambda": "#/components/schemas/LambdaDetailedDeploymentResponse"
+          }
+        }
       },
       "EmbeddedMetadataClusterHealth": {
         "type": "object",

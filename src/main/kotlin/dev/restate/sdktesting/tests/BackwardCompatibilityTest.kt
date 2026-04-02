@@ -295,16 +295,14 @@ class BackwardCompatibilityTest {
                 UpdateHttpDeploymentRequest().uri(URI.create(localEndpointURI.toString())))
 
         try {
-          adminApi.updateDeployment(deployment.deploymentResponseOneOf.id, updateRequest)
+          adminApi.updateDeployment(deployment.httpDeploymentResponse.id, updateRequest)
           LOG.info(
               "Successfully updated deployment {} to use URI {}",
-              deployment.deploymentResponseOneOf.id,
+              deployment.httpDeploymentResponse.id,
               localEndpointURI)
         } catch (e: Exception) {
           LOG.error(
-              "Failed to update deployment {}: {}",
-              deployment.deploymentResponseOneOf.id,
-              e.message)
+              "Failed to update deployment {}: {}", deployment.httpDeploymentResponse.id, e.message)
           throw e
         }
       }
