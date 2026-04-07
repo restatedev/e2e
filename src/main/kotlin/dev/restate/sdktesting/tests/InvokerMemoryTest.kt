@@ -37,6 +37,7 @@ import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.serialization.json.Json
 import org.assertj.core.api.Assertions.assertThat
@@ -45,6 +46,7 @@ import org.awaitility.kotlin.withAlias
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.extension.RegisterExtension
 
 /**
@@ -159,12 +161,13 @@ class InvokerMemoryTest {
   }
 
   @Test
+  @Timeout(120)
   @DisplayName("All invocations complete under memory pressure with invoker yield")
   fun allInvocationsCompleteUnderMemoryPressure(
       @InjectClient ingressClient: Client,
       @InjectAdminURI adminURI: URI,
       @InjectContainerPort(hostName = RESTATE_RUNTIME, port = RUNTIME_NODE_PORT) metricsPort: Int,
-  ) = runTest {
+  ) = runTest(timeout = 2.minutes) {
     val client = ingressClient.toService<MemoryPressureService>()
     val count = 50
 
@@ -193,8 +196,15 @@ class InvokerMemoryTest {
       assertThat(entry.status).isEqualTo("completed")
     }
 
-    // Verify all invoker memory has been released
-    assertThat(getInvokerMemoryPoolUsage(metricsPort)).isEqualTo(0.0)
+    // Verify all invoker memory has been released.
+    // Memory leases are tied to HTTP body frames (via Bytes::from_owner); hyper's
+    // connection driver flushes them asynchronously, so we poll instead of asserting
+    // immediately.
+    await withAlias
+        "invoker memory pool returns to zero" untilAsserted
+        {
+          assertThat(getInvokerMemoryPoolUsage(metricsPort)).isEqualTo(0.0)
+        }
   }
 
   @Test
@@ -238,8 +248,15 @@ class InvokerMemoryTest {
       assertThat(entry.status).isEqualTo("completed")
     }
 
-    // Verify all invoker memory has been released
-    assertThat(getInvokerMemoryPoolUsage(metricsPort)).isEqualTo(0.0)
+    // Verify all invoker memory has been released.
+    // Memory leases are tied to HTTP body frames (via Bytes::from_owner); hyper's
+    // connection driver flushes them asynchronously, so we poll instead of asserting
+    // immediately.
+    await withAlias
+        "invoker memory pool returns to zero" untilAsserted
+        {
+          assertThat(getInvokerMemoryPoolUsage(metricsPort)).isEqualTo(0.0)
+        }
   }
 
   @Test
@@ -265,8 +282,15 @@ class InvokerMemoryTest {
           assertThat(status.status).isEqualTo("paused")
         }
 
-    // Verify all invoker memory has been released
-    assertThat(getInvokerMemoryPoolUsage(metricsPort)).isEqualTo(0.0)
+    // Verify all invoker memory has been released.
+    // Memory leases are tied to HTTP body frames (via Bytes::from_owner); hyper's
+    // connection driver flushes them asynchronously, so we poll instead of asserting
+    // immediately.
+    await withAlias
+        "invoker memory pool returns to zero" untilAsserted
+        {
+          assertThat(getInvokerMemoryPoolUsage(metricsPort)).isEqualTo(0.0)
+        }
   }
 
   @Test
@@ -309,7 +333,14 @@ class InvokerMemoryTest {
           assertThat(status.status).isEqualTo("paused")
         }
 
-    // Verify all invoker memory has been released
-    assertThat(getInvokerMemoryPoolUsage(metricsPort)).isEqualTo(0.0)
+    // Verify all invoker memory has been released.
+    // Memory leases are tied to HTTP body frames (via Bytes::from_owner); hyper's
+    // connection driver flushes them asynchronously, so we poll instead of asserting
+    // immediately.
+    await withAlias
+        "invoker memory pool returns to zero" untilAsserted
+        {
+          assertThat(getInvokerMemoryPoolUsage(metricsPort)).isEqualTo(0.0)
+        }
   }
 }
