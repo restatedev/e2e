@@ -24,6 +24,7 @@ import dev.restate.sdk.kotlin.state
 import dev.restate.client.kotlin.response
 import dev.restate.client.kotlin.toService
 import dev.restate.client.kotlin.toVirtualObject
+import dev.restate.sdk.kotlin.endpoint.journalRetention
 import dev.restate.sdktesting.infra.InjectAdminURI
 import dev.restate.sdktesting.infra.InjectClient
 import dev.restate.sdktesting.infra.InjectContainerPort
@@ -36,6 +37,7 @@ import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.serialization.json.Json
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
@@ -147,7 +149,12 @@ class InvokerMemoryTest {
       withEnv("RESTATE_DEFAULT_RETRY_POLICY__MAX_ATTEMPTS", "10")
       withEnv("RESTATE_DEFAULT_RETRY_POLICY__ON_MAX_ATTEMPTS", "pause")
 
-      withEndpoint(Endpoint.bind(MemoryPressureService()).bind(StatefulObject()))
+      // Disable journal retention so that completed journal entries are cleaned up immediately.
+      // This test creates large payloads in journal steps and queries sys_journal at the end,
+      // so retaining them would bloat the table and slow down the test.
+      withEndpoint(
+          Endpoint.bind(MemoryPressureService()) { it.journalRetention = 0.seconds }
+              .bind(StatefulObject()) { it.journalRetention = 0.seconds })
     }
   }
 
