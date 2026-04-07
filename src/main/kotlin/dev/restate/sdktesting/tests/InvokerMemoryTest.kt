@@ -12,19 +12,19 @@ import dev.restate.admin.api.ServiceApi
 import dev.restate.admin.client.ApiClient
 import dev.restate.admin.model.ModifyServiceStateRequest
 import dev.restate.client.Client
+import dev.restate.client.kotlin.response
+import dev.restate.client.kotlin.toService
+import dev.restate.client.kotlin.toVirtualObject
 import dev.restate.sdk.annotation.Handler
 import dev.restate.sdk.annotation.Name
 import dev.restate.sdk.annotation.Service
 import dev.restate.sdk.annotation.VirtualObject
 import dev.restate.sdk.endpoint.Endpoint
+import dev.restate.sdk.kotlin.endpoint.journalRetention
 import dev.restate.sdk.kotlin.get
 import dev.restate.sdk.kotlin.runBlock
 import dev.restate.sdk.kotlin.set
 import dev.restate.sdk.kotlin.state
-import dev.restate.client.kotlin.response
-import dev.restate.client.kotlin.toService
-import dev.restate.client.kotlin.toVirtualObject
-import dev.restate.sdk.kotlin.endpoint.journalRetention
 import dev.restate.sdktesting.infra.InjectAdminURI
 import dev.restate.sdktesting.infra.InjectClient
 import dev.restate.sdktesting.infra.InjectContainerPort
@@ -35,10 +35,10 @@ import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.serialization.json.Json
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
@@ -167,45 +167,48 @@ class InvokerMemoryTest {
       @InjectClient ingressClient: Client,
       @InjectAdminURI adminURI: URI,
       @InjectContainerPort(hostName = RESTATE_RUNTIME, port = RUNTIME_NODE_PORT) metricsPort: Int,
-  ) = runTest(timeout = 2.minutes) {
-    val client = ingressClient.toService<MemoryPressureService>()
-    val count = 50
+  ) =
+      runTest(timeout = 2.minutes) {
+        val client = ingressClient.toService<MemoryPressureService>()
+        val count = 50
 
-    // Launch all invocations concurrently. This will require 50 x 64KB = 3.2MB
-    // of inbound memory allocation. Since the pool size is only 1MB, some of the
-    // invocations must yield and resume for the others to make progress.
-    val deferreds =
-        (1..count).map { i ->
-          async {
-            client.request { generate("key-$i") }.options(idempotentCallOptions).call().response
-          }
+        // Launch all invocations concurrently. This will require 50 x 64KB = 3.2MB
+        // of inbound memory allocation. Since the pool size is only 1MB, some of the
+        // invocations must yield and resume for the others to make progress.
+        val deferreds =
+            (1..count).map { i ->
+              async {
+                client.request { generate("key-$i") }.options(idempotentCallOptions).call().response
+              }
+            }
+
+        // Await all results — if any invocation gets stuck, this will time out
+        val results = deferreds.awaitAll()
+
+        // Verify all invocations returned correct results
+        results.forEachIndexed { index, result ->
+          assertThat(result).isEqualTo("ok-key-${index + 1}")
         }
 
-    // Await all results — if any invocation gets stuck, this will time out
-    val results = deferreds.awaitAll()
-
-    // Verify all invocations returned correct results
-    results.forEachIndexed { index, result -> assertThat(result).isEqualTo("ok-key-${index + 1}") }
-
-    // Verify all invocations completed via admin query
-    val invocations =
-        getAllInvocations(
-            adminURI,
-            "target_service_name = 'MemoryPressureService' AND target_handler_name = 'generate'")
-    assertThat(invocations).hasSize(count).allSatisfy { entry ->
-      assertThat(entry.status).isEqualTo("completed")
-    }
-
-    // Verify all invoker memory has been released.
-    // Memory leases are tied to HTTP body frames (via Bytes::from_owner); hyper's
-    // connection driver flushes them asynchronously, so we poll instead of asserting
-    // immediately.
-    await withAlias
-        "invoker memory pool returns to zero" untilAsserted
-        {
-          assertThat(getInvokerMemoryPoolUsage(metricsPort)).isEqualTo(0.0)
+        // Verify all invocations completed via admin query
+        val invocations =
+            getAllInvocations(
+                adminURI,
+                "target_service_name = 'MemoryPressureService' AND target_handler_name = 'generate'")
+        assertThat(invocations).hasSize(count).allSatisfy { entry ->
+          assertThat(entry.status).isEqualTo("completed")
         }
-  }
+
+        // Verify all invoker memory has been released.
+        // Memory leases are tied to HTTP body frames (via Bytes::from_owner); hyper's
+        // connection driver flushes them asynchronously, so we poll instead of asserting
+        // immediately.
+        await withAlias
+            "invoker memory pool returns to zero" untilAsserted
+            {
+              assertThat(getInvokerMemoryPoolUsage(metricsPort)).isEqualTo(0.0)
+            }
+      }
 
   @Test
   @DisplayName("Virtual object invocations yield when state loading exceeds memory budget")
@@ -230,7 +233,9 @@ class InvokerMemoryTest {
     val deferreds =
         (1..count).map { i ->
           val client = ingressClient.toVirtualObject<StatefulObject>("obj-$i")
-          async { client.request { readState("read") }.options(idempotentCallOptions).call().response }
+          async {
+            client.request { readState("read") }.options(idempotentCallOptions).call().response
+          }
         }
 
     // Await all results — if any invocation gets stuck, this will time out
@@ -270,7 +275,8 @@ class InvokerMemoryTest {
 
     // Send invocation that produces a single run output (512KiB) exceeding the
     // per-invocation memory limit (256KiB). Use send() so we don't block waiting.
-    val sendResult = client.request { generateOversized("oversized") }.options(idempotentCallOptions).send()
+    val sendResult =
+        client.request { generateOversized("oversized") }.options(idempotentCallOptions).send()
     val invocationId = sendResult.invocationId()
 
     // Wait until the invocation is paused — the server should detect it can
