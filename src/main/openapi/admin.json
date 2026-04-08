@@ -2344,24 +2344,38 @@
         "type": "string"
       },
       "DeploymentResponse": {
-        "anyOf": [
+        "oneOf": [
           {
             "$ref": "#/components/schemas/HttpDeploymentResponse"
           },
           {
             "$ref": "#/components/schemas/LambdaDeploymentResponse"
           }
-        ]
+        ],
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "http": "#/components/schemas/HttpDeploymentResponse",
+            "lambda": "#/components/schemas/LambdaDeploymentResponse"
+          }
+        }
       },
       "DetailedDeploymentResponse": {
-        "anyOf": [
+        "oneOf": [
           {
             "$ref": "#/components/schemas/HttpDetailedDeploymentResponse"
           },
           {
             "$ref": "#/components/schemas/LambdaDetailedDeploymentResponse"
           }
-        ]
+        ],
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "http": "#/components/schemas/HttpDetailedDeploymentResponse",
+            "lambda": "#/components/schemas/LambdaDetailedDeploymentResponse"
+          }
+        }
       },
       "EmbeddedMetadataClusterHealth": {
         "type": "object",
