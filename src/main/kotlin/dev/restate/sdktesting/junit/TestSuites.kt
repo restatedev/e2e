@@ -17,7 +17,7 @@ object TestSuites {
           mapOf(
               "RESTATE_DEFAULT_NUM_PARTITIONS" to "4",
           ),
-          "(none() | always-suspending) & !only-single-node",
+          "(none() | always-suspending | only-multi-node) & !only-single-node",
           3)
   private val ALWAYS_SUSPENDING_SUITE =
       TestSuite(
@@ -31,7 +31,7 @@ object TestSuites {
               "RESTATE_WORKER__INVOKER__INACTIVITY_TIMEOUT" to "0s",
               "RESTATE_DEFAULT_NUM_PARTITIONS" to "4",
           ),
-          "(always-suspending | only-always-suspending) & !only-single-node",
+          "(always-suspending | only-always-suspending | only-multi-node) & !only-single-node",
           3)
   private val VERSION_COMPATIBILITY_SUITE =
       TestSuite("versionCompat", emptyMap(), "version-compatibility")
