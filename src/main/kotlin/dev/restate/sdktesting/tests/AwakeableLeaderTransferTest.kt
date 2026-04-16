@@ -120,14 +120,15 @@ class AwakeableLeaderTransferTest {
                     client.request { run() }.options { this.idempotencyKey = idempotencyKey }.send()
 
                     // Poll until the awakeable ID is stored in state
+                    var awkId = ""
                     await withAlias
                         "awakeable $key is registered" untilAsserted
                         {
-                          assertThat(client.request { getAwakeableId() }.call().response)
-                              .isNotBlank()
+                          val id = client.request { getAwakeableId() }.call().response
+                          assertThat(id).isNotBlank()
+                          awkId = id
                         }
 
-                    val awkId = client.request { getAwakeableId() }.call().response
                     AwakeableInfo(key, idempotencyKey, awkId)
                   }
                 }
