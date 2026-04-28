@@ -279,8 +279,6 @@ class BackwardCompatibilityTest {
           DeploymentApi(
               ApiClient()
                   .setHost(adminURI.host)
-                  // TODO remove basePath
-                  .setBasePath("/v2")
                   .setPort(adminURI.port))
 
       // List all deployments
