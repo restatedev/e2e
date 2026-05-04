@@ -263,10 +263,7 @@ class ForwardCompatibilityTest {
         @InjectLocalEndpointURI localEndpointURI: URI
     ) {
       // Create Admin API client with the provided admin URI
-      val adminClient =
-          ApiClient()
-              .setHost(adminURI.host)
-              .setPort(adminURI.port)
+      val adminClient = ApiClient().setHost(adminURI.host).setPort(adminURI.port)
       val adminApi = DeploymentApi(adminClient)
 
       // List all deployments

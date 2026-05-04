@@ -275,11 +275,7 @@ class BackwardCompatibilityTest {
         @InjectLocalEndpointURI localEndpointURI: URI
     ) {
       // Create Admin API client with the provided admin URI
-      val adminApi =
-          DeploymentApi(
-              ApiClient()
-                  .setHost(adminURI.host)
-                  .setPort(adminURI.port))
+      val adminApi = DeploymentApi(ApiClient().setHost(adminURI.host).setPort(adminURI.port))
 
       // List all deployments
       val deployments = adminApi.listDeployments()
