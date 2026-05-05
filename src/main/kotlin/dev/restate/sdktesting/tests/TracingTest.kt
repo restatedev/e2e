@@ -84,26 +84,29 @@ class TracingTest {
     await withAlias
         "traces are available" untilAsserted
         {
-          val traces = Tracing.getTraces(jaegerPort, "GreeterService")
+          val traces = Tracing.getTraces(jaegerPort, "Restate")
 
           assertThat(traces.result.resourceSpans).isNotEmpty()
 
-          // Find the GreeterService spans
-          val greeterSpans =
+          // Group GreeterService spans by name. After the tracing revamp, every invocation
+          // produces three spans: invocation-start, invocation-attempt and invocation-end.
+          val greeterSpansByName =
               traces.result.resourceSpans
                   .flatMap { it.scopeSpans }
                   .flatMap { it.spans }
                   .filter { it.name.contains("GreeterService/greet") }
+                  .groupBy { it.name.substringBefore(' ') }
 
-          assertThat(greeterSpans).isNotEmpty()
+          assertThat(greeterSpansByName.keys)
+              .contains("invocation-start", "invocation-attempt", "invocation-end")
 
-          // Verify span attributes
-          val span = greeterSpans.first()
-
-          // Verify Restate-specific attributes
-          val attributes = span.attributes.associate { it.key to it.value.stringValue }
-          assertThat(attributes).containsKey("restate.invocation.id")
-          assertThat(attributes).containsEntry("restate.invocation.target", "GreeterService/greet")
+          // Verify Restate-specific attributes are set on every emitted span.
+          greeterSpansByName.values.flatten().forEach { span ->
+            val attributes = span.attributes.associate { it.key to it.value.stringValue }
+            assertThat(attributes).containsKey("restate.invocation.id")
+            assertThat(attributes)
+                .containsEntry("restate.invocation.target", "GreeterService/greet")
+          }
         }
   }
 }

@@ -91,7 +91,7 @@ class KafkaTracingTest {
     await withAlias
         "traces are available" untilAsserted
         {
-          val traces = Tracing.getTraces(jaegerPort, extractServiceName(Counter::class.java))
+          val traces = Tracing.getTraces(jaegerPort, "Restate")
 
           assertThat(traces.result.resourceSpans).isNotEmpty()
 
