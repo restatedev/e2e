@@ -1,16 +1,76 @@
 [versions]
 restate = "2.6.0"
 ktor = "2.3.13"
+log4j = "2.24.3"
+jackson = "2.21.2"
+junit = "6.0.3"
+assertj = "3.27.6"
+testcontainers = "2.0.4"
+awaitility = "4.3.0"
 
 [libraries]
+# Restate SDK
+restate-sdk-client-kotlin = { module = "dev.restate:client-kotlin", version.ref = "restate" }
+restate-sdk-kotlin-http = { module = "dev.restate:sdk-kotlin-http", version.ref = "restate" }
+
+# Ktor
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-java = { module = "io.ktor:ktor-client-java", version.ref = "ktor" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
-mordant = { module = "com.github.ajalt.mordant:mordant", version = "2.7.2" }
+
+# CLI
 clikt = { module = "com.github.ajalt.clikt:clikt", version = "4.2.2" }
-tomcat-annotations = "org.apache.tomcat:annotations-api:6.0.53"
-google-findbugs-jsr305 = "com.google.code.findbugs:jsr305:3.0.2"
+mordant = { module = "com.github.ajalt.mordant:mordant", version = "2.7.2" }
+
+# Compile-only utilities
+tomcat-annotations = { module = "org.apache.tomcat:annotations-api", version = "6.0.53" }
+google-findbugs-jsr305 = { module = "com.google.code.findbugs:jsr305", version = "3.0.2" }
+
+# Logging
+log4j-api = { module = "org.apache.logging.log4j:log4j-api", version.ref = "log4j" }
+log4j-core = { module = "org.apache.logging.log4j:log4j-core", version.ref = "log4j" }
+log4j-slf4j = { module = "org.apache.logging.log4j:log4j-slf4j-impl", version.ref = "log4j" }
+log4j-jul = { module = "org.apache.logging.log4j:log4j-jul", version.ref = "log4j" }
+log4j-kotlin = { module = "org.apache.logging.log4j:log4j-api-kotlin", version = "1.5.0" }
+
+# Jackson
+jackson-core = { module = "com.fasterxml.jackson.core:jackson-core", version.ref = "jackson" }
+jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
+jackson-parameter-names = { module = "com.fasterxml.jackson.module:jackson-module-parameter-names", version.ref = "jackson" }
+jackson-java8 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jdk8", version.ref = "jackson" }
+jackson-datetime = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version.ref = "jackson" }
+jackson-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson" }
+jackson-toml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-toml", version.ref = "jackson" }
+
+# Vertx (used in infra for in-process Restate endpoint support)
+vertx = { module = "io.vertx:vertx-core", version = "4.5.14" }
+
+# JUnit
+junit-all = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
+junit-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit" }
+junit-reporting = { module = "org.junit.platform:junit-platform-reporting", version.ref = "junit" }
+
+# Assertions
+assertj = { module = "org.assertj:assertj-core", version.ref = "assertj" }
+
+# Containers
+testcontainers-core = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
+testcontainers-kafka = { module = "org.testcontainers:testcontainers-kafka", version.ref = "testcontainers" }
+# Keep docker-java in sync with the version used by testcontainers
+docker = { module = "com.github.docker-java:docker-java", version = "3.7.0" }
+
+# Utilities
+dotenv = { module = "io.github.cdimascio:dotenv-kotlin", version = "6.5.1" }
+awaitility = { module = "org.awaitility:awaitility-kotlin", version.ref = "awaitility" }
+
+# Serialization & Coroutines
+kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version = "1.9.0" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version = "1.9.0" }
+kaml = { module = "com.charleskorn.kaml:kaml", version = "0.102.0" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version = "1.10.1" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version = "1.10.1" }
 
 [plugins]
-openapi-generator = "org.openapi.generator:7.5.0"
+openapi-generator = { id = "org.openapi.generator", version = "7.5.0" }
+shadow = { id = "com.gradleup.shadow", version = "8.3.5" }

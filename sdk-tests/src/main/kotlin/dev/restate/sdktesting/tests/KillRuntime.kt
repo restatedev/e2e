@@ -1,0 +1,97 @@
+// Copyright (c) 2023 - Restate Software, Inc., Restate GmbH
+//
+// This file is part of the Restate SDK Test suite tool,
+// which is released under the MIT license.
+//
+// You can find a copy of the license in file LICENSE in the root
+// directory of this repository or package, or at
+// https://github.com/restatedev/sdk-test-suite/blob/main/LICENSE
+package dev.restate.sdktesting.tests
+
+import dev.restate.client.jdk.JdkClient
+import dev.restate.client.kotlin.*
+import dev.restate.sdktesting.contracts.Counter
+import dev.restate.sdktesting.infra.*
+import java.net.http.HttpClient
+import java.time.Duration
+import java.time.temporal.ChronoUnit
+import java.util.*
+import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.toJavaDuration
+import kotlinx.coroutines.withTimeout
+import org.assertj.core.api.Assertions.assertThat
+import org.awaitility.kotlin.atMost
+import org.awaitility.kotlin.await
+import org.awaitility.kotlin.withAlias
+import org.junit.jupiter.api.Tag
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Timeout
+import org.junit.jupiter.api.extension.RegisterExtension
+
+@Tag("always-suspending")
+@Tag("only-single-node")
+class KillRuntime {
+
+  companion object {
+    @JvmStatic
+    @RegisterExtension
+    val deployerExt: RestateDeployerExtension = RestateDeployerExtension {
+      withServiceSpec(ServiceSpec.defaultBuilder().withServices(Counter::class))
+    }
+  }
+
+  @Timeout(value = 60, unit = TimeUnit.SECONDS)
+  @Test
+  fun startAndKillRuntimeRetainsTheState(
+      @InjectContainerHandle(RESTATE_RUNTIME) runtimeHandle: ContainerHandle
+  ) = runTest {
+    // We instantiate the client manually, in order to close it before killing and restarting
+    val httpClient = HttpClient.newHttpClient()
+    val ingressClient =
+        JdkClient.of(
+            httpClient, "http://127.0.0.1:${runtimeHandle.getMappedPort(8080)!!}", null, null)
+    val res1 =
+        ingressClient
+            .toVirtualObject<Counter>("my-key")
+            .request { add(1) }
+            .options(idempotentCallOptions)
+            .call()
+            .response
+    assertThat(res1.oldValue).isEqualTo(0)
+    assertThat(res1.newValue).isEqualTo(1)
+
+    // Close the HTTP client to avoid keeping around dangling connections.
+    httpClient.close()
+
+    // Stop and start the runtime
+    runtimeHandle.killAndRestart()
+
+    val idempotencyKey = UUID.randomUUID().toString()
+
+    await withAlias
+        "second add" atMost
+        Duration.of(60, ChronoUnit.SECONDS) untilAsserted
+        {
+          // We need a new client, because on restarts docker might mess up the exposed ports.
+          // NotFunky
+          // but true...
+          val httpClient =
+              HttpClient.newBuilder().connectTimeout(5.seconds.toJavaDuration()).build()
+          val ingressClient =
+              JdkClient.of(
+                  httpClient, "http://127.0.0.1:${runtimeHandle.getMappedPort(8080)!!}", null, null)
+          val res2 =
+              withTimeout(5.seconds) {
+                ingressClient
+                    .toVirtualObject<Counter>("my-key")
+                    .request { add(2) }
+                    .options { this.idempotencyKey = idempotencyKey }
+                    .call()
+                    .response
+              }
+          assertThat(res2.oldValue).isEqualTo(1)
+          assertThat(res2.newValue).isEqualTo(3)
+        }
+  }
+}

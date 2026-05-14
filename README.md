@@ -1,25 +1,24 @@
-# Restate end-to-end tests
+# Restate E2E
 
-This repository contains Restate e2e tests.
+This repository contains test suites for the Restate ecosystem, organized as a multi-module Gradle project.
 
-## Running locally
+## Modules
 
-You need JVM >= 21.
+| Module | Description |
+|--------|-------------|
+| [`infra`](infra/) | Shared test infrastructure: TestContainers orchestration, JUnit integration, OpenAPI admin client, runtime config schema |
+| [`e2e-tests`](e2e-tests/) | End-to-end integration tests for the Restate runtime |
+| [`sdk-tests`](sdk-tests/) | Conformance tests for Restate SDK implementations |
 
-To run all the tests:
+See each module's README for usage details.
+
+## Requirements
+
+- JVM >= 21
+- Docker
+
+## Building
 
 ```shell
-./gradlew run
+./gradlew build
 ```
-
-To pass args to the tool, e.g. to run an individual test:
-
-```shell
-./gradlew run --args 'run --test-suite=<SUITE> --test-name=<TEST_NAME>'
-```
-
-To change the runtime container image, use `--restate-container-image=<RUNTIME_CONTAINER_IMAGE>`.
-
-By default, the tool will always pull images, unless they have the repository prefix `restate.local` or `localhost`. To always try to use the local cache, use `--image-pull-policy=CACHED`.
-
-All the environment variables prefixed with `RUST_` and `RESTATE_` will be propagated to every deployed runtime container. 

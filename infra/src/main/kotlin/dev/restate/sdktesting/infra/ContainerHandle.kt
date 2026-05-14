@@ -21,7 +21,7 @@ import org.testcontainers.utility.LogUtils
 /** Handle to interact with deployed containers */
 class ContainerHandle
 internal constructor(
-    internal val container: GenericContainer<*>,
+    val container: GenericContainer<*>,
     private val afterRestartWaitStrategy: () -> Unit = {},
 ) {
 

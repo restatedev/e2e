@@ -33,6 +33,7 @@ data class RestateDeployerConfig(
     val localAdminPort: Int? = null,
     val localNodePort: Int? = null,
     val retainAfterEnd: Boolean = false,
+    val customTestsFile: String? = null,
 ) {
   init {
     check(restateNodes >= 1) { "Number of deployed Restate nodes must be >= 1" }
