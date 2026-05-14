@@ -1,0 +1,37 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v4
+
+      - name: Build sdk-tests shadow jar
+        run: ./gradlew :sdk-tests:shadowJar
+
+      - name: Rename jar
+        run: mv sdk-tests/build/libs/sdk-tests*.jar sdk-tests.jar
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            sdk-tests.jar

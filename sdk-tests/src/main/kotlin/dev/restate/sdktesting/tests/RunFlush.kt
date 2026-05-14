@@ -1,0 +1,48 @@
+// Copyright (c) 2023 - Restate Software, Inc., Restate GmbH
+//
+// This file is part of the Restate SDK Test suite tool,
+// which is released under the MIT license.
+//
+// You can find a copy of the license in file LICENSE in the root
+// directory of this repository or package, or at
+// https://github.com/restatedev/sdk-test-suite/blob/main/LICENSE
+package dev.restate.sdktesting.tests
+
+import dev.restate.client.Client
+import dev.restate.client.kotlin.response
+import dev.restate.client.kotlin.toService
+import dev.restate.sdktesting.contracts.TestUtilsService
+import dev.restate.sdktesting.infra.InjectClient
+import dev.restate.sdktesting.infra.RestateDeployerExtension
+import dev.restate.sdktesting.infra.ServiceSpec
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Tag
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.RegisterExtension
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
+
+@Tag("only-always-suspending")
+class RunFlush {
+  companion object {
+    @RegisterExtension
+    val deployerExt: RestateDeployerExtension = RestateDeployerExtension {
+      withServiceSpec(ServiceSpec.defaultBuilder().withServices(TestUtilsService::class))
+    }
+  }
+
+  @DisplayName("Run should wait on acknowledgements")
+  @Test
+  @Execution(ExecutionMode.CONCURRENT)
+  fun flush(@InjectClient ingressClient: Client) = runTest {
+    assertThat(
+            ingressClient
+                .toService<TestUtilsService>()
+                .request { countExecutedSideEffects(3) }
+                .options(idempotentCallOptions)
+                .call()
+                .response)
+        .isEqualTo(0)
+  }
+}
