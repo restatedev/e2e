@@ -51,11 +51,11 @@ runs:
       if: ${{ inputs.exclusions != '' }}
       shell: bash
       run: |
-        cat > exclusions.yaml << 'EOF'
+        cat > e2e-tests/exclusions.yaml << 'EOF'
         ${{ inputs.exclusions }}
         EOF
         echo "Exclusions file"
-        cat exclusions.yaml
+        cat e2e-tests/exclusions.yaml
         echo "TEST_EXCLUSIONS_FILE=exclusions.yaml" >> $GITHUB_ENV
 
     - name: Run
