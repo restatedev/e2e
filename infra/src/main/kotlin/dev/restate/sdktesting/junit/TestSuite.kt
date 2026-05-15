@@ -187,7 +187,7 @@ class TestSuite(
 
     val testContainersLogger =
         builder
-            .newLogger("org.testcontainers", Level.TRACE)
+            .newLogger("org.testcontainers", Level.DEBUG)
             .add(builder.newAppenderRef("testRunnerLog"))
             .add(builder.newAppenderRef("routingAppender"))
             .addAttribute("additivity", false)

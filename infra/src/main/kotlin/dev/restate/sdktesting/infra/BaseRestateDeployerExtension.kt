@@ -63,7 +63,7 @@ abstract class BaseRestateDeployerExtension : ParameterResolver {
   }
 
   private fun resolveIngressClient(extensionContext: ExtensionContext): Client {
-    return Client.connect(resolveIngressURI(extensionContext).toString())
+    return LoggingClient(Client.connect(resolveIngressURI(extensionContext).toString()))
   }
 
   private fun resolveContainerAddress(
