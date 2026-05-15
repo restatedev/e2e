@@ -51,7 +51,6 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.ClassOrderer
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Order
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestClassOrder
 import org.junit.jupiter.api.TestInstance
@@ -64,7 +63,6 @@ import org.junit.jupiter.api.parallel.Isolated
  * Tests verifying backward compatibility (newer Restate version can read data written by older
  * version).
  */
-@Tag("version-compatibility")
 @Isolated
 @Execution(ExecutionMode.SAME_THREAD)
 @TestClassOrder(ClassOrderer.OrderAnnotation::class)
@@ -145,7 +143,6 @@ class BackwardCompatibilityTest {
     }
   }
 
-  @Tag("version-compatibility")
   @Nested
   @Order(1)
   @Isolated
@@ -237,7 +234,6 @@ class BackwardCompatibilityTest {
     }
   }
 
-  @Tag("version-compatibility")
   @Nested
   @Order(2)
   @Isolated

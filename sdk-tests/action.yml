@@ -13,7 +13,7 @@ inputs:
     default: 'ghcr.io/restatedev/restate:main'
   serviceContainerImage:
     required: true
-    description: Container image to use for the service
+    description: Docker image for the service under test
   exclusionsFile:
     required: false
     description: Exclusions file
@@ -59,7 +59,7 @@ runs:
       env:
         RESTATE_CONTAINER_IMAGE: ${{ inputs.restateContainerImage }}
       shell: bash
-      run: java -jar sdk-tests.jar run ${{ inputs.testSuite != '' && format('--test-suite={0}', inputs.testSuite) || '' }} ${{ inputs.testName != '' && format('--test-name={0}', inputs.testName) || '' }} ${{ inputs.exclusionsFile != '' && format('--exclusions-file={0}', inputs.exclusionsFile) || '' }} ${{ inputs.serviceContainerEnvFile != '' && format('--service-container-env-file={0}', inputs.serviceContainerEnvFile) || '' }} ${{ inputs.customTestsFile != '' && format('--custom-tests-file={0}', inputs.customTestsFile) || '' }} --report-dir=test-report ${{ inputs.serviceContainerImage }}
+      run: java -jar sdk-tests.jar run ${{ inputs.testSuite != '' && format('--test-suite={0}', inputs.testSuite) || '' }} ${{ inputs.testName != '' && format('--test-name={0}', inputs.testName) || '' }} ${{ inputs.exclusionsFile != '' && format('--exclusions-file={0}', inputs.exclusionsFile) || '' }} ${{ inputs.serviceContainerEnvFile != '' && format('--service-container-env-file={0}', inputs.serviceContainerEnvFile) || '' }} ${{ inputs.customTestsFile != '' && format('--custom-tests-file={0}', inputs.customTestsFile) || '' }} --service-container-image=${{ inputs.serviceContainerImage }} --report-dir=test-report
 
     # Upload logs and publish test result
     - uses: actions/upload-artifact@v4

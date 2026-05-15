@@ -22,7 +22,6 @@ import java.util.stream.Stream
 import kotlin.time.Duration.Companion.minutes
 import kotlinx.serialization.Serializable
 import org.apache.logging.log4j.LogManager
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.api.parallel.Execution
@@ -30,7 +29,6 @@ import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
-@Tag("customTests")
 class Custom {
 
   @Serializable

@@ -28,13 +28,11 @@ import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.withAlias
 import org.junit.jupiter.api.DisplayName
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 
-@Tag("always-suspending")
 class Combinators {
   companion object {
     @RegisterExtension

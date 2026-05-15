@@ -25,14 +25,11 @@ import java.util.function.Function
 import kotlinx.serialization.json.Json
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 
-@Tag("always-suspending")
-@Tag("lazy-state")
 class State {
 
   companion object {

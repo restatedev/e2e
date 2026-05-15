@@ -24,13 +24,10 @@ import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.withAlias
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.extension.RegisterExtension
 
-@Tag("always-suspending")
-@Tag("only-single-node")
 class KillRuntime {
 
   companion object {

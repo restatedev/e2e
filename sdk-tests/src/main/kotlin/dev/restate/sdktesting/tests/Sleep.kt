@@ -24,15 +24,12 @@ import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 
-@Tag("always-suspending")
-@Tag("timers")
 class Sleep {
 
   companion object {

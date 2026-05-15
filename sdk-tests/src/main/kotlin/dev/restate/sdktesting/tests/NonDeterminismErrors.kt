@@ -21,7 +21,6 @@ import java.util.UUID
 import org.assertj.core.api.Assertions.*
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.withAlias
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
@@ -29,8 +28,6 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 
 /** Test non-determinism/journal mismatch checks in the SDKs. */
-@Tag("only-always-suspending")
-@Tag("only-single-node")
 class NonDeterminismErrors {
   companion object {
     @RegisterExtension

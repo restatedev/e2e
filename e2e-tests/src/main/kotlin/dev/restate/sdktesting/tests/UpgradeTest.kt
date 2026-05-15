@@ -32,7 +32,6 @@ import kotlinx.serialization.Serializable
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.withAlias
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
@@ -79,8 +78,6 @@ class VersionedService(private val version: String) {
   }
 }
 
-@Tag("always-suspending")
-@Tag("only-single-node")
 class UpgradeWithNewInvocation {
 
   companion object {
@@ -122,8 +119,6 @@ class UpgradeWithNewInvocation {
   }
 }
 
-@Tag("always-suspending")
-@Tag("only-single-node")
 class UpgradeWithInFlightInvocation {
 
   companion object {

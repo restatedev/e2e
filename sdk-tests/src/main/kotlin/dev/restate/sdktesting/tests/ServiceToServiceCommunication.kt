@@ -28,14 +28,12 @@ import kotlin.time.Duration.Companion.seconds
 import kotlinx.serialization.json.Json
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 
-@Tag("always-suspending")
 class ServiceToServiceCommunication {
 
   companion object {
@@ -184,7 +182,6 @@ class ServiceToServiceCommunication {
   @Test
   @Execution(ExecutionMode.CONCURRENT)
   @Timeout(value = 30, unit = TimeUnit.SECONDS)
-  @Tag("timers")
   fun oneWayCallWithDelay(@InjectClient ingressClient: Client) =
       runTest(timeout = 30.seconds) {
         val counterId = UUID.randomUUID().toString()
