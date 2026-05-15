@@ -14,6 +14,12 @@ inputs:
   exclusions:
     required: false
     description: Test exclusions file content
+  testSuite:
+    required: false
+    description: Test suite to run (default, threeNodes, alwaysSuspending, threeNodesAlwaysSuspending, versionCompat). Runs all suites if omitted.
+  testName:
+    required: false
+    description: Name of a single test class to run within the suite (requires testSuite)
 outputs: {}
 runs:
   using: "composite"
@@ -63,7 +69,15 @@ runs:
       env:
         RESTATE_CONTAINER_IMAGE: ${{ inputs.restateContainerImage }}
         TEST_REPORT_DIR: test-report
-      run: ./gradlew :e2e-tests:run
+      run: |
+        ARGS="run"
+        if [[ -n "${{ inputs.testSuite }}" ]]; then
+          ARGS="$ARGS --test-suite=${{ inputs.testSuite }}"
+        fi
+        if [[ -n "${{ inputs.testName }}" ]]; then
+          ARGS="$ARGS --test-name=${{ inputs.testName }}"
+        fi
+        ./gradlew :e2e-tests:run --args="$ARGS"
 
     # Upload logs and publish test result
     - uses: actions/upload-artifact@v4
