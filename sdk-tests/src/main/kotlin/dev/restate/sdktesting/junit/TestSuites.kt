@@ -8,7 +8,9 @@
 // https://github.com/restatedev/sdk-test-suite/blob/main/LICENSE
 package dev.restate.sdktesting.junit
 
-object TestSuites {
+object TestSuites : SuiteProvider {
+  override val defaultSuite: TestSuite get() = DEFAULT_SUITE
+
   val DEFAULT_SUITE = TestSuite("default", emptyMap(), "none() | always-suspending | customTests")
   val THREE_NODES_SUITE =
       TestSuite(
@@ -59,7 +61,7 @@ object TestSuites {
       TestSuite(
           "persistedTimers", mapOf("RESTATE_WORKER__NUM_TIMERS_IN_MEMORY_LIMIT" to "1"), "timers")
 
-  fun allSuites(): List<TestSuite> {
+  override fun allSuites(): List<TestSuite> {
     return listOf(
         DEFAULT_SUITE,
         THREE_NODES_SUITE,
@@ -71,7 +73,7 @@ object TestSuites {
         PERSISTED_TIMERS_SUITE)
   }
 
-  fun resolveSuites(suite: String?): List<TestSuite> {
+  override fun resolveSuites(suite: String?): List<TestSuite> {
     return when (suite ?: "all") {
       "all" -> allSuites()
       else -> {

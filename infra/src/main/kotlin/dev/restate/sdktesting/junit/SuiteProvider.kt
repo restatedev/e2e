@@ -6,8 +6,10 @@
 // You can find a copy of the license in file LICENSE in the root
 // directory of this repository or package, or at
 // https://github.com/restatedev/sdk-test-suite/blob/main/LICENSE
-package dev.restate.sdktesting
+package dev.restate.sdktesting.junit
 
-import dev.restate.sdktesting.junit.TestSuites
-
-fun main(args: Array<String>) = runMain(args, TestSuites)
+interface SuiteProvider {
+  val defaultSuite: TestSuite
+  fun allSuites(): List<TestSuite>
+  fun resolveSuites(suite: String?): List<TestSuite>
+}

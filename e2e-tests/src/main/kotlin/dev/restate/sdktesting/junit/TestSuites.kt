@@ -8,7 +8,9 @@
 // https://github.com/restatedev/sdk-test-suite/blob/main/LICENSE
 package dev.restate.sdktesting.junit
 
-object TestSuites {
+object TestSuites : SuiteProvider {
+  override val defaultSuite: TestSuite get() = DEFAULT_SUITE
+
   val DEFAULT_SUITE =
       TestSuite("default", emptyMap(), "none() | always-suspending | only-single-node")
   val THREE_NODES_SUITE =
@@ -36,7 +38,7 @@ object TestSuites {
   private val VERSION_COMPATIBILITY_SUITE =
       TestSuite("versionCompat", emptyMap(), "version-compatibility")
 
-  fun allSuites(): List<TestSuite> {
+  override fun allSuites(): List<TestSuite> {
     return listOf(
         DEFAULT_SUITE,
         THREE_NODES_SUITE,
@@ -45,7 +47,7 @@ object TestSuites {
         VERSION_COMPATIBILITY_SUITE)
   }
 
-  fun resolveSuites(suite: String?): List<TestSuite> {
+  override fun resolveSuites(suite: String?): List<TestSuite> {
     return when (suite ?: "all") {
       "all" -> allSuites()
       else -> {

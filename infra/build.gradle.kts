@@ -27,7 +27,9 @@ dependencies {
   compileOnly(libs.tomcat.annotations)
   compileOnly(libs.google.findbugs.jsr305)
 
+  implementation(libs.clikt)
   implementation(libs.mordant)
+  implementation(libs.dotenv)
   implementation(libs.restate.sdk.client.kotlin)
   implementation(libs.restate.sdk.kotlin.http)
   implementation(libs.vertx)
