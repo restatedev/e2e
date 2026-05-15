@@ -10,14 +10,23 @@ package dev.restate.sdktesting.tests
 
 import dev.restate.client.Client
 import dev.restate.client.kotlin.*
+import dev.restate.sdktesting.contracts.TestUtilsService
+import dev.restate.sdktesting.contracts.TestUtilsService.RejectSignalRequest
+import dev.restate.sdktesting.contracts.TestUtilsService.ResolveSignalRequest
 import dev.restate.sdktesting.contracts.VirtualObjectCommandInterpreter
+import dev.restate.sdktesting.contracts.VirtualObjectCommandInterpreter.AwaitAllCompleted
+import dev.restate.sdktesting.contracts.VirtualObjectCommandInterpreter.AwaitAllSucceededOrFirstFailed
 import dev.restate.sdktesting.contracts.VirtualObjectCommandInterpreter.AwaitAny
 import dev.restate.sdktesting.contracts.VirtualObjectCommandInterpreter.AwaitAnySuccessful
 import dev.restate.sdktesting.contracts.VirtualObjectCommandInterpreter.AwaitAwakeableOrTimeout
+import dev.restate.sdktesting.contracts.VirtualObjectCommandInterpreter.AwaitFirstCompleted
+import dev.restate.sdktesting.contracts.VirtualObjectCommandInterpreter.AwaitFirstSucceededOrAllFailed
 import dev.restate.sdktesting.contracts.VirtualObjectCommandInterpreter.CreateAwakeable
+import dev.restate.sdktesting.contracts.VirtualObjectCommandInterpreter.CreateSignal
 import dev.restate.sdktesting.contracts.VirtualObjectCommandInterpreter.InterpretRequest
 import dev.restate.sdktesting.contracts.VirtualObjectCommandInterpreter.RejectAwakeable
 import dev.restate.sdktesting.contracts.VirtualObjectCommandInterpreter.ResolveAwakeable
+import dev.restate.sdktesting.contracts.VirtualObjectCommandInterpreter.RunReturns
 import dev.restate.sdktesting.contracts.VirtualObjectCommandInterpreter.RunThrowTerminalException
 import dev.restate.sdktesting.contracts.VirtualObjectCommandInterpreter.Sleep
 import dev.restate.sdktesting.infra.*
@@ -38,7 +47,8 @@ class Combinators {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension = RestateDeployerExtension {
       withServiceSpec(
-          ServiceSpec.defaultBuilder().withServices(VirtualObjectCommandInterpreter::class))
+          ServiceSpec.defaultBuilder()
+              .withServices(VirtualObjectCommandInterpreter::class, TestUtilsService::class))
     }
   }
 
@@ -160,5 +170,270 @@ class Combinators {
         .call()
 
     assertThat(result.await()).isEqualTo("awk1-result")
+  }
+
+  @Test
+  @DisplayName("Signals: await first successful or all failed")
+  @Execution(ExecutionMode.CONCURRENT)
+  fun signalFirstSuccessfulOrAllFailed(@InjectClient ingressClient: Client) = runTest {
+    val testId = UUID.randomUUID().toString()
+    val interpreterClient = ingressClient.toVirtualObject<VirtualObjectCommandInterpreter>(testId)
+    val utilsClient = ingressClient.toService<TestUtilsService>()
+
+    val sendResponse =
+        interpreterClient
+            .request {
+              interpretCommands(
+                  InterpretRequest(
+                      listOf(
+                          AwaitAnySuccessful(
+                              listOf(
+                                  CreateSignal("sig0"),
+                                  CreateSignal("sig1"),
+                                  CreateSignal("sig2"))))))
+            }
+            .options(idempotentCallOptions)
+            .send()
+
+    val invocationId = sendResponse.invocationId()
+    utilsClient
+        .request { rejectSignal(RejectSignalRequest(invocationId, "sig0", "fail0")) }
+        .options(idempotentCallOptions)
+        .call()
+    utilsClient
+        .request { rejectSignal(RejectSignalRequest(invocationId, "sig2", "fail2")) }
+        .options(idempotentCallOptions)
+        .call()
+    utilsClient
+        .request { resolveSignal(ResolveSignalRequest(invocationId, "sig1", "success1")) }
+        .options(idempotentCallOptions)
+        .call()
+
+    assertThat(sendResponse.attachSuspend().response).isEqualTo("success1")
+  }
+
+  @Test
+  @DisplayName("Signals: await all successful or first failed")
+  @Execution(ExecutionMode.CONCURRENT)
+  fun signalAllSuccessfulOrFirstFailed(@InjectClient ingressClient: Client) = runTest {
+    val testId = UUID.randomUUID().toString()
+    val interpreterClient = ingressClient.toVirtualObject<VirtualObjectCommandInterpreter>(testId)
+    val utilsClient = ingressClient.toService<TestUtilsService>()
+
+    val sendResponse =
+        interpreterClient
+            .request {
+              interpretCommands(
+                  InterpretRequest(
+                      listOf(
+                          AwaitAllSucceededOrFirstFailed(
+                              listOf(
+                                  CreateSignal("sig0"),
+                                  CreateSignal("sig1"),
+                                  CreateSignal("sig2"))))))
+            }
+            .options(idempotentCallOptions)
+            .send()
+
+    val invocationId = sendResponse.invocationId()
+    utilsClient
+        .request { resolveSignal(ResolveSignalRequest(invocationId, "sig0", "val0")) }
+        .options(idempotentCallOptions)
+        .call()
+    utilsClient
+        .request { resolveSignal(ResolveSignalRequest(invocationId, "sig1", "val1")) }
+        .options(idempotentCallOptions)
+        .call()
+    utilsClient
+        .request { resolveSignal(ResolveSignalRequest(invocationId, "sig2", "val2")) }
+        .options(idempotentCallOptions)
+        .call()
+
+    assertThat(sendResponse.attachSuspend().response).isEqualTo("val0|val1|val2")
+  }
+
+  @Test
+  @DisplayName("Signals: await all completed")
+  @Execution(ExecutionMode.CONCURRENT)
+  fun signalAllCompleted(@InjectClient ingressClient: Client) = runTest {
+    val testId = UUID.randomUUID().toString()
+    val interpreterClient = ingressClient.toVirtualObject<VirtualObjectCommandInterpreter>(testId)
+    val utilsClient = ingressClient.toService<TestUtilsService>()
+
+    val sendResponse =
+        interpreterClient
+            .request {
+              interpretCommands(
+                  InterpretRequest(
+                      listOf(
+                          AwaitAllCompleted(
+                              listOf(
+                                  CreateSignal("sig0"),
+                                  CreateSignal("sig1"),
+                                  CreateSignal("sig2"))))))
+            }
+            .options(idempotentCallOptions)
+            .send()
+
+    val invocationId = sendResponse.invocationId()
+    utilsClient
+        .request { resolveSignal(ResolveSignalRequest(invocationId, "sig0", "val0")) }
+        .options(idempotentCallOptions)
+        .call()
+    utilsClient
+        .request { rejectSignal(RejectSignalRequest(invocationId, "sig1", "err1")) }
+        .options(idempotentCallOptions)
+        .call()
+    utilsClient
+        .request { resolveSignal(ResolveSignalRequest(invocationId, "sig2", "val2")) }
+        .options(idempotentCallOptions)
+        .call()
+
+    assertThat(sendResponse.attachSuspend().response).isEqualTo("ok:val0|err:err1|ok:val2")
+  }
+
+  @Test
+  @DisplayName("Signals: await first completed")
+  @Execution(ExecutionMode.CONCURRENT)
+  fun signalFirstCompleted(@InjectClient ingressClient: Client) = runTest {
+    val testId = UUID.randomUUID().toString()
+    val interpreterClient = ingressClient.toVirtualObject<VirtualObjectCommandInterpreter>(testId)
+    val utilsClient = ingressClient.toService<TestUtilsService>()
+
+    val sendResponse =
+        interpreterClient
+            .request {
+              interpretCommands(
+                  InterpretRequest(
+                      listOf(
+                          AwaitAny(
+                              listOf(
+                                  CreateSignal("sig0"),
+                                  CreateSignal("sig1"),
+                                  CreateSignal("sig2"))))))
+            }
+            .options(idempotentCallOptions)
+            .send()
+
+    val invocationId = sendResponse.invocationId()
+    utilsClient
+        .request { resolveSignal(ResolveSignalRequest(invocationId, "sig1", "first")) }
+        .options(idempotentCallOptions)
+        .call()
+
+    assertThat(sendResponse.attachSuspend().response).isEqualTo("first")
+  }
+
+  @Test
+  @DisplayName("Mixed: run wins the race against an unresolved signal")
+  @Execution(ExecutionMode.CONCURRENT)
+  fun mixedRunWinsRaceAgainstSignal(@InjectClient ingressClient: Client) = runTest {
+    val testId = UUID.randomUUID().toString()
+
+    // RunReturns completes immediately; the signal is never resolved so it can't win.
+    assertThat(
+            ingressClient
+                .toVirtualObject<VirtualObjectCommandInterpreter>(testId)
+                .request {
+                  interpretCommands(
+                      InterpretRequest(
+                          listOf(
+                              AwaitFirstCompleted(
+                                  listOf(CreateSignal("sig"), RunReturns("runval"))))))
+                }
+                .options(idempotentCallOptions)
+                .call()
+                .response)
+        .isEqualTo("runval")
+  }
+
+  @Test
+  @DisplayName("Mixed: failed run is skipped, signal succeeds in AwaitFirstSucceededOrAllFailed")
+  @Execution(ExecutionMode.CONCURRENT)
+  fun mixedSignalWinsAfterRunFails(@InjectClient ingressClient: Client) = runTest {
+    val testId = UUID.randomUUID().toString()
+    val interpreterClient = ingressClient.toVirtualObject<VirtualObjectCommandInterpreter>(testId)
+    val utilsClient = ingressClient.toService<TestUtilsService>()
+
+    val sendResponse =
+        interpreterClient
+            .request {
+              interpretCommands(
+                  InterpretRequest(
+                      listOf(
+                          AwaitFirstSucceededOrAllFailed(
+                              listOf(RunThrowTerminalException("fail"), CreateSignal("sig"))))))
+            }
+            .options(idempotentCallOptions)
+            .send()
+
+    val invocationId = sendResponse.invocationId()
+    utilsClient
+        .request { resolveSignal(ResolveSignalRequest(invocationId, "sig", "sigval")) }
+        .options(idempotentCallOptions)
+        .call()
+
+    assertThat(sendResponse.attachSuspend().response).isEqualTo("sigval")
+  }
+
+  @Test
+  @DisplayName("Mixed: AwaitAllSucceededOrFirstFailed with run and signal both succeed")
+  @Execution(ExecutionMode.CONCURRENT)
+  fun mixedAllSucceededRunAndSignal(@InjectClient ingressClient: Client) = runTest {
+    val testId = UUID.randomUUID().toString()
+    val interpreterClient = ingressClient.toVirtualObject<VirtualObjectCommandInterpreter>(testId)
+    val utilsClient = ingressClient.toService<TestUtilsService>()
+
+    val sendResponse =
+        interpreterClient
+            .request {
+              interpretCommands(
+                  InterpretRequest(
+                      listOf(
+                          AwaitAllSucceededOrFirstFailed(
+                              listOf(RunReturns("runval"), CreateSignal("sig"))))))
+            }
+            .options(idempotentCallOptions)
+            .send()
+
+    val invocationId = sendResponse.invocationId()
+    utilsClient
+        .request { resolveSignal(ResolveSignalRequest(invocationId, "sig", "sigval")) }
+        .options(idempotentCallOptions)
+        .call()
+
+    assertThat(sendResponse.attachSuspend().response).isEqualTo("runval|sigval")
+  }
+
+  @Test
+  @DisplayName("Mixed: AwaitAllCompleted with run (ok), signal (ok), and failed run (err)")
+  @Execution(ExecutionMode.CONCURRENT)
+  fun mixedAllCompletedRunSignalAndFailedRun(@InjectClient ingressClient: Client) = runTest {
+    val testId = UUID.randomUUID().toString()
+    val interpreterClient = ingressClient.toVirtualObject<VirtualObjectCommandInterpreter>(testId)
+    val utilsClient = ingressClient.toService<TestUtilsService>()
+
+    val sendResponse =
+        interpreterClient
+            .request {
+              interpretCommands(
+                  InterpretRequest(
+                      listOf(
+                          AwaitAllCompleted(
+                              listOf(
+                                  RunReturns("runval"),
+                                  CreateSignal("sig"),
+                                  RunThrowTerminalException("fail"))))))
+            }
+            .options(idempotentCallOptions)
+            .send()
+
+    val invocationId = sendResponse.invocationId()
+    utilsClient
+        .request { resolveSignal(ResolveSignalRequest(invocationId, "sig", "sigval")) }
+        .options(idempotentCallOptions)
+        .call()
+
+    assertThat(sendResponse.attachSuspend().response).isEqualTo("ok:runval|ok:sigval|err:fail")
   }
 }

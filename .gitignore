@@ -21,4 +21,4 @@ services/node-services/restatedev-restate-sdk-*
 test_report
 .kotlin
 
-.claude/
+.claude/settings.local.json
