@@ -9,9 +9,13 @@
 package dev.restate.sdktesting.tests
 
 import dev.restate.client.Client
-import dev.restate.client.kotlin.toService
-import dev.restate.sdktesting.contracts.TestUtilsService
+import dev.restate.client.kotlin.toVirtualObject
+import dev.restate.sdktesting.contracts.VirtualObjectCommandInterpreter
+import dev.restate.sdktesting.contracts.VirtualObjectCommandInterpreter.AwaitOne
+import dev.restate.sdktesting.contracts.VirtualObjectCommandInterpreter.InterpretRequest
+import dev.restate.sdktesting.contracts.VirtualObjectCommandInterpreter.Sleep
 import dev.restate.sdktesting.infra.*
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 import kotlin.random.nextLong
@@ -32,7 +36,8 @@ class SleepWithFailures {
   companion object {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension = RestateDeployerExtension {
-      withServiceSpec(ServiceSpec.defaultBuilder().withServices(TestUtilsService::class))
+      withServiceSpec(
+          ServiceSpec.defaultBuilder().withServices(VirtualObjectCommandInterpreter::class))
     }
 
     private val DEFAULT_SLEEP_DURATION = 4.seconds
@@ -43,12 +48,16 @@ class SleepWithFailures {
       sleepDuration: Duration = DEFAULT_SLEEP_DURATION,
       action: suspend () -> Unit
   ) {
+    val testId = UUID.randomUUID().toString()
     val start = TimeSource.Monotonic.markNow()
     val job = coroutineScope {
       launch {
         ingressClient
-            .toService<TestUtilsService>()
-            .request { sleepConcurrently(listOf(sleepDuration.inWholeMilliseconds)) }
+            .toVirtualObject<VirtualObjectCommandInterpreter>(testId)
+            .request {
+              interpretCommands(
+                  InterpretRequest(listOf(AwaitOne(Sleep(sleepDuration.inWholeMilliseconds)))))
+            }
             .options(idempotentCallOptions)
             .call()
       }

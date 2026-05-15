@@ -9,11 +9,16 @@
 package dev.restate.sdktesting.tests
 
 import dev.restate.client.Client
-import dev.restate.client.kotlin.toService
-import dev.restate.sdktesting.contracts.TestUtilsService
+import dev.restate.client.kotlin.toVirtualObject
+import dev.restate.sdktesting.contracts.VirtualObjectCommandInterpreter
+import dev.restate.sdktesting.contracts.VirtualObjectCommandInterpreter.AwaitAllCompleted
+import dev.restate.sdktesting.contracts.VirtualObjectCommandInterpreter.AwaitOne
+import dev.restate.sdktesting.contracts.VirtualObjectCommandInterpreter.InterpretRequest
+import dev.restate.sdktesting.contracts.VirtualObjectCommandInterpreter.Sleep
 import dev.restate.sdktesting.infra.InjectClient
 import dev.restate.sdktesting.infra.RestateDeployerExtension
 import dev.restate.sdktesting.infra.ServiceSpec
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 import kotlin.random.nextLong
@@ -35,7 +40,8 @@ class Sleep {
   companion object {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension = RestateDeployerExtension {
-      withServiceSpec(ServiceSpec.defaultBuilder().withServices(TestUtilsService::class))
+      withServiceSpec(
+          ServiceSpec.defaultBuilder().withServices(VirtualObjectCommandInterpreter::class))
     }
   }
 
@@ -46,8 +52,11 @@ class Sleep {
 
     val elapsed = measureNanoTime {
       ingressClient
-          .toService<TestUtilsService>()
-          .request { sleepConcurrently(listOf(sleepDuration.inWholeMilliseconds)) }
+          .toVirtualObject<VirtualObjectCommandInterpreter>(UUID.randomUUID().toString())
+          .request {
+            interpretCommands(
+                InterpretRequest(listOf(AwaitOne(Sleep(sleepDuration.inWholeMilliseconds)))))
+          }
           .options(idempotentCallOptions)
           .call()
     }
@@ -65,20 +74,23 @@ class Sleep {
         val sleepsPerInvocation = 20
         val concurrentSleepInvocations = 50
 
-        val coordinatorClient = ingressClient.toService<TestUtilsService>()
-
-        // Range is inclusive
         (1..concurrentSleepInvocations)
             .map {
               launch {
-                coordinatorClient
+                ingressClient
+                    .toVirtualObject<VirtualObjectCommandInterpreter>(UUID.randomUUID().toString())
                     .request {
-                      sleepConcurrently(
-                          (1..sleepsPerInvocation).map {
-                            Random.nextLong(
-                                minSleepDuration.inWholeMilliseconds..maxSleepDuration
-                                        .inWholeMilliseconds)
-                          })
+                      interpretCommands(
+                          InterpretRequest(
+                              listOf(
+                                  AwaitAllCompleted(
+                                      (1..sleepsPerInvocation).map {
+                                        Sleep(
+                                            Random.nextLong(
+                                                minSleepDuration
+                                                    .inWholeMilliseconds..maxSleepDuration
+                                                        .inWholeMilliseconds))
+                                      }))))
                     }
                     .options(idempotentCallOptions)
                     .call()

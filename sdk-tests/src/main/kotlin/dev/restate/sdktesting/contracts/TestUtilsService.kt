@@ -42,9 +42,6 @@ interface TestUtilsService {
   /** Just echo */
   @Handler @Raw suspend fun rawEcho(@Raw input: ByteArray): ByteArray
 
-  /** Create timers and await them all. Durations in milliseconds */
-  @Handler suspend fun sleepConcurrently(millisDuration: List<Long>)
-
   /**
    * Invoke `ctx.run` incrementing a local variable counter (not a restate state key!).
    *
