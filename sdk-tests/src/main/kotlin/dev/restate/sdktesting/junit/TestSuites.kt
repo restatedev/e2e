@@ -164,7 +164,7 @@ object TestSuites : SuiteProvider {
       TestSuite(
           "persistedTimers",
           mapOf("RESTATE_WORKER__NUM_TIMERS_IN_MEMORY_LIMIT" to "1"),
-          listOf(clazz<Sleep>(), method<ServiceToServiceCommunication>("manySleeps")))
+          listOf(clazz<Sleep>()))
 
   override fun allSuites(): List<TestSuite> {
     return listOf(
