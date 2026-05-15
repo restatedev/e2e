@@ -63,6 +63,11 @@ class TestSuite(
             .selectors(DiscoverySelectors.selectPackage("dev.restate.sdktesting.tests"))
             .filters(TagFilter.includeTags(junitIncludeTags))
             .filters(*filters.toTypedArray())
+            .apply {
+              if (restateDeployerConfig.customTestsFile == null) {
+                filters(TagFilter.excludeTags("customTests"))
+              }
+            }
             // Redirect STDOUT/STDERR
             .configurationParameter(LauncherConstants.CAPTURE_STDOUT_PROPERTY_NAME, "true")
             .configurationParameter(LauncherConstants.CAPTURE_STDERR_PROPERTY_NAME, "true")
