@@ -20,6 +20,7 @@ import dev.restate.sdktesting.tests.ProxyRequestSigning
 import dev.restate.sdktesting.tests.RunFlush
 import dev.restate.sdktesting.tests.RunRetry
 import dev.restate.sdktesting.tests.ServiceToServiceCommunication
+import dev.restate.sdktesting.tests.Signals
 import dev.restate.sdktesting.tests.Sleep
 import dev.restate.sdktesting.tests.SleepWithFailures
 import dev.restate.sdktesting.tests.State
@@ -52,7 +53,7 @@ object TestSuites : SuiteProvider {
               clazz<StopRuntime>(),
               clazz<UserErrors>(),
               clazz<WorkflowAPI>(),
-          ))
+              clazz<Signals>()))
 
   val THREE_NODES_SUITE =
       TestSuite(
@@ -74,7 +75,7 @@ object TestSuites : SuiteProvider {
               clazz<State>(),
               clazz<UserErrors>(),
               clazz<WorkflowAPI>(),
-          ),
+              clazz<Signals>()),
           3)
 
   private val ALWAYS_SUSPENDING_SUITE =
@@ -95,7 +96,7 @@ object TestSuites : SuiteProvider {
               clazz<StopRuntime>(),
               clazz<UserErrors>(),
               clazz<WorkflowAPI>(),
-          ))
+              clazz<Signals>()))
 
   private val THREE_NODES_ALWAYS_SUSPENDING_SUITE =
       TestSuite(
@@ -115,7 +116,7 @@ object TestSuites : SuiteProvider {
               clazz<State>(),
               clazz<UserErrors>(),
               clazz<WorkflowAPI>(),
-          ),
+              clazz<Signals>()),
           3)
 
   private val SINGLE_THREAD_SINGLE_PARTITION_SUITE =
@@ -141,7 +142,7 @@ object TestSuites : SuiteProvider {
               clazz<StopRuntime>(),
               clazz<UserErrors>(),
               clazz<WorkflowAPI>(),
-          ))
+              clazz<Signals>()))
 
   private val LAZY_STATE_SUITE =
       TestSuite(

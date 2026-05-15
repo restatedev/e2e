@@ -26,10 +26,22 @@ interface VirtualObjectCommandInterpreter {
   // This is serialized as `{"type": "sleep", ...}`
   @Serializable @SerialName("sleep") data class Sleep(val timeoutMillis: Long) : AwaitableCommand
 
+  // This is serialized as `{"type": "runReturns", ...}`
+  // When implementing this, make sure that the run executes some actual work, especially in async
+  // world (e.g. in ts, something as simple as setTimeout(1) is enough...)
+  @Serializable
+  @SerialName("runReturns")
+  data class RunReturns(val value: String) : AwaitableCommand
+
   // This is serialized as `{"type": "runThrowTerminalException", ...}`
   @Serializable
   @SerialName("runThrowTerminalException")
   data class RunThrowTerminalException(val reason: String) : AwaitableCommand
+
+  // This is serialized as `{"type": "createSignal", ...}`
+  @Serializable
+  @SerialName("createSignal")
+  data class CreateSignal(val signalName: String) : AwaitableCommand
 
   @Serializable sealed interface Command
 
@@ -53,6 +65,26 @@ interface VirtualObjectCommandInterpreter {
   @Serializable
   @SerialName("awaitAwakeableOrTimeout")
   data class AwaitAwakeableOrTimeout(val awakeableKey: String, val timeoutMillis: Long) : Command
+
+  // Awaits all commands; returns first succeeded or throws if all failed
+  @Serializable
+  @SerialName("awaitFirstSucceededOrAllFailed")
+  data class AwaitFirstSucceededOrAllFailed(val commands: List<AwaitableCommand>) : Command
+
+  // Awaits all commands; returns first completed (throwing if it failed)
+  @Serializable
+  @SerialName("awaitFirstCompleted")
+  data class AwaitFirstCompleted(val commands: List<AwaitableCommand>) : Command
+
+  // Awaits all commands; returns pipe-joined values if all succeed, throws on first failure
+  @Serializable
+  @SerialName("awaitAllSucceededOrFirstFailed")
+  data class AwaitAllSucceededOrFirstFailed(val commands: List<AwaitableCommand>) : Command
+
+  // Awaits all commands; returns pipe-joined "ok:<value>" or "err:<reason>" for each result
+  @Serializable
+  @SerialName("awaitAllCompleted")
+  data class AwaitAllCompleted(val commands: List<AwaitableCommand>) : Command
 
   @Serializable data class InterpretRequest(val commands: List<Command>)
 
