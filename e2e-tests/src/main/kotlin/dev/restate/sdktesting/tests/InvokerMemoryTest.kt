@@ -47,7 +47,6 @@ import org.awaitility.kotlin.await
 import org.awaitility.kotlin.withAlias
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.DisplayName
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.extension.RegisterExtension
@@ -69,7 +68,6 @@ import org.junit.jupiter.api.extension.RegisterExtension
  * The yield tests verify invocations eventually complete correctly. The oversized tests verify the
  * invocation is paused.
  */
-@Tag("only-single-node")
 class InvokerMemoryTest {
 
   @Service

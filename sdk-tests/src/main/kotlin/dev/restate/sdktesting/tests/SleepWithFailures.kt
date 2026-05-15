@@ -22,13 +22,11 @@ import kotlin.time.TimeSource
 import kotlin.time.toJavaDuration
 import kotlinx.coroutines.*
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.extension.RegisterExtension
 
 // -- Sleep tests with terminations/killings of service endpoint
-@Tag("always-suspending")
 class SleepWithFailures {
 
   companion object {

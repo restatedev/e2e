@@ -25,11 +25,9 @@ import java.net.URI
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.withAlias
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
-@Tag("only-single-node" /* This test depends on metadata propagation happening immediately */)
 class PauseResumeChangingDeploymentTest {
 
   @Service

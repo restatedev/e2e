@@ -20,18 +20,27 @@ import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.core.config.Configurator
 import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilderFactory
 import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration
+import org.junit.platform.engine.DiscoverySelector
 import org.junit.platform.engine.Filter
+import org.junit.platform.engine.discovery.ClassNameFilter
 import org.junit.platform.engine.discovery.DiscoverySelectors
 import org.junit.platform.launcher.*
 import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder
 import org.junit.platform.launcher.core.LauncherFactory
 import org.junit.platform.reporting.legacy.xml.LegacyXmlReportGeneratingListener
 
+inline fun <reified T> clazz(): DiscoverySelector = DiscoverySelectors.selectClass(T::class.java)
+
+inline fun <reified T> method(name: String): DiscoverySelector =
+    DiscoverySelectors.selectMethod(T::class.java, name)
+
+private const val CUSTOM_TEST_CLASS = "dev.restate.sdktesting.tests.Custom"
+
 class TestSuite(
     val name: String,
     val additionalEnvs: Map<String, String>,
-    val junitIncludeTags: String,
-    val restateNodes: Int = 1
+    val selectors: List<DiscoverySelector>,
+    val restateNodes: Int = 1,
 ) {
   fun runTests(
       terminal: Terminal,
@@ -60,12 +69,11 @@ class TestSuite(
     // Prepare launch request
     var builder =
         LauncherDiscoveryRequestBuilder.request()
-            .selectors(DiscoverySelectors.selectPackage("dev.restate.sdktesting.tests"))
-            .filters(TagFilter.includeTags(junitIncludeTags))
+            .selectors(selectors)
             .filters(*filters.toTypedArray())
             .apply {
               if (restateDeployerConfig.customTestsFile == null) {
-                filters(TagFilter.excludeTags("customTests"))
+                filters(ClassNameFilter.excludeClassNamePatterns(CUSTOM_TEST_CLASS))
               }
             }
             // Redirect STDOUT/STDERR

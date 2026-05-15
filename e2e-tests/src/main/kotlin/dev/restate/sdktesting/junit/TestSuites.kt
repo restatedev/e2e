@@ -8,25 +8,76 @@
 // https://github.com/restatedev/sdk-test-suite/blob/main/LICENSE
 package dev.restate.sdktesting.junit
 
+import dev.restate.sdktesting.tests.AwakeableIngressEndpointTest
+import dev.restate.sdktesting.tests.AwakeableLeaderTransferTest
+import dev.restate.sdktesting.tests.BackwardCompatibilityTest
+import dev.restate.sdktesting.tests.ForwardCompatibilityTest
+import dev.restate.sdktesting.tests.IngressTest
+import dev.restate.sdktesting.tests.InvokerMemoryTest
+import dev.restate.sdktesting.tests.JournalRetentionTest
+import dev.restate.sdktesting.tests.KafkaTest
+import dev.restate.sdktesting.tests.OpenAPITest
+import dev.restate.sdktesting.tests.PauseResumeChangingDeploymentTest
+import dev.restate.sdktesting.tests.PauseResumeTest
+import dev.restate.sdktesting.tests.RestartAsNewInvocationTest
+import dev.restate.sdktesting.tests.StatePatchingTest
+import dev.restate.sdktesting.tests.TracingTest
+import dev.restate.sdktesting.tests.UpgradeWithInFlightInvocation
+import dev.restate.sdktesting.tests.UpgradeWithNewInvocation
+
 object TestSuites : SuiteProvider {
   override val defaultSuite: TestSuite
     get() = DEFAULT_SUITE
 
   val DEFAULT_SUITE =
-      TestSuite("default", emptyMap(), "none() | always-suspending | only-single-node")
+      TestSuite(
+          "default",
+          emptyMap(),
+          listOf(
+              clazz<AwakeableIngressEndpointTest>(),
+              clazz<IngressTest>(),
+              clazz<InvokerMemoryTest>(),
+              clazz<JournalRetentionTest>(),
+              clazz<KafkaTest>(),
+              clazz<OpenAPITest>(),
+              clazz<PauseResumeChangingDeploymentTest>(),
+              clazz<PauseResumeTest>(),
+              clazz<RestartAsNewInvocationTest>(),
+              clazz<StatePatchingTest>(),
+              clazz<TracingTest>(),
+              clazz<UpgradeWithNewInvocation>(),
+              clazz<UpgradeWithInFlightInvocation>(),
+          ))
+
   val THREE_NODES_SUITE =
       TestSuite(
           "threeNodes",
           mapOf(
               "RESTATE_DEFAULT_NUM_PARTITIONS" to "4",
           ),
-          "(none() | always-suspending | only-multi-node) & !only-single-node",
+          listOf(
+              clazz<AwakeableIngressEndpointTest>(),
+              clazz<AwakeableLeaderTransferTest>(),
+              clazz<IngressTest>(),
+              clazz<JournalRetentionTest>(),
+              clazz<PauseResumeTest>(),
+              clazz<RestartAsNewInvocationTest>(),
+              clazz<StatePatchingTest>(),
+              clazz<TracingTest>(),
+          ),
           3)
+
   private val ALWAYS_SUSPENDING_SUITE =
       TestSuite(
           "alwaysSuspending",
           mapOf("RESTATE_WORKER__INVOKER__INACTIVITY_TIMEOUT" to "0s"),
-          "always-suspending | only-always-suspending | only-single-node")
+          listOf(
+              clazz<InvokerMemoryTest>(),
+              clazz<PauseResumeChangingDeploymentTest>(),
+              clazz<UpgradeWithNewInvocation>(),
+              clazz<UpgradeWithInFlightInvocation>(),
+          ))
+
   private val THREE_NODES_ALWAYS_SUSPENDING_SUITE =
       TestSuite(
           "threeNodesAlwaysSuspending",
@@ -34,10 +85,14 @@ object TestSuites : SuiteProvider {
               "RESTATE_WORKER__INVOKER__INACTIVITY_TIMEOUT" to "0s",
               "RESTATE_DEFAULT_NUM_PARTITIONS" to "4",
           ),
-          "(always-suspending | only-always-suspending | only-multi-node) & !only-single-node",
+          listOf(clazz<AwakeableLeaderTransferTest>()),
           3)
+
   private val VERSION_COMPATIBILITY_SUITE =
-      TestSuite("versionCompat", emptyMap(), "version-compatibility")
+      TestSuite(
+          "versionCompat",
+          emptyMap(),
+          listOf(clazz<BackwardCompatibilityTest>(), clazz<ForwardCompatibilityTest>()))
 
   override fun allSuites(): List<TestSuite> {
     return listOf(

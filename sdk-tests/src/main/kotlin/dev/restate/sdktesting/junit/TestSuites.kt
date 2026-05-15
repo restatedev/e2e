@@ -8,24 +8,95 @@
 // https://github.com/restatedev/sdk-test-suite/blob/main/LICENSE
 package dev.restate.sdktesting.junit
 
+import dev.restate.sdktesting.tests.CallOrdering
+import dev.restate.sdktesting.tests.Cancellation
+import dev.restate.sdktesting.tests.Combinators
+import dev.restate.sdktesting.tests.Custom
+import dev.restate.sdktesting.tests.Ingress
+import dev.restate.sdktesting.tests.KillInvocation
+import dev.restate.sdktesting.tests.KillRuntime
+import dev.restate.sdktesting.tests.NonDeterminismErrors
+import dev.restate.sdktesting.tests.ProxyRequestSigning
+import dev.restate.sdktesting.tests.RunFlush
+import dev.restate.sdktesting.tests.RunRetry
+import dev.restate.sdktesting.tests.ServiceToServiceCommunication
+import dev.restate.sdktesting.tests.Sleep
+import dev.restate.sdktesting.tests.SleepWithFailures
+import dev.restate.sdktesting.tests.State
+import dev.restate.sdktesting.tests.StopRuntime
+import dev.restate.sdktesting.tests.UserErrors
+import dev.restate.sdktesting.tests.WorkflowAPI
+
 object TestSuites : SuiteProvider {
   override val defaultSuite: TestSuite
     get() = DEFAULT_SUITE
 
-  val DEFAULT_SUITE = TestSuite("default", emptyMap(), "none() | always-suspending | customTests")
+  val DEFAULT_SUITE =
+      TestSuite(
+          "default",
+          emptyMap(),
+          listOf(
+              clazz<CallOrdering>(),
+              clazz<Cancellation>(),
+              clazz<Combinators>(),
+              clazz<Custom>(),
+              clazz<Ingress>(),
+              clazz<KillInvocation>(),
+              clazz<KillRuntime>(),
+              clazz<ProxyRequestSigning>(),
+              clazz<RunRetry>(),
+              clazz<ServiceToServiceCommunication>(),
+              clazz<Sleep>(),
+              clazz<SleepWithFailures>(),
+              clazz<State>(),
+              clazz<StopRuntime>(),
+              clazz<UserErrors>(),
+              clazz<WorkflowAPI>(),
+          ))
+
   val THREE_NODES_SUITE =
       TestSuite(
           "threeNodes",
           mapOf(
               "RESTATE_DEFAULT_NUM_PARTITIONS" to "4",
           ),
-          "(none() | always-suspending) & !only-single-node & !customTests",
+          listOf(
+              clazz<CallOrdering>(),
+              clazz<Cancellation>(),
+              clazz<Combinators>(),
+              clazz<Ingress>(),
+              clazz<KillInvocation>(),
+              clazz<ProxyRequestSigning>(),
+              clazz<RunRetry>(),
+              clazz<ServiceToServiceCommunication>(),
+              clazz<Sleep>(),
+              clazz<SleepWithFailures>(),
+              clazz<State>(),
+              clazz<UserErrors>(),
+              clazz<WorkflowAPI>(),
+          ),
           3)
+
   private val ALWAYS_SUSPENDING_SUITE =
       TestSuite(
           "alwaysSuspending",
           mapOf("RESTATE_WORKER__INVOKER__INACTIVITY_TIMEOUT" to "0s"),
-          "always-suspending | only-always-suspending")
+          listOf(
+              clazz<Cancellation>(),
+              clazz<Combinators>(),
+              clazz<KillRuntime>(),
+              clazz<NonDeterminismErrors>(),
+              clazz<RunFlush>(),
+              clazz<RunRetry>(),
+              clazz<ServiceToServiceCommunication>(),
+              clazz<Sleep>(),
+              clazz<SleepWithFailures>(),
+              clazz<State>(),
+              clazz<StopRuntime>(),
+              clazz<UserErrors>(),
+              clazz<WorkflowAPI>(),
+          ))
+
   private val THREE_NODES_ALWAYS_SUSPENDING_SUITE =
       TestSuite(
           "threeNodesAlwaysSuspending",
@@ -33,8 +104,20 @@ object TestSuites : SuiteProvider {
               "RESTATE_WORKER__INVOKER__INACTIVITY_TIMEOUT" to "0s",
               "RESTATE_DEFAULT_NUM_PARTITIONS" to "4",
           ),
-          "(always-suspending | only-always-suspending) & !only-single-node",
+          listOf(
+              clazz<Cancellation>(),
+              clazz<Combinators>(),
+              clazz<RunFlush>(),
+              clazz<RunRetry>(),
+              clazz<ServiceToServiceCommunication>(),
+              clazz<Sleep>(),
+              clazz<SleepWithFailures>(),
+              clazz<State>(),
+              clazz<UserErrors>(),
+              clazz<WorkflowAPI>(),
+          ),
           3)
+
   private val SINGLE_THREAD_SINGLE_PARTITION_SUITE =
       TestSuite(
           "singleThreadSinglePartition",
@@ -42,14 +125,32 @@ object TestSuites : SuiteProvider {
               "RESTATE_DEFAULT_NUM_PARTITIONS" to "1",
               "RESTATE_DEFAULT_THREAD_POOL_SIZE" to "1",
           ),
-          "none() | always-suspending | stop-runtime")
+          listOf(
+              clazz<CallOrdering>(),
+              clazz<Cancellation>(),
+              clazz<Combinators>(),
+              clazz<Ingress>(),
+              clazz<KillInvocation>(),
+              clazz<KillRuntime>(),
+              clazz<ProxyRequestSigning>(),
+              clazz<RunRetry>(),
+              clazz<ServiceToServiceCommunication>(),
+              clazz<Sleep>(),
+              clazz<SleepWithFailures>(),
+              clazz<State>(),
+              clazz<StopRuntime>(),
+              clazz<UserErrors>(),
+              clazz<WorkflowAPI>(),
+          ))
+
   private val LAZY_STATE_SUITE =
       TestSuite(
           "lazyState",
           mapOf(
               "RESTATE_WORKER__INVOKER__DISABLE_EAGER_STATE" to "true",
           ),
-          "lazy-state")
+          listOf(clazz<State>()))
+
   private val LAZY_STATE_ALWAYS_SUSPENDING_SUITE =
       TestSuite(
           "lazyStateAlwaysSuspending",
@@ -57,10 +158,13 @@ object TestSuites : SuiteProvider {
               "RESTATE_WORKER__INVOKER__DISABLE_EAGER_STATE" to "true",
               "RESTATE_WORKER__INVOKER__INACTIVITY_TIMEOUT" to "0s",
           ),
-          "lazy-state")
+          listOf(clazz<State>()))
+
   private val PERSISTED_TIMERS_SUITE =
       TestSuite(
-          "persistedTimers", mapOf("RESTATE_WORKER__NUM_TIMERS_IN_MEMORY_LIMIT" to "1"), "timers")
+          "persistedTimers",
+          mapOf("RESTATE_WORKER__NUM_TIMERS_IN_MEMORY_LIMIT" to "1"),
+          listOf(clazz<Sleep>(), method<ServiceToServiceCommunication>("manySleeps")))
 
   override fun allSuites(): List<TestSuite> {
     return listOf(
