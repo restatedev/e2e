@@ -9,7 +9,8 @@
 package dev.restate.sdktesting.junit
 
 object TestSuites : SuiteProvider {
-  override val defaultSuite: TestSuite get() = DEFAULT_SUITE
+  override val defaultSuite: TestSuite
+    get() = DEFAULT_SUITE
 
   val DEFAULT_SUITE = TestSuite("default", emptyMap(), "none() | always-suspending | customTests")
   val THREE_NODES_SUITE =

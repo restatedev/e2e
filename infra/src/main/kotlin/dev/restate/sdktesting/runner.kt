@@ -253,11 +253,13 @@ private class Run(private val suites: SuiteProvider) :
 }
 
 private class Debug(private val suites: SuiteProvider) :
-    TestRunCommand("Run a single test without a service container, forwarding to a local process.") {
+    TestRunCommand(
+        "Run a single test without a service container, forwarding to a local process.") {
   val testSuite by
       option()
           .default(suites.defaultSuite.name)
-          .help("Test suite to use for environment setup. Available: ${suites.allSuites().map { it.name }}")
+          .help(
+              "Test suite to use for environment setup. Available: ${suites.allSuites().map { it.name }}")
   val testName by option().required().help("Name of the test class to run")
   val localContainers by
       argument()
@@ -271,8 +273,7 @@ private class Debug(private val suites: SuiteProvider) :
       option()
           .flag("--dont-retain-after-end", default = false)
           .help("Keep the Docker network alive after the test ends (requires manual cleanup)")
-  val mountStateDirectory by
-      option().help("Mount a local directory as the Restate data directory")
+  val mountStateDirectory by option().help("Mount a local directory as the Restate data directory")
   val localIngressPort by option().int().help("Bind Restate ingress to this host port")
   val localAdminPort by option().int().help("Bind Restate admin to this host port")
   val localNodePort by option().int().help("Bind Restate node-to-node port to this host port")
@@ -282,7 +283,9 @@ private class Debug(private val suites: SuiteProvider) :
 
     val restateDeployerConfig =
         RestateDeployerConfig(
-            localContainers.associate { it.first to LocalForwardServiceDeploymentConfig(it.second) },
+            localContainers.associate {
+              it.first to LocalForwardServiceDeploymentConfig(it.second)
+            },
             localAdminPort = this.localAdminPort,
             localIngressPort = this.localIngressPort,
             localNodePort = this.localNodePort,
@@ -291,7 +294,8 @@ private class Debug(private val suites: SuiteProvider) :
     registerGlobalConfig(testRunnerOptions.applyToDeployerConfig(restateDeployerConfig))
 
     val suite = suites.resolveSuites(testSuite)[0]
-    val testFilters = listOf(ClassNameFilter.includeClassNamePatterns(testClassNameToFQCN(testName)))
+    val testFilters =
+        listOf(ClassNameFilter.includeClassNamePatterns(testClassNameToFQCN(testName)))
 
     val report = suite.runTests(terminal, testRunnerOptions.reportDir, testFilters, true, false)
 

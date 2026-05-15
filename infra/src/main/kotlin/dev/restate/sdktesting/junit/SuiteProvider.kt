@@ -10,6 +10,8 @@ package dev.restate.sdktesting.junit
 
 interface SuiteProvider {
   val defaultSuite: TestSuite
+
   fun allSuites(): List<TestSuite>
+
   fun resolveSuites(suite: String?): List<TestSuite>
 }

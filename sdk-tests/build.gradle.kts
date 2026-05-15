@@ -55,9 +55,7 @@ allOpen {
 
 application { mainClass = "dev.restate.sdktesting.MainKt" }
 
-tasks.shadowJar {
-  archiveClassifier = ""
-}
+tasks.shadowJar { archiveClassifier = "" }
 
 spotless {
   kotlin {
