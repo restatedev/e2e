@@ -11,6 +11,7 @@ package dev.restate.sdktesting.junit
 import dev.restate.sdktesting.tests.AwakeableIngressEndpointTest
 import dev.restate.sdktesting.tests.AwakeableLeaderTransferTest
 import dev.restate.sdktesting.tests.BackwardCompatibilityTest
+import dev.restate.sdktesting.tests.ConcurrencyLimitTest
 import dev.restate.sdktesting.tests.ForwardCompatibilityTest
 import dev.restate.sdktesting.tests.IngressTest
 import dev.restate.sdktesting.tests.InvokerMemoryTest
@@ -20,6 +21,7 @@ import dev.restate.sdktesting.tests.OpenAPITest
 import dev.restate.sdktesting.tests.PauseResumeChangingDeploymentTest
 import dev.restate.sdktesting.tests.PauseResumeTest
 import dev.restate.sdktesting.tests.RestartAsNewInvocationTest
+import dev.restate.sdktesting.tests.ScopeIsolationTest
 import dev.restate.sdktesting.tests.StatePatchingTest
 import dev.restate.sdktesting.tests.TracingTest
 import dev.restate.sdktesting.tests.UpgradeWithInFlightInvocation
@@ -35,6 +37,7 @@ object TestSuites : SuiteProvider {
           emptyMap(),
           listOf(
               clazz<AwakeableIngressEndpointTest>(),
+              clazz<ConcurrencyLimitTest>(),
               clazz<IngressTest>(),
               clazz<InvokerMemoryTest>(),
               clazz<JournalRetentionTest>(),
@@ -43,6 +46,7 @@ object TestSuites : SuiteProvider {
               clazz<PauseResumeChangingDeploymentTest>(),
               clazz<PauseResumeTest>(),
               clazz<RestartAsNewInvocationTest>(),
+              clazz<ScopeIsolationTest>(),
               clazz<StatePatchingTest>(),
               clazz<TracingTest>(),
               clazz<UpgradeWithNewInvocation>(),
@@ -56,6 +60,8 @@ object TestSuites : SuiteProvider {
               "RESTATE_DEFAULT_NUM_PARTITIONS" to "4",
           ),
           listOf(
+              clazz<ConcurrencyLimitTest>(),
+              clazz<ScopeIsolationTest>(),
               clazz<AwakeableIngressEndpointTest>(),
               clazz<AwakeableLeaderTransferTest>(),
               clazz<IngressTest>(),
@@ -72,6 +78,7 @@ object TestSuites : SuiteProvider {
           "alwaysSuspending",
           mapOf("RESTATE_WORKER__INVOKER__INACTIVITY_TIMEOUT" to "0s"),
           listOf(
+              clazz<ConcurrencyLimitTest>(),
               clazz<InvokerMemoryTest>(),
               clazz<PauseResumeChangingDeploymentTest>(),
               clazz<UpgradeWithNewInvocation>(),
@@ -85,7 +92,7 @@ object TestSuites : SuiteProvider {
               "RESTATE_WORKER__INVOKER__INACTIVITY_TIMEOUT" to "0s",
               "RESTATE_DEFAULT_NUM_PARTITIONS" to "4",
           ),
-          listOf(clazz<AwakeableLeaderTransferTest>()),
+          listOf(clazz<ConcurrencyLimitTest>(), clazz<AwakeableLeaderTransferTest>()),
           3)
 
   private val VERSION_COMPATIBILITY_SUITE =
