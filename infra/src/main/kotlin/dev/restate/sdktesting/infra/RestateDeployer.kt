@@ -8,8 +8,8 @@
 // https://github.com/restatedev/sdk-test-suite/blob/main/LICENSE
 package dev.restate.sdktesting.infra
 
+import dev.restate.admin.api.ClusterHealthApi
 import dev.restate.admin.api.DeploymentApi
-import dev.restate.admin.api.HealthApi
 import dev.restate.admin.client.ApiClient
 import dev.restate.admin.client.ApiException
 import dev.restate.admin.model.RegisterDeploymentRequest
@@ -355,22 +355,22 @@ private constructor(
   }
 
   /**
-   * Wait for the metadata cluster being ready. The metadata cluster is ready once the admin API on
-   * every restate node reports healthy.
+   * Wait for the metadata cluster being ready. The metadata cluster is ready once all the restate
+   * nodes have joined the cluster.
    */
   private fun waitForMetadataClusterBeingReady() {
+    val numberRestateNodes = runtimeContainers.size
+
     Unreliables.retryUntilTrue(60, TimeUnit.SECONDS) {
       try {
-        runtimeContainers.forEach { node ->
-          val adminPort = node.getMappedPort(RUNTIME_ADMIN_ENDPOINT_PORT)
-          val client =
-              HealthApi(
-                  ApiClient(HttpClient.newBuilder(), apiClient.objectMapper, null)
-                      .setHost("localhost")
-                      .setPort(adminPort))
-          client.health()
-        }
-        true
+        val randomRestateNode = runtimeContainers.random()
+        val adminPort = randomRestateNode.getMappedPort(RUNTIME_ADMIN_ENDPOINT_PORT)
+        val client =
+            ClusterHealthApi(
+                ApiClient(HttpClient.newBuilder(), apiClient.objectMapper, null)
+                    .setHost("localhost")
+                    .setPort(adminPort))
+        client.clusterHealth().metadataClusterHealth?.members?.size == numberRestateNodes
       } catch (e: ApiException) {
         Thread.sleep(200)
         throw IllegalStateException(
