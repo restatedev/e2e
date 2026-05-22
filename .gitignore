@@ -1,5 +1,6 @@
 # will have compiled files and executables
 /target/
+*/bin
 
 .idea/
 # Ignore Gradle project-specific cache directory
