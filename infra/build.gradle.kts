@@ -1,3 +1,4 @@
+import com.google.protobuf.gradle.id
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
@@ -7,6 +8,7 @@ plugins {
 
   id("org.jsonschema2pojo")
   alias(libs.plugins.openapi.generator)
+  alias(libs.plugins.protobuf)
 
   id("com.diffplug.spotless")
   id("com.github.jk1.dependency-license-report")
@@ -19,7 +21,11 @@ val generatedOpenapi = layout.buildDirectory.dir("generated/openapi")
 
 sourceSets {
   main {
-    java.srcDirs(generatedJ2SPDir, layout.buildDirectory.dir("generated/openapi/src/main/java"))
+    java.srcDirs(
+        generatedJ2SPDir,
+        layout.buildDirectory.dir("generated/openapi/src/main/java"),
+        layout.buildDirectory.dir("generated/source/proto/main/java"),
+        layout.buildDirectory.dir("generated/source/proto/main/grpc"))
   }
 }
 
@@ -65,6 +71,11 @@ dependencies {
 
   implementation(libs.assertj)
   implementation(libs.awaitility)
+
+  implementation(libs.protobuf.java)
+  implementation(libs.grpc.protobuf)
+  implementation(libs.grpc.stub)
+  implementation(libs.grpc.netty.shaded)
 }
 
 jsonSchema2Pojo {
@@ -97,11 +108,18 @@ openApiGenerate {
   configOptions.put("openApiNullable", "false")
 }
 
+protobuf {
+  protoc { artifact = "com.google.protobuf:protoc:${libs.versions.protobuf.get()}" }
+  plugins { id("grpc") { artifact = "io.grpc:protoc-gen-grpc-java:${libs.versions.grpc.get()}" } }
+  generateProtoTasks { all().forEach { it.plugins { id("grpc") } } }
+}
+
 tasks {
   withType<KotlinCompile>().configureEach {
     dependsOn(openApiGenerate)
     dependsOn(generateJsonSchema2Pojo)
     dependsOn(withType<GenerateTask>())
+    dependsOn(withType<com.google.protobuf.gradle.GenerateProtoTask>())
   }
 }
 

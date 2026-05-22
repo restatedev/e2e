@@ -7,6 +7,9 @@ junit = "6.0.3"
 assertj = "3.27.6"
 testcontainers = "2.0.4"
 awaitility = "4.3.0"
+grpc = "1.68.1"
+protobuf = "3.25.5"
+protobufPlugin = "0.9.4"
 
 [libraries]
 # Restate SDK
@@ -71,6 +74,13 @@ kaml = { module = "com.charleskorn.kaml:kaml", version = "0.102.0" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version = "1.10.1" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version = "1.10.1" }
 
+# gRPC / Protobuf (used by infra to talk to Restate metadata-server gRPC)
+protobuf-java = { module = "com.google.protobuf:protobuf-java", version.ref = "protobuf" }
+grpc-protobuf = { module = "io.grpc:grpc-protobuf", version.ref = "grpc" }
+grpc-stub = { module = "io.grpc:grpc-stub", version.ref = "grpc" }
+grpc-netty-shaded = { module = "io.grpc:grpc-netty-shaded", version.ref = "grpc" }
+
 [plugins]
 openapi-generator = { id = "org.openapi.generator", version = "7.5.0" }
 shadow = { id = "com.gradleup.shadow", version = "8.3.5" }
+protobuf = { id = "com.google.protobuf", version.ref = "protobufPlugin" }

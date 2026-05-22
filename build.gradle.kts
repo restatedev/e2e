@@ -5,6 +5,7 @@ plugins {
 
   id("org.jsonschema2pojo") version "1.2.2" apply false
   alias(libs.plugins.openapi.generator) apply false
+  alias(libs.plugins.protobuf) apply false
 
   id("com.diffplug.spotless") version "6.25.0" apply false
   id("com.github.jk1.dependency-license-report") version "2.9" apply false

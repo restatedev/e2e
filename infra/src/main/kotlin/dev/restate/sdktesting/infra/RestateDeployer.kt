@@ -8,7 +8,7 @@
 // https://github.com/restatedev/sdk-test-suite/blob/main/LICENSE
 package dev.restate.sdktesting.infra
 
-import dev.restate.admin.api.ClusterHealthApi
+import com.google.protobuf.Empty
 import dev.restate.admin.api.DeploymentApi
 import dev.restate.admin.client.ApiClient
 import dev.restate.admin.client.ApiException
@@ -18,6 +18,8 @@ import dev.restate.sdk.endpoint.Endpoint
 import dev.restate.sdk.http.vertx.RestateHttpServer
 import dev.restate.sdktesting.infra.runtimeconfig.IngressOptions
 import dev.restate.sdktesting.infra.runtimeconfig.RestateConfigSchema
+import io.grpc.ManagedChannelBuilder
+import io.grpc.StatusRuntimeException
 import io.vertx.core.http.HttpServer
 import java.io.File
 import java.net.URI
@@ -42,6 +44,7 @@ import org.testcontainers.images.builder.Transferable
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider
 import org.testcontainers.shaded.com.github.dockerjava.core.DockerClientConfig
+import restate.metadata_server_svc.MetadataServerSvcGrpc
 
 class RestateDeployer
 private constructor(
@@ -362,20 +365,18 @@ private constructor(
     val numberRestateNodes = runtimeContainers.size
 
     Unreliables.retryUntilTrue(60, TimeUnit.SECONDS) {
+      val randomRestateNode = runtimeContainers.random()
+      val nodePort = randomRestateNode.getMappedPort(RUNTIME_NODE_PORT)
+      val channel = ManagedChannelBuilder.forAddress("localhost", nodePort).usePlaintext().build()
       try {
-        val randomRestateNode = runtimeContainers.random()
-        val adminPort = randomRestateNode.getMappedPort(RUNTIME_ADMIN_ENDPOINT_PORT)
-        val client =
-            ClusterHealthApi(
-                ApiClient(HttpClient.newBuilder(), apiClient.objectMapper, null)
-                    .setHost("localhost")
-                    .setPort(adminPort))
-        client.clusterHealth().metadataClusterHealth?.members?.size == numberRestateNodes
-      } catch (e: ApiException) {
+        val response =
+            MetadataServerSvcGrpc.newBlockingStub(channel).status(Empty.getDefaultInstance())
+        response.hasConfiguration() && response.configuration.membersCount == numberRestateNodes
+      } catch (e: StatusRuntimeException) {
         Thread.sleep(200)
-        throw IllegalStateException(
-            "Error when checking cluster health, got status code ${e.code} with body: ${e.responseBody}",
-            e)
+        throw IllegalStateException("Error when checking metadata server status: ${e.status}", e)
+      } finally {
+        channel.shutdownNow()
       }
     }
   }
