@@ -95,6 +95,7 @@ class ConcurrencyLimitTest {
   fun actionConcurrencyLimitIsRespected(
       @InjectIngressURI ingressURI: URI,
       @InjectAdminURI adminURI: URI,
+      @InjectContainerHandle(hostName = RESTATE_RUNTIME) runtimeHandle: ContainerHandle,
       @InjectClient ingressClient: Client,
   ) =
       runTest(timeout = 120.seconds) {
@@ -107,7 +108,7 @@ class ConcurrencyLimitTest {
         val ruleVersion =
             upsertActionConcurrencyRule(adminURI, pattern = scope, actionConcurrency = limit)
                 .version
-        awaitRuleBookApplied(adminURI, ruleVersion)
+        awaitRuleBookApplied(runtimeHandle, ruleVersion)
 
         val outerIds =
             blockerKeys.map { key ->

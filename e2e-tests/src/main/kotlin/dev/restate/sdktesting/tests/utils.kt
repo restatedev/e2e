@@ -16,6 +16,7 @@ import dev.restate.admin.model.RegisterHttpDeploymentRequest
 import dev.restate.common.InvocationOptions
 import dev.restate.sdk.endpoint.Endpoint
 import dev.restate.sdk.http.vertx.RestateHttpServer
+import dev.restate.sdktesting.infra.ContainerHandle
 import io.vertx.core.http.HttpServer
 import java.net.URI
 import java.net.http.HttpClient
@@ -101,10 +102,13 @@ data class SysJournalEntry(val index: Int, @SerialName("entry_type") val entryTy
 
 @Serializable data class SysInvocationEntry(val id: String, val status: String)
 
-/** Data classes for partition_state query result */
-@Serializable
-data class PartitionStateQueryResult(val rows: List<PartitionStateEntry> = emptyList())
-
+/**
+ * One row of `partition_state` as returned by `restatectl sql --json`.
+ *
+ * `partition_state` is an internal cluster-ctrl table not exposed on the admin `/query` port — see
+ * https://github.com/restatedev/restate/pull/4783 — so we have to shell out to `restatectl`
+ * inside the runtime container instead.
+ */
 @Serializable
 data class PartitionStateEntry(
     @SerialName("partition_id") val partitionId: Long,
@@ -201,26 +205,30 @@ suspend fun getAllInvocations(adminURI: URI, filter: String? = null): List<SysIn
 }
 
 /**
- * Queries the partition_state table and returns one row per partition processor.
+ * Returns one row per partition processor by execing `restatectl sql --json` inside the runtime
+ * container.
  *
- * `applied_rule_book_version` is the version of the rule book currently applied by the partition
- * processor (see Restate PR #4783); `null` until the first `UpsertRuleBook` has been observed.
+ * `partition_state` is an internal cluster-ctrl table, so this can't go through the admin `/query`
+ * endpoint. `applied_rule_book_version` is `null` until the partition processor has observed its
+ * first `UpsertRuleBook` (see Restate PR #4783).
  */
-suspend fun getAllPartitionStates(adminURI: URI): List<PartitionStateEntry> {
-  val request =
-      HttpRequest.newBuilder()
-          .uri(URI.create("http://${adminURI.host}:${adminURI.port}/query"))
-          .header("accept", "application/json")
-          .header("content-type", "application/json")
-          .POST(
-              HttpRequest.BodyPublishers.ofString(
-                  """{"query": "SELECT partition_id, plain_node_id, applied_rule_book_version FROM partition_state"}"""))
-          .build()
-
-  val response =
-      HttpClient.newHttpClient().sendAsync(request, HttpResponse.BodyHandlers.ofString()).await()
-
-  return sysQueryJson.decodeFromString<PartitionStateQueryResult>(response.body()).rows
+suspend fun getAllPartitionStates(runtimeHandle: ContainerHandle): List<PartitionStateEntry> {
+  val result =
+      withContext(Dispatchers.IO) {
+        runtimeHandle.container.execInContainer(
+            "restatectl",
+            "sql",
+            "--json",
+            "SELECT partition_id, plain_node_id, applied_rule_book_version FROM partition_state")
+      }
+  check(result.exitCode == 0) {
+    "restatectl sql exited with ${result.exitCode}: stdout=${result.stdout}, stderr=${result.stderr}"
+  }
+  // `restatectl sql --json` only writes the row count + timing to stderr; stdout is a single
+  // arrow JSON array. An empty result set is "" (no rows ever printed), so guard for that.
+  val stdout = result.stdout.trim()
+  if (stdout.isEmpty()) return emptyList()
+  return sysQueryJson.decodeFromString(stdout)
 }
 
 /**
@@ -235,7 +243,7 @@ suspend fun getAllPartitionStates(adminURI: URI): List<PartitionStateEntry> {
  * lower bound to wait for.
  */
 suspend fun awaitRuleBookApplied(
-    adminURI: URI,
+    runtimeHandle: ContainerHandle,
     expectedVersion: Int,
     timeout: Duration = 30.seconds
 ) {
@@ -243,7 +251,7 @@ suspend fun awaitRuleBookApplied(
       "partition_state.applied_rule_book_version >= $expectedVersion on all partitions" withTimeout
       timeout untilAsserted
       {
-        val states = getAllPartitionStates(adminURI)
+        val states = getAllPartitionStates(runtimeHandle)
         assertThat(states).isNotEmpty
         assertThat(states).allSatisfy { row ->
           assertThat(row.appliedRuleBookVersion)
