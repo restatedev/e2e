@@ -32,7 +32,6 @@ import dev.restate.serde.TypeTag
 import java.net.URI
 import java.util.UUID
 import kotlin.time.Duration.Companion.seconds
-import kotlinx.coroutines.delay
 import kotlinx.serialization.json.Json
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
@@ -105,7 +104,10 @@ class ConcurrencyLimitTest {
         val invocationCount = 4
         val blockerKeys = (0 until invocationCount).map { "block-key-$runId-$it" }
 
-        upsertActionConcurrencyRule(adminURI, pattern = scope, actionConcurrency = limit)
+        val ruleVersion =
+            upsertActionConcurrencyRule(adminURI, pattern = scope, actionConcurrency = limit)
+                .version
+        awaitRuleBookApplied(adminURI, ruleVersion)
 
         val outerIds =
             blockerKeys.map { key ->
@@ -121,10 +123,6 @@ class ConcurrencyLimitTest {
             {
               assertThat(getAllInvocations(adminURI, blockerTargetFilter)).hasSize(limit)
             }
-        // Briefly confirm the count stays at `limit`, defending against a slow rule activation
-        // where all 4 would have started before our first check.
-        delay(1.seconds)
-        assertThat(getAllInvocations(adminURI, blockerTargetFilter)).hasSize(limit)
 
         // Resolve one awakeable at a time. After each resolve, a held outer becomes running and
         // spawns its Blocker.

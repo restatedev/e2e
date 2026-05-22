@@ -34,24 +34,19 @@ import org.junit.jupiter.api.extension.RegisterExtension
 class ScopeIsolationTest {
 
   @Service
-  @Name("ScopedEcho")
-  class ScopedEcho {
-    /**
-     * Returns a fresh random value via `runBlock` per invocation. Used to prove the two scoped
-     * calls actually executed independently rather than the second one being deduplicated to the
-     * first one's stored result.
-     */
-    @Handler suspend fun echo(input: String): String = runBlock { UUID.randomUUID().toString() }
+  @Name("Random")
+  class Random {
+    @Handler suspend fun genRandomUUID(input: String) = runBlock { UUID.randomUUID().toString() }
   }
 
   companion object {
     @RegisterExtension
     @JvmField
     val deployerExt: RestateDeployerExtension = RestateDeployerExtension {
-      withEndpoint(Endpoint.bind(ScopedEcho()))
+      withEndpoint(Endpoint.bind(Random()))
       // Scoped invocations require the vqueues experimental feature.
-      // TODO: drop this once the minimum supported Restate version is v1.8, where vqueues is on by
-      //   default.
+      // TODO: drop this once the minimum supported Restate version is v1.8,
+      //  where vqueues are enabled by default.
       withEnv("RESTATE_EXPERIMENTAL_ENABLE_VQUEUES", "true")
     }
   }
@@ -69,10 +64,20 @@ class ScopeIsolationTest {
 
     val idA =
         sendInvocationWithScope(
-            ingressURI, scopeA, "ScopedEcho", "echo", body, idempotencyKey = sharedIdempotencyKey)
+            ingressURI,
+            scopeA,
+            "Random",
+            "genRandomUUID",
+            body,
+            idempotencyKey = sharedIdempotencyKey)
     val idB =
         sendInvocationWithScope(
-            ingressURI, scopeB, "ScopedEcho", "echo", body, idempotencyKey = sharedIdempotencyKey)
+            ingressURI,
+            scopeB,
+            "Random",
+            "genRandomUUID",
+            body,
+            idempotencyKey = sharedIdempotencyKey)
 
     assertThat(idA).isNotEqualTo(idB)
 
