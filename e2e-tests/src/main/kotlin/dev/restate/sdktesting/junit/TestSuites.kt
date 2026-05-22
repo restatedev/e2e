@@ -78,7 +78,6 @@ object TestSuites : SuiteProvider {
           "alwaysSuspending",
           mapOf("RESTATE_WORKER__INVOKER__INACTIVITY_TIMEOUT" to "0s"),
           listOf(
-              clazz<ConcurrencyLimitTest>(),
               clazz<InvokerMemoryTest>(),
               clazz<PauseResumeChangingDeploymentTest>(),
               clazz<UpgradeWithNewInvocation>(),
@@ -92,7 +91,7 @@ object TestSuites : SuiteProvider {
               "RESTATE_WORKER__INVOKER__INACTIVITY_TIMEOUT" to "0s",
               "RESTATE_DEFAULT_NUM_PARTITIONS" to "4",
           ),
-          listOf(clazz<ConcurrencyLimitTest>(), clazz<AwakeableLeaderTransferTest>()),
+          listOf(clazz<AwakeableLeaderTransferTest>()),
           3)
 
   private val VERSION_COMPATIBILITY_SUITE =

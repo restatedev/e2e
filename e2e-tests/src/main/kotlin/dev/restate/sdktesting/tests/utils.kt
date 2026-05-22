@@ -106,8 +106,8 @@ data class SysJournalEntry(val index: Int, @SerialName("entry_type") val entryTy
  * One row of `partition_state` as returned by `restatectl sql --json`.
  *
  * `partition_state` is an internal cluster-ctrl table not exposed on the admin `/query` port — see
- * https://github.com/restatedev/restate/pull/4783 — so we have to shell out to `restatectl`
- * inside the runtime container instead.
+ * https://github.com/restatedev/restate/pull/4783 — so we have to shell out to `restatectl` inside
+ * the runtime container instead.
  */
 @Serializable
 data class PartitionStateEntry(
