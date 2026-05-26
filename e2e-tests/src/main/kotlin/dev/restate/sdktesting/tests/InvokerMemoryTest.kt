@@ -45,10 +45,7 @@ import kotlinx.serialization.json.Json
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.withAlias
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.DisplayName
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.Timeout
+import org.junit.jupiter.api.*
 import org.junit.jupiter.api.extension.RegisterExtension
 
 /**
@@ -166,11 +163,7 @@ class InvokerMemoryTest {
   // invocation left over from a failed/timed-out test would otherwise hold memory leases across
   // the global pool and cascade into the next test. Kill everything still in flight and wait for
   // the invoker memory pool to drain before yielding control to the next @Test.
-  @AfterEach
-  fun cleanupInvocations(
-      @InjectAdminURI adminURI: URI,
-      @InjectContainerPort(hostName = RESTATE_RUNTIME, port = RUNTIME_NODE_PORT) metricsPort: Int,
-  ) = runBlocking {
+  private suspend fun drainAndKill(adminURI: URI, metricsPort: Int) {
     val nonTerminalFilter = "status != 'completed'"
     val invocationApi = InvocationApi(ApiClient().setHost(adminURI.host).setPort(adminURI.port))
 
@@ -193,8 +186,14 @@ class InvokerMemoryTest {
         }
   }
 
-  @Test
+  @AfterEach
+  fun cleanupInvocations(
+      @InjectAdminURI adminURI: URI,
+      @InjectContainerPort(hostName = RESTATE_RUNTIME, port = RUNTIME_NODE_PORT) metricsPort: Int,
+  ) = runBlocking { drainAndKill(adminURI, metricsPort) }
+
   @Timeout(120)
+  @Test
   @DisplayName("All invocations complete under memory pressure with invoker yield")
   fun allInvocationsCompleteUnderMemoryPressure(
       @InjectClient ingressClient: Client,
