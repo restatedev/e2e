@@ -139,6 +139,7 @@ class InvokerMemoryTest {
     @RegisterExtension
     @JvmField
     val deployerExt: RestateDeployerExtension = RestateDeployerExtension {
+      withEnv("RESTATE_DEFAULT_NUM_PARTITIONS", "1")
       // Tight memory budget to force yield behavior
       withEnv("RESTATE_WORKER__INVOKER__MEMORY_LIMIT", "1MiB")
       withEnv("RESTATE_WORKER__INVOKER__PER_INVOCATION_INITIAL_MEMORY", "16KiB")
