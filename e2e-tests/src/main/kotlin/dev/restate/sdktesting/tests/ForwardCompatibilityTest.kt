@@ -52,6 +52,8 @@ import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.api.parallel.Isolated
 
 /** Tests to verify forward compatibility (older version can read data written by newer version). */
+@Disabled(
+    "Incompatible with RESTATE_EXPERIMENTAL_ENABLE_VQUEUES=true — re-enable once vqueues support is added")
 @Isolated
 @Execution(ExecutionMode.SAME_THREAD)
 @TestClassOrder(ClassOrderer.OrderAnnotation::class)

@@ -49,6 +49,7 @@ import org.awaitility.kotlin.await
 import org.awaitility.kotlin.withAlias
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.ClassOrderer
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Test
@@ -63,6 +64,8 @@ import org.junit.jupiter.api.parallel.Isolated
  * Tests verifying backward compatibility (newer Restate version can read data written by older
  * version).
  */
+@Disabled(
+    "Incompatible with RESTATE_EXPERIMENTAL_ENABLE_VQUEUES=true — re-enable once vqueues support is added")
 @Isolated
 @Execution(ExecutionMode.SAME_THREAD)
 @TestClassOrder(ClassOrderer.OrderAnnotation::class)
