@@ -63,7 +63,6 @@ jobs:
               exit 1
             fi
             echo "::endgroup::"
-            echo "InvokerMemoryTest PASSED on iteration $iteration (matrix run ${{ matrix.run }})"
           done
           echo "No failure after $iteration iterations within ${SOAK_SECONDS}s (matrix run ${{ matrix.run }})"
 

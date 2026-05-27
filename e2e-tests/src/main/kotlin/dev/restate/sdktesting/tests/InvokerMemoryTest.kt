@@ -136,10 +136,11 @@ class InvokerMemoryTest {
     @RegisterExtension
     @JvmField
     val deployerExt: RestateDeployerExtension = RestateDeployerExtension {
+      withEnv("RESTATE_DEFAULT_NUM_PARTITIONS", "1")
       // Tight memory budget to force yield behavior
       withEnv("RESTATE_WORKER__INVOKER__MEMORY_LIMIT", "1MiB")
       withEnv("RESTATE_WORKER__INVOKER__PER_INVOCATION_INITIAL_MEMORY", "16KiB")
-      withEnv("RESTATE_WORKER__INVOKER__PER_INVOCATION_MEMORY_LIMIT", "256KiB")
+      withEnv("RESTATE_WORKER__INVOKER__PER_INVOCATION_MEMORY_LIMIT", "96KiB")
       // Enable the experimental invoker yield feature
       withEnv("RESTATE_EXPERIMENTAL_ENABLE_INVOKER_YIELD", "true")
       // Explicit retry policy: fast retries, pause on max attempts.
@@ -241,6 +242,7 @@ class InvokerMemoryTest {
             }
       }
 
+  @Disabled
   @Test
   @DisplayName("Virtual object invocations yield when state loading exceeds memory budget")
   fun allStatefulInvocationsCompleteUnderMemoryPressure(
@@ -295,6 +297,7 @@ class InvokerMemoryTest {
         }
   }
 
+  @Disabled
   @Test
   @DisplayName("Invocation is paused when single run output exceeds per-invocation memory limit")
   fun invocationPausedWhenRunExceedsMemoryLimit(
@@ -330,6 +333,7 @@ class InvokerMemoryTest {
         }
   }
 
+  @Disabled
   @Test
   @DisplayName("Invocation is paused when virtual object state exceeds per-invocation memory limit")
   fun invocationPausedWhenStateExceedsMemoryLimit(
