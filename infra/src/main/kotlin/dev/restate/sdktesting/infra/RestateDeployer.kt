@@ -146,12 +146,12 @@ private constructor(
     fun build(testReportDir: String): RestateDeployer {
       val defaultLogFilters =
           mapOf(
-              "restate_invoker" to "trace",
-              "restate_ingress_http" to "trace",
-              "restate_ingress_kafka" to "trace",
-              "restate_log_server" to "trace",
-              "restate_bifrost" to "trace",
-              "restate_core::partitions" to "trace",
+              "restate_invoker" to "debug",
+              "restate_ingress_http" to "debug",
+              "restate_ingress_kafka" to "debug",
+              "restate_log_server" to "debug",
+              "restate_bifrost" to "debug",
+              "restate_core::partitions" to "debug",
               "restate" to "debug")
       val defaultLog =
           (listOf("info") + defaultLogFilters.map { "${it.key}=${it.value}" }).joinToString(
