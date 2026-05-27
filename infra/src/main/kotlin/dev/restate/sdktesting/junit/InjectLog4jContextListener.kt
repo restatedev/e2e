@@ -9,29 +9,52 @@
 package dev.restate.sdktesting.junit
 
 import kotlin.jvm.optionals.getOrNull
+import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.ThreadContext
 import org.junit.platform.engine.TestExecutionResult
 import org.junit.platform.engine.support.descriptor.ClassSource
+import org.junit.platform.engine.support.descriptor.MethodSource
 import org.junit.platform.launcher.TestExecutionListener
 import org.junit.platform.launcher.TestIdentifier
 import org.junit.platform.launcher.TestPlan
 
-class InjectLog4jContextListener(val suiteName: String) : TestExecutionListener {
+class InjectLog4jContextListener(
+    val suiteName: String,
+    private val parallel: Boolean,
+) : TestExecutionListener {
 
   companion object {
     const val TEST_CLASS = "test_class"
+    private val LOG = LogManager.getLogger(InjectLog4jContextListener::class.java)
   }
 
   @Volatile var testPlan: TestPlan? = null
 
   override fun testPlanExecutionStarted(testPlan: TestPlan) {
     this.testPlan = testPlan
+    if (parallel) {
+      LOG.warn(
+          "Suite '{}' runs test classes in PARALLEL: testrunner.log lines from different tests " +
+              "interleave. Correlate using the per-test routed logs (<reportDir>/<TestClass>/testRunner.log), " +
+              "or rerun with --sequential for clean boundaries.",
+          suiteName)
+    }
   }
 
   override fun executionStarted(testIdentifier: TestIdentifier) {
-    if (testIdentifier.isContainer && testIdentifier.source.getOrNull() is ClassSource) {
-      ThreadContext.put(
-          TEST_CLASS, classSimpleName((testIdentifier.source.getOrNull() as ClassSource).className))
+    when (val source = testIdentifier.source.getOrNull()) {
+      is ClassSource ->
+          if (testIdentifier.isContainer) {
+            val testClass = classSimpleName(source.className)
+            ThreadContext.put(TEST_CLASS, testClass)
+            LOG.info("========== TEST CLASS STARTED: {} ==========", testClass)
+          }
+      is MethodSource ->
+          LOG.info(
+              "---------- TEST STARTED: {}#{} ----------",
+              classSimpleName(source.className),
+              source.methodName)
+      else -> {}
     }
   }
 
@@ -39,8 +62,22 @@ class InjectLog4jContextListener(val suiteName: String) : TestExecutionListener 
       testIdentifier: TestIdentifier,
       testExecutionResult: TestExecutionResult
   ) {
-    if (testIdentifier.isContainer && testIdentifier.source.getOrNull() is ClassSource) {
-      ThreadContext.remove(TEST_CLASS)
+    when (val source = testIdentifier.source.getOrNull()) {
+      is MethodSource ->
+          LOG.info(
+              "---------- TEST FINISHED: {}#{} -> {} ----------",
+              classSimpleName(source.className),
+              source.methodName,
+              testExecutionResult.status)
+      is ClassSource ->
+          if (testIdentifier.isContainer) {
+            LOG.info(
+                "========== TEST CLASS FINISHED: {} -> {} ==========",
+                classSimpleName(source.className),
+                testExecutionResult.status)
+            ThreadContext.remove(TEST_CLASS)
+          }
+      else -> {}
     }
   }
 }

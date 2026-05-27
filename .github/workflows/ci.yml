@@ -58,7 +58,7 @@ jobs:
           while [ "$SECONDS" -lt "$SOAK_SECONDS" ]; do
             iteration=$((iteration + 1))
             echo "::group::Iteration $iteration (elapsed ${SECONDS}s / ${SOAK_SECONDS}s)"
-            if ! ./gradlew :e2e-tests:run --args="run --test-suite=default --test-name=InvokerMemoryTest"; then
+            if ! ./gradlew :e2e-tests:run --args="run --test-suite=default --test-name=InvokerMemoryTest --sequential"; then
               echo "::endgroup::"
               echo "InvokerMemoryTest FAILED on iteration $iteration (matrix run ${{ matrix.run }})"
               exit 1

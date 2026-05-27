@@ -113,7 +113,7 @@ class TestSuite(
             reportDir.resolve("testrunner.stderr"),
             errWriter)
     val logTestEventsListener = LogTestEventsToTerminalListener(name, terminal)
-    val injectLoggingContextListener = InjectLog4jContextListener(name)
+    val injectLoggingContextListener = InjectLog4jContextListener(name, parallel)
 
     // Launch
     LauncherFactory.openSession().use { session ->
