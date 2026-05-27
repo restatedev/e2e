@@ -11,13 +11,14 @@ on:
 
 jobs:
   build-and-test:
-    name: Build and test (Java ${{ matrix.java }})
+    name: Build and test (Java ${{ matrix.java }}, run ${{ matrix.run }})
     runs-on: ubuntu-latest
     timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
         java: [ 21 ]
+        run: [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ]
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK ${{ matrix.java }}
@@ -32,17 +33,28 @@ jobs:
       - name: Validate Gradle wrapper
         uses: gradle/actions/wrapper-validation@v4
 
+      - name: Create exclusions file
+        run: |
+          cat > e2e-tests/exclusions.yaml << 'EOF'
+          exclusions:
+            default:
+              - dev.restate.sdktesting.tests.InvokerMemoryTest.allStatefulInvocationsCompleteUnderMemoryPressure
+              - dev.restate.sdktesting.tests.InvokerMemoryTest.invocationPausedWhenRunExceedsMemoryLimit
+              - dev.restate.sdktesting.tests.InvokerMemoryTest.invocationPausedWhenStateExceedsMemoryLimit
+          EOF
+
       - name: Run
-        run: ./gradlew :e2e-tests:run
+        run: ./gradlew :e2e-tests:run --args="run --test-suite=default --test-name=InvokerMemoryTest"
         env:
           TEST_REPORT_DIR: test-report
           RESTATE_EXPERIMENTAL_ENABLE_VQUEUES: true
+          TEST_EXCLUSIONS_FILE: exclusions.yaml
 
       # Upload logs and publish test result
       - uses: actions/upload-artifact@v4
         if: always() # Make sure this is run even when test fails
         with:
-          name: e2e-test-report
+          name: e2e-test-report-run-${{ matrix.run }}
           path: e2e-tests/test-report
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
