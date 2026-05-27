@@ -213,6 +213,29 @@ class TestSuite(
     builder.add(testContainersLogger)
     builder.add(rootLogger)
 
+    // Opt-in verbose diagnostics (set by the connection-pool repro CI job). Kept gated so normal
+    // runs aren't flooded with SDK state-machine TRACE / Vert.x event-loop logging.
+    if (System.getenv("E2E_VERBOSE_SDK_LOGGING") == "true") {
+      val stateMachineLogger =
+          builder
+              .newLogger("dev.restate.sdk.core.statemachine", Level.TRACE)
+              .add(builder.newAppenderRef("testRunnerLog"))
+              .add(builder.newAppenderRef("routingAppender"))
+              .addAttribute("additivity", false)
+      val vertxLogger =
+          builder
+              .newLogger("io.vertx", Level.INFO)
+              .add(builder.newAppenderRef("testRunnerLog"))
+              .add(builder.newAppenderRef("routingAppender"))
+              .addAttribute("additivity", false)
+      if (printToStdout) {
+        stateMachineLogger.add(builder.newAppenderRef("stdout"))
+        vertxLogger.add(builder.newAppenderRef("stdout"))
+      }
+      builder.add(stateMachineLogger)
+      builder.add(vertxLogger)
+    }
+
     return builder.build()
   }
 }

@@ -49,6 +49,17 @@ jobs:
           RESTATE_EXPERIMENTAL_ENABLE_VQUEUES: true
           RESTATE_CONTAINER_IMAGE: ghcr.io/restatedev/restate:fix-blocking-invoker
           TEST_EXCLUSIONS_FILE: exclusions.yaml
+          # Connection-pool repro diagnostics (opt-in). Turns on SDK state-machine TRACE +
+          # io.vertx logging in the harness log config.
+          E2E_VERBOSE_SDK_LOGGING: "true"
+          # GC/heap/safepoint logging + heap-dump-on-OOM + route Vert.x logs through SLF4J->log4j.
+          # No -Xmx (heap sizing deferred). Applies to every JVM the step starts; the forked app
+          # JVM (in-process SDK) writes gc-<pid>.log to e2e-tests/ (its cwd), which is uploaded.
+          JAVA_TOOL_OPTIONS: >-
+            -Xlog:gc*,gc+heap=info,safepoint:file=gc-%p.log:time,uptime,level,tags
+            -XX:+HeapDumpOnOutOfMemoryError
+            -XX:HeapDumpPath=.
+            -Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.SLF4JLogDelegateFactory
           # Internal soak budget (55 min). Job hard cap (timeout-minutes) is 60 min;
           # the ~5 min margin lets the final iteration + artifact upload finish before
           # GitHub cancels the job (cancellation skips `if: always()` steps).
@@ -72,7 +83,10 @@ jobs:
         if: always() # Make sure this is run even when test fails
         with:
           name: e2e-test-report-run-${{ matrix.run }}
-          path: e2e-tests/test-report
+          path: |
+            e2e-tests/test-report
+            e2e-tests/gc-*.log
+            e2e-tests/*.hprof
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()

@@ -29,6 +29,7 @@ import dev.restate.sdk.kotlin.state
 import dev.restate.sdktesting.infra.InjectAdminURI
 import dev.restate.sdktesting.infra.InjectClient
 import dev.restate.sdktesting.infra.InjectContainerPort
+import dev.restate.sdktesting.infra.InjectReportDir
 import dev.restate.sdktesting.infra.RESTATE_RUNTIME
 import dev.restate.sdktesting.infra.RUNTIME_NODE_PORT
 import dev.restate.sdktesting.infra.RestateDeployerExtension
@@ -36,12 +37,21 @@ import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
+import java.nio.file.Files
+import java.nio.file.Path
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.Json
+import org.apache.logging.log4j.LogManager
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.withAlias
@@ -112,6 +122,19 @@ class InvokerMemoryTest {
   }
 
   companion object {
+    private val LOG = LogManager.getLogger(InvokerMemoryTest::class.java)
+
+    /** Dump all JVM thread stacks (including the in-process SDK's Vert.x event loops) to a file. */
+    private fun dumpAllThreads(path: Path) {
+      val sb = StringBuilder()
+      Thread.getAllStackTraces().forEach { (thread, frames) ->
+        sb.append("\"${thread.name}\" state=${thread.state}\n")
+        frames.forEach { sb.append("\tat $it\n") }
+        sb.append("\n")
+      }
+      Files.writeString(path, sb.toString())
+    }
+
     /**
      * Fetch the invoker memory pool usage from the Prometheus metrics endpoint. Returns the value
      * of `restate_memory_pool_usage_bytes{name="invoker"}` as a [Double].
@@ -148,6 +171,12 @@ class InvokerMemoryTest {
       withEnv("RESTATE_DEFAULT_RETRY_POLICY__MAX_INTERVAL", "100ms")
       withEnv("RESTATE_DEFAULT_RETRY_POLICY__MAX_ATTEMPTS", "10")
       withEnv("RESTATE_DEFAULT_RETRY_POLICY__ON_MAX_ATTEMPTS", "pause")
+
+      // Connection-pool repro diagnostics: turn the runtime->SDK keep-alive PING into a 2s liveness
+      // heartbeat with a large timeout, so a stall is probed without tearing the connection down.
+      // NOTE: env key path is UNVERIFIED against the runtime config schema; confirm before relying.
+      withEnv("RESTATE_HTTP_KEEP_ALIVE_OPTIONS__INTERVAL", "2s")
+      withEnv("RESTATE_HTTP_KEEP_ALIVE_OPTIONS__TIMEOUT", "120s")
 
       // Disable journal retention so that completed journal entries are cleaned up immediately.
       // This test creates large payloads in journal steps and queries sys_journal at the end,
@@ -198,23 +227,79 @@ class InvokerMemoryTest {
       @InjectClient ingressClient: Client,
       @InjectAdminURI adminURI: URI,
       @InjectContainerPort(hostName = RESTATE_RUNTIME, port = RUNTIME_NODE_PORT) metricsPort: Int,
+      @InjectReportDir reportDir: Path,
   ) =
       runTest(timeout = 2.minutes) {
         val client = ingressClient.toService<MemoryPressureService>()
         val count = 50
 
-        // Launch all invocations concurrently. This will require 50 x 64KB = 3.2MB
-        // of inbound memory allocation. Since the pool size is only 1MB, some of the
-        // invocations must yield and resume for the others to make progress.
-        val deferreds =
-            (1..count).map { i ->
-              async {
-                client.request { generate("key-$i") }.options(idempotentCallOptions).call().response
+        // Log the app JVM's resolved limits (no -Xmx is set, so max heap is the JDK ergonomic
+        // default ~25% of runner RAM). Helps correlate stalls with the actual heap/CPU budget.
+        Runtime.getRuntime().let {
+          LOG.info(
+              "JVM env: maxHeapMiB={}, totalHeapMiB={}, availableProcessors={}",
+              it.maxMemory() / (1024 * 1024),
+              it.totalMemory() / (1024 * 1024),
+              it.availableProcessors())
+        }
+
+        // Run the invocations, the progress watchdog and the bounded await on a REAL dispatcher.
+        // runTest's virtual clock would otherwise fast-forward the 90s timeout the instant the test
+        // dispatcher idles (while the network calls are suspended), cancelling the in-flight calls.
+        val results =
+            withContext(Dispatchers.IO) {
+              withTimeoutOrNull(90.seconds) {
+                // 50 x 64KB = 3.2MB of inbound memory; pool is only 1MB, so some invocations must
+                // yield and resume for the others to make progress. Created inside the timeout so
+                // a real timeout structurally cancels the in-flight calls (no hang on teardown).
+                val deferreds =
+                    (1..count).map { i ->
+                      async {
+                        client
+                            .request { generate("key-$i") }
+                            .options(idempotentCallOptions)
+                            .call()
+                            .response
+                      }
+                    }
+
+                // Progress watchdog: every 2s log completion count, invoker pool usage and JVM
+                // heap, so a progressive slowdown is visible in testrunner.log before a stall.
+                val watchdog = launch {
+                  while (isActive) {
+                    delay(2.seconds)
+                    val done = deferreds.count { it.isCompleted }
+                    val rt = Runtime.getRuntime()
+                    val heapMiB = (rt.totalMemory() - rt.freeMemory()) / (1024 * 1024)
+                    val pool =
+                        runCatching { getInvokerMemoryPoolUsage(metricsPort) }.getOrDefault(-1.0)
+                    LOG.info(
+                        "watchdog: {}/{} completed, invokerPoolBytes={}, heapUsedMiB={}",
+                        done,
+                        count,
+                        pool,
+                        heapMiB)
+                  }
+                }
+
+                try {
+                  deferreds.awaitAll()
+                } finally {
+                  watchdog.cancel()
+                }
               }
             }
 
-        // Await all results — if any invocation gets stuck, this will time out
-        val results = deferreds.awaitAll()
+        // On timeout the bounded await returns null (and structurally cancels the in-flight calls).
+        // Capture a thread dump before the 120s @Timeout kills the JVM — the decisive "stuck on
+        // what?" probe of the in-process Vert.x event-loop threads.
+        if (results == null) {
+          val dump =
+              reportDir.resolve("InvokerMemoryTest-threaddump-${System.currentTimeMillis()}.txt")
+          dumpAllThreads(dump)
+          throw AssertionError(
+              "Timed out after 90s waiting for $count invocations; thread dump at $dump")
+        }
 
         // Verify all invocations returned correct results
         results.forEachIndexed { index, result ->

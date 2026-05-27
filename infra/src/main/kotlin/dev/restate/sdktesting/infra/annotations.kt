@@ -28,3 +28,5 @@ annotation class InjectContainerPort(val hostName: String, val port: Int)
 @Target(AnnotationTarget.FIELD) annotation class Deployer
 
 @Target(AnnotationTarget.VALUE_PARAMETER) annotation class InjectLocalEndpointURI
+
+@Target(AnnotationTarget.VALUE_PARAMETER) annotation class InjectReportDir

@@ -37,6 +37,8 @@ abstract class BaseRestateDeployerExtension : ParameterResolver {
             URI::class.java.isAssignableFrom(parameterContext.parameter.type)) ||
         (parameterContext.isAnnotated(InjectLocalEndpointURI::class.java) &&
             URI::class.java.isAssignableFrom(parameterContext.parameter.type)) ||
+        (parameterContext.isAnnotated(InjectReportDir::class.java) &&
+            Path::class.java.isAssignableFrom(parameterContext.parameter.type)) ||
         (parameterContext.isAnnotated(InjectContainerHandle::class.java) &&
             ContainerHandle::class.java.isAssignableFrom(parameterContext.parameter.type))
   }
@@ -55,6 +57,8 @@ abstract class BaseRestateDeployerExtension : ParameterResolver {
       resolveAdminURI(extensionContext)
     } else if (parameterContext.isAnnotated(InjectLocalEndpointURI::class.java)) {
       resolveLocalEndpointURI(extensionContext)
+    } else if (parameterContext.isAnnotated(InjectReportDir::class.java)) {
+      getReportPath(extensionContext)
     } else if (parameterContext.isAnnotated(InjectContainerHandle::class.java)) {
       resolveContainerHandle(parameterContext, extensionContext)
     } else {
