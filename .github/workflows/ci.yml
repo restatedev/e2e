@@ -47,6 +47,7 @@ jobs:
         env:
           TEST_REPORT_DIR: test-report
           RESTATE_EXPERIMENTAL_ENABLE_VQUEUES: true
+          RESTATE_CONTAINER_IMAGE: ghcr.io/restatedev/restate:fix-blocking-invoker
           TEST_EXCLUSIONS_FILE: exclusions.yaml
           # Internal soak budget (55 min). Job hard cap (timeout-minutes) is 60 min;
           # the ~5 min margin lets the final iteration + artifact upload finish before
