@@ -1,0 +1,81 @@
+name: Debug runner (SSH)
+
+on:
+  workflow_dispatch:
+    inputs:
+      runner:
+        description: 'WarpBuild runner size'
+        type: choice
+        default: warp-ubuntu-latest-x64-16x
+        options:
+          - warp-ubuntu-latest-x64-4x
+          - warp-ubuntu-latest-x64-16x
+      timeout_minutes:
+        description: 'Job timeout (minutes) — SSH session caps here'
+        type: number
+        default: 120
+
+jobs:
+  debug:
+    name: SSH debug session
+    runs-on: ${{ inputs.runner }}
+    timeout-minutes: ${{ fromJSON(inputs.timeout_minutes) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: 21
+          distribution: 'adopt'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Checkout instrumented SDK
+        uses: actions/checkout@v4
+        with:
+          repository: tillrohrmann/sdk-java
+          ref: debug-sdk
+          path: sdk-java
+
+      - name: Publish instrumented SDK to Maven local
+        working-directory: sdk-java
+        run: ./gradlew publishToMavenLocal
+
+      - name: Install async-profiler
+        run: |
+          set -euo pipefail
+          AP_VERSION=3.0
+          curl -fsSL -o /tmp/ap.tar.gz \
+            "https://github.com/async-profiler/async-profiler/releases/download/v${AP_VERSION}/async-profiler-${AP_VERSION}-linux-x64.tar.gz"
+          mkdir -p "$HOME/async-profiler"
+          tar -xzf /tmp/ap.tar.gz -C "$HOME/async-profiler" --strip-components=1
+          echo "$HOME/async-profiler/bin" >> "$GITHUB_PATH"
+          # Relax kernel perf restrictions so async-profiler CPU sampling works on the runner.
+          sudo sysctl -w kernel.perf_event_paranoid=1 || true
+          sudo sysctl -w kernel.kptr_restrict=0 || true
+
+      - name: Print quickstart hints
+        run: |
+          cat <<'EOF'
+          ============================================================
+          About to open an SSH session on this runner.
+          Workspace: $GITHUB_WORKSPACE  (e2e repo checkout)
+          Instrumented SDK 2.8.0-SNAPSHOT already in ~/.m2.
+          Useful commands:
+            cd $GITHUB_WORKSPACE
+            ./gradlew :e2e-tests:run --args="run --test-suite=default --test-name=InvokerMemoryTest --sequential"
+            jps -l                                       # find the forked app JVM pid
+            jcmd <pid> JFR.start name=soak settings=profile filename=soak.jfr
+            jcmd <pid> JFR.dump  name=soak
+            asprof -d 60 -f cpu.html <pid>               # 60s CPU flamegraph
+            asprof -d 60 -e alloc -f alloc.html <pid>    # alloc profile
+          Exit the shell ('exit') to end the job and release the runner.
+          ============================================================
+          EOF
+
+      - name: Open SSH session (action-debugger)
+        uses: Warpbuilds/action-debugger@v1.3
+        with:
+          limit-access-to-actor: true
