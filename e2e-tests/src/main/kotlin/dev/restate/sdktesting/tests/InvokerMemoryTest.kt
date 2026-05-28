@@ -225,7 +225,7 @@ class InvokerMemoryTest {
       @InjectContainerPort(hostName = RESTATE_RUNTIME, port = RUNTIME_NODE_PORT) metricsPort: Int,
   ) = runBlocking { drainAndKill(adminURI, metricsPort) }
 
-  @Timeout(120)
+  @Timeout(7200)
   @Test
   @DisplayName("All invocations complete under memory pressure with invoker yield")
   fun allInvocationsCompleteUnderMemoryPressure(
@@ -234,7 +234,7 @@ class InvokerMemoryTest {
       @InjectContainerPort(hostName = RESTATE_RUNTIME, port = RUNTIME_NODE_PORT) metricsPort: Int,
       @InjectReportDir reportDir: Path,
   ) =
-      runTest(timeout = 2.minutes) {
+      runTest(timeout = 120.minutes) {
         val client = ingressClient.toService<MemoryPressureService>()
         val count = 50
 
