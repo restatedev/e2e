@@ -176,7 +176,7 @@ class InvokerMemoryTest {
       // heartbeat with a large timeout, so a stall is probed without tearing the connection down.
       // NOTE: env key path is UNVERIFIED against the runtime config schema; confirm before relying.
       withEnv("RESTATE_HTTP_KEEP_ALIVE_OPTIONS__INTERVAL", "2s")
-      withEnv("RESTATE_HTTP_KEEP_ALIVE_OPTIONS__TIMEOUT", "120s")
+      withEnv("RESTATE_HTTP_KEEP_ALIVE_OPTIONS__TIMEOUT", "240s")
 
       // Disable journal retention so that completed journal entries are cleaned up immediately.
       // This test creates large payloads in journal steps and queries sys_journal at the end,
