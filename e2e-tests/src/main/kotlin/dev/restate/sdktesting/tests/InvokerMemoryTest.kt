@@ -195,7 +195,7 @@ class InvokerMemoryTest {
     val nonTerminalFilter = "status != 'completed'"
     val invocationApi = InvocationApi(ApiClient().setHost(adminURI.host).setPort(adminURI.port))
 
-    LOG.info("Killing all invocations");
+    LOG.info("Killing all invocations")
 
     // Each poll iteration re-lists pending invocations and re-issues kill for everything
     // still alive, then asserts the list is empty. Awaitility's ignoreExceptions() (set in
@@ -210,7 +210,7 @@ class InvokerMemoryTest {
           assertThat(pending).isEmpty()
         }
 
-    LOG.info("Awaiting until the invoker memory pool is drained");
+    LOG.info("Awaiting until the invoker memory pool is drained")
 
     await withAlias
         "invoker memory pool drains" untilAsserted
@@ -302,6 +302,22 @@ class InvokerMemoryTest {
           val dump =
               reportDir.resolve("InvokerMemoryTest-threaddump-${System.currentTimeMillis()}.txt")
           dumpAllThreads(dump)
+
+          if (System.getenv("E2E_HOLD_ON_FAILURE") == "true") {
+            val release = Path.of("/tmp/restate-release-test")
+            LOG.error(
+                "TEST HALTED for SSH diagnostics. JVM pid={}. Touch {} (or kill the JVM) to release. " +
+                    "Thread dump at {}.",
+                ProcessHandle.current().pid(),
+                release,
+                dump)
+            while (!Files.exists(release)) {
+              Thread.sleep(2_000)
+            }
+            Files.deleteIfExists(release)
+            LOG.warn("Release signal received; failing the test now.")
+          }
+
           throw AssertionError(
               "Timed out after 90s waiting for $count invocations; thread dump at $dump")
         }

@@ -3,6 +3,11 @@ name: CI
 on:
   pull_request:
   workflow_dispatch:
+    inputs:
+      ssh_on_failure:
+        description: 'Halt the failing test JVM live and open an SSH session for diagnostics'
+        type: boolean
+        default: false
   push:
     branches:
       - main
@@ -42,9 +47,11 @@ jobs:
     name: Build and test (Java ${{ matrix.java }}, run ${{ matrix.run }})
     needs: build-sdk
     runs-on: warp-ubuntu-latest-x64-16x
-    timeout-minutes: 60
+    # 60 min normally; 3 h when ssh_on_failure is opted in so the SSH window isn't squeezed.
+    timeout-minutes: ${{ fromJSON(inputs.ssh_on_failure == true && '180' || '60') }}
     strategy:
-      fail-fast: false
+      # Only one job should hold the SSH session, so flip fail-fast on opt-in.
+      fail-fast: ${{ inputs.ssh_on_failure == true }}
       matrix:
         java: [ 21 ]
         run: [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ]
@@ -63,6 +70,26 @@ jobs:
           path: m2-staging
       - name: Install instrumented SDK into Maven local
         run: mkdir -p ~/.m2/repository && cp -r m2-staging/dev ~/.m2/repository/
+
+      - name: Install async-profiler (for SSH diagnostics)
+        if: inputs.ssh_on_failure == true
+        run: |
+          set -euo pipefail
+          AP_VERSION=3.0
+          curl -fsSL -o /tmp/ap.tar.gz \
+            "https://github.com/async-profiler/async-profiler/releases/download/v${AP_VERSION}/async-profiler-${AP_VERSION}-linux-x64.tar.gz"
+          mkdir -p "$HOME/async-profiler"
+          tar -xzf /tmp/ap.tar.gz -C "$HOME/async-profiler" --strip-components=1
+          echo "$HOME/async-profiler/bin" >> "$GITHUB_PATH"
+          sudo sysctl -w kernel.perf_event_paranoid=1 || true
+          sudo sysctl -w kernel.kptr_restrict=0 || true
+
+      - name: Open SSH (detached) — available throughout the soak
+        if: inputs.ssh_on_failure == true
+        uses: Warpbuilds/action-debugger@v1.3
+        with:
+          detached: true
+          limit-access-to-actor: true
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -89,6 +116,9 @@ jobs:
           # Connection-pool repro diagnostics (opt-in). Turns on SDK state-machine TRACE +
           # io.vertx logging in the harness log config.
           E2E_VERBOSE_SDK_LOGGING: "true"
+          # When true, InvokerMemoryTest's timeout handler blocks (keeping the JVM alive)
+          # until /tmp/restate-release-test is touched — for SSH-driven live diagnostics.
+          E2E_HOLD_ON_FAILURE: ${{ inputs.ssh_on_failure == true }}
           RESTATE_DIAGNOSTICS_EVENT_LOOP: "true"
           # GC/heap/safepoint logging + heap-dump-on-OOM + route Vert.x logs through SLF4J->log4j.
           # No -Xmx (heap sizing deferred). Applies to every JVM the step starts; the forked app
