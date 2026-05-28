@@ -1,5 +1,6 @@
 [versions]
-restate = "2.7.0"
+# Instrumented build from tillrohrmann/sdk-java@debug-sdk, resolved via mavenLocal()
+restate = "2.8.0-SNAPSHOT"
 ktor = "2.3.13"
 log4j = "2.24.3"
 jackson = "2.21.2"

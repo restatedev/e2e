@@ -10,8 +10,37 @@ on:
     - cron: "12 0 * * *" # 00:12am UTC daily
 
 jobs:
+  build-sdk:
+    name: Build instrumented SDK (debug-sdk)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: 21
+          distribution: 'adopt'
+      - name: Checkout instrumented SDK
+        uses: actions/checkout@v4
+        with:
+          repository: tillrohrmann/sdk-java
+          ref: debug-sdk
+          path: sdk-java
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+      - name: Publish instrumented SDK to Maven local
+        working-directory: sdk-java
+        run: ./gradlew publishToMavenLocal
+      - name: Stage dev.restate artifacts
+        run: mkdir -p m2-staging && cp -r ~/.m2/repository/dev m2-staging/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: instrumented-sdk-m2
+          path: m2-staging
+
   build-and-test:
     name: Build and test (Java ${{ matrix.java }}, run ${{ matrix.run }})
+    needs: build-sdk
     runs-on: ubuntu-latest
     timeout-minutes: 60
     strategy:
@@ -26,6 +55,14 @@ jobs:
         with:
           java-version: ${{ matrix.java }}
           distribution: 'adopt'
+
+      - name: Download instrumented SDK artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: instrumented-sdk-m2
+          path: m2-staging
+      - name: Install instrumented SDK into Maven local
+        run: mkdir -p ~/.m2/repository && cp -r m2-staging/dev ~/.m2/repository/
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4

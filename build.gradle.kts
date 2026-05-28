@@ -16,6 +16,8 @@ subprojects {
   version = "1.0-SNAPSHOT"
 
   repositories {
+    // Instrumented dev.restate:*:2.8.0-SNAPSHOT (debug-sdk) published via publishToMavenLocal
+    mavenLocal()
     mavenCentral()
   }
 }
