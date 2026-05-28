@@ -131,6 +131,8 @@ jobs:
           # below deletes the pcap + ss-snapshots when the soak passes so artifacts stay
           # small; failed iterations keep their capture for diagnosis.
           E2E_TCP_CAPTURE: "true"
+          # Enable http2 diagnostics from the SDK
+          RESTATE_DIAGNOSTICS_HTTP2: "true"
           RESTATE_DIAGNOSTICS_EVENT_LOOP: "true"
           # GC/heap/safepoint logging + heap-dump-on-OOM + route Vert.x logs through SLF4J->log4j.
           # No -Xmx (heap sizing deferred). Applies to every JVM the step starts; the forked app

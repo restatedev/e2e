@@ -236,6 +236,22 @@ class TestSuite(
       builder.add(vertxLogger)
     }
 
+    // io.netty DEBUG when the SDK's HTTP/2 diagnostics are on (captures the
+    // Http2FrameLogger output from the instrumented debug-sdk branch, plus
+    // channel/event-loop activity at Netty level).
+    if (System.getenv("RESTATE_DIAGNOSTICS_HTTP2") == "true") {
+      val nettyLogger =
+          builder
+              .newLogger("io.netty", Level.DEBUG)
+              .add(builder.newAppenderRef("testRunnerLog"))
+              .add(builder.newAppenderRef("routingAppender"))
+              .addAttribute("additivity", false)
+      if (printToStdout) {
+        nettyLogger.add(builder.newAppenderRef("stdout"))
+      }
+      builder.add(nettyLogger)
+    }
+
     return builder.build()
   }
 }
