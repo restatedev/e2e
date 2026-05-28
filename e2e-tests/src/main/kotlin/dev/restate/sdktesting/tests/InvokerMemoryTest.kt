@@ -195,6 +195,8 @@ class InvokerMemoryTest {
     val nonTerminalFilter = "status != 'completed'"
     val invocationApi = InvocationApi(ApiClient().setHost(adminURI.host).setPort(adminURI.port))
 
+    LOG.info("Killing all invocations");
+
     // Each poll iteration re-lists pending invocations and re-issues kill for everything
     // still alive, then asserts the list is empty. Awaitility's ignoreExceptions() (set in
     // the untilAsserted wrapper in utils.kt) absorbs transient failures of either the list
@@ -207,6 +209,9 @@ class InvokerMemoryTest {
           pending.forEach { invocationApi.killInvocation(it.id) }
           assertThat(pending).isEmpty()
         }
+
+    LOG.info("Awaiting until the invoker memory pool is drained");
+
     await withAlias
         "invoker memory pool drains" untilAsserted
         {
