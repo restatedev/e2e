@@ -89,6 +89,7 @@ jobs:
           # Connection-pool repro diagnostics (opt-in). Turns on SDK state-machine TRACE +
           # io.vertx logging in the harness log config.
           E2E_VERBOSE_SDK_LOGGING: "true"
+          RESTATE_DIAGNOSTICS_EVENT_LOOP: "true"
           # GC/heap/safepoint logging + heap-dump-on-OOM + route Vert.x logs through SLF4J->log4j.
           # No -Xmx (heap sizing deferred). Applies to every JVM the step starts; the forked app
           # JVM (in-process SDK) writes gc-<pid>.log to e2e-tests/ (its cwd), which is uploaded.
