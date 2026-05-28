@@ -317,7 +317,7 @@ private constructor(
           .also { it.waitFor(5, TimeUnit.SECONDS) }
     }
 
-    // 2. Periodic ss snapshotter (500ms). Wrapper is non-sudo so we can SIGTERM it;
+    // 2. Periodic ss snapshotter (5s). Wrapper is non-sudo so we can SIGTERM it;
     //    ss itself runs via sudo so socket info incl. PIDs is available.
     val ssScript =
         """
@@ -331,7 +331,7 @@ private constructor(
         |    echo "=== ${'$'}TS ss -tanpimoe state all ==="
         |    sudo ss -tanpimoe state all "( sport = :$port or dport = :$port )"
         |  } >> "${'$'}LOG" 2>&1
-        |  sleep 0.5
+        |  sleep 5
         |done
         |"""
             .trimMargin()
