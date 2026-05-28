@@ -227,6 +227,8 @@ private constructor(
   private val localEndpointServer: HttpServer? =
       localEndpoint?.let { RestateHttpServer.fromEndpoint(it) }
 
+  private var tcpCaptureProcesses: List<Process> = emptyList()
+
   init {
     // Configure additional containers to be deployed within the same network where we deploy
     // everything else
@@ -286,6 +288,81 @@ private constructor(
     writeEnvironmentReport(testReportDir)
 
     LOG.info("Docker environment up and running")
+
+    if (localEndpointPort != null && shouldCaptureTcp()) {
+      tcpCaptureProcesses = startTcpCapture(localEndpointPort, testReportDir)
+    }
+  }
+
+  private fun shouldCaptureTcp(): Boolean =
+      System.getenv("E2E_TCP_CAPTURE") == "true" &&
+          System.getProperty("os.name").lowercase().contains("linux")
+
+  /**
+   * Start sysctl/ss/tcpdump diagnostics for the in-process local endpoint port. Output lands in
+   * [reportDir] next to the runtime container logs. Stopped from [close]. No-op on non-Linux.
+   */
+  private fun startTcpCapture(port: Int, reportDir: String): List<Process> {
+    val out = mutableListOf<Process>()
+
+    // 1. One-shot sysctl snapshot of network knobs (kernel TCP buffer sizing etc.).
+    runCatching {
+      ProcessBuilder(
+              "sh",
+              "-c",
+              "sysctl -a 2>/dev/null | grep -E '^(net\\.core\\.[rw]mem|net\\.ipv4\\.tcp_[rw]mem|net\\.ipv4\\.udp_[rw]mem|net\\.ipv4\\.tcp_moderate_rcvbuf)'")
+          .redirectErrorStream(true)
+          .redirectOutput(File("$reportDir/sysctl-net.txt"))
+          .start()
+          .also { it.waitFor(5, TimeUnit.SECONDS) }
+    }
+
+    // 2. Periodic ss snapshotter (500ms). Wrapper is non-sudo so we can SIGTERM it;
+    //    ss itself runs via sudo so socket info incl. PIDs is available.
+    val ssScript =
+        """
+        |trap 'exit 0' TERM INT
+        |LOG="$reportDir/ss-snapshots.log"
+        |while true; do
+        |  TS=${'$'}(date -u +"%H:%M:%S.%3N")
+        |  {
+        |    echo "=== ${'$'}TS ss -tanpimoe established ==="
+        |    sudo ss -tanpimoe "( sport = :$port or dport = :$port )"
+        |    echo "=== ${'$'}TS ss -tanpimoe state all ==="
+        |    sudo ss -tanpimoe state all "( sport = :$port or dport = :$port )"
+        |  } >> "${'$'}LOG" 2>&1
+        |  sleep 0.5
+        |done
+        |"""
+            .trimMargin()
+    out.add(
+        ProcessBuilder("bash", "-c", ssScript)
+            .redirectErrorStream(true)
+            .redirectOutput(File("$reportDir/ss-supervisor.log"))
+            .start())
+
+    // 3. tcpdump capture (-s 256 fits h2 frame headers incl. WINDOW_UPDATE payloads).
+    //    Non-root parents can't SIGTERM a root child, so the wrapper records tcpdump's
+    //    PID and sudo-kills it on shutdown.
+    val tcpdumpScript =
+        """
+        |sudo tcpdump -i any -nn -s 256 \
+        |  -w "$reportDir/capture.pcap" \
+        |  "tcp port $port and tcp[tcpflags] & (tcp-ack|tcp-push|tcp-rst|tcp-fin|tcp-syn) != 0" \
+        |  >>"$reportDir/tcpdump.stderr.log" 2>&1 &
+        |CHILD=${'$'}!
+        |trap 'sudo kill -TERM ${'$'}CHILD 2>/dev/null; wait ${'$'}CHILD' TERM INT
+        |wait ${'$'}CHILD
+        |"""
+            .trimMargin()
+    out.add(
+        ProcessBuilder("bash", "-c", tcpdumpScript)
+            .redirectErrorStream(true)
+            .redirectOutput(File("$reportDir/tcpdump-supervisor.log"))
+            .start())
+
+    LOG.info("Started TCP capture for port {} → {}", port, reportDir)
+    return out
   }
 
   private fun configureLogger(testReportDir: String) {
@@ -481,6 +558,12 @@ private constructor(
     teardownRuntime()
     teardownAdditionalContainers()
     teardownServices()
+
+    if (tcpCaptureProcesses.isNotEmpty()) {
+      tcpCaptureProcesses.forEach { runCatching { it.destroy() } }
+      tcpCaptureProcesses.forEach { runCatching { it.waitFor(5, TimeUnit.SECONDS) } }
+      tcpCaptureProcesses = emptyList()
+    }
 
     localEndpointServer?.close()?.toCompletionStage()?.toCompletableFuture()?.join()
 

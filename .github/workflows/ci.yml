@@ -71,6 +71,14 @@ jobs:
       - name: Install instrumented SDK into Maven local
         run: mkdir -p ~/.m2/repository && cp -r m2-staging/dev ~/.m2/repository/
 
+      - name: Install TCP capture tools
+        run: |
+          set -euo pipefail
+          if ! command -v tcpdump >/dev/null || ! command -v ss >/dev/null; then
+            sudo apt-get update
+            sudo apt-get install -y --no-install-recommends tcpdump iproute2
+          fi
+
       - name: Install async-profiler (for SSH diagnostics)
         if: inputs.ssh_on_failure == true
         run: |
@@ -119,6 +127,10 @@ jobs:
           # When true, InvokerMemoryTest's timeout handler blocks (keeping the JVM alive)
           # until /tmp/restate-release-test is touched — for SSH-driven live diagnostics.
           E2E_HOLD_ON_FAILURE: ${{ inputs.ssh_on_failure == true }}
+          # Always-on TCP capture (ss snapshots + tcpdump -s 256). The post-loop cleanup
+          # below deletes the pcap + ss-snapshots when the soak passes so artifacts stay
+          # small; failed iterations keep their capture for diagnosis.
+          E2E_TCP_CAPTURE: "true"
           RESTATE_DIAGNOSTICS_EVENT_LOOP: "true"
           # GC/heap/safepoint logging + heap-dump-on-OOM + route Vert.x logs through SLF4J->log4j.
           # No -Xmx (heap sizing deferred). Applies to every JVM the step starts; the forked app
@@ -145,6 +157,9 @@ jobs:
             echo "::endgroup::"
           done
           echo "No failure after $iteration iterations within ${SOAK_SECONDS}s (matrix run ${{ matrix.run }})"
+          # Soak passed → drop the per-class pcap + ss snapshots; keep sysctl-net.txt (tiny).
+          find e2e-tests/test-report -name 'capture.pcap' -delete 2>/dev/null || true
+          find e2e-tests/test-report -name 'ss-snapshots.log' -delete 2>/dev/null || true
 
       # Upload logs and publish test result
       - uses: actions/upload-artifact@v4
