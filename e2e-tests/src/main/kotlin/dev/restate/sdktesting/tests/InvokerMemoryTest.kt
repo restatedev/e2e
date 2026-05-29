@@ -26,6 +26,7 @@ import dev.restate.sdk.kotlin.get
 import dev.restate.sdk.kotlin.runBlock
 import dev.restate.sdk.kotlin.set
 import dev.restate.sdk.kotlin.state
+import dev.restate.sdktesting.infra.ContainerServiceDeploymentConfig
 import dev.restate.sdktesting.infra.InjectAdminURI
 import dev.restate.sdktesting.infra.InjectClient
 import dev.restate.sdktesting.infra.InjectContainerPort
@@ -33,6 +34,7 @@ import dev.restate.sdktesting.infra.InjectReportDir
 import dev.restate.sdktesting.infra.RESTATE_RUNTIME
 import dev.restate.sdktesting.infra.RUNTIME_NODE_PORT
 import dev.restate.sdktesting.infra.RestateDeployerExtension
+import dev.restate.sdktesting.infra.ServiceSpec
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
@@ -124,6 +126,15 @@ class InvokerMemoryTest {
   companion object {
     private val LOG = LogManager.getLogger(InvokerMemoryTest::class.java)
 
+    /**
+     * When set to "ts", the test deploys a TypeScript service container instead of binding the
+     * Kotlin services in-process. The Kotlin path remains the default so existing CI behaviour is
+     * unchanged.
+     */
+    private val USE_TS_SERVICE = System.getenv("INVOKER_MEMORY_TEST_SDK") == "ts"
+
+    private const val DEFAULT_TS_IMAGE = "ghcr.io/restatedev/e2e-invoker-memory-ts:0.1.0"
+
     /** Dump all JVM thread stacks (including the in-process SDK's Vert.x event loops) to a file. */
     private fun dumpAllThreads(path: Path) {
       val sb = StringBuilder()
@@ -181,9 +192,20 @@ class InvokerMemoryTest {
       // Disable journal retention so that completed journal entries are cleaned up immediately.
       // This test creates large payloads in journal steps and queries sys_journal at the end,
       // so retaining them would bloat the table and slow down the test.
-      withEndpoint(
-          Endpoint.bind(MemoryPressureService()) { it.journalRetention = 0.seconds }
-              .bind(StatefulObject()) { it.journalRetention = 0.seconds })
+      //
+      // The TS path mirrors this via `options: { journalRetention: { seconds: 0 } }` in the
+      // service image (see e2e-tests/services/invoker-memory-ts/src/index.ts).
+      if (USE_TS_SERVICE) {
+        val image = System.getenv("INVOKER_MEMORY_TEST_TS_IMAGE") ?: DEFAULT_TS_IMAGE
+        withServiceDeploymentConfig(
+            ServiceSpec.DEFAULT_SERVICE_NAME, ContainerServiceDeploymentConfig(image, emptyMap()))
+        withServiceSpec(
+            ServiceSpec.defaultBuilder().withServices("MemoryPressureService", "StatefulObject"))
+      } else {
+        withEndpoint(
+            Endpoint.bind(MemoryPressureService()) { it.journalRetention = 0.seconds }
+                .bind(StatefulObject()) { it.journalRetention = 0.seconds })
+      }
     }
   }
 
@@ -240,12 +262,15 @@ class InvokerMemoryTest {
 
         // Log the app JVM's resolved limits (no -Xmx is set, so max heap is the JDK ergonomic
         // default ~25% of runner RAM). Helps correlate stalls with the actual heap/CPU budget.
-        Runtime.getRuntime().let {
-          LOG.info(
-              "JVM env: maxHeapMiB={}, totalHeapMiB={}, availableProcessors={}",
-              it.maxMemory() / (1024 * 1024),
-              it.totalMemory() / (1024 * 1024),
-              it.availableProcessors())
+        // Only relevant when the SDK runs in-process; the TS path runs in a separate container.
+        if (!USE_TS_SERVICE) {
+          Runtime.getRuntime().let {
+            LOG.info(
+                "JVM env: maxHeapMiB={}, totalHeapMiB={}, availableProcessors={}",
+                it.maxMemory() / (1024 * 1024),
+                it.totalMemory() / (1024 * 1024),
+                it.availableProcessors())
+          }
         }
 
         // Run the invocations, the progress watchdog and the bounded await on a REAL dispatcher.
@@ -268,22 +293,29 @@ class InvokerMemoryTest {
                       }
                     }
 
-                // Progress watchdog: every 2s log completion count, invoker pool usage and JVM
-                // heap, so a progressive slowdown is visible in testrunner.log before a stall.
+                // Progress watchdog: every 2s log completion count and invoker pool usage so a
+                // progressive slowdown is visible in testrunner.log before a stall. Kotlin path
+                // also logs JVM heap usage (in-process SDK); the TS path drops it because the SDK
+                // runs in a separate Node container.
                 val watchdog = launch {
                   while (isActive) {
                     delay(2.seconds)
                     val done = deferreds.count { it.isCompleted }
-                    val rt = Runtime.getRuntime()
-                    val heapMiB = (rt.totalMemory() - rt.freeMemory()) / (1024 * 1024)
                     val pool =
                         runCatching { getInvokerMemoryPoolUsage(metricsPort) }.getOrDefault(-1.0)
-                    LOG.info(
-                        "watchdog: {}/{} completed, invokerPoolBytes={}, heapUsedMiB={}",
-                        done,
-                        count,
-                        pool,
-                        heapMiB)
+                    if (USE_TS_SERVICE) {
+                      LOG.info(
+                          "watchdog: {}/{} completed, invokerPoolBytes={}", done, count, pool)
+                    } else {
+                      val rt = Runtime.getRuntime()
+                      val heapMiB = (rt.totalMemory() - rt.freeMemory()) / (1024 * 1024)
+                      LOG.info(
+                          "watchdog: {}/{} completed, invokerPoolBytes={}, heapUsedMiB={}",
+                          done,
+                          count,
+                          pool,
+                          heapMiB)
+                    }
                   }
                 }
 
@@ -296,14 +328,20 @@ class InvokerMemoryTest {
             }
 
         // On timeout the bounded await returns null (and structurally cancels the in-flight calls).
-        // Capture a thread dump before the 120s @Timeout kills the JVM — the decisive "stuck on
-        // what?" probe of the in-process Vert.x event-loop threads.
+        // For the Kotlin in-process path, capture a thread dump before the 120s @Timeout kills the
+        // JVM — the decisive "stuck on what?" probe of the in-process Vert.x event-loop threads.
+        // The TS path runs the SDK in a separate container, so a thread dump of this JVM tells us
+        // nothing about the SDK.
         if (results == null) {
-          val dump =
-              reportDir.resolve("InvokerMemoryTest-threaddump-${System.currentTimeMillis()}.txt")
-          dumpAllThreads(dump)
-          throw AssertionError(
-              "Timed out after 90s waiting for $count invocations; thread dump at $dump")
+          if (USE_TS_SERVICE) {
+            throw AssertionError("Timed out after 90s waiting for $count invocations")
+          } else {
+            val dump =
+                reportDir.resolve("InvokerMemoryTest-threaddump-${System.currentTimeMillis()}.txt")
+            dumpAllThreads(dump)
+            throw AssertionError(
+                "Timed out after 90s waiting for $count invocations; thread dump at $dump")
+          }
         }
 
         // Verify all invocations returned correct results

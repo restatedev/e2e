@@ -110,6 +110,14 @@ private constructor(
       this.serviceEndpoints.add(builder.build())
     }
 
+    fun withServiceDeploymentConfig(name: String, deploymentConfig: ServiceDeploymentConfig) =
+        apply {
+          this.config =
+              this.config.copy(
+                  serviceDeploymentConfig =
+                      this.config.serviceDeploymentConfig + (name to deploymentConfig))
+        }
+
     /** Add a container that will be added within the same network of functions and runtime. */
     fun withContainer(hostName: String, container: GenericContainer<*>) = apply {
       this.additionalContainers[hostName] = container

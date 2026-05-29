@@ -39,7 +39,7 @@ jobs:
           path: m2-staging
 
   build-and-test:
-    name: Build and test (Java ${{ matrix.java }}, run ${{ matrix.run }})
+    name: Build and test (Java ${{ matrix.java }}, sdk ${{ matrix.sdk }}, run ${{ matrix.run }})
     needs: build-sdk
     runs-on: warp-ubuntu-latest-x64-16x
     timeout-minutes: 60
@@ -48,6 +48,7 @@ jobs:
       matrix:
         java: [ 21 ]
         run: [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ]
+        sdk: [ kotlin, ts ]
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK ${{ matrix.java }}
@@ -86,6 +87,10 @@ jobs:
           RESTATE_EXPERIMENTAL_ENABLE_VQUEUES: true
           RESTATE_CONTAINER_IMAGE: ghcr.io/restatedev/restate:fix-blocking-invoker
           TEST_EXCLUSIONS_FILE: exclusions.yaml
+          # Selects the SDK that backs the InvokerMemoryTest services:
+          #   "kotlin" → in-process Kotlin services (default in code; full JVM diagnostics on)
+          #   "ts"     → pre-published TypeScript container (ghcr.io/restatedev/e2e-invoker-memory-ts)
+          INVOKER_MEMORY_TEST_SDK: ${{ matrix.sdk }}
           # Connection-pool repro diagnostics (opt-in). Turns on SDK state-machine TRACE +
           # io.vertx logging in the harness log config.
           E2E_VERBOSE_SDK_LOGGING: "true"
@@ -120,7 +125,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always() # Make sure this is run even when test fails
         with:
-          name: e2e-test-report-run-${{ matrix.run }}
+          name: e2e-test-report-${{ matrix.sdk }}-run-${{ matrix.run }}
           path: |
             e2e-tests/test-report
             e2e-tests/gc-*.log
