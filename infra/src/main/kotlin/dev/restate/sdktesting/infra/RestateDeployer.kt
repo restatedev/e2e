@@ -341,12 +341,17 @@ private constructor(
             .redirectOutput(File("$reportDir/ss-supervisor.log"))
             .start())
 
-    // 3. tcpdump capture (-s 256 fits h2 frame headers incl. WINDOW_UPDATE payloads).
+    // 3. tcpdump capture
+    //    Capture only on loopback: with Testcontainers' default Linux host-port exposure,
+    //    container→host traffic arrives via a sshd-proxy that tunnels SSH-encrypted bytes
+    //    on the Docker bridge and emits plaintext h2 on lo to the SDK listener. -i lo gives
+    //    us plaintext (decodable as HTTP/2 in Wireshark) and halves the pcap by dropping
+    //    the encrypted-SSH duplicate on docker0.
     //    Non-root parents can't SIGTERM a root child, so the wrapper records tcpdump's
     //    PID and sudo-kills it on shutdown.
     val tcpdumpScript =
         """
-        |sudo tcpdump -i any -nn -s 256 \
+        |sudo tcpdump -i lo -nn -s 0 \
         |  -w "$reportDir/capture.pcap" \
         |  "tcp port $port and tcp[tcpflags] & (tcp-ack|tcp-push|tcp-rst|tcp-fin|tcp-syn) != 0" \
         |  >>"$reportDir/tcpdump.stderr.log" 2>&1 &
