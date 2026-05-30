@@ -16,16 +16,8 @@ import dev.restate.client.Client
 import dev.restate.client.kotlin.response
 import dev.restate.client.kotlin.toService
 import dev.restate.client.kotlin.toVirtualObject
-import dev.restate.sdk.annotation.Handler
-import dev.restate.sdk.annotation.Name
-import dev.restate.sdk.annotation.Service
-import dev.restate.sdk.annotation.VirtualObject
 import dev.restate.sdk.endpoint.Endpoint
 import dev.restate.sdk.kotlin.endpoint.journalRetention
-import dev.restate.sdk.kotlin.get
-import dev.restate.sdk.kotlin.runBlock
-import dev.restate.sdk.kotlin.set
-import dev.restate.sdk.kotlin.state
 import dev.restate.sdktesting.infra.ContainerServiceDeploymentConfig
 import dev.restate.sdktesting.infra.InjectAdminURI
 import dev.restate.sdktesting.infra.InjectClient
@@ -35,6 +27,8 @@ import dev.restate.sdktesting.infra.RESTATE_RUNTIME
 import dev.restate.sdktesting.infra.RUNTIME_NODE_PORT
 import dev.restate.sdktesting.infra.RestateDeployerExtension
 import dev.restate.sdktesting.infra.ServiceSpec
+import dev.restate.sdktesting.invokermemory.MemoryPressureService
+import dev.restate.sdktesting.invokermemory.StatefulObject
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
@@ -79,61 +73,26 @@ import org.junit.jupiter.api.extension.RegisterExtension
  */
 class InvokerMemoryTest {
 
-  @Service
-  @Name("MemoryPressureService")
-  class MemoryPressureService {
-    @Handler
-    suspend fun generate(input: String): String {
-      for (i in 0 until 10) {
-        runBlock { randomString(64.kb) }
-      }
-      return "ok-$input"
-    }
-
-    @Handler
-    suspend fun generateOversized(input: String): String {
-      // Single side effect producing 512KiB — exceeds the 256KiB per-invocation memory limit.
-      // The invocation can never make progress and should be paused by the server.
-      runBlock { randomString(512.kb) }
-      return "ok-$input"
-    }
-  }
-
-  @VirtualObject
-  @Name("StatefulObject")
-  class StatefulObject {
-    @Handler
-    suspend fun initState(input: String) {
-      // Store two 32KiB state entries (64KiB total per virtual object)
-      state().set("state-a", randomString(32.kb))
-      state().set("state-b", randomString(32.kb))
-    }
-
-    @Handler
-    suspend fun readState(input: String): Int {
-      val a = state().get<String>("state-a") ?: ""
-      val b = state().get<String>("state-b") ?: ""
-      return a.length + b.length
-    }
-
-    @Handler
-    suspend fun readLargeState(input: String): Int {
-      val data = state().get<String>("large-state") ?: ""
-      return data.length
-    }
-  }
-
   companion object {
     private val LOG = LogManager.getLogger(InvokerMemoryTest::class.java)
 
     /**
-     * When set to "ts", the test deploys a TypeScript service container instead of binding the
-     * Kotlin services in-process. The Kotlin path remains the default so existing CI behaviour is
-     * unchanged.
+     * Selects how the InvokerMemoryTest services are deployed:
+     * * `kotlin` (default) — in-process Kotlin services via `Endpoint.bind(...)`; SDK shares the
+     *   test JVM and the JVM-side diagnostics (heap log, watchdog heap field, thread dump on
+     *   timeout) target it.
+     * * `kotlin-container` — the same Kotlin services packaged into a separate JVM Docker image
+     *   (`DEFAULT_KOTLIN_IMAGE`). Isolates "in-process vs out-of-process" for the Kotlin SDK.
+     * * `ts` — TypeScript service Docker image (`DEFAULT_TS_IMAGE`).
      */
-    private val USE_TS_SERVICE = System.getenv("INVOKER_MEMORY_TEST_SDK") == "ts"
+    private val SDK_MODE = System.getenv("INVOKER_MEMORY_TEST_SDK") ?: "kotlin"
+
+    private val USE_TS_SERVICE = SDK_MODE == "ts"
+    private val USE_KOTLIN_CONTAINER_SERVICE = SDK_MODE == "kotlin-container"
+    private val USE_CONTAINER_SERVICE = USE_TS_SERVICE || USE_KOTLIN_CONTAINER_SERVICE
 
     private const val DEFAULT_TS_IMAGE = "ghcr.io/restatedev/e2e-invoker-memory-ts:0.1.0"
+    private const val DEFAULT_KOTLIN_IMAGE = "ghcr.io/restatedev/e2e-invoker-memory-kotlin:0.1.0"
 
     /** Dump all JVM thread stacks (including the in-process SDK's Vert.x event loops) to a file. */
     private fun dumpAllThreads(path: Path) {
@@ -194,9 +153,13 @@ class InvokerMemoryTest {
       // so retaining them would bloat the table and slow down the test.
       //
       // The TS path mirrors this via `options: { journalRetention: { seconds: 0 } }` in the
-      // service image (see e2e-tests/services/invoker-memory-ts/src/index.ts).
-      if (USE_TS_SERVICE) {
-        val image = System.getenv("INVOKER_MEMORY_TEST_TS_IMAGE") ?: DEFAULT_TS_IMAGE
+      // service image (see e2e-tests/services/invoker-memory-ts/src/index.ts). The Kotlin
+      // container path reuses the same Kotlin classes — same journalRetention applied in
+      // e2e-tests/services/invoker-memory-kotlin/src/main/kotlin/.../Main.kt.
+      if (USE_CONTAINER_SERVICE) {
+        val image =
+            if (USE_TS_SERVICE) System.getenv("INVOKER_MEMORY_TEST_TS_IMAGE") ?: DEFAULT_TS_IMAGE
+            else System.getenv("INVOKER_MEMORY_TEST_KOTLIN_IMAGE") ?: DEFAULT_KOTLIN_IMAGE
         withServiceDeploymentConfig(
             ServiceSpec.DEFAULT_SERVICE_NAME, ContainerServiceDeploymentConfig(image, emptyMap()))
         withServiceSpec(
@@ -217,7 +180,7 @@ class InvokerMemoryTest {
     val nonTerminalFilter = "status != 'completed'"
     val invocationApi = InvocationApi(ApiClient().setHost(adminURI.host).setPort(adminURI.port))
 
-    LOG.info("Killing all invocations");
+    LOG.info("Killing all invocations")
 
     // Each poll iteration re-lists pending invocations and re-issues kill for everything
     // still alive, then asserts the list is empty. Awaitility's ignoreExceptions() (set in
@@ -232,7 +195,7 @@ class InvokerMemoryTest {
           assertThat(pending).isEmpty()
         }
 
-    LOG.info("Awaiting until the invoker memory pool is drained");
+    LOG.info("Awaiting until the invoker memory pool is drained")
 
     await withAlias
         "invoker memory pool drains" untilAsserted
@@ -262,8 +225,9 @@ class InvokerMemoryTest {
 
         // Log the app JVM's resolved limits (no -Xmx is set, so max heap is the JDK ergonomic
         // default ~25% of runner RAM). Helps correlate stalls with the actual heap/CPU budget.
-        // Only relevant when the SDK runs in-process; the TS path runs in a separate container.
-        if (!USE_TS_SERVICE) {
+        // Only relevant when the SDK runs in-process; container modes run the SDK in a separate
+        // process (Node for "ts", a separate JVM for "kotlin-container").
+        if (!USE_CONTAINER_SERVICE) {
           Runtime.getRuntime().let {
             LOG.info(
                 "JVM env: maxHeapMiB={}, totalHeapMiB={}, availableProcessors={}",
@@ -294,18 +258,18 @@ class InvokerMemoryTest {
                     }
 
                 // Progress watchdog: every 2s log completion count and invoker pool usage so a
-                // progressive slowdown is visible in testrunner.log before a stall. Kotlin path
-                // also logs JVM heap usage (in-process SDK); the TS path drops it because the SDK
-                // runs in a separate Node container.
+                // progressive slowdown is visible in testrunner.log before a stall. The
+                // in-process Kotlin path also logs JVM heap usage (this JVM hosts the SDK);
+                // container modes drop it because the SDK runs in a separate process whose
+                // heap is invisible from here.
                 val watchdog = launch {
                   while (isActive) {
                     delay(2.seconds)
                     val done = deferreds.count { it.isCompleted }
                     val pool =
                         runCatching { getInvokerMemoryPoolUsage(metricsPort) }.getOrDefault(-1.0)
-                    if (USE_TS_SERVICE) {
-                      LOG.info(
-                          "watchdog: {}/{} completed, invokerPoolBytes={}", done, count, pool)
+                    if (USE_CONTAINER_SERVICE) {
+                      LOG.info("watchdog: {}/{} completed, invokerPoolBytes={}", done, count, pool)
                     } else {
                       val rt = Runtime.getRuntime()
                       val heapMiB = (rt.totalMemory() - rt.freeMemory()) / (1024 * 1024)
@@ -330,10 +294,10 @@ class InvokerMemoryTest {
         // On timeout the bounded await returns null (and structurally cancels the in-flight calls).
         // For the Kotlin in-process path, capture a thread dump before the 120s @Timeout kills the
         // JVM — the decisive "stuck on what?" probe of the in-process Vert.x event-loop threads.
-        // The TS path runs the SDK in a separate container, so a thread dump of this JVM tells us
-        // nothing about the SDK.
+        // Container modes run the SDK in a separate process, so a thread dump of this JVM tells
+        // us nothing about the SDK.
         if (results == null) {
-          if (USE_TS_SERVICE) {
+          if (USE_CONTAINER_SERVICE) {
             throw AssertionError("Timed out after 90s waiting for $count invocations")
           } else {
             val dump =

@@ -12,6 +12,7 @@ kotlin { jvmToolchain(21) }
 
 dependencies {
   implementation(project(":infra"))
+  implementation(project(":invoker-memory-kotlin-contracts"))
 
   compileOnly(libs.tomcat.annotations)
   compileOnly(libs.google.findbugs.jsr305)
