@@ -80,7 +80,13 @@ class InvokerMemoryTest {
      * Selects how the InvokerMemoryTest services are deployed:
      * * `kotlin` (default) — in-process Kotlin services via `Endpoint.bind(...)`; SDK shares the
      *   test JVM and the JVM-side diagnostics (heap log, watchdog heap field, thread dump on
-     *   timeout) target it.
+     *   timeout) target it. The Restate container reaches the SDK via the testcontainers SSH
+     *   host-port relay (`host.testcontainers.internal`).
+     * * `kotlin-host` — same as `kotlin`, but the Restate container is started with `--network
+     *   host` so it can reach the in-process SDK at `127.0.0.1:<port>` directly, **bypassing the
+     *   testcontainers SSH relay**. Used to determine whether the relay is on the stall path.
+     *   **Linux only**: Docker Desktop on macOS does not bridge `--network host` to the host
+     *   loopback, so this mode does not work locally on Mac.
      * * `kotlin-container` — the same Kotlin services packaged into a separate JVM Docker image
      *   (`DEFAULT_KOTLIN_IMAGE`). Isolates "in-process vs out-of-process" for the Kotlin SDK.
      * * `ts` — TypeScript service Docker image (`DEFAULT_TS_IMAGE`).
@@ -89,6 +95,7 @@ class InvokerMemoryTest {
 
     private val USE_TS_SERVICE = SDK_MODE == "ts"
     private val USE_KOTLIN_CONTAINER_SERVICE = SDK_MODE == "kotlin-container"
+    private val USE_KOTLIN_HOST_NETWORK = SDK_MODE == "kotlin-host"
     private val USE_CONTAINER_SERVICE = USE_TS_SERVICE || USE_KOTLIN_CONTAINER_SERVICE
 
     private const val DEFAULT_TS_IMAGE = "ghcr.io/restatedev/e2e-invoker-memory-ts:0.1.0"
@@ -165,6 +172,12 @@ class InvokerMemoryTest {
         withServiceSpec(
             ServiceSpec.defaultBuilder().withServices("MemoryPressureService", "StatefulObject"))
       } else {
+        // In-process Kotlin path. `kotlin-host` additionally puts the Restate container on the
+        // host network namespace so it reaches the SDK at 127.0.0.1 directly — useful when
+        // diagnosing whether the SSH host-port relay is implicated in the stall.
+        if (USE_KOTLIN_HOST_NETWORK) {
+          withHostNetworkMode()
+        }
         withEndpoint(
             Endpoint.bind(MemoryPressureService()) { it.journalRetention = 0.seconds }
                 .bind(StatefulObject()) { it.journalRetention = 0.seconds })

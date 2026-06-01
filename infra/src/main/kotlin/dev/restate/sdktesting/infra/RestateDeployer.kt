@@ -55,7 +55,14 @@ private constructor(
     configSchema: RestateConfigSchema?,
     overrideRestateContainerImage: String?,
     overrideRestateStateDirectoryMount: String?,
+    private val hostNetworkMode: Boolean,
 ) : AutoCloseable {
+
+  init {
+    require(!hostNetworkMode || config.restateNodes == 1) {
+      "Host networking is only supported with a single Restate node"
+    }
+  }
 
   companion object {
     internal const val RESTATE_URI_ENV = "RESTATE_URI"
@@ -86,6 +93,7 @@ private constructor(
       private var copyToContainer: MutableList<Pair<String, Transferable>> = mutableListOf(),
       private var overrideRestateContainerImage: String? = null,
       private var overrideRestateStateDirectoryMount: String? = null,
+      private var hostNetworkMode: Boolean = false,
   ) {
 
     fun withEndpoint(endpoint: Endpoint) = apply { this.localEndpoint = endpoint }
@@ -151,6 +159,17 @@ private constructor(
       this.overrideRestateStateDirectoryMount = stateDirectory
     }
 
+    /**
+     * Run the Restate container with `--network host` instead of attaching it to a Testcontainers
+     * bridge network. The runtime then shares the host's network namespace and can reach an
+     * in-process SDK endpoint at `127.0.0.1:<port>` directly — bypassing the testcontainers SSH
+     * host-port relay used by `Testcontainers.exposeHostPorts`.
+     *
+     * Linux only: Docker Desktop on macOS does not bridge `--network host` to the host's loopback.
+     * Single-node clusters only.
+     */
+    fun withHostNetworkMode(enabled: Boolean = true) = apply { this.hostNetworkMode = enabled }
+
     fun build(testReportDir: String): RestateDeployer {
       val defaultLogFilters =
           mapOf(
@@ -186,7 +205,8 @@ private constructor(
           copyToContainer,
           configSchema,
           overrideRestateContainerImage,
-          overrideRestateStateDirectoryMount)
+          overrideRestateStateDirectoryMount,
+          hostNetworkMode)
     }
   }
 
@@ -199,7 +219,9 @@ private constructor(
               null,
               null)
           .port
-  private val restateUri = "http://$RESTATE_RUNTIME:$ingressPort/"
+  private val restateUri =
+      if (hostNetworkMode) "http://127.0.0.1:$ingressPort/"
+      else "http://$RESTATE_RUNTIME:$ingressPort/"
 
   private val network = Network.newNetwork()!!
   private val serviceContainers =
@@ -222,7 +244,8 @@ private constructor(
           copyToContainer,
           overrideRestateContainerImage,
           overrideRestateStateDirectoryMount,
-          config.restateNodes)
+          config.restateNodes,
+          hostNetworkMode)
 
   private val deployedContainers: Map<String, ContainerHandle> =
       (runtimeContainers.map {
@@ -266,7 +289,11 @@ private constructor(
 
           val port = it.actualPort()
           LOG.debug("Started local endpoint on port {}", port)
-          Testcontainers.exposeHostPorts(port)
+          // With `--network host` the runtime container shares the host's netns and reaches the
+          // in-process SDK at 127.0.0.1:<port> directly — no SSH host-port relay needed.
+          if (!hostNetworkMode) {
+            Testcontainers.exposeHostPorts(port)
+          }
 
           port
         }
@@ -285,9 +312,12 @@ private constructor(
     // Let's execute service discovery to register the services
     serviceSpecs.forEach { spec -> discoverDeployment(client, spec) }
 
-    // Discover local endpoint if any
+    // Discover local endpoint if any. With host networking, the runtime container shares the
+    // host loopback, so it reaches the SDK at 127.0.0.1; otherwise testcontainers exposed the
+    // port behind the SSH-relayed `host.testcontainers.internal` address.
     if (localEndpointPort != null) {
-      discoverDeployment(client, "http://host.testcontainers.internal:$localEndpointPort")
+      val endpointHost = if (hostNetworkMode) "127.0.0.1" else "host.testcontainers.internal"
+      discoverDeployment(client, "http://$endpointHost:$localEndpointPort")
     }
 
     // Log environment
@@ -372,7 +402,11 @@ private constructor(
     Unreliables.retryUntilTrue(60, TimeUnit.SECONDS) {
       try {
         val randomRestateNode = runtimeContainers.random()
-        val adminPort = randomRestateNode.getMappedPort(RUNTIME_ADMIN_ENDPOINT_PORT)
+        // Host networking shares the host's loopback, so the container's native port is the host
+        // port. Without host networking there's a Docker-assigned mapped port.
+        val adminPort =
+            if (hostNetworkMode) RUNTIME_ADMIN_ENDPOINT_PORT
+            else randomRestateNode.getMappedPort(RUNTIME_ADMIN_ENDPOINT_PORT)
         val client =
             ClusterHealthApi(
                 ApiClient(HttpClient.newBuilder(), apiClient.objectMapper, null)
@@ -523,6 +557,12 @@ private constructor(
   }
 
   internal fun getContainerPort(hostName: String, port: Int): Int {
+    // With host networking the runtime container shares the host's network namespace, so the
+    // container's native port == the host port (and Docker exposes no port mapping table to read
+    // from, which would make getMappedPort throw).
+    if (hostNetworkMode && hostName == RESTATE_RUNTIME) {
+      return port
+    }
     return deployedContainers[hostName]?.getMappedPort(port)
         ?: throw java.lang.IllegalStateException(
             "Requested port for container $hostName, but the container or the port was not found")
@@ -530,7 +570,8 @@ private constructor(
 
   internal fun getLocalEndpointURI(): URI {
     return localEndpointServer?.let {
-      URI.create("http://host.testcontainers.internal:${it.actualPort()}")
+      val host = if (hostNetworkMode) "127.0.0.1" else "host.testcontainers.internal"
+      URI.create("http://$host:${it.actualPort()}")
     } ?: throw java.lang.IllegalStateException("No local endpoint was deployed for this test")
   }
 

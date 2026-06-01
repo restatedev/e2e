@@ -48,7 +48,7 @@ jobs:
       matrix:
         java: [ 21 ]
         run: [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ]
-        sdk: [ ts, kotlin-container, kotlin ]
+        sdk: [ ts, kotlin-container, kotlin, kotlin-host ]
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK ${{ matrix.java }}
