@@ -1,0 +1,17 @@
+[package]
+name = "e2e-test-services"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "Aggregate Rust binary hosting all Rust-side service implementations used by the e2e test suite. Services to bind are selected at startup via the SERVICES env var."
+
+[dependencies]
+restate-sdk = { version = "0.10", features = ["http_server"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+rand = "0.10"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1

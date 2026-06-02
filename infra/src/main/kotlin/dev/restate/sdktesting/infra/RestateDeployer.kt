@@ -110,6 +110,19 @@ private constructor(
       this.serviceEndpoints.add(builder.build())
     }
 
+    /**
+     * Register a [ServiceDeploymentConfig] (e.g. a container image) for the given service spec
+     * name. Lets a test bind a specific image to its [ServiceSpec] without going through the global
+     * `--service-container-image` CLI flag.
+     */
+    fun withServiceDeploymentConfig(name: String, deploymentConfig: ServiceDeploymentConfig) =
+        apply {
+          this.config =
+              this.config.copy(
+                  serviceDeploymentConfig =
+                      this.config.serviceDeploymentConfig + (name to deploymentConfig))
+        }
+
     /** Add a container that will be added within the same network of functions and runtime. */
     fun withContainer(hostName: String, container: GenericContainer<*>) = apply {
       this.additionalContainers[hostName] = container

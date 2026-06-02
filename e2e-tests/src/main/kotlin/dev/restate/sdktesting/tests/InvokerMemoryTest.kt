@@ -16,28 +16,21 @@ import dev.restate.client.Client
 import dev.restate.client.kotlin.response
 import dev.restate.client.kotlin.toService
 import dev.restate.client.kotlin.toVirtualObject
-import dev.restate.sdk.annotation.Handler
-import dev.restate.sdk.annotation.Name
-import dev.restate.sdk.annotation.Service
-import dev.restate.sdk.annotation.VirtualObject
-import dev.restate.sdk.endpoint.Endpoint
-import dev.restate.sdk.kotlin.endpoint.journalRetention
-import dev.restate.sdk.kotlin.get
-import dev.restate.sdk.kotlin.runBlock
-import dev.restate.sdk.kotlin.set
-import dev.restate.sdk.kotlin.state
+import dev.restate.sdktesting.contracts.MemoryPressureService
+import dev.restate.sdktesting.contracts.StatefulObject
+import dev.restate.sdktesting.infra.ContainerServiceDeploymentConfig
 import dev.restate.sdktesting.infra.InjectAdminURI
 import dev.restate.sdktesting.infra.InjectClient
 import dev.restate.sdktesting.infra.InjectContainerPort
 import dev.restate.sdktesting.infra.RESTATE_RUNTIME
 import dev.restate.sdktesting.infra.RUNTIME_NODE_PORT
 import dev.restate.sdktesting.infra.RestateDeployerExtension
+import dev.restate.sdktesting.infra.ServiceSpec
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
@@ -70,51 +63,22 @@ import org.junit.jupiter.api.extension.RegisterExtension
  */
 class InvokerMemoryTest {
 
-  @Service
-  @Name("MemoryPressureService")
-  class MemoryPressureService {
-    @Handler
-    suspend fun generate(input: String): String {
-      for (i in 0 until 10) {
-        runBlock { randomString(64.kb) }
-      }
-      return "ok-$input"
-    }
-
-    @Handler
-    suspend fun generateOversized(input: String): String {
-      // Single side effect producing 512KiB — exceeds the 256KiB per-invocation memory limit.
-      // The invocation can never make progress and should be paused by the server.
-      runBlock { randomString(512.kb) }
-      return "ok-$input"
-    }
-  }
-
-  @VirtualObject
-  @Name("StatefulObject")
-  class StatefulObject {
-    @Handler
-    suspend fun initState(input: String) {
-      // Store two 32KiB state entries (64KiB total per virtual object)
-      state().set("state-a", randomString(32.kb))
-      state().set("state-b", randomString(32.kb))
-    }
-
-    @Handler
-    suspend fun readState(input: String): Int {
-      val a = state().get<String>("state-a") ?: ""
-      val b = state().get<String>("state-b") ?: ""
-      return a.length + b.length
-    }
-
-    @Handler
-    suspend fun readLargeState(input: String): Int {
-      val data = state().get<String>("large-state") ?: ""
-      return data.length
-    }
-  }
-
   companion object {
+    /**
+     * Aggregate Rust image hosting every Rust-side e2e service, including the two consumed by this
+     * test. See `e2e-tests/services/rust/README.md` for the publish workflow and the list of
+     * services the image hosts. Override with the `E2E_TEST_SERVICES_RS_IMAGE` env var when
+     * iterating against an unpublished image locally.
+     */
+    private const val DEFAULT_E2E_RS_IMAGE = "ghcr.io/restatedev/e2e-test-services-rs:0.1.0"
+
+    /**
+     * Spec name for the Rust service deployment. Doubles as the container hostname on the
+     * Testcontainers bridge network, so the runtime discovers the service at
+     * `http://invoker-memory:9080/`.
+     */
+    private const val SERVICE_SPEC_NAME = "invoker-memory"
+
     /**
      * Fetch the invoker memory pool usage from the Prometheus metrics endpoint. Returns the value
      * of `restate_memory_pool_usage_bytes{name="invoker"}` as a [Double].
@@ -152,12 +116,18 @@ class InvokerMemoryTest {
       withEnv("RESTATE_DEFAULT_RETRY_POLICY__MAX_ATTEMPTS", "10")
       withEnv("RESTATE_DEFAULT_RETRY_POLICY__ON_MAX_ATTEMPTS", "pause")
 
-      // Disable journal retention so that completed journal entries are cleaned up immediately.
-      // This test creates large payloads in journal steps and queries sys_journal at the end,
-      // so retaining them would bloat the table and slow down the test.
-      withEndpoint(
-          Endpoint.bind(MemoryPressureService()) { it.journalRetention = 0.seconds }
-              .bind(StatefulObject()) { it.journalRetention = 0.seconds })
+      // Deploy the aggregate Rust services image as a sibling container on the same bridge
+      // network as the Restate runtime. The image hosts every Rust-side e2e service; the
+      // `SERVICES=...` env var injected by ServiceSpec.withServices(...) picks the subset bound
+      // for this test. Journal retention is set to zero inside the Rust binary (see
+      // `e2e-tests/services/rust/src/main.rs`) — the test creates large payloads in journal
+      // steps and queries sys_journal at teardown, so retaining them would bloat the table.
+      val image = System.getenv("E2E_TEST_SERVICES_RS_IMAGE") ?: DEFAULT_E2E_RS_IMAGE
+      withServiceDeploymentConfig(
+          SERVICE_SPEC_NAME, ContainerServiceDeploymentConfig(image, emptyMap()))
+      withServiceSpec(
+          ServiceSpec.builder(SERVICE_SPEC_NAME)
+              .withServices("MemoryPressureService", "StatefulObject"))
     }
   }
 
