@@ -51,11 +51,24 @@ The report directory structure is:
 
 For each failed test:
 1. Go to the subdirectory matching the test's class name (the simple class name, not the fully qualified one)
-2. Read the `testRunner.log` first -- it shows the test execution flow and often reveals the immediate cause
+2. Read the `testRunner.log` first -- it shows the test execution flow and often reveals the immediate cause. Note: this file may be absent; in that case there may be a `test-exceptions.log` with the test exception, and the execution flow is only in the top-level `testrunner.log`
 3. If the failure involves a timeout or unexpected runtime behavior, check `runtime_0.log` (and higher restart counts if they exist) for errors, panics, or unexpected state
 4. If the failure involves Kafka, check `kafka_0.log`
 5. Check `sys_invocation_dump.json` to see the state of invocations -- look for stuck, failed, or unexpected invocation states
 6. Check `sys_journal_dump.json` and `sys_journal_events_dump.json` if the failure seems related to journal/state issues
+
+#### Deployment failures (TimeoutException in `beforeAll` / `RestateDeployer.deployRuntime`)
+
+If the error stack trace goes through `RestateDeployerExtension.beforeAll` -> `RestateDeployer.deployAll` -> `deployRuntime`, the environment never came up -- this is an infra problem, not a test logic problem. Investigate differently:
+
+- `deployRuntime` starts all runtime containers concurrently and waits at most **150 seconds** total (`CompletableFuture.allOf(...).get(150, SECONDS)`). Each individual container gets up to 3 testcontainers start attempts with a 120s `/restate/health` HTTP wait each. Multiple `runtime*_N.log` files with suffixes `_0, _2, _4` correspond to these retry attempts (~2 minutes apart).
+- Build a **start timeline**: grep the first `^20..-` timestamp line of every `runtime*_N.log` file. A node whose first log line is minutes later than its siblings (or missing entirely) means its container never actually started -- focus on why docker couldn't start it, not on the Restate logs.
+- **threeNodes configs**: only the node named `runtime` has `RESTATE_AUTO_PROVISION=true`; `runtime-1`/`runtime-2` point their metadata client at `http://runtime:5122`. If followers loop on `Metadata store has not been provisioned yet` or DNS `Temporary failure in name resolution` for host `runtime`, the leader container is not on the docker network (not started) -- those follower errors are a symptom, not the cause.
+- For docker-level causes, search the **top-level** `testrunner.log` for: `Error during callback` (docker-java pull/exec failures), `502 Bad Gateway` / registry errors (GHCR outages -- the pull policy always re-pulls `restate:main`, so a registry blip can wedge a container start for minutes), `Could not start container`, `port is already allocated`. Count occurrences per config (`grep -c` across all `*/testrunner.log`) to judge whether it's a transient infra flake (re-run the job) vs something in the PR.
+
+Caveats when reading the top-level `testrunner.log`:
+- Test classes run **in parallel** and all share this log with no thread/class marker; container hostnames like `runtime` are reused by every class (each in its own docker network). Attribute lines by timestamp window (the `Writing container logs to .../<TestClassName>` line marks each class's deploy start) and by container ID, never by hostname alone.
+- After the 150s deploy timeout fires, testcontainers retry threads keep restarting containers in the background. Log files and "started and is healthy" lines with timestamps *after* the test failure are zombie-retry noise, not evidence the deploy worked.
 
 ### Step 4: Report findings
 
