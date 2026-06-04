@@ -143,6 +143,14 @@ class ForwardCompatibilityTest {
     @Deployer
     val deployerExt: RestateDeployer.Builder.() -> Unit = {
       withEnv("RESTATE_CLUSTER_NAME", "forward-compatibility-test")
+      // The new version provisions the cluster. Since v1.7 the default-on
+      // `controlled-idempotent-sharding` feature changes the partition key derivation for
+      // idempotent invocations on unscoped services, which the older version
+      // (LAST_COMPATIBLE_RESTATE_SERVER_VERSION) does not know about. Without disabling it the
+      // older version computes a different partition key, fails to find the previously accepted
+      // idempotent invocation and reports ACCEPTED instead of PREVIOUSLY_ACCEPTED. Provision with
+      // the legacy sharding scheme so the data stays forward compatible.
+      withEnv("RESTATE_DISABLE_CONTROLLED_IDEMPOTENT_SHARDING", "true")
       withOverrideRestateStateDirectoryMount(stateDir.toString())
       withEndpoint(
           Endpoint.bind(MyService())
