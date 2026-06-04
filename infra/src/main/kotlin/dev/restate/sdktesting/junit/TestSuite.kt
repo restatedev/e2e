@@ -142,7 +142,11 @@ class TestSuite(
             .newLayout("PatternLayout")
             .addAttribute(
                 "pattern",
-                "%d{ISO8601} %-5p [%X{test_class}]%notEmpty{[%X{containerHostname}]} %c{1.2.*} - %m%n")
+                "%d{ISO8601} %-5p [%X{test_class}]" +
+                    "%notEmpty{[%X{containerHostname}]}" +
+                    "%notEmpty{[%X{restateInvocationTarget}]}" +
+                    "%notEmpty{[%X{restateInvocationId}]}" +
+                    " %c{1.2.*} - %m%n")
 
     val testRunnerFileAppender =
         builder
