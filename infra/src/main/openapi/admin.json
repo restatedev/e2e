@@ -2522,7 +2522,7 @@
         "type": "string"
       },
       "DeploymentResponse": {
-        "oneOf": [
+        "anyOf": [
           {
             "type": "object",
             "title": "HttpDeploymentResponse",
@@ -2697,7 +2697,7 @@
         ]
       },
       "DetailedDeploymentResponse": {
-        "oneOf": [
+        "anyOf": [
           {
             "type": "object",
             "title": "HttpDetailedDeploymentResponse",
