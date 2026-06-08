@@ -17,9 +17,7 @@ import dev.restate.sdktesting.contracts.Counter
 import dev.restate.sdktesting.contracts.MapObject
 import dev.restate.sdktesting.contracts.MapObject.Entry
 import dev.restate.sdktesting.contracts.Proxy
-import dev.restate.sdktesting.infra.InjectClient
-import dev.restate.sdktesting.infra.RestateDeployerExtension
-import dev.restate.sdktesting.infra.ServiceSpec
+import dev.restate.sdktesting.infra.*
 import java.util.*
 import java.util.function.Function
 import kotlinx.serialization.json.Json

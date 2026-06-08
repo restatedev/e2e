@@ -16,9 +16,7 @@ import dev.restate.sdktesting.contracts.Counter
 import dev.restate.sdktesting.contracts.Counter.CounterUpdateResponse
 import dev.restate.sdktesting.contracts.Proxy
 import dev.restate.sdktesting.contracts.TestUtilsService
-import dev.restate.sdktesting.infra.InjectClient
-import dev.restate.sdktesting.infra.RestateDeployerExtension
-import dev.restate.sdktesting.infra.ServiceSpec
+import dev.restate.sdktesting.infra.*
 import dev.restate.serde.TypeTag
 import java.util.UUID
 import java.util.concurrent.TimeUnit

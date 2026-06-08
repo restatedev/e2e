@@ -12,8 +12,7 @@ import dev.restate.sdk.annotation.Handler
 import dev.restate.sdk.annotation.Name
 import dev.restate.sdk.annotation.Service
 import dev.restate.sdk.endpoint.Endpoint
-import dev.restate.sdktesting.infra.InjectAdminURI
-import dev.restate.sdktesting.infra.RestateDeployerExtension
+import dev.restate.sdktesting.infra.*
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest

@@ -8,6 +8,7 @@
 // https://github.com/restatedev/sdk-test-suite/blob/main/LICENSE
 package dev.restate.sdktesting.tests
 
+import dev.restate.sdktesting.infra.*
 import dev.restate.sdktesting.infra.runtimeconfig.RestateConfigSchema
 import java.net.URI
 import java.net.http.HttpClient

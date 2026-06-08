@@ -16,9 +16,7 @@ import dev.restate.client.kotlin.toService
 import dev.restate.sdk.annotation.Handler
 import dev.restate.sdk.annotation.Service
 import dev.restate.sdk.endpoint.Endpoint
-import dev.restate.sdktesting.infra.InjectAdminURI
-import dev.restate.sdktesting.infra.InjectClient
-import dev.restate.sdktesting.infra.RestateDeployerExtension
+import dev.restate.sdktesting.infra.*
 import java.net.URI
 import java.util.concurrent.atomic.AtomicBoolean
 import org.assertj.core.api.Assertions.assertThat

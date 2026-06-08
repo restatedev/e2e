@@ -21,9 +21,7 @@ import dev.restate.sdk.common.TerminalException
 import dev.restate.sdk.endpoint.Endpoint
 import dev.restate.sdk.kotlin.endpoint.journalRetention
 import dev.restate.sdk.kotlin.runBlock
-import dev.restate.sdktesting.infra.InjectAdminURI
-import dev.restate.sdktesting.infra.InjectClient
-import dev.restate.sdktesting.infra.RestateDeployerExtension
+import dev.restate.sdktesting.infra.*
 import java.net.URI
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference

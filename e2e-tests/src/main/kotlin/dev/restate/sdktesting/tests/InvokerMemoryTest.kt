@@ -18,14 +18,7 @@ import dev.restate.client.kotlin.toService
 import dev.restate.client.kotlin.toVirtualObject
 import dev.restate.sdktesting.contracts.MemoryPressureService
 import dev.restate.sdktesting.contracts.StatefulObject
-import dev.restate.sdktesting.infra.ContainerServiceDeploymentConfig
-import dev.restate.sdktesting.infra.InjectAdminURI
-import dev.restate.sdktesting.infra.InjectClient
-import dev.restate.sdktesting.infra.InjectContainerPort
-import dev.restate.sdktesting.infra.RESTATE_RUNTIME
-import dev.restate.sdktesting.infra.RUNTIME_NODE_PORT
-import dev.restate.sdktesting.infra.RestateDeployerExtension
-import dev.restate.sdktesting.infra.ServiceSpec
+import dev.restate.sdktesting.infra.*
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest

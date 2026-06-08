@@ -36,11 +36,7 @@ import dev.restate.sdk.kotlin.promiseHandle
 import dev.restate.sdk.kotlin.set
 import dev.restate.sdk.kotlin.state
 import dev.restate.sdk.kotlin.stateKey
-import dev.restate.sdktesting.infra.InjectAdminURI
-import dev.restate.sdktesting.infra.InjectClient
-import dev.restate.sdktesting.infra.InjectContainerPort
-import dev.restate.sdktesting.infra.KafkaContainer
-import dev.restate.sdktesting.infra.RestateDeployerExtension
+import dev.restate.sdktesting.infra.*
 import dev.restate.sdktesting.infra.runtimeconfig.RestateConfigSchema
 import dev.restate.sdktesting.tests.Tracing.JAEGER_HOSTNAME
 import dev.restate.sdktesting.tests.Tracing.JAEGER_QUERY_PORT

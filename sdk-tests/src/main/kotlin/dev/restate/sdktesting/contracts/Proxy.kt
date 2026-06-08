@@ -23,6 +23,10 @@ interface Proxy {
       val message: ByteArray,
       val delayMillis: Int? = null,
       val idempotencyKey: String? = null,
+      /** Scope to attach to the outgoing service-to-service call, if set. */
+      val scope: String? = null,
+      /** Limit key to attach to the outgoing service-to-service call, if set. */
+      val limitKey: String? = null,
   )
 
   @Serializable

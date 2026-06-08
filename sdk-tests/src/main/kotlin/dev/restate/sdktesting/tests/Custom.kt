@@ -10,11 +10,7 @@ package dev.restate.sdktesting.tests
 
 import com.charleskorn.kaml.Yaml
 import com.charleskorn.kaml.decodeFromStream
-import dev.restate.sdktesting.infra.InjectAdminURI
-import dev.restate.sdktesting.infra.InjectIngressURI
-import dev.restate.sdktesting.infra.RestateDeployerExtension
-import dev.restate.sdktesting.infra.ServiceSpec
-import dev.restate.sdktesting.infra.getGlobalConfig
+import dev.restate.sdktesting.infra.*
 import java.io.FileInputStream
 import java.net.URI
 import java.util.concurrent.TimeUnit

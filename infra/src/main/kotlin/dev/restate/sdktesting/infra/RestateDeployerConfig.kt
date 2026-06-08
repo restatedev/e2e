@@ -8,6 +8,8 @@
 // https://github.com/restatedev/sdk-test-suite/blob/main/LICENSE
 package dev.restate.sdktesting.infra
 
+import org.testcontainers.images.ImagePullPolicy
+
 sealed interface ServiceDeploymentConfig
 
 data class ContainerServiceDeploymentConfig(
@@ -20,6 +22,15 @@ data class LocalForwardServiceDeploymentConfig(val port: Int = 9080) : ServiceDe
 enum class PullPolicy {
   ALWAYS,
   CACHED
+}
+
+internal fun dev.restate.sdktesting.infra.PullPolicy.toTestContainersImagePullPolicy():
+    ImagePullPolicy {
+  return when (this) {
+    dev.restate.sdktesting.infra.PullPolicy.ALWAYS -> LocalAlwaysPullPolicy
+    dev.restate.sdktesting.infra.PullPolicy.CACHED ->
+        org.testcontainers.images.PullPolicy.defaultPolicy()
+  }
 }
 
 data class RestateDeployerConfig(
