@@ -100,13 +100,23 @@ object TestSuites : SuiteProvider {
           emptyMap(),
           listOf(clazz<BackwardCompatibilityTest>(), clazz<ForwardCompatibilityTest>()))
 
+  // Same tests as DEFAULT_SUITE, but exercising the new /restate/* ingress API through the
+  // NewIngressClient implementation of the SDK Client interface (see useNewClient).
+  private val NEW_CLIENT_SUITE =
+      TestSuite(
+          "newIngressAPI",
+          DEFAULT_SUITE.additionalEnvs,
+          DEFAULT_SUITE.selectors,
+          useNewClient = true)
+
   override fun allSuites(): List<TestSuite> {
     return listOf(
         DEFAULT_SUITE,
         THREE_NODES_SUITE,
         ALWAYS_SUSPENDING_SUITE,
         THREE_NODES_ALWAYS_SUSPENDING_SUITE,
-        VERSION_COMPATIBILITY_SUITE)
+        VERSION_COMPATIBILITY_SUITE,
+        NEW_CLIENT_SUITE)
   }
 
   override fun resolveSuites(suite: String?): List<TestSuite> {
@@ -124,6 +134,7 @@ object TestSuites : SuiteProvider {
                     THREE_NODES_ALWAYS_SUSPENDING_SUITE.name ->
                         listOf(THREE_NODES_ALWAYS_SUSPENDING_SUITE)
                     VERSION_COMPATIBILITY_SUITE.name -> listOf(VERSION_COMPATIBILITY_SUITE)
+                    NEW_CLIENT_SUITE.name -> listOf(NEW_CLIENT_SUITE)
                     else -> {
                       throw IllegalArgumentException("Unexpected suite name $suite")
                     }
