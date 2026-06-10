@@ -49,16 +49,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Implementation of {@link Client} that targets the new {@code /restate/*} ingress API introduced
- * in <a href="https://github.com/restatedev/restate/pull/4678">restatedev/restate#4678</a>:
- *
- * <ul>
- *   <li>{@code POST /restate/call/{service}[/{key}]/{handler}}
- *   <li>{@code POST /restate/send/{service}[/{key}]/{handler}}
- *   <li>{@code GET /restate/attach/{invocationId}} and {@code GET /restate/output/{invocationId}}
- *   <li>{@code POST /restate/attach} and {@code POST /restate/output} with an invocation target
- *       body
- * </ul>
+ * Implementation of {@link Client} that targets the new {@code /restate/*} ingress API introduced in 1.7
  *
  * <p>This class is intentionally self-contained (it does not extend the SDK's {@code BaseClient})
  * so that it can be copy-pasted into the SDK {@code client} module once the new ingress API
@@ -462,10 +453,10 @@ public final class NewIngressClient implements Client {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     try (JsonGenerator gen = JSON_FACTORY.createGenerator(baos)) {
       gen.writeStartObject();
-      gen.writeStringField("type", "idempotency");
+      gen.writeStringField("target", "idempotentInvocation");
       gen.writeStringField("service", target.getService());
       if (target.getKey() != null) {
-        gen.writeStringField("serviceKey", target.getKey());
+        gen.writeStringField("key", target.getKey());
       }
       gen.writeStringField("handler", target.getHandler());
       gen.writeStringField("idempotencyKey", idempotencyKey);
@@ -480,9 +471,9 @@ public final class NewIngressClient implements Client {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     try (JsonGenerator gen = JSON_FACTORY.createGenerator(baos)) {
       gen.writeStartObject();
-      gen.writeStringField("type", "workflow");
-      gen.writeStringField("name", workflowName);
-      gen.writeStringField("key", workflowId);
+      gen.writeStringField("target", "workflow");
+      gen.writeStringField("workflowName", workflowName);
+      gen.writeStringField("workflowKey", workflowId);
       gen.writeEndObject();
     } catch (IOException e) {
       throw new RuntimeException("Cannot serialize workflow invocation target", e);
