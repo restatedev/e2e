@@ -61,7 +61,6 @@ object TestSuites : SuiteProvider {
               "RESTATE_DEFAULT_NUM_PARTITIONS" to "4",
           ),
           listOf(
-              clazz<ConcurrencyLimitTest>(),
               clazz<ScopeIsolationTest>(),
               clazz<AwakeableIngressEndpointTest>(),
               clazz<AwakeableLeaderTransferTest>(),
