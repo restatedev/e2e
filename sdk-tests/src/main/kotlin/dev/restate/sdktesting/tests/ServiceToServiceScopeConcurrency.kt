@@ -22,20 +22,17 @@ import dev.restate.sdktesting.contracts.VirtualObjectCommandInterpreter.ResolveA
 import dev.restate.sdktesting.infra.*
 import java.net.URI
 import java.util.UUID
-import java.util.concurrent.TimeUnit
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.serialization.json.Json
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.withAlias
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.extension.RegisterExtension
 
 /**
  * Verifies that the new service-to-service call options for `scope` and `limitKey` are propagated
- * to the runtime: a rule-book action-concurrency rule scoped to `scope/limitKey` must throttle the
+ * to the runtime: a rule-book concurrency rule scoped to `scope/limitKey` must limit the
  * invocations a service issues with those options.
  *
  * Scope is only supported for `@Service` targets, so the scoped invocations are calls to
@@ -48,7 +45,7 @@ import org.junit.jupiter.api.extension.RegisterExtension
  *
  * Matching the rule against the exact `scope/limitKey` pattern means the test fails unless *both*
  * options are propagated: if either were dropped, the invocation identity would not match the rule
- * and all N would run unthrottled.
+ * and all N would run concurrently.
  */
 class ServiceToServiceScopeConcurrency {
 
@@ -74,123 +71,117 @@ class ServiceToServiceScopeConcurrency {
 
   @Test
   @DisplayName(
-      "Action concurrency limit is enforced on service-to-service calls carrying scope and limit key")
-  // Overrides the 30s default method timeout: blocked scoped invocations are released one at a
-  // time.
-  @Timeout(value = 120, unit = TimeUnit.SECONDS)
+      "Concurrency limit is enforced on service-to-service calls carrying scope and limit key")
   fun scopeAndLimitKeyArePropagatedOnServiceToServiceCalls(
       @InjectClient ingressClient: Client,
       @InjectAdminURI adminURI: URI,
       @InjectContainerHandle(hostName = RESTATE_RUNTIME) runtimeHandle: ContainerHandle,
-  ) =
-      runTest(timeout = 120.seconds) {
-        val runId = UUID.randomUUID().toString().take(8)
-        val scope = "s2s-scope-$runId"
-        val limitKey = "s2s-limitkey-$runId"
-        // The runtime matches the rule pattern against the "scope/limitKey" identity.
-        val rulePattern = "$scope/$limitKey"
-        val limit = 2
-        val invocationCount = 4
-        val interpreterKeys = (0 until invocationCount).map { "interpreter-$runId-$it" }
+  ) = runTest {
+    val runId = UUID.randomUUID().toString().take(8)
+    val scope = "s2s-scope-$runId"
+    val limitKey = "s2s-limitkey-$runId"
+    // The runtime matches the rule pattern against the "scope/limitKey" identity.
+    val rulePattern = "$scope/$limitKey"
+    val limit = 2
+    val invocationCount = 4
+    val interpreterKeys = (0 until invocationCount).map { "interpreter-$runId-$it" }
 
-        val ruleVersion =
-            upsertActionConcurrencyRule(adminURI, pattern = rulePattern, actionConcurrency = limit)
-                .version
-        awaitRuleBookApplied(runtimeHandle, ruleVersion)
+    val ruleVersion =
+        upsertActionConcurrencyRule(adminURI, pattern = rulePattern, actionConcurrency = limit)
+            .version
+    awaitRuleBookApplied(runtimeHandle, ruleVersion)
 
-        // A single (unscoped) Proxy invocation fans out one scoped background call to Proxy.call
-        // per
-        // interpreter key. Each scoped Proxy.call is the invocation the rule throttles; once
-        // running,
-        // it makes a regular (unscoped) call to its interpreter, which blocks on an awakeable.
-        val proxyName = extractServiceName(Proxy::class.java)
-        val interpreterName = extractServiceName(VirtualObjectCommandInterpreter::class.java)
-        val blockCommand =
-            Json.encodeToString(InterpretRequest(listOf(AwaitOne(CreateAwakeable(AWAKEABLE_KEY)))))
-                .encodeToByteArray()
-        ingressClient
-            .toService<Proxy>()
-            .request {
-              manyCalls(
-                  interpreterKeys.map { key ->
-                    // Inner, unscoped call from Proxy.call to the blocking interpreter VO.
-                    val innerCall =
-                        Proxy.ProxyRequest(
-                            serviceName = interpreterName,
-                            virtualObjectKey = key,
-                            handlerName = "interpretCommands",
-                            message = blockCommand,
-                        )
-                    Proxy.ManyCallRequest(
-                        // Outer, scoped call to the Proxy service.
-                        Proxy.ProxyRequest(
-                            serviceName = proxyName,
-                            virtualObjectKey = null,
-                            handlerName = "call",
-                            message = Json.encodeToString(innerCall).encodeToByteArray(),
-                            scope = scope,
-                            limitKey = limitKey,
-                        ),
-                        oneWayCall = true,
-                        awaitAtTheEnd = false,
+    // A single (unscoped) Proxy invocation fans out one scoped background call to Proxy.call per
+    // interpreter key. Each scoped Proxy.call is an invocation the rule limits; once running, it
+    // makes a regular (unscoped) call to its interpreter, which blocks on an awakeable.
+    val proxyName = extractServiceName(Proxy::class.java)
+    val interpreterName = extractServiceName(VirtualObjectCommandInterpreter::class.java)
+    val blockCommand =
+        Json.encodeToString(InterpretRequest(listOf(AwaitOne(CreateAwakeable(AWAKEABLE_KEY)))))
+            .encodeToByteArray()
+    ingressClient
+        .toService<Proxy>()
+        .request {
+          manyCalls(
+              interpreterKeys.map { key ->
+                // Inner, unscoped call from Proxy.call to the blocking interpreter VO.
+                val innerCall =
+                    Proxy.ProxyRequest(
+                        serviceName = interpreterName,
+                        virtualObjectKey = key,
+                        handlerName = "interpretCommands",
+                        message = blockCommand,
                     )
-                  })
-            }
+                Proxy.ManyCallRequest(
+                    // Outer, scoped call to the Proxy service.
+                    Proxy.ProxyRequest(
+                        serviceName = proxyName,
+                        virtualObjectKey = null,
+                        handlerName = "call",
+                        message = Json.encodeToString(innerCall).encodeToByteArray(),
+                        scope = scope,
+                        limitKey = limitKey,
+                    ),
+                    oneWayCall = true,
+                    awaitAtTheEnd = false,
+                )
+              })
+        }
+        .options(idempotentCallOptions)
+        .call()
+
+    suspend fun isRunning(key: String): Boolean =
+        ingressClient
+            .toVirtualObject<VirtualObjectCommandInterpreter>(key)
+            .request { hasAwakeable(AWAKEABLE_KEY) }
             .options(idempotentCallOptions)
             .call()
+            .response
 
-        suspend fun isRunning(key: String): Boolean =
-            ingressClient
-                .toVirtualObject<VirtualObjectCommandInterpreter>(key)
-                .request { hasAwakeable(AWAKEABLE_KEY) }
-                .options(idempotentCallOptions)
-                .call()
-                .response
-
-        // The rule must hold the count of running invocations at exactly `limit`; the rest wait.
-        await withAlias
-            "exactly $limit scoped invocations are running" untilAsserted
-            {
-              assertThat(interpreterKeys.count { isRunning(it) }).isEqualTo(limit)
-            }
-
-        // Resolve one awakeable at a time. After each resolve, a held invocation becomes running
-        // and registers its own awakeable.
-        val unresolvedKeys = interpreterKeys.toMutableSet()
-        repeat(invocationCount) {
-          var activeKey: String? = null
-          await withAlias
-              "find a running interpreter (among unresolved keys)" untilAsserted
-              {
-                val found = unresolvedKeys.firstOrNull { isRunning(it) }
-                assertThat(found).isNotNull
-                activeKey = found
-              }
-
-          ingressClient
-              .toVirtualObject<VirtualObjectCommandInterpreter>(activeKey!!)
-              .request { resolveAwakeable(ResolveAwakeable(AWAKEABLE_KEY, "done")) }
-              .options(idempotentCallOptions)
-              .call()
-          unresolvedKeys.remove(activeKey!!)
+    // The rule must hold the count of running invocations at exactly `limit`; the rest wait.
+    await withAlias
+        "exactly $limit scoped invocations are running" untilAsserted
+        {
+          assertThat(interpreterKeys.count { isRunning(it) }).isEqualTo(limit)
         }
 
-        // Every interpreter invocation must eventually complete, recording the resolved value.
-        interpreterKeys.forEach { key ->
-          await withAlias
-              "interpreter $key completed" untilAsserted
-              {
-                assertThat(
-                        ingressClient
-                            .toVirtualObject<VirtualObjectCommandInterpreter>(key)
-                            .request { getResults() }
-                            .options(idempotentCallOptions)
-                            .call()
-                            .response)
-                    .contains("done")
-              }
-        }
+    // Resolve one awakeable at a time. After each resolve, a held invocation becomes running
+    // and registers its own awakeable.
+    val unresolvedKeys = interpreterKeys.toMutableSet()
+    repeat(invocationCount) {
+      var activeKey: String? = null
+      await withAlias
+          "find a running interpreter (among unresolved keys)" untilAsserted
+          {
+            val found = unresolvedKeys.firstOrNull { isRunning(it) }
+            assertThat(found).isNotNull
+            activeKey = found
+          }
 
-        bulkDeleteRules(adminURI, listOf(rulePattern))
-      }
+      ingressClient
+          .toVirtualObject<VirtualObjectCommandInterpreter>(activeKey!!)
+          .request { resolveAwakeable(ResolveAwakeable(AWAKEABLE_KEY, "done")) }
+          .options(idempotentCallOptions)
+          .call()
+      unresolvedKeys.remove(activeKey!!)
+    }
+
+    // Every interpreter invocation must eventually complete, recording the resolved value.
+    interpreterKeys.forEach { key ->
+      await withAlias
+          "interpreter $key completed" untilAsserted
+          {
+            assertThat(
+                    ingressClient
+                        .toVirtualObject<VirtualObjectCommandInterpreter>(key)
+                        .request { getResults() }
+                        .options(idempotentCallOptions)
+                        .call()
+                        .response)
+                .contains("done")
+          }
+    }
+
+    bulkDeleteRules(adminURI, listOf(rulePattern))
+  }
 }
