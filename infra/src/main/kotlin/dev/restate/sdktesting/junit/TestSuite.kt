@@ -41,6 +41,7 @@ class TestSuite(
     val additionalEnvs: Map<String, String>,
     val selectors: List<DiscoverySelector>,
     val restateNodes: Int = 1,
+    val useNewClient: Boolean = false,
 ) {
   fun runTests(
       terminal: Terminal,
@@ -63,7 +64,11 @@ class TestSuite(
 
     // Apply additional runtime envs
     val restateDeployerConfig =
-        getGlobalConfig().copy(additionalRuntimeEnvs = additionalEnvs, restateNodes = restateNodes)
+        getGlobalConfig()
+            .copy(
+                additionalRuntimeEnvs = additionalEnvs,
+                restateNodes = restateNodes,
+                useNewClient = useNewClient)
     registerGlobalConfig(restateDeployerConfig)
 
     // Prepare launch request

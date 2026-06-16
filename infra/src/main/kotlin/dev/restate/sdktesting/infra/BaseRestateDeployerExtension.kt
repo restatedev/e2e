@@ -9,6 +9,7 @@
 package dev.restate.sdktesting.infra
 
 import dev.restate.client.Client
+import dev.restate.client.experimental.NewIngressClient
 import java.net.URI
 import java.nio.file.Path
 import org.junit.jupiter.api.extension.*
@@ -63,7 +64,10 @@ abstract class BaseRestateDeployerExtension : ParameterResolver {
   }
 
   private fun resolveIngressClient(extensionContext: ExtensionContext): Client {
-    return LoggingClient(Client.connect(resolveIngressURI(extensionContext).toString()))
+    val uri = resolveIngressURI(extensionContext).toString()
+    val delegate =
+        if (getGlobalConfig().useNewClient) NewIngressClient.connect(uri) else Client.connect(uri)
+    return LoggingClient(delegate)
   }
 
   private fun resolveContainerAddress(
