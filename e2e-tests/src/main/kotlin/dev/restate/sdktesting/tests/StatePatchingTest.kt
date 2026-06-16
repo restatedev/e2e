@@ -21,9 +21,7 @@ import dev.restate.sdk.endpoint.Endpoint
 import dev.restate.sdk.kotlin.get
 import dev.restate.sdk.kotlin.set
 import dev.restate.sdk.kotlin.state
-import dev.restate.sdktesting.infra.InjectAdminURI
-import dev.restate.sdktesting.infra.InjectClient
-import dev.restate.sdktesting.infra.RestateDeployerExtension
+import dev.restate.sdktesting.infra.*
 import java.net.URI
 import kotlinx.serialization.json.Json
 import org.assertj.core.api.Assertions.assertThat

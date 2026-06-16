@@ -15,9 +15,7 @@ import dev.restate.sdk.annotation.Service
 import dev.restate.sdk.endpoint.Endpoint
 import dev.restate.sdk.kotlin.endpoint.*
 import dev.restate.sdk.kotlin.sleep
-import dev.restate.sdktesting.infra.InjectAdminURI
-import dev.restate.sdktesting.infra.InjectClient
-import dev.restate.sdktesting.infra.RestateDeployerExtension
+import dev.restate.sdktesting.infra.*
 import java.net.URI
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.milliseconds

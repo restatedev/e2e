@@ -15,9 +15,7 @@ import dev.restate.client.kotlin.toVirtualObject
 import dev.restate.common.reflections.ReflectionUtils.extractServiceName
 import dev.restate.sdktesting.contracts.ListObject
 import dev.restate.sdktesting.contracts.Proxy
-import dev.restate.sdktesting.infra.InjectClient
-import dev.restate.sdktesting.infra.RestateDeployerExtension
-import dev.restate.sdktesting.infra.ServiceSpec
+import dev.restate.sdktesting.infra.*
 import java.util.*
 import java.util.stream.Stream
 import kotlinx.serialization.json.Json

@@ -17,9 +17,7 @@ import dev.restate.sdk.annotation.Service
 import dev.restate.sdk.endpoint.Endpoint
 import dev.restate.sdk.kotlin.openTelemetryContext
 import dev.restate.sdk.kotlin.request
-import dev.restate.sdktesting.infra.InjectClient
-import dev.restate.sdktesting.infra.InjectContainerPort
-import dev.restate.sdktesting.infra.RestateDeployerExtension
+import dev.restate.sdktesting.infra.*
 import dev.restate.sdktesting.infra.runtimeconfig.RestateConfigSchema
 import dev.restate.sdktesting.tests.Tracing.JAEGER_HOSTNAME
 import dev.restate.sdktesting.tests.Tracing.JAEGER_QUERY_PORT

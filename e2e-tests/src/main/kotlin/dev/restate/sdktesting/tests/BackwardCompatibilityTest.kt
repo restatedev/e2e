@@ -31,12 +31,7 @@ import dev.restate.sdk.kotlin.get
 import dev.restate.sdk.kotlin.runBlock
 import dev.restate.sdk.kotlin.set
 import dev.restate.sdk.kotlin.state
-import dev.restate.sdktesting.infra.Deployer
-import dev.restate.sdktesting.infra.InjectAdminURI
-import dev.restate.sdktesting.infra.InjectClient
-import dev.restate.sdktesting.infra.InjectLocalEndpointURI
-import dev.restate.sdktesting.infra.RestateDeployer
-import dev.restate.sdktesting.infra.RestateDeployerExtension
+import dev.restate.sdktesting.infra.*
 import dev.restate.serde.kotlinx.jsonSerde
 import java.net.URI
 import java.nio.file.Files

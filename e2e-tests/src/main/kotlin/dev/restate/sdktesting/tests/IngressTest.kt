@@ -40,9 +40,7 @@ import dev.restate.sdk.kotlin.send
 import dev.restate.sdk.kotlin.set
 import dev.restate.sdk.kotlin.state
 import dev.restate.sdk.kotlin.stateKey
-import dev.restate.sdktesting.infra.InjectAdminURI
-import dev.restate.sdktesting.infra.InjectClient
-import dev.restate.sdktesting.infra.RestateDeployerExtension
+import dev.restate.sdktesting.infra.*
 import dev.restate.sdktesting.tests.IngressTest.Counter.CounterUpdateResponse
 import dev.restate.serde.TypeTag
 import java.net.URI

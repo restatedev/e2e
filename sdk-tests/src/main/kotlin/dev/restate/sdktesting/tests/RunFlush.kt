@@ -12,9 +12,7 @@ import dev.restate.client.Client
 import dev.restate.client.kotlin.response
 import dev.restate.client.kotlin.toService
 import dev.restate.sdktesting.contracts.TestUtilsService
-import dev.restate.sdktesting.infra.InjectClient
-import dev.restate.sdktesting.infra.RestateDeployerExtension
-import dev.restate.sdktesting.infra.ServiceSpec
+import dev.restate.sdktesting.infra.*
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test

@@ -15,9 +15,7 @@ import dev.restate.sdktesting.contracts.VirtualObjectCommandInterpreter.AwaitAll
 import dev.restate.sdktesting.contracts.VirtualObjectCommandInterpreter.AwaitOne
 import dev.restate.sdktesting.contracts.VirtualObjectCommandInterpreter.InterpretRequest
 import dev.restate.sdktesting.contracts.VirtualObjectCommandInterpreter.Sleep
-import dev.restate.sdktesting.infra.InjectClient
-import dev.restate.sdktesting.infra.RestateDeployerExtension
-import dev.restate.sdktesting.infra.ServiceSpec
+import dev.restate.sdktesting.infra.*
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random

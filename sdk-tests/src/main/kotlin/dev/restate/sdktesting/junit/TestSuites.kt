@@ -20,6 +20,7 @@ import dev.restate.sdktesting.tests.ProxyRequestSigning
 import dev.restate.sdktesting.tests.RunFlush
 import dev.restate.sdktesting.tests.RunRetry
 import dev.restate.sdktesting.tests.ServiceToServiceCommunication
+import dev.restate.sdktesting.tests.ServiceToServiceScopeConcurrency
 import dev.restate.sdktesting.tests.Signals
 import dev.restate.sdktesting.tests.Sleep
 import dev.restate.sdktesting.tests.SleepWithFailures
@@ -47,6 +48,7 @@ object TestSuites : SuiteProvider {
               clazz<ProxyRequestSigning>(),
               clazz<RunRetry>(),
               clazz<ServiceToServiceCommunication>(),
+              clazz<ServiceToServiceScopeConcurrency>(),
               clazz<Sleep>(),
               clazz<SleepWithFailures>(),
               clazz<State>(),
@@ -70,6 +72,7 @@ object TestSuites : SuiteProvider {
               clazz<ProxyRequestSigning>(),
               clazz<RunRetry>(),
               clazz<ServiceToServiceCommunication>(),
+              clazz<ServiceToServiceScopeConcurrency>(),
               clazz<Sleep>(),
               clazz<SleepWithFailures>(),
               clazz<State>(),
