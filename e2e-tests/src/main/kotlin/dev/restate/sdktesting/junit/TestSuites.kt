@@ -51,7 +51,8 @@ object TestSuites : SuiteProvider {
               clazz<TracingTest>(),
               clazz<UpgradeWithNewInvocation>(),
               clazz<UpgradeWithInFlightInvocation>(),
-          ))
+          ),
+          useNewClient = true)
 
   val THREE_NODES_SUITE =
       TestSuite(
@@ -71,7 +72,8 @@ object TestSuites : SuiteProvider {
               clazz<StatePatchingTest>(),
               clazz<TracingTest>(),
           ),
-          3)
+          restateNodes = 3,
+          useNewClient = true)
 
   private val ALWAYS_SUSPENDING_SUITE =
       TestSuite(
@@ -82,7 +84,8 @@ object TestSuites : SuiteProvider {
               clazz<PauseResumeChangingDeploymentTest>(),
               clazz<UpgradeWithNewInvocation>(),
               clazz<UpgradeWithInFlightInvocation>(),
-          ))
+          ),
+          useNewClient = true)
 
   private val THREE_NODES_ALWAYS_SUSPENDING_SUITE =
       TestSuite(
@@ -92,22 +95,22 @@ object TestSuites : SuiteProvider {
               "RESTATE_DEFAULT_NUM_PARTITIONS" to "4",
           ),
           listOf(clazz<AwakeableLeaderTransferTest>()),
-          3)
+          restateNodes = 3,
+          useNewClient = true)
 
   private val VERSION_COMPATIBILITY_SUITE =
       TestSuite(
           "versionCompat",
           emptyMap(),
-          listOf(clazz<BackwardCompatibilityTest>(), clazz<ForwardCompatibilityTest>()))
+          listOf(clazz<BackwardCompatibilityTest>(), clazz<ForwardCompatibilityTest>()),
+          useNewClient = false)
 
-  // Same tests as DEFAULT_SUITE, but exercising the new /restate/* ingress API through the
-  // NewIngressClient implementation of the SDK Client interface (see useNewClient).
-  private val NEW_CLIENT_SUITE =
+  private val OLD_INGRESS_API_SUITE =
       TestSuite(
-          "newIngressAPI",
+          "oldIngressAPI",
           DEFAULT_SUITE.additionalEnvs,
           DEFAULT_SUITE.selectors,
-          useNewClient = true)
+          useNewClient = false)
 
   override fun allSuites(): List<TestSuite> {
     return listOf(
@@ -116,7 +119,7 @@ object TestSuites : SuiteProvider {
         ALWAYS_SUSPENDING_SUITE,
         THREE_NODES_ALWAYS_SUSPENDING_SUITE,
         VERSION_COMPATIBILITY_SUITE,
-        NEW_CLIENT_SUITE)
+        OLD_INGRESS_API_SUITE)
   }
 
   override fun resolveSuites(suite: String?): List<TestSuite> {
@@ -134,7 +137,7 @@ object TestSuites : SuiteProvider {
                     THREE_NODES_ALWAYS_SUSPENDING_SUITE.name ->
                         listOf(THREE_NODES_ALWAYS_SUSPENDING_SUITE)
                     VERSION_COMPATIBILITY_SUITE.name -> listOf(VERSION_COMPATIBILITY_SUITE)
-                    NEW_CLIENT_SUITE.name -> listOf(NEW_CLIENT_SUITE)
+                    OLD_INGRESS_API_SUITE.name -> listOf(OLD_INGRESS_API_SUITE)
                     else -> {
                       throw IllegalArgumentException("Unexpected suite name $suite")
                     }

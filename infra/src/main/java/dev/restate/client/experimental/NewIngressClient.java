@@ -49,13 +49,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Implementation of {@link Client} that targets the new {@code /restate/*} ingress API introduced in 1.7
+ * Implementation of {@link Client} that targets the new {@code /restate/*} ingress API introduced
+ * in 1.7
  *
- * <p>This class is intentionally self-contained (it does not extend the SDK's {@code BaseClient})
- * so that it can be copy-pasted into the SDK {@code client} module once the new ingress API
- * stabilizes. It mirrors the request serialization, header handling and response mapping of {@code
- * BaseClient} / {@code JdkClient}, only the URL routing differs. JSON bodies are produced with the
- * Jackson Core streaming API to match the minimal dependency set of the SDK {@code client} module.
+ * <p>This class is meant to be moved to the Java SDK once we want the SDK client to depend only on
+ * the new ingress API.
  */
 public final class NewIngressClient implements Client {
 
