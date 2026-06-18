@@ -87,8 +87,7 @@ class ServiceToServiceScopeConcurrency {
     val interpreterKeys = (0 until invocationCount).map { "interpreter-$runId-$it" }
 
     val ruleVersion =
-        upsertActionConcurrencyRule(adminURI, pattern = rulePattern, actionConcurrency = limit)
-            .version
+        upsertConcurrencyRule(adminURI, pattern = rulePattern, concurrency = limit).version
     awaitRuleBookApplied(runtimeHandle, ruleVersion)
 
     // A single (unscoped) Proxy invocation fans out one scoped background call to Proxy.call per

@@ -43,14 +43,9 @@ private val queryJson = Json {
 private fun ruleApi(adminURI: URI): RuleApi =
     RuleApi(ApiClient().setHost(adminURI.host).setPort(adminURI.port))
 
-/** Upsert a single rule that caps action concurrency for a given pattern. */
-fun upsertActionConcurrencyRule(
-    adminURI: URI,
-    pattern: String,
-    actionConcurrency: Int
-): RuleResponse {
-  val req =
-      UpsertRuleRequest().pattern(pattern).limits(UserLimits().actionConcurrency(actionConcurrency))
+/** Upsert a single rule that caps concurrency for a given pattern. */
+fun upsertConcurrencyRule(adminURI: URI, pattern: String, concurrency: Int): RuleResponse {
+  val req = UpsertRuleRequest().pattern(pattern).limits(UserLimits().concurrency(concurrency))
   return ruleApi(adminURI).upsertRules(listOf(req)).single()
 }
 

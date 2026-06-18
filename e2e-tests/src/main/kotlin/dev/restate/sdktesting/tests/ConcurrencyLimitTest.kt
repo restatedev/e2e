@@ -21,7 +21,6 @@ import dev.restate.sdk.common.TerminalException
 import dev.restate.sdk.endpoint.Endpoint
 import dev.restate.sdk.kotlin.awakeable
 import dev.restate.sdk.kotlin.awakeableHandle
-import dev.restate.sdk.kotlin.call
 import dev.restate.sdk.kotlin.get
 import dev.restate.sdk.kotlin.resolve
 import dev.restate.sdk.kotlin.set
@@ -43,9 +42,8 @@ import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.api.parallel.Isolated
 
 /**
- * Verifies the runtime enforces the rule-book concurrency limit on a scope. Scoped
- * invocations are limited to N in flight, and the held excess progresses as the running ones
- * complete.
+ * Verifies the runtime enforces the rule-book concurrency limit on a scope. Scoped invocations are
+ * limited to N in flight, and the held excess progresses as the running ones complete.
  *
  * Runs only on single-node suites: the strict in-process concurrency bound (see
  * [concurrencyLimitIsRespected]) cannot be asserted on multi-node clusters, where a leadership
@@ -117,8 +115,7 @@ class ConcurrencyLimitTest {
   }
 
   @Test
-  @DisplayName(
-      "Concurrency limit on a scope holds excess invocations and releases on completion")
+  @DisplayName("Concurrency limit on a scope holds excess invocations and releases on completion")
   fun concurrencyLimitIsRespected(
       @InjectIngressURI ingressURI: URI,
       @InjectAdminURI adminURI: URI,
@@ -136,8 +133,7 @@ class ConcurrencyLimitTest {
         val blockerKeys = (0 until invocationCount).map { "block-key-$runId-$it" }
 
         val ruleVersion =
-            upsertActionConcurrencyRule(adminURI, pattern = scope, actionConcurrency = limit)
-                .version
+            upsertConcurrencyRule(adminURI, pattern = scope, concurrency = limit).version
         awaitRuleBookApplied(runtimeHandle, ruleVersion)
 
         val outerIds =
@@ -151,7 +147,8 @@ class ConcurrencyLimitTest {
         // We count the scoped BlockingProxy invocations directly instead of the downstream Blocker
         // invocations they spawn. The runtime only guarantees that no more than `limit` scoped
         // invocations run *concurrently* - it does not guarantee that it is always the *same* set.
-        // Under a leadership change a running BlockingProxy can yield its slot to a held one, but the
+        // Under a leadership change a running BlockingProxy can yield its slot to a held one, but
+        // the
         // Blocker invocation it already spawned keeps running until its awakeable is resolved. The
         // Blocker count is therefore cumulative and can exceed `limit` even while the limit is
         // respected, which made the previous `Blocker/%/run` count flaky on threeNodes.
@@ -206,13 +203,17 @@ class ConcurrencyLimitTest {
         }
 
         // The concurrency limit must also hold for actual handler execution: at no point
-        // during the run should more than `limit` BlockingProxy handlers have run concurrently on the
+        // during the run should more than `limit` BlockingProxy handlers have run concurrently on
+        // the
         // SDK endpoint. This maximum is accumulated across the whole run.
         //
-        // We only assert the strict bound on single-node clusters. On multi-node clusters a leadership
-        // change can momentarily run more than `limit` handlers at once: the old leader needs time to
+        // We only assert the strict bound on single-node clusters. On multi-node clusters a
+        // leadership
+        // change can momentarily run more than `limit` handlers at once: the old leader needs time
+        // to
         // notice it lost leadership and the SDK deployment needs time to abort its in-flight
-        // invocations, while the new leader has already dispatched replacements. Single-node clusters
+        // invocations, while the new leader has already dispatched replacements. Single-node
+        // clusters
         // have no leadership changes, so vqueue admission control is authoritative.
         // See https://github.com/restatedev/e2e/issues/435.
         if (getGlobalConfig().restateNodes == 1) {
