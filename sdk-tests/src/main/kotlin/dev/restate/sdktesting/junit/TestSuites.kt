@@ -72,7 +72,6 @@ object TestSuites : SuiteProvider {
               clazz<ProxyRequestSigning>(),
               clazz<RunRetry>(),
               clazz<ServiceToServiceCommunication>(),
-              clazz<ServiceToServiceScopeConcurrency>(),
               clazz<Sleep>(),
               clazz<SleepWithFailures>(),
               clazz<State>(),

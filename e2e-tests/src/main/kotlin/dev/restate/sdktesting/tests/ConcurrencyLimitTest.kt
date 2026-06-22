@@ -39,7 +39,6 @@ import org.awaitility.kotlin.withAlias
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
-import org.junit.jupiter.api.parallel.Isolated
 
 /**
  * Verifies the runtime enforces the rule-book concurrency limit on a scope. Scoped invocations are
@@ -50,7 +49,6 @@ import org.junit.jupiter.api.parallel.Isolated
  * change can momentarily run more than `limit` handlers at once. See
  * https://github.com/restatedev/e2e/issues/435.
  */
-@Isolated
 class ConcurrencyLimitTest {
 
   @Service
@@ -202,25 +200,19 @@ class ConcurrencyLimitTest {
           assertThat(response).isEqualTo("done")
         }
 
-        // The concurrency limit must also hold for actual handler execution: at no point
-        // during the run should more than `limit` BlockingProxy handlers have run concurrently on
-        // the
-        // SDK endpoint. This maximum is accumulated across the whole run.
+        // The concurrency limit must also hold for actual handler execution: at no point during the
+        // run should more than `limit` BlockingProxy handlers have run concurrently on the SDK
+        // endpoint. This maximum is accumulated across the whole run.
         //
-        // We only assert the strict bound on single-node clusters. On multi-node clusters a
-        // leadership
-        // change can momentarily run more than `limit` handlers at once: the old leader needs time
-        // to
-        // notice it lost leadership and the SDK deployment needs time to abort its in-flight
-        // invocations, while the new leader has already dispatched replacements. Single-node
-        // clusters
-        // have no leadership changes, so vqueue admission control is authoritative.
-        // See https://github.com/restatedev/e2e/issues/435.
-        if (getGlobalConfig().restateNodes == 1) {
-          assertThat(maxConcurrentBlocks.get())
-              .`as`("max concurrently running BlockingProxy handlers")
-              .isLessThanOrEqualTo(limit)
-        }
+        // This strict in-process bound is why the test is single-node only: on multi-node a
+        // leadership change can momentarily run more than `limit` handlers at once (the old leader
+        // needs time to notice it lost leadership and the SDK deployment needs time to abort its
+        // in-flight invocations, while the new leader has already dispatched replacements).
+        // Single-node clusters have no leadership changes, so vqueue admission control is
+        // authoritative. See https://github.com/restatedev/e2e/issues/435.
+        assertThat(maxConcurrentBlocks.get())
+            .`as`("max concurrently running BlockingProxy handlers")
+            .isLessThanOrEqualTo(limit)
 
         bulkDeleteRules(adminURI, listOf(scope))
       }
