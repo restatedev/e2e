@@ -22,6 +22,8 @@ dependencies {
   implementation(libs.mordant)
 
   implementation(libs.restate.sdk.client.kotlin)
+  implementation(libs.restate.sdk.kotlin.http)
+  implementation(libs.vertx)
   implementation(libs.dotenv)
 
   implementation(libs.junit.all)
