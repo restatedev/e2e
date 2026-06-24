@@ -1,0 +1,144 @@
+// Copyright (c) 2024 - Restate Software, Inc., Restate GmbH
+//
+// This file is part of the Restate service protocol, which is
+// released under the MIT license.
+//
+// You can find a copy of the license in file LICENSE in the root
+// directory of this repository or package, or at
+// https://github.com/restatedev/proto/blob/main/LICENSE
+
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "restate/common.proto";
+import "restate/metadata.proto";
+
+package restate.metadata_server_svc;
+
+// Grpc service definition for a MetadataStore implementation.
+service MetadataServerSvc {
+  // Get a versioned kv-pair
+  rpc Get(GetRequest) returns (GetResponse);
+
+  // Get the current version for a kv-pair
+  rpc GetVersion(GetRequest) returns (GetVersionResponse);
+
+  // Puts the given kv-pair into the metadata store
+  rpc Put(PutRequest) returns (google.protobuf.Empty);
+
+  // Deletes the given kv-pair
+  rpc Delete(DeleteRequest) returns (google.protobuf.Empty);
+
+  // Provisions the metadata store with the given input
+  rpc Provision(ProvisionRequest) returns (ProvisionResponse);
+
+  // Returns the status of the metadata store svc
+  rpc Status(google.protobuf.Empty) returns (StatusResponse);
+
+  // Instructs the node to join the metadata cluster
+  rpc AddNode(google.protobuf.Empty) returns (google.protobuf.Empty);
+
+  // Remove the given node from the metadata cluster. This operation can only be executed by the leader.
+  rpc RemoveNode(RemoveNodeRequest) returns (google.protobuf.Empty);
+}
+
+message GetRequest {
+  string key = 1;
+  // Cluster fingerprint for validation. If set to 0, then this field is ignored (for backward compatibility and allowing bootstrapping of a cluster).
+  uint64 cluster_fingerprint = 2;
+  // Cluster name for validation. Optional to support backward compatibility.
+  optional string cluster_name = 3;
+}
+
+message PutRequest {
+  string key = 1;
+  restate.metadata.VersionedValue value = 2;
+  restate.metadata.Precondition precondition = 3;
+  // Cluster fingerprint for validation. If set to 0, then this field is ignored (for backward compatibility and allowing bootstrapping of a cluster).
+  uint64 cluster_fingerprint = 4;
+  // Cluster name for validation. Optional to support backward compatibility.
+  optional string cluster_name = 5;
+}
+
+message DeleteRequest {
+  string key = 1;
+  restate.metadata.Precondition precondition = 2;
+  // Cluster fingerprint for validation. If set to 0, then this field is ignored (for backward compatibility and allowing bootstrapping of a cluster).
+  uint64 cluster_fingerprint = 3;
+  // Cluster name for validation. Optional to support backward compatibility.
+  optional string cluster_name = 4;
+}
+
+message GetResponse { optional restate.metadata.VersionedValue value = 1; }
+
+message GetVersionResponse { optional restate.common.Version version = 1; }
+
+message ProvisionRequest { bytes nodes_configuration = 1; }
+
+message ProvisionResponse { bool newly_provisioned = 1; }
+
+message RemoveNodeRequest {
+  uint32 plain_node_id = 1;
+  // optional field to uniquely identify a given cluster member
+  optional int64 created_at_millis = 2;
+}
+
+message StatusResponse {
+  restate.common.MetadataServerStatus status = 1;
+  optional MetadataServerConfiguration configuration = 2;
+  optional uint32 leader = 3;
+  optional SnapshotSummary snapshot = 4;
+  optional RaftSummary raft = 5;
+}
+
+message MetadataServerConfiguration {
+  restate.common.Version version = 1;
+  map<uint32, int64> members = 2;
+}
+
+message SnapshotSummary {
+  uint64 index = 1;
+  uint64 size = 2;
+}
+
+message RaftSummary {
+  uint64 term = 1;
+  uint64 applied = 2;
+  uint64 committed = 3;
+  uint64 first_index = 4;
+  uint64 last_index = 5;
+}
+
+// Ulid is a u128, which is not supported
+// by protobuf so instead we built it out of
+// 2 uint64 which is more efficient than a
+// bytes type.
+message Ulid {
+  uint64 low = 1;
+  uint64 high = 2;
+}
+
+enum WriteRequestKind {
+  WriteRequestKind_UNKNOWN = 0;
+  Put = 1;
+  Delete = 2;
+}
+
+message WriteRequest {
+  Ulid request_id = 1;
+  WriteRequestKind kind = 2;
+  bytes key = 3;
+  restate.metadata.Precondition precondition = 4;
+  // value is only required if WriteRequestKind is set to PUT
+  optional restate.metadata.VersionedValue value = 7;
+}
+
+message KvEntry {
+  bytes key = 1;
+  restate.metadata.VersionedValue value = 2;
+}
+
+message MetadataServerSnapshot {
+  MetadataServerConfiguration configuration = 1;
+  repeated KvEntry entries = 2;
+}
