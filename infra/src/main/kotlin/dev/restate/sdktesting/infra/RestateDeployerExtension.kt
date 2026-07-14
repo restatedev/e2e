@@ -27,7 +27,9 @@ class RestateDeployerExtension(
     val deployerFactory =
         this.deployerFactory
             ?: (AnnotationSupport.findAnnotatedFieldValues(
-                    context.requiredTestInstance, Deployer::class.java)
+                    context.requiredTestInstance,
+                    Deployer::class.java,
+                )
                 .firstOrNull() as? RestateDeployer.Builder.() -> Unit)
     if (deployerFactory == null) {
       throw IllegalStateException("The class $className has no deployer factory configured")

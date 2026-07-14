@@ -27,7 +27,7 @@ import org.junit.platform.launcher.TestPlan
 class RedirectStdoutAndStderrListener(
     private val stdoutOutputPath: Path,
     private val stderrOutputPath: Path,
-    private val out: PrintWriter
+    private val out: PrintWriter,
 ) : TestExecutionListener {
   private val stdoutBuffer = StringWriter()
   private val stderrBuffer = StringWriter()

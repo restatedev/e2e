@@ -55,7 +55,9 @@ object TestSuites : SuiteProvider {
               clazz<StopRuntime>(),
               clazz<UserErrors>(),
               clazz<WorkflowAPI>(),
-              clazz<Signals>()))
+              clazz<Signals>(),
+          ),
+      )
 
   val THREE_NODES_SUITE =
       TestSuite(
@@ -77,8 +79,10 @@ object TestSuites : SuiteProvider {
               clazz<State>(),
               clazz<UserErrors>(),
               clazz<WorkflowAPI>(),
-              clazz<Signals>()),
-          3)
+              clazz<Signals>(),
+          ),
+          3,
+      )
 
   private val ALWAYS_SUSPENDING_SUITE =
       TestSuite(
@@ -98,7 +102,9 @@ object TestSuites : SuiteProvider {
               clazz<StopRuntime>(),
               clazz<UserErrors>(),
               clazz<WorkflowAPI>(),
-              clazz<Signals>()))
+              clazz<Signals>(),
+          ),
+      )
 
   private val THREE_NODES_ALWAYS_SUSPENDING_SUITE =
       TestSuite(
@@ -118,8 +124,10 @@ object TestSuites : SuiteProvider {
               clazz<State>(),
               clazz<UserErrors>(),
               clazz<WorkflowAPI>(),
-              clazz<Signals>()),
-          3)
+              clazz<Signals>(),
+          ),
+          3,
+      )
 
   private val SINGLE_THREAD_SINGLE_PARTITION_SUITE =
       TestSuite(
@@ -144,7 +152,9 @@ object TestSuites : SuiteProvider {
               clazz<StopRuntime>(),
               clazz<UserErrors>(),
               clazz<WorkflowAPI>(),
-              clazz<Signals>()))
+              clazz<Signals>(),
+          ),
+      )
 
   private val LAZY_STATE_SUITE =
       TestSuite(
@@ -152,7 +162,8 @@ object TestSuites : SuiteProvider {
           mapOf(
               "RESTATE_WORKER__INVOKER__DISABLE_EAGER_STATE" to "true",
           ),
-          listOf(clazz<State>()))
+          listOf(clazz<State>()),
+      )
 
   private val LAZY_STATE_ALWAYS_SUSPENDING_SUITE =
       TestSuite(
@@ -161,13 +172,15 @@ object TestSuites : SuiteProvider {
               "RESTATE_WORKER__INVOKER__DISABLE_EAGER_STATE" to "true",
               "RESTATE_WORKER__INVOKER__INACTIVITY_TIMEOUT" to "0s",
           ),
-          listOf(clazz<State>()))
+          listOf(clazz<State>()),
+      )
 
   private val PERSISTED_TIMERS_SUITE =
       TestSuite(
           "persistedTimers",
           mapOf("RESTATE_WORKER__NUM_TIMERS_IN_MEMORY_LIMIT" to "1"),
-          listOf(clazz<Sleep>()))
+          listOf(clazz<Sleep>()),
+      )
 
   override fun allSuites(): List<TestSuite> {
     return listOf(
@@ -178,7 +191,8 @@ object TestSuites : SuiteProvider {
         SINGLE_THREAD_SINGLE_PARTITION_SUITE,
         LAZY_STATE_SUITE,
         LAZY_STATE_ALWAYS_SUSPENDING_SUITE,
-        PERSISTED_TIMERS_SUITE)
+        PERSISTED_TIMERS_SUITE,
+    )
   }
 
   override fun resolveSuites(suite: String?): List<TestSuite> {

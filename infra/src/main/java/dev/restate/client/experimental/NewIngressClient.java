@@ -95,7 +95,8 @@ public final class NewIngressClient implements Client {
     Serde<Req> reqSerde = this.serdeFactory.create(request.getRequestTypeTag());
     Serde<Res> resSerde = this.serdeFactory.create(request.getResponseTypeTag());
 
-    URI requestUri = baseUri.resolve("/restate/call" + targetToURI(request.getTarget()));
+    URI requestUri =
+        baseUri.resolve(invokePath(request.getTarget(), false, null, request.getLimitKey()));
     Stream<Map.Entry<String, String>> headersStream =
         requestHeaders(request, reqSerde.contentType());
     Slice requestBody = reqSerde.serialize(request.getRequest());
@@ -109,12 +110,8 @@ public final class NewIngressClient implements Client {
       Request<Req, Res> request, Duration delay) {
     Serde<Req> reqSerde = this.serdeFactory.create(request.getRequestTypeTag());
 
-    StringBuilder path =
-        new StringBuilder("/restate/send").append(targetToURI(request.getTarget()));
-    if (delay != null && !delay.isZero() && !delay.isNegative()) {
-      path.append("?delay=").append(delay);
-    }
-    URI requestUri = baseUri.resolve(path.toString());
+    URI requestUri =
+        baseUri.resolve(invokePath(request.getTarget(), true, delay, request.getLimitKey()));
 
     Stream<Map.Entry<String, String>> headersStream =
         requestHeaders(request, reqSerde.contentType());
@@ -432,14 +429,42 @@ public final class NewIngressClient implements Client {
 
   // --- URL/body helpers
 
-  /** Contains prefix / but not postfix /. */
-  private static String targetToURI(Target target) {
+  /**
+   * Builds the ingress path (with query params) for a call/send.
+   *
+   * <p>Scoped invocations use the versioned scoped ingress API, which carries the scope in the
+   * path: {@code /restate/scope/{scopeKey}/{send|call}/{service}[/{key}]/{handler}}. The scope is
+   * NOT accepted as a query parameter by the runtime. Unscoped invocations use {@code
+   * /restate/{send|call}/{service}[/{key}]/{handler}}.
+   */
+  private static String invokePath(Target target, boolean isSend, Duration delay, String limitKey) {
+    String op = isSend ? "send" : "call";
     StringBuilder builder = new StringBuilder();
+
+    // Prefix: scoped invocations carry the scope in the path, unscoped ones don't.
+    if (target.getScope() != null) {
+      builder.append("/restate/scope/").append(urlEncode(target.getScope())).append("/").append(op);
+    } else {
+      builder.append("/restate/").append(op);
+    }
+
+    // Target: /{service}[/{key}]/{handler}
     builder.append("/").append(target.getService());
     if (target.getKey() != null) {
       builder.append("/").append(urlEncode(target.getKey()));
     }
     builder.append("/").append(target.getHandler());
+
+    // Query params.
+    String separator = "?";
+    if (limitKey != null) {
+      // The runtime reads the limit key from the "limit-key" query param; it requires a scope.
+      builder.append(separator).append("limit-key=").append(urlEncode(limitKey));
+      separator = "&";
+    }
+    if (isSend && delay != null && !delay.isZero() && !delay.isNegative()) {
+      builder.append(separator).append("delay=").append(delay);
+    }
     return builder.toString();
   }
 

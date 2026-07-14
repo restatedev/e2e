@@ -36,7 +36,8 @@ class ExecutionResultCollector(private val testSuite: String) : TestExecutionLis
           classesResults.toMap(),
           testResults.toMap(),
           timeStarted!!,
-          timeFinished!!)
+          timeFinished!!,
+      )
     }
 
   override fun testPlanExecutionStarted(testPlan: TestPlan) {
@@ -50,7 +51,7 @@ class ExecutionResultCollector(private val testSuite: String) : TestExecutionLis
 
   override fun executionFinished(
       testIdentifier: TestIdentifier,
-      testExecutionResult: TestExecutionResult
+      testExecutionResult: TestExecutionResult,
   ) {
     if (testIdentifier.source.getOrNull() is MethodSource && testIdentifier.isTest) {
       testResults[testIdentifier] = testExecutionResult.toTestResult()

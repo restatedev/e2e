@@ -93,11 +93,13 @@ class AwakeableLeaderTransferTest {
                   "set",
                   "--yes",
                   "--partition-replication",
-                  numNodes.toString())
+                  numNodes.toString(),
+              )
             }
         assertThat(configResult.exitCode)
             .describedAs(
-                "restatectl config set failed (exit=${configResult.exitCode}): ${configResult.stderr}")
+                "restatectl config set failed (exit=${configResult.exitCode}): ${configResult.stderr}"
+            )
             .isZero()
         LOG.info("Set partition replication to {}", numNodes)
 
@@ -139,7 +141,8 @@ class AwakeableLeaderTransferTest {
         // The leadership pin cycles through all nodes so the partition processor leader
         // keeps changing while we resolve awakeables through the ingress.
         LOG.info(
-            "Phase 2: Starting leadership transfers and resolving ${awakeables.size} awakeables")
+            "Phase 2: Starting leadership transfers and resolving ${awakeables.size} awakeables"
+        )
 
         val transferJob =
             launch(Dispatchers.IO) {
@@ -157,7 +160,8 @@ class AwakeableLeaderTransferTest {
                           "pin",
                           "0",
                           "--node",
-                          targetNode.toString())
+                          targetNode.toString(),
+                      )
                   if (result.exitCode == 0) {
                     LOG.debug("Leadership pinned to node N{}", targetNode)
                   } else {
@@ -165,7 +169,8 @@ class AwakeableLeaderTransferTest {
                         "Leadership pin to N{} failed (exit={}): {}",
                         targetNode,
                         result.exitCode,
-                        result.stderr)
+                        result.stderr,
+                    )
                   }
                 } catch (e: Exception) {
                   LOG.warn("restatectl exec failed: {}", e.message)
@@ -205,7 +210,8 @@ class AwakeableLeaderTransferTest {
 
         LOG.info(
             "Phase 3: Verifying {} accepted resolves led to completed invocations",
-            acceptedResolves)
+            acceptedResolves,
+        )
 
         var completed = 0
         for (awk in resolvedAwakeables) {
@@ -234,10 +240,13 @@ class AwakeableLeaderTransferTest {
         assertThat(completed)
             .withFailMessage(
                 "${acceptedResolves - completed} out of $acceptedResolves accepted awakeable resolves " +
-                    "did not complete. Signals were lost during leadership transitions.")
+                    "did not complete. Signals were lost during leadership transitions."
+            )
             .isEqualTo(acceptedResolves)
 
         LOG.info(
-            "All {} accepted awakeable resolves led to completed invocations", acceptedResolves)
+            "All {} accepted awakeable resolves led to completed invocations",
+            acceptedResolves,
+        )
       }
 }

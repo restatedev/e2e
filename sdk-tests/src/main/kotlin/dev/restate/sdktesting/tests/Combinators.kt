@@ -48,7 +48,8 @@ class Combinators {
     val deployerExt: RestateDeployerExtension = RestateDeployerExtension {
       withServiceSpec(
           ServiceSpec.defaultBuilder()
-              .withServices(VirtualObjectCommandInterpreter::class, TestUtilsService::class))
+              .withServices(VirtualObjectCommandInterpreter::class, TestUtilsService::class)
+      )
     }
   }
 
@@ -66,12 +67,15 @@ class Combinators {
                   interpretCommands(
                       InterpretRequest(
                           listOf(
-                              AwaitAny(
-                                  listOf(CreateAwakeable("awk1"), Sleep(timeout.toMillis()))))))
+                              AwaitAny(listOf(CreateAwakeable("awk1"), Sleep(timeout.toMillis())))
+                          )
+                      )
+                  )
                 }
                 .options(idempotentCallOptions)
                 .call()
-                .response)
+                .response
+        )
         .isEqualTo("sleep")
   }
 
@@ -92,13 +96,19 @@ class Combinators {
                                 InterpretRequest(
                                     listOf(
                                         AwaitAwakeableOrTimeout(
-                                            "should-timeout-awk", timeout.toMillis()))))
+                                            "should-timeout-awk",
+                                            timeout.toMillis(),
+                                        )
+                                    )
+                                )
+                            )
                           }
                           .options(idempotentCallOptions)
                           .call()
                           .response
                     }
-                    .exceptionOrNull())
+                    .exceptionOrNull()
+            )
             .message()
             .contains("await-timeout")
       }
@@ -127,7 +137,11 @@ class Combinators {
                                 RunThrowTerminalException("run1"),
                                 CreateAwakeable(awk2),
                                 RunThrowTerminalException("run2"),
-                            )))))
+                            )
+                        )
+                    )
+                )
+            )
           }
           .options(idempotentCallOptions)
           .call()
@@ -146,7 +160,8 @@ class Combinators {
                 .request { hasAwakeable(awk0) }
                 .options(idempotentCallOptions)
                 .call()
-                .response)
+                .response
+        )
         .isTrue()
     // hasAwakeable might have to be retried in case of leadership changes
     assertThat(
@@ -154,7 +169,8 @@ class Combinators {
                 .request { hasAwakeable(awk1) }
                 .options(idempotentCallOptions)
                 .call()
-                .response)
+                .response
+        )
         .isTrue()
 
     // Now let's reject awakeable 2, this should not complete anything
@@ -190,7 +206,12 @@ class Combinators {
                               listOf(
                                   CreateSignal("sig0"),
                                   CreateSignal("sig1"),
-                                  CreateSignal("sig2"))))))
+                                  CreateSignal("sig2"),
+                              )
+                          )
+                      )
+                  )
+              )
             }
             .options(idempotentCallOptions)
             .send()
@@ -230,7 +251,12 @@ class Combinators {
                               listOf(
                                   CreateSignal("sig0"),
                                   CreateSignal("sig1"),
-                                  CreateSignal("sig2"))))))
+                                  CreateSignal("sig2"),
+                              )
+                          )
+                      )
+                  )
+              )
             }
             .options(idempotentCallOptions)
             .send()
@@ -270,7 +296,12 @@ class Combinators {
                               listOf(
                                   CreateSignal("sig0"),
                                   CreateSignal("sig1"),
-                                  CreateSignal("sig2"))))))
+                                  CreateSignal("sig2"),
+                              )
+                          )
+                      )
+                  )
+              )
             }
             .options(idempotentCallOptions)
             .send()
@@ -310,7 +341,12 @@ class Combinators {
                               listOf(
                                   CreateSignal("sig0"),
                                   CreateSignal("sig1"),
-                                  CreateSignal("sig2"))))))
+                                  CreateSignal("sig2"),
+                              )
+                          )
+                      )
+                  )
+              )
             }
             .options(idempotentCallOptions)
             .send()
@@ -338,12 +374,15 @@ class Combinators {
                   interpretCommands(
                       InterpretRequest(
                           listOf(
-                              AwaitFirstCompleted(
-                                  listOf(CreateSignal("sig"), RunReturns("runval"))))))
+                              AwaitFirstCompleted(listOf(CreateSignal("sig"), RunReturns("runval")))
+                          )
+                      )
+                  )
                 }
                 .options(idempotentCallOptions)
                 .call()
-                .response)
+                .response
+        )
         .isEqualTo("runval")
   }
 
@@ -362,7 +401,11 @@ class Combinators {
                   InterpretRequest(
                       listOf(
                           AwaitFirstSucceededOrAllFailed(
-                              listOf(RunThrowTerminalException("fail"), CreateSignal("sig"))))))
+                              listOf(RunThrowTerminalException("fail"), CreateSignal("sig"))
+                          )
+                      )
+                  )
+              )
             }
             .options(idempotentCallOptions)
             .send()
@@ -391,7 +434,11 @@ class Combinators {
                   InterpretRequest(
                       listOf(
                           AwaitAllSucceededOrFirstFailed(
-                              listOf(RunReturns("runval"), CreateSignal("sig"))))))
+                              listOf(RunReturns("runval"), CreateSignal("sig"))
+                          )
+                      )
+                  )
+              )
             }
             .options(idempotentCallOptions)
             .send()
@@ -423,7 +470,12 @@ class Combinators {
                               listOf(
                                   RunReturns("runval"),
                                   CreateSignal("sig"),
-                                  RunThrowTerminalException("fail"))))))
+                                  RunThrowTerminalException("fail"),
+                              )
+                          )
+                      )
+                  )
+              )
             }
             .options(idempotentCallOptions)
             .send()

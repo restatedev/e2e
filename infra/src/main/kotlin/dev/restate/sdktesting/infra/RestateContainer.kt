@@ -42,7 +42,8 @@ class RestateContainer(
     enableLocalPortForward: Boolean = true,
 ) :
     GenericContainer<RestateContainer>(
-        DockerImageName.parse(overrideContainerImage ?: config.restateContainerImage)) {
+        DockerImageName.parse(overrideContainerImage ?: config.restateContainerImage)
+    ) {
   companion object {
     private val LOG = LogManager.getLogger(RestateContainer::class.java)
     private val TOML_MAPPER = ObjectMapper(TomlFactory())
@@ -56,7 +57,9 @@ class RestateContainer(
                         RateLimiterBuilder.newBuilder()
                             .withRate(200, TimeUnit.MILLISECONDS)
                             .withConstantThroughput()
-                            .build()))
+                            .build()
+                    )
+            )
             .withStrategy(
                 Wait.forHttp("/health")
                     .forPort(RUNTIME_ADMIN_ENDPOINT_PORT)
@@ -64,7 +67,9 @@ class RestateContainer(
                         RateLimiterBuilder.newBuilder()
                             .withRate(200, TimeUnit.MILLISECONDS)
                             .withConstantThroughput()
-                            .build()))
+                            .build()
+                    )
+            )
             .withStartupTimeout(120.seconds.toJavaDuration())
 
     fun createRestateContainers(
@@ -75,7 +80,7 @@ class RestateContainer(
         copyToContainer: List<Pair<String, Transferable>>,
         overrideContainerImage: String?,
         overrideStateDirectoryMount: String?,
-        nodes: Int
+        nodes: Int,
     ): List<RestateContainer> {
       val clusterId = envs.get("RESTATE_CLUSTER_NAME") ?: UUID.randomUUID().toString()
       val replicationProperty = if (nodes == 1) 1 else 2
@@ -103,11 +108,14 @@ class RestateContainer(
               effectiveEnvs +
                   mapOf(
                       "RESTATE_AUTO_PROVISION" to "true",
-                      "RESTATE_ADVERTISED_ADDRESS" to "http://$RESTATE_RUNTIME:$RUNTIME_NODE_PORT"),
+                      "RESTATE_ADVERTISED_ADDRESS" to "http://$RESTATE_RUNTIME:$RUNTIME_NODE_PORT",
+                  ),
               configSchema,
               copyToContainer,
               overrideContainerImage,
-              overrideStateDirectoryMount)) +
+              overrideStateDirectoryMount,
+          )
+      ) +
           (1.rangeUntil(nodes)).map {
             RestateContainer(
                 config,
@@ -116,13 +124,15 @@ class RestateContainer(
                 effectiveEnvs +
                     mapOf(
                         "RESTATE_ADVERTISED_ADDRESS" to
-                            "http://$RESTATE_RUNTIME-$it:$RUNTIME_NODE_PORT"),
+                            "http://$RESTATE_RUNTIME-$it:$RUNTIME_NODE_PORT"
+                    ),
                 configSchema,
                 copyToContainer,
                 overrideContainerImage,
                 overrideStateDirectoryMount,
                 // Only the leader gets the privilege of local port forwarding
-                enableLocalPortForward = false)
+                enableLocalPortForward = false,
+            )
           }
     }
   }
@@ -158,7 +168,9 @@ class RestateContainer(
 
       if (configSchema != null) {
         withCopyToContainer(
-            Transferable.of(TOML_MAPPER.writeValueAsBytes(configSchema)), "/config.toml")
+            Transferable.of(TOML_MAPPER.writeValueAsBytes(configSchema)),
+            "/config.toml",
+        )
         withEnv("RESTATE_CONFIG", "/config.toml")
       }
 

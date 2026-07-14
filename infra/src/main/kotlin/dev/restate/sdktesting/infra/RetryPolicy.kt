@@ -25,7 +25,8 @@ sealed class RetryPolicy {
       return mapOf(
           "RESTATE_WORKER__INVOKER__RETRY_POLICY__TYPE" to "fixed-delay",
           "RESTATE_WORKER__INVOKER__RETRY_POLICY__INTERVAL" to interval,
-          "RESTATE_WORKER__INVOKER__RETRY_POLICY__MAX_ATTEMPTS" to maxAttempts.toString())
+          "RESTATE_WORKER__INVOKER__RETRY_POLICY__MAX_ATTEMPTS" to maxAttempts.toString(),
+      )
     }
   }
 }

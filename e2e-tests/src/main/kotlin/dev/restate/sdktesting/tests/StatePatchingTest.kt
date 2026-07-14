@@ -78,7 +78,8 @@ class StatePatchingTest {
         ModifyServiceStateRequest()
             .objectKey("test-key")
             .newState(
-                mapOf("state" to Json.encodeToString(newState).toByteArray().map { it.toInt() }))
+                mapOf("state" to Json.encodeToString(newState).toByteArray().map { it.toInt() })
+            )
 
     await withAlias
         "modify service state" untilAsserted

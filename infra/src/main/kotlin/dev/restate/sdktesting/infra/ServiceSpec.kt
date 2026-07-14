@@ -77,7 +77,8 @@ data class ServiceSpec(
                 name,
                 network,
                 restateURI,
-                totalEnvs + serviceConfig.additionalEnvs)
+                totalEnvs + serviceConfig.additionalEnvs,
+            )
       }
       is LocalForwardServiceDeploymentConfig -> {
         Testcontainers.exposeHostPorts(serviceConfig.port)
@@ -87,7 +88,8 @@ data class ServiceSpec(
               * Should be available at 'localhost:${serviceConfig.port}'
               * Should be configured with env variables ${totalEnvs}
           """
-                .trimIndent())
+                .trimIndent()
+        )
         null
       }
     }

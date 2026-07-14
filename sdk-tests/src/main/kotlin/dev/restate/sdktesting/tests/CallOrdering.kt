@@ -44,7 +44,8 @@ class CallOrdering {
           Arguments.of(booleanArrayOf(false, true, false)),
           Arguments.of(
               booleanArrayOf(true, true, false),
-          ))
+          ),
+      )
     }
   }
 
@@ -67,7 +68,8 @@ class CallOrdering {
                         extractServiceName(ListObject::class.java),
                         listName,
                         "append",
-                        Json.encodeToString(index.toString()).encodeToByteArray())
+                        Json.encodeToString(index.toString()).encodeToByteArray(),
+                    )
 
                 if (executeAsBackgroundCall) {
                   Proxy.ManyCallRequest(proxyRequest, true, false)
@@ -86,7 +88,8 @@ class CallOrdering {
                 .request { clear() }
                 .options(idempotentCallOptions)
                 .call()
-                .response)
+                .response
+        )
         .containsExactly("0", "1", "2")
   }
 }

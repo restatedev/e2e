@@ -20,14 +20,14 @@ interface TestUtilsService {
   data class ResolveSignalRequest(
       val invocationId: String,
       val signalName: String,
-      val value: String
+      val value: String,
   )
 
   @Serializable
   data class RejectSignalRequest(
       val invocationId: String,
       val signalName: String,
-      val reason: String
+      val reason: String,
   )
 
   /** Just echo */

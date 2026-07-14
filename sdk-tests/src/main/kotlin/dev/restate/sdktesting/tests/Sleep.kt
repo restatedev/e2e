@@ -39,7 +39,8 @@ class Sleep {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension = RestateDeployerExtension {
       withServiceSpec(
-          ServiceSpec.defaultBuilder().withServices(VirtualObjectCommandInterpreter::class))
+          ServiceSpec.defaultBuilder().withServices(VirtualObjectCommandInterpreter::class)
+      )
     }
   }
 
@@ -53,7 +54,8 @@ class Sleep {
           .toVirtualObject<VirtualObjectCommandInterpreter>(UUID.randomUUID().toString())
           .request {
             interpretCommands(
-                InterpretRequest(listOf(AwaitOne(Sleep(sleepDuration.inWholeMilliseconds)))))
+                InterpretRequest(listOf(AwaitOne(Sleep(sleepDuration.inWholeMilliseconds))))
+            )
           }
           .options(idempotentCallOptions)
           .call()
@@ -87,8 +89,14 @@ class Sleep {
                                             Random.nextLong(
                                                 minSleepDuration
                                                     .inWholeMilliseconds..maxSleepDuration
-                                                        .inWholeMilliseconds))
-                                      }))))
+                                                        .inWholeMilliseconds
+                                            )
+                                        )
+                                      }
+                                  )
+                              )
+                          )
+                      )
                     }
                     .options(idempotentCallOptions)
                     .call()

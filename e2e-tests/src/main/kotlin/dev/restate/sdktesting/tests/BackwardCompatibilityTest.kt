@@ -150,7 +150,8 @@ class BackwardCompatibilityTest {
     val deployerExt: RestateDeployer.Builder.() -> Unit = {
       withEnv("RESTATE_CLUSTER_NAME", "backward-compatibility-test")
       withOverrideRestateContainerImage(
-          "ghcr.io/restatedev/restate:${Constants.LAST_COMPATIBLE_RESTATE_SERVER_VERSION}")
+          "ghcr.io/restatedev/restate:${Constants.LAST_COMPATIBLE_RESTATE_SERVER_VERSION}"
+      )
       withOverrideRestateStateDirectoryMount(stateDir.toString())
       withEndpoint(
           Endpoint.bind(MyService())
@@ -160,7 +161,9 @@ class BackwardCompatibilityTest {
                   {
                     it.journalRetention = 10.minutes
                     it.inactivityTimeout = 2.minutes
-                  }))
+                  },
+              )
+      )
     }
 
     @Test
@@ -249,13 +252,16 @@ class BackwardCompatibilityTest {
                   {
                     it.journalRetention = 10.minutes
                     it.inactivityTimeout = 2.minutes
-                  })
+                  },
+              )
               .bind(
                   CalleeService(),
                   {
                     it.journalRetention = 20.minutes
                     it.inactivityTimeout = 2.minutes
-                  }))
+                  },
+              )
+      )
     }
 
     // We need to patch the service deployments, otherwise restate will continue retrying to the old
@@ -263,7 +269,7 @@ class BackwardCompatibilityTest {
     @BeforeAll
     fun patchServiceDeployments(
         @InjectAdminURI adminURI: URI,
-        @InjectLocalEndpointURI localEndpointURI: URI
+        @InjectLocalEndpointURI localEndpointURI: URI,
     ) {
       // Create Admin API client with the provided admin URI
       val adminApi = DeploymentApi(ApiClient().setHost(adminURI.host).setPort(adminURI.port))
@@ -277,17 +283,22 @@ class BackwardCompatibilityTest {
       for (deployment in deployments.deployments) {
         val updateRequest =
             UpdateDeploymentRequest(
-                UpdateHttpDeploymentRequest().uri(URI.create(localEndpointURI.toString())))
+                UpdateHttpDeploymentRequest().uri(URI.create(localEndpointURI.toString()))
+            )
 
         try {
           adminApi.updateDeployment(deployment.httpDeploymentResponse.id, updateRequest)
           LOG.info(
               "Successfully updated deployment {} to use URI {}",
               deployment.httpDeploymentResponse.id,
-              localEndpointURI)
+              localEndpointURI,
+          )
         } catch (e: Exception) {
           LOG.error(
-              "Failed to update deployment {}: {}", deployment.httpDeploymentResponse.id, e.message)
+              "Failed to update deployment {}: {}",
+              deployment.httpDeploymentResponse.id,
+              e.message,
+          )
           throw e
         }
       }

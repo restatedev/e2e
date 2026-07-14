@@ -117,10 +117,13 @@ class InvokerMemoryTest {
       // steps and queries sys_journal at teardown, so retaining them would bloat the table.
       val image = System.getenv("E2E_TEST_SERVICES_RS_IMAGE") ?: DEFAULT_E2E_RS_IMAGE
       withServiceDeploymentConfig(
-          SERVICE_SPEC_NAME, ContainerServiceDeploymentConfig(image, emptyMap()))
+          SERVICE_SPEC_NAME,
+          ContainerServiceDeploymentConfig(image, emptyMap()),
+      )
       withServiceSpec(
           ServiceSpec.builder(SERVICE_SPEC_NAME)
-              .withServices("MemoryPressureService", "StatefulObject"))
+              .withServices("MemoryPressureService", "StatefulObject")
+      )
     }
   }
 
@@ -189,7 +192,8 @@ class InvokerMemoryTest {
         val invocations =
             getAllInvocations(
                 adminURI,
-                "target_service_name = 'MemoryPressureService' AND target_handler_name = 'generate'")
+                "target_service_name = 'MemoryPressureService' AND target_handler_name = 'generate'",
+            )
         assertThat(invocations).hasSize(count).allSatisfy { entry ->
           assertThat(entry.status).isEqualTo("completed")
         }
@@ -243,7 +247,8 @@ class InvokerMemoryTest {
     val invocations =
         getAllInvocations(
             adminURI,
-            "target_service_name = 'StatefulObject' AND target_handler_name = 'readState'")
+            "target_service_name = 'StatefulObject' AND target_handler_name = 'readState'",
+        )
     assertThat(invocations).hasSize(count).allSatisfy { entry ->
       assertThat(entry.status).isEqualTo("completed")
     }

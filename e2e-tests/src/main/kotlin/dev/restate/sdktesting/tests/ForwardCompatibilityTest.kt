@@ -155,7 +155,9 @@ class ForwardCompatibilityTest {
                   {
                     it.journalRetention = 10.minutes
                     it.inactivityTimeout = 2.minutes
-                  }))
+                  },
+              )
+      )
     }
 
     @Test
@@ -236,7 +238,8 @@ class ForwardCompatibilityTest {
     val deployerExt: RestateDeployer.Builder.() -> Unit = {
       withEnv("RESTATE_CLUSTER_NAME", "forward-compatibility-test")
       withOverrideRestateContainerImage(
-          "ghcr.io/restatedev/restate:${Constants.LAST_COMPATIBLE_RESTATE_SERVER_VERSION}")
+          "ghcr.io/restatedev/restate:${Constants.LAST_COMPATIBLE_RESTATE_SERVER_VERSION}"
+      )
       withOverrideRestateStateDirectoryMount(stateDir.toString())
       withEndpoint(
           Endpoint.bind(MyService())
@@ -246,13 +249,16 @@ class ForwardCompatibilityTest {
                   {
                     it.journalRetention = 10.minutes
                     it.inactivityTimeout = 2.minutes
-                  })
+                  },
+              )
               .bind(
                   CalleeService(),
                   {
                     it.journalRetention = 20.minutes
                     it.inactivityTimeout = 2.minutes
-                  }))
+                  },
+              )
+      )
     }
 
     // We need to patch the service deployments, otherwise restate will continue retrying to the old
@@ -260,7 +266,7 @@ class ForwardCompatibilityTest {
     @BeforeAll
     fun patchServiceDeployments(
         @InjectAdminURI adminURI: URI,
-        @InjectLocalEndpointURI localEndpointURI: URI
+        @InjectLocalEndpointURI localEndpointURI: URI,
     ) {
       // Create Admin API client with the provided admin URI
       val adminClient = ApiClient().setHost(adminURI.host).setPort(adminURI.port)
@@ -285,7 +291,9 @@ class ForwardCompatibilityTest {
             java.net.http.HttpRequest.newBuilder()
                 .uri(
                     URI.create(
-                        "http://${adminURI.host}:${adminURI.port}/v2/deployments/$deploymentId"))
+                        "http://${adminURI.host}:${adminURI.port}/v2/deployments/$deploymentId"
+                    )
+                )
                 .header("Content-Type", "application/json")
                 .PUT(java.net.http.HttpRequest.BodyPublishers.ofString(body))
                 .build()
@@ -297,7 +305,10 @@ class ForwardCompatibilityTest {
             "updateDeployment call failed with: ${response.statusCode()} - ${response.body()}"
           }
           LOG.info(
-              "Successfully updated deployment {} to use URI {}", deploymentId, localEndpointURI)
+              "Successfully updated deployment {} to use URI {}",
+              deploymentId,
+              localEndpointURI,
+          )
         } catch (e: Exception) {
           LOG.error("Failed to update deployment {}: {}", deploymentId, e.message)
           throw e

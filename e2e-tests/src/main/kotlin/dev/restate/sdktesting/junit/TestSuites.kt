@@ -52,7 +52,8 @@ object TestSuites : SuiteProvider {
               clazz<UpgradeWithNewInvocation>(),
               clazz<UpgradeWithInFlightInvocation>(),
           ),
-          useNewClient = true)
+          useNewClient = true,
+      )
 
   val THREE_NODES_SUITE =
       TestSuite(
@@ -72,7 +73,8 @@ object TestSuites : SuiteProvider {
               clazz<TracingTest>(),
           ),
           restateNodes = 3,
-          useNewClient = true)
+          useNewClient = true,
+      )
 
   private val ALWAYS_SUSPENDING_SUITE =
       TestSuite(
@@ -84,7 +86,8 @@ object TestSuites : SuiteProvider {
               clazz<UpgradeWithNewInvocation>(),
               clazz<UpgradeWithInFlightInvocation>(),
           ),
-          useNewClient = true)
+          useNewClient = true,
+      )
 
   private val THREE_NODES_ALWAYS_SUSPENDING_SUITE =
       TestSuite(
@@ -95,21 +98,24 @@ object TestSuites : SuiteProvider {
           ),
           listOf(clazz<AwakeableLeaderTransferTest>()),
           restateNodes = 3,
-          useNewClient = true)
+          useNewClient = true,
+      )
 
   private val VERSION_COMPATIBILITY_SUITE =
       TestSuite(
           "versionCompat",
           emptyMap(),
           listOf(clazz<BackwardCompatibilityTest>(), clazz<ForwardCompatibilityTest>()),
-          useNewClient = false)
+          useNewClient = false,
+      )
 
   private val OLD_INGRESS_API_SUITE =
       TestSuite(
           "oldIngressAPI",
           DEFAULT_SUITE.additionalEnvs,
           DEFAULT_SUITE.selectors,
-          useNewClient = false)
+          useNewClient = false,
+      )
 
   override fun allSuites(): List<TestSuite> {
     return listOf(
@@ -118,7 +124,8 @@ object TestSuites : SuiteProvider {
         ALWAYS_SUSPENDING_SUITE,
         THREE_NODES_ALWAYS_SUSPENDING_SUITE,
         VERSION_COMPATIBILITY_SUITE,
-        OLD_INGRESS_API_SUITE)
+        OLD_INGRESS_API_SUITE,
+    )
   }
 
   override fun resolveSuites(suite: String?): List<TestSuite> {

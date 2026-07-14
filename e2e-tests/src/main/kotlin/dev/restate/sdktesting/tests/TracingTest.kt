@@ -65,7 +65,10 @@ class TracingTest {
               // Make sure local otel propagates w3c trace context
               .withOpenTelemetry(
                   OpenTelemetry.propagating(
-                      ContextPropagators.create(W3CTraceContextPropagator.getInstance()))))
+                      ContextPropagators.create(W3CTraceContextPropagator.getInstance())
+                  )
+              )
+      )
     }
   }
 

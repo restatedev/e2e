@@ -25,7 +25,8 @@ import org.testcontainers.utility.DockerImageName
 class KafkaContainer(private vararg val topics: String) :
     KafkaContainer(
         DockerImageName.parse("docker.io/apache/kafka-native:4.1.1")
-            .asCompatibleSubstituteFor("apache/kafka")) {
+            .asCompatibleSubstituteFor("apache/kafka")
+    ) {
 
   companion object {
     const val KAFKA_NETWORK_PORT = 9092
@@ -59,7 +60,8 @@ class KafkaContainer(private vararg val topics: String) :
         listOf(
                 "INTERNAL://kafka:9092",
                 "EXTERNAL://${host}:${externalPort}",
-                "BROKER://${containerInfo.config.hostName}:9093")
+                "BROKER://${containerInfo.config.hostName}:9093",
+            )
             .joinToString(",")
 
     // Create startup script that exports the advertised listeners

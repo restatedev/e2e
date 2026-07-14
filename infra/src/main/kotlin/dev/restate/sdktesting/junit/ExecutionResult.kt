@@ -31,7 +31,7 @@ class ExecutionResult(
     private val classesResults: Map<TestIdentifier, TestResult>,
     private val testResults: Map<TestIdentifier, TestResult>,
     timeStarted: TimeSource.Monotonic.ValueTimeMark,
-    timeFinished: TimeSource.Monotonic.ValueTimeMark
+    timeFinished: TimeSource.Monotonic.ValueTimeMark,
 ) {
 
   val succeededTests = testResults.values.count { it is Succeeded }
@@ -89,12 +89,13 @@ class ExecutionResult(
         $classesInfoLine
         * Execution time: $executionDuration
         """
-            .trimIndent())
+            .trimIndent()
+    )
   }
 
   fun printFailuresToTerminal(
       terminal: Terminal,
-      maxStackTraceLines: Int = DEFAULT_MAX_STACKTRACE_LINES_TERMINAL
+      maxStackTraceLines: Int = DEFAULT_MAX_STACKTRACE_LINES_TERMINAL,
   ) {
     val classesFailures =
         this.classesResults.toList().filter { it.second is Aborted || it.second is Failed }
@@ -124,7 +125,7 @@ class ExecutionResult(
 
   fun printFailuresToFiles(
       baseReportDir: Path,
-      maxStackTraceLines: Int = DEFAULT_MAX_STACKTRACE_LINES_FILE
+      maxStackTraceLines: Int = DEFAULT_MAX_STACKTRACE_LINES_FILE,
   ) {
     val reportDir = baseReportDir.resolve(testSuite)
 
@@ -140,7 +141,8 @@ class ExecutionResult(
               reportDir.resolve(clzSimpleName).resolve(TEST_EXCEPTIONS_FILE),
               StandardOpenOption.WRITE,
               StandardOpenOption.CREATE,
-              StandardOpenOption.APPEND)
+              StandardOpenOption.APPEND,
+          )
           .use { printFailure(PrintWriter(it), f.first, f.second, maxStackTraceLines) }
     }
 
@@ -152,7 +154,8 @@ class ExecutionResult(
               reportDir.resolve(clzSimpleName).resolve(TEST_EXCEPTIONS_FILE),
               StandardOpenOption.WRITE,
               StandardOpenOption.CREATE,
-              StandardOpenOption.APPEND)
+              StandardOpenOption.APPEND,
+          )
           .use { printFailure(PrintWriter(it), f.first, f.second, maxStackTraceLines) }
     }
   }
@@ -161,7 +164,7 @@ class ExecutionResult(
       printWriter: PrintWriter,
       testIdentifier: TestIdentifier,
       result: TestResult,
-      maxStackTraceLines: Int
+      maxStackTraceLines: Int,
   ) {
     printWriter.println(describeTestIdentifier(testSuite, testPlan, testIdentifier))
     describeTestIdentifierSource(printWriter, testIdentifier)
@@ -186,8 +189,9 @@ class ExecutionResult(
 
   private fun printStackTrace(writer: PrintWriter, throwable: Throwable, max: Int) {
     var max = max
-    if (throwable.cause != null ||
-        (throwable.suppressed != null && throwable.suppressed.size > 0)) {
+    if (
+        throwable.cause != null || (throwable.suppressed != null && throwable.suppressed.size > 0)
+    ) {
       max = max / 2
     }
     printStackTrace(writer, arrayOf(), throwable, "", TAB + " ", HashSet(), max)
@@ -201,7 +205,7 @@ class ExecutionResult(
       caption: String,
       indentation: String,
       seenThrowables: MutableSet<Throwable?>,
-      max: Int
+      max: Int,
   ) {
     if (seenThrowables.contains(throwable)) {
       writer.printf("%s%s[%s%s]%n", indentation, TAB, CIRCULAR, throwable)
@@ -233,7 +237,7 @@ class ExecutionResult(
 
   private fun numberOfCommonFrames(
       currentTrace: Array<StackTraceElement>,
-      parentTrace: Array<StackTraceElement>?
+      parentTrace: Array<StackTraceElement>?,
   ): Int {
     var currentIndex = currentTrace.size - 1
     var parentIndex = parentTrace!!.size - 1

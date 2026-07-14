@@ -37,7 +37,8 @@ class SleepWithFailures {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension = RestateDeployerExtension {
       withServiceSpec(
-          ServiceSpec.defaultBuilder().withServices(VirtualObjectCommandInterpreter::class))
+          ServiceSpec.defaultBuilder().withServices(VirtualObjectCommandInterpreter::class)
+      )
     }
 
     private val DEFAULT_SLEEP_DURATION = 4.seconds
@@ -46,7 +47,7 @@ class SleepWithFailures {
   private suspend fun asyncSleepTest(
       ingressClient: Client,
       sleepDuration: Duration = DEFAULT_SLEEP_DURATION,
-      action: suspend () -> Unit
+      action: suspend () -> Unit,
   ) {
     val testId = UUID.randomUUID().toString()
     val start = TimeSource.Monotonic.markNow()
@@ -56,7 +57,8 @@ class SleepWithFailures {
             .toVirtualObject<VirtualObjectCommandInterpreter>(testId)
             .request {
               interpretCommands(
-                  InterpretRequest(listOf(AwaitOne(Sleep(sleepDuration.inWholeMilliseconds)))))
+                  InterpretRequest(listOf(AwaitOne(Sleep(sleepDuration.inWholeMilliseconds))))
+              )
             }
             .options(idempotentCallOptions)
             .call()
@@ -64,8 +66,10 @@ class SleepWithFailures {
     }
     delay(
         Random.nextLong(
-                (sleepDuration / 4).inWholeMilliseconds..(sleepDuration / 2).inWholeMilliseconds)
-            .milliseconds)
+                (sleepDuration / 4).inWholeMilliseconds..(sleepDuration / 2).inWholeMilliseconds
+            )
+            .milliseconds
+    )
 
     action()
 
@@ -79,7 +83,8 @@ class SleepWithFailures {
   @Test
   fun sleepAndKillServiceEndpoint(
       @InjectClient ingressClient: Client,
-      @InjectContainerHandle(ServiceSpec.DEFAULT_SERVICE_NAME) coordinatorContainer: ContainerHandle
+      @InjectContainerHandle(ServiceSpec.DEFAULT_SERVICE_NAME)
+      coordinatorContainer: ContainerHandle,
   ) {
     runTest(timeout = 60.seconds) {
       asyncSleepTest(ingressClient) { coordinatorContainer.killAndRestart() }
@@ -90,7 +95,8 @@ class SleepWithFailures {
   @Test
   fun sleepAndTerminateServiceEndpoint(
       @InjectClient ingressClient: Client,
-      @InjectContainerHandle(ServiceSpec.DEFAULT_SERVICE_NAME) coordinatorContainer: ContainerHandle
+      @InjectContainerHandle(ServiceSpec.DEFAULT_SERVICE_NAME)
+      coordinatorContainer: ContainerHandle,
   ) {
     runTest(timeout = 60.seconds) {
       asyncSleepTest(ingressClient) { coordinatorContainer.terminateAndRestart() }

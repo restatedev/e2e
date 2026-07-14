@@ -47,7 +47,11 @@ class KillRuntime {
     val httpClient = HttpClient.newHttpClient()
     val ingressClient =
         JdkClient.of(
-            httpClient, "http://127.0.0.1:${runtimeHandle.getMappedPort(8080)!!}", null, null)
+            httpClient,
+            "http://127.0.0.1:${runtimeHandle.getMappedPort(8080)!!}",
+            null,
+            null,
+        )
     val res1 =
         ingressClient
             .toVirtualObject<Counter>("my-key")
@@ -77,7 +81,11 @@ class KillRuntime {
               HttpClient.newBuilder().connectTimeout(5.seconds.toJavaDuration()).build()
           val ingressClient =
               JdkClient.of(
-                  httpClient, "http://127.0.0.1:${runtimeHandle.getMappedPort(8080)!!}", null, null)
+                  httpClient,
+                  "http://127.0.0.1:${runtimeHandle.getMappedPort(8080)!!}",
+                  null,
+                  null,
+              )
           val res2 =
               withTimeout(5.seconds) {
                 ingressClient

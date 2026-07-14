@@ -76,7 +76,9 @@ fun startAndRegisterLocalEndpoint(endpoint: Endpoint, adminURI: URI): LocalEndpo
         deploymentApi
             .createDeployment(
                 RegisterDeploymentRequest(
-                    RegisterHttpDeploymentRequest().uri(URI.create(uri)).force(false)))
+                    RegisterHttpDeploymentRequest().uri(URI.create(uri)).force(false)
+                )
+            )
             .id
       } catch (e: Exception) {
         LOG.error("Failed to register new deployment {}: {}", uri, e.message)

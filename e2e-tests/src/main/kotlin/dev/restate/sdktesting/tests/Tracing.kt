@@ -49,7 +49,7 @@ object Tracing {
       val startTimeUnixNano: Long,
       val endTimeUnixNano: Long,
       val attributes: List<KeyValue> = emptyList(),
-      val status: Status? = null
+      val status: Status? = null,
   )
 
   @Serializable data class KeyValue(val key: String, val value: Value)
@@ -59,7 +59,7 @@ object Tracing {
       val stringValue: String? = null,
       val intValue: Long? = null,
       val doubleValue: Double? = null,
-      val boolValue: Boolean? = null
+      val boolValue: Boolean? = null,
   )
 
   @Serializable data class Status(val code: Int = 599, val message: String? = null)
@@ -82,7 +82,9 @@ object Tracing {
         HttpRequest.newBuilder()
             .uri(
                 URI.create(
-                    "http://localhost:$otlpPort/api/v3/traces?query.service_name=$serviceName&query.start_time_min=$startTimeEpoch&query.start_time_max=$nowEpoch"))
+                    "http://localhost:$otlpPort/api/v3/traces?query.service_name=$serviceName&query.start_time_min=$startTimeEpoch&query.start_time_max=$nowEpoch"
+                )
+            )
             .header("Accept", "application/json")
             .GET()
             .build()

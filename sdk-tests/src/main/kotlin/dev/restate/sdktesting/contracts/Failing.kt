@@ -17,7 +17,7 @@ interface Failing {
   @Serializable
   data class FailureToPropagate(
       val errorMessage: String,
-      val metadata: Map<String, String>? = null
+      val metadata: Map<String, String>? = null,
   )
 
   @Handler suspend fun terminallyFailingCall(failureToPropagate: FailureToPropagate)

@@ -15,7 +15,7 @@ import org.junit.platform.launcher.TestPlan
 fun describeTestIdentifier(
     testSuite: String,
     testPlan: TestPlan,
-    identifier: TestIdentifier?
+    identifier: TestIdentifier?,
 ): String {
   if (identifier == null || identifier.parentId.isEmpty) {
     return testSuite

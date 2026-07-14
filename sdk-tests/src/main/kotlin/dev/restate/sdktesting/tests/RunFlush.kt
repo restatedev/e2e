@@ -38,7 +38,8 @@ class RunFlush {
                 .request { countExecutedSideEffects(3) }
                 .options(idempotentCallOptions)
                 .call()
-                .response)
+                .response
+        )
         .isEqualTo(0)
   }
 }

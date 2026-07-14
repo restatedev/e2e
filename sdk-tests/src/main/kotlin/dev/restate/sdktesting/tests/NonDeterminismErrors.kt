@@ -36,7 +36,8 @@ class NonDeterminismErrors {
       withEnv("RESTATE_DEFAULT_RETRY_POLICY__ON_MAX_ATTEMPTS", "kill")
       withEnv("RESTATE_DEFAULT_RETRY_POLICY__INITIAL_INTERVAL", "1ms")
       withServiceSpec(
-          ServiceSpec.defaultBuilder().withServices(NonDeterministic::class, Counter::class))
+          ServiceSpec.defaultBuilder().withServices(NonDeterministic::class, Counter::class)
+      )
     }
   }
 
@@ -47,7 +48,9 @@ class NonDeterminismErrors {
               "eitherSleepOrCall",
               "callDifferentMethod",
               "backgroundInvokeWithDifferentTargets",
-              "setDifferentKey"])
+              "setDifferentKey",
+          ]
+  )
   @Execution(ExecutionMode.CONCURRENT)
   fun method(handlerName: String, @InjectClient ingressClient: Client) = runTest {
     // Increment the count first, this makes sure that the counter service is there.
@@ -63,11 +66,14 @@ class NonDeterminismErrors {
                       Target.virtualObject(
                           extractServiceName(NonDeterministic::class.java),
                           handlerName,
-                          handlerName),
+                          handlerName,
+                      ),
                       Serde.VOID,
                       Serde.VOID,
-                      null)
-                  .also { it.idempotencyKey = UUID.randomUUID().toString() })
+                      null,
+                  )
+                  .also { it.idempotencyKey = UUID.randomUUID().toString() }
+          )
         }
         .isNotNull()
 

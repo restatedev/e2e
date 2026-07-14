@@ -26,7 +26,7 @@ abstract class BaseRestateDeployerExtension : ParameterResolver {
 
   override fun supportsParameter(
       parameterContext: ParameterContext,
-      extensionContext: ExtensionContext
+      extensionContext: ExtensionContext,
   ): Boolean {
     return (parameterContext.isAnnotated(InjectClient::class.java) &&
         Client::class.java.isAssignableFrom(parameterContext.parameter.type)) ||
@@ -44,7 +44,7 @@ abstract class BaseRestateDeployerExtension : ParameterResolver {
 
   override fun resolveParameter(
       parameterContext: ParameterContext,
-      extensionContext: ExtensionContext
+      extensionContext: ExtensionContext,
   ): Any? {
     return if (parameterContext.isAnnotated(InjectClient::class.java)) {
       resolveIngressClient(extensionContext)
@@ -72,7 +72,7 @@ abstract class BaseRestateDeployerExtension : ParameterResolver {
 
   private fun resolveContainerAddress(
       parameterContext: ParameterContext,
-      extensionContext: ExtensionContext
+      extensionContext: ExtensionContext,
   ): Any {
     val annotation = parameterContext.findAnnotation(InjectContainerPort::class.java).get()
 
@@ -82,7 +82,8 @@ abstract class BaseRestateDeployerExtension : ParameterResolver {
   private fun resolveIngressURI(extensionContext: ExtensionContext): URI {
     return URI.create(
         "http://127.0.0.1:${ getDeployer(extensionContext)
-      .getContainerPort(RESTATE_RUNTIME, RUNTIME_INGRESS_ENDPOINT_PORT)}/")
+      .getContainerPort(RESTATE_RUNTIME, RUNTIME_INGRESS_ENDPOINT_PORT)}/"
+    )
   }
 
   private fun resolveLocalEndpointURI(extensionContext: ExtensionContext): URI {
@@ -92,12 +93,13 @@ abstract class BaseRestateDeployerExtension : ParameterResolver {
   private fun resolveAdminURI(extensionContext: ExtensionContext): URI {
     return URI.create(
         "http://127.0.0.1:${ getDeployer(extensionContext)
-      .getContainerPort(RESTATE_RUNTIME, RUNTIME_ADMIN_ENDPOINT_PORT)}/")
+      .getContainerPort(RESTATE_RUNTIME, RUNTIME_ADMIN_ENDPOINT_PORT)}/"
+    )
   }
 
   private fun resolveContainerHandle(
       parameterContext: ParameterContext,
-      extensionContext: ExtensionContext
+      extensionContext: ExtensionContext,
   ): Any {
     val annotation = parameterContext.findAnnotation(InjectContainerHandle::class.java).get()
 

@@ -50,7 +50,8 @@ class Ingress {
                   headers = mapOf(headerName to headerValue)
                 }
                 .call()
-                .response)
+                .response
+        )
         .containsEntry(headerName, headerValue)
   }
 
@@ -66,7 +67,8 @@ class Ingress {
                 .request { rawEcho(bytes) }
                 .options(idempotentCallOptions)
                 .call()
-                .response)
+                .response
+        )
         .isEqualTo(bytes)
   }
 }

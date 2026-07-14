@@ -61,7 +61,8 @@ class UserErrors {
                       .call()
                       .response
                 }
-                .exceptionOrNull())
+                .exceptionOrNull()
+        )
         .hasMessageContaining(errorMessage)
   }
 
@@ -92,7 +93,8 @@ class UserErrors {
                       .call()
                       .response
                 }
-                .exceptionOrNull())
+                .exceptionOrNull()
+        )
         .hasMessageContaining(errorMessage)
   }
 
@@ -113,7 +115,8 @@ class UserErrors {
                       .call()
                       .response
                 }
-                .exceptionOrNull())
+                .exceptionOrNull()
+        )
         .hasMessageContaining(errorMessage)
   }
 
@@ -129,7 +132,8 @@ class UserErrors {
             ingressUri,
             key,
             "terminallyFailingCall",
-            Failing.FailureToPropagate(errorMessage, TEST_METADATA))
+            Failing.FailureToPropagate(errorMessage, TEST_METADATA),
+        )
 
     assertThat(errorBody.message).contains(errorMessage)
     assertThat(errorBody.metadata).containsAllEntriesOf(TEST_METADATA)
@@ -156,7 +160,8 @@ class UserErrors {
             ingressUri,
             key,
             "callTerminallyFailingCall",
-            Failing.FailureToPropagate(errorMessage, TEST_METADATA))
+            Failing.FailureToPropagate(errorMessage, TEST_METADATA),
+        )
 
     assertThat(errorBody.message).contains(errorMessage)
     assertThat(errorBody.metadata).containsAllEntriesOf(TEST_METADATA)
@@ -174,7 +179,8 @@ class UserErrors {
             ingressUri,
             key,
             "terminallyFailingSideEffect",
-            Failing.FailureToPropagate(errorMessage, TEST_METADATA))
+            Failing.FailureToPropagate(errorMessage, TEST_METADATA),
+        )
 
     assertThat(errorBody.message).contains(errorMessage)
     assertThat(errorBody.metadata).containsAllEntriesOf(TEST_METADATA)
@@ -191,7 +197,8 @@ class UserErrors {
             runCatching {
                   counterClient.request { addThenFail(1) }.options(idempotentCallOptions).call()
                 }
-                .exceptionOrNull())
+                .exceptionOrNull()
+        )
         .hasMessageContaining(counterName)
 
     assertThat(counterClient.request { get() }.options(idempotentCallOptions).call().response)
@@ -208,7 +215,8 @@ class UserErrors {
                 .request { failingCallWithEventualSuccess() }
                 .options(idempotentCallOptions)
                 .call()
-                .response)
+                .response
+        )
         .isEqualTo(SUCCESS_ATTEMPT)
   }
 
@@ -216,14 +224,14 @@ class UserErrors {
   private data class RestateError(
       val code: Int? = null,
       val message: String,
-      val metadata: Map<String, String>? = null
+      val metadata: Map<String, String>? = null,
   )
 
   private suspend fun callIngressRawAndExpectError(
       ingressUri: URI,
       key: String,
       handler: String,
-      body: Failing.FailureToPropagate
+      body: Failing.FailureToPropagate,
   ): RestateError {
     val httpClient = HttpClient.newHttpClient()
     val requestBody = json.encodeToString(body)

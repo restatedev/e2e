@@ -11,6 +11,7 @@ package dev.restate.sdktesting.tests
 import dev.restate.client.Client
 import dev.restate.client.kotlin.attachSuspend
 import dev.restate.client.kotlin.response
+import dev.restate.client.kotlin.toService
 import dev.restate.sdk.annotation.Handler
 import dev.restate.sdk.annotation.Name
 import dev.restate.sdk.annotation.Service
@@ -18,9 +19,7 @@ import dev.restate.sdk.endpoint.Endpoint
 import dev.restate.sdk.kotlin.runBlock
 import dev.restate.sdktesting.infra.*
 import dev.restate.serde.TypeTag
-import java.net.URI
 import java.util.UUID
-import kotlinx.serialization.json.Json
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -54,30 +53,28 @@ class ScopeIsolationTest {
   @Test
   @DisplayName("Same idempotency key in two different scopes produces two distinct invocations")
   fun sameIdempotencyKeyAcrossScopesIsolates(
-      @InjectIngressURI ingressURI: URI,
       @InjectClient ingressClient: Client,
   ) = runTest {
     val sharedIdempotencyKey = "shared-idempotency"
     val scopeA = UUID.randomUUID().toString()
     val scopeB = UUID.randomUUID().toString()
-    val body = Json.encodeToString("foo")
 
     val idA =
-        sendInvocationWithScope(
-            ingressURI,
-            scopeA,
-            "Random",
-            "genRandomUUID",
-            body,
-            idempotencyKey = sharedIdempotencyKey)
+        ingressClient
+            .scope(scopeA)
+            .toService<Random>()
+            .request { genRandomUUID("foo") }
+            .options { idempotencyKey = sharedIdempotencyKey }
+            .send()
+            .invocationId()
     val idB =
-        sendInvocationWithScope(
-            ingressURI,
-            scopeB,
-            "Random",
-            "genRandomUUID",
-            body,
-            idempotencyKey = sharedIdempotencyKey)
+        ingressClient
+            .scope(scopeB)
+            .toService<Random>()
+            .request { genRandomUUID("foo") }
+            .options { idempotencyKey = sharedIdempotencyKey }
+            .send()
+            .invocationId()
 
     assertThat(idA).isNotEqualTo(idB)
 

@@ -85,7 +85,8 @@ suspend fun getAllPartitionStates(runtimeHandle: ContainerHandle): List<Partitio
             "restatectl",
             "sql",
             "--json",
-            "SELECT partition_id, plain_node_id, applied_rule_book_version FROM partition_state")
+            "SELECT partition_id, plain_node_id, applied_rule_book_version FROM partition_state",
+        )
       }
   check(result.exitCode == 0) {
     "restatectl sql exited with ${result.exitCode}: stdout=${result.stdout}, stderr=${result.stderr}"
@@ -110,7 +111,7 @@ suspend fun getAllPartitionStates(runtimeHandle: ContainerHandle): List<Partitio
 suspend fun awaitRuleBookApplied(
     runtimeHandle: ContainerHandle,
     expectedVersion: Int,
-    timeout: Duration = 30.seconds
+    timeout: Duration = 30.seconds,
 ) {
   await withAlias
       "partition_state.applied_rule_book_version >= $expectedVersion on all partitions" withTimeout
@@ -125,7 +126,8 @@ suspend fun awaitRuleBookApplied(
                   row.partitionId,
                   row.plainNodeId,
                   expectedVersion,
-                  row.appliedRuleBookVersion)
+                  row.appliedRuleBookVersion,
+              )
               .isNotNull
               .isGreaterThanOrEqualTo(expectedVersion.toLong())
         }

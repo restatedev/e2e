@@ -145,7 +145,8 @@ class ServiceToServiceScopeConcurrency {
   @Test
   @Timeout(value = 120, unit = TimeUnit.SECONDS)
   @DisplayName(
-      "Concurrency limit is enforced on service-to-service calls carrying scope and limit key")
+      "Concurrency limit is enforced on service-to-service calls carrying scope and limit key"
+  )
   fun scopeAndLimitKeyArePropagatedOnServiceToServiceCalls(
       @InjectAdminURI adminURI: URI,
       @InjectContainerHandle(hostName = RESTATE_RUNTIME) runtimeHandle: ContainerHandle,
@@ -192,7 +193,8 @@ class ServiceToServiceScopeConcurrency {
                         oneWayCall = true,
                         awaitAtTheEnd = false,
                     )
-                  })
+                  }
+              )
             }
             .options(idempotentCallOptions)
             .call()
@@ -226,17 +228,16 @@ class ServiceToServiceScopeConcurrency {
           await withAlias
               "find a Blocker (among unresolved keys) that has registered its awakeable" untilAsserted
               {
-                val found =
-                    unresolvedKeys.firstNotNullOfOrNull { key ->
-                      val awkId =
-                          ingressClient
-                              .toVirtualObject<Blocker>(key)
-                              .request { getAwakeable() }
-                              .options(idempotentCallOptions)
-                              .call()
-                              .response
-                      if (awkId.isNotEmpty()) key else null
-                    }
+                val found = unresolvedKeys.firstNotNullOfOrNull { key ->
+                  val awkId =
+                      ingressClient
+                          .toVirtualObject<Blocker>(key)
+                          .request { getAwakeable() }
+                          .options(idempotentCallOptions)
+                          .call()
+                          .response
+                  if (awkId.isNotEmpty()) key else null
+                }
                 assertThat(found).isNotNull
                 activeKey = found
               }
@@ -261,7 +262,8 @@ class ServiceToServiceScopeConcurrency {
                             .request { getResult() }
                             .options(idempotentCallOptions)
                             .call()
-                            .response)
+                            .response
+                    )
                     .isEqualTo("done")
               }
         }
