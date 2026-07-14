@@ -22,11 +22,6 @@ dependencies {
   implementation(libs.restate.sdk.kotlin.http)
   implementation(libs.vertx)
 
-  implementation(libs.ktor.client.core)
-  implementation(libs.ktor.client.java)
-  implementation(libs.ktor.client.content.negotiation)
-  implementation(libs.ktor.serialization.kotlinx.json)
-
   implementation(libs.junit.all)
   implementation(libs.junit.launcher)
   implementation(libs.junit.reporting)
