@@ -16,8 +16,6 @@ subprojects {
   version = "1.0-SNAPSHOT"
 
   repositories {
-    // Resolves locally-published SDK snapshots (e.g. dev.restate:*:2.10.0-SNAPSHOT) first.
-    mavenLocal()
     mavenCentral()
   }
 }
