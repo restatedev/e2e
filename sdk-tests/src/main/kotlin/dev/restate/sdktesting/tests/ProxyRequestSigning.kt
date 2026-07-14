@@ -40,7 +40,8 @@ MC4CAQAwBQYDK2VwBCIEIHsQRVQ+AZX9/Yy1b0Zw+OA+bb7xDxGsAd5kB45jZhoc
           ServiceSpec.builder("service-with-request-signing")
               .withServices(Counter::class)
               .withEnv(E2E_REQUEST_SIGNING_ENV, SIGNING_KEY)
-              .build())
+              .build()
+      )
     }
   }
 

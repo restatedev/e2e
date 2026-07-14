@@ -120,7 +120,8 @@ private constructor(
           this.config =
               this.config.copy(
                   serviceDeploymentConfig =
-                      this.config.serviceDeploymentConfig + (name to deploymentConfig))
+                      this.config.serviceDeploymentConfig + (name to deploymentConfig)
+              )
         }
 
     /** Add a container that will be added within the same network of functions and runtime. */
@@ -165,13 +166,17 @@ private constructor(
               "restate_log_server" to "trace",
               "restate_bifrost" to "trace",
               "restate_core::partitions" to "trace",
-              "restate" to "debug")
+              "restate" to "debug",
+          )
       val defaultLog =
           (listOf("info") + defaultLogFilters.map { "${it.key}=${it.value}" }).joinToString(
-              separator = ",")
+              separator = ","
+          )
       val loadedRuntimeContainerEnvs =
           mapOf(
-              "RUST_LOG" to (System.getenv("RUST_LOG") ?: defaultLog), "RUST_BACKTRACE" to "full") +
+              "RUST_LOG" to (System.getenv("RUST_LOG") ?: defaultLog),
+              "RUST_BACKTRACE" to "full",
+          ) +
               System.getenv().filterKeys {
                 (it.uppercase().startsWith("RESTATE_") &&
                     it.uppercase() != "RESTATE_CONTAINER_IMAGE") ||
@@ -191,7 +196,8 @@ private constructor(
           copyToContainer,
           configSchema,
           overrideRestateContainerImage,
-          overrideRestateStateDirectoryMount)
+          overrideRestateStateDirectoryMount,
+      )
     }
   }
 
@@ -202,7 +208,8 @@ private constructor(
               configSchema?.ingress?.bindAddress ?: IngressOptions().bindAddress,
               "/",
               null,
-              null)
+              null,
+          )
           .port
   private val restateUri = "http://$RESTATE_RUNTIME:$ingressPort/"
 
@@ -227,7 +234,8 @@ private constructor(
           copyToContainer,
           overrideRestateContainerImage,
           overrideRestateStateDirectoryMount,
-          config.restateNodes)
+          config.restateNodes,
+      )
 
   private val deployedContainers: Map<String, ContainerHandle> =
       (runtimeContainers.map {
@@ -237,8 +245,9 @@ private constructor(
               additionalContainers.map { it.key to ContainerHandle(it.value) })
           .associate { it }
 
-  private val localEndpointServer: HttpServer? =
-      localEndpoint?.let { RestateHttpServer.fromEndpoint(it) }
+  private val localEndpointServer: HttpServer? = localEndpoint?.let {
+    RestateHttpServer.fromEndpoint(it)
+  }
 
   init {
     // Configure additional containers to be deployed within the same network where we deploy
@@ -265,16 +274,15 @@ private constructor(
 
     // Gotta start the local endpoint server, this needs to be available before the runtime
     // container starts up
-    val localEndpointPort =
-        localEndpointServer?.let {
-          it.listen(0).toCompletionStage().toCompletableFuture().join()
+    val localEndpointPort = localEndpointServer?.let {
+      it.listen(0).toCompletionStage().toCompletableFuture().join()
 
-          val port = it.actualPort()
-          LOG.debug("Started local endpoint on port {}", port)
-          Testcontainers.exposeHostPorts(port)
+      val port = it.actualPort()
+      LOG.debug("Started local endpoint on port {}", port)
+      Testcontainers.exposeHostPorts(port)
 
-          port
-        }
+      port
+    }
 
     // Deploy sequentially
     deployServices()
@@ -285,7 +293,8 @@ private constructor(
         DeploymentApi(
             ApiClient(HttpClient.newBuilder(), apiClient.objectMapper, null)
                 .setHost("localhost")
-                .setPort(getContainerPort(RESTATE_RUNTIME, RUNTIME_ADMIN_ENDPOINT_PORT)))
+                .setPort(getContainerPort(RESTATE_RUNTIME, RUNTIME_ADMIN_ENDPOINT_PORT))
+        )
 
     // Let's execute service discovery to register the services
     serviceSpecs.forEach { spec -> discoverDeployment(client, spec) }
@@ -317,7 +326,8 @@ private constructor(
       LOG.debug(
           "Started service container {} with endpoint {}",
           serviceName,
-          serviceContainer.first.getEndpointUrl(config))
+          serviceContainer.first.getEndpointUrl(config),
+      )
     }
   }
 
@@ -349,16 +359,20 @@ private constructor(
                       {
                         CloseableThreadContext.put("containerHostname", container.hostname).use {
                           LOG.debug(
-                              "Restate container '${container.hostname}' using image '${config.restateContainerImage}' is starting")
+                              "Restate container '${container.hostname}' using image '${config.restateContainerImage}' is starting"
+                          )
                           container.dependsOn(containerDependencies).start()
                           container.dumpConfiguration()
                           LOG.debug(
-                              "Restate container '${container.hostname}' id '${container.containerId}' started and is healthy")
+                              "Restate container '${container.hostname}' id '${container.containerId}' started and is healthy"
+                          )
                         }
                       },
-                      executor)
+                      executor,
+                  )
                 }
-                .toTypedArray())
+                .toTypedArray()
+        )
         .get(150, TimeUnit.SECONDS)
 
     executor.shutdown()
@@ -382,13 +396,15 @@ private constructor(
             ClusterHealthApi(
                 ApiClient(HttpClient.newBuilder(), apiClient.objectMapper, null)
                     .setHost("localhost")
-                    .setPort(adminPort))
+                    .setPort(adminPort)
+            )
         client.clusterHealth().metadataClusterHealth?.members?.size == numberRestateNodes
       } catch (e: ApiException) {
         Thread.sleep(200)
         throw IllegalStateException(
             "Error when checking cluster health, got status code ${e.code} with body: ${e.responseBody}",
-            e)
+            e,
+        )
       }
     }
   }
@@ -414,18 +430,20 @@ private constructor(
             Thread.sleep(30)
             throw IllegalStateException(
                 "Error when discovering endpoint $uri, got status code ${e.code} with body: ${e.responseBody}",
-                e)
+                e,
+            )
           }
         }
 
     LOG.debug(
         """
-      Successfully executed discovery for endpoint {}, registered with id {}. Discovered services: {}
-      """
+        Successfully executed discovery for endpoint {}, registered with id {}. Discovered services: {}
+        """
             .trimIndent(),
         uri,
         response.id,
-        response.services.map { it.name })
+        response.services.map { it.name },
+    )
   }
 
   private fun writeEnvironmentReport(testReportDir: String) {
@@ -436,11 +454,13 @@ private constructor(
     DockerClientConfig.getDefaultObjectMapper()
         .writer(
             SimpleFilterProvider()
-                .addFilter("rawValues", SimpleBeanPropertyFilter.serializeAllExcept("rawValues")))
+                .addFilter("rawValues", SimpleBeanPropertyFilter.serializeAllExcept("rawValues"))
+        )
         .withDefaultPrettyPrinter()
         .writeValue(
             outFile,
-            deployedContainers.map { it.key to it.value.container.containerInfo.rawValues }.toMap())
+            deployedContainers.map { it.key to it.value.container.containerInfo.rawValues }.toMap(),
+        )
   }
 
   private fun teardownAdditionalContainers() {
@@ -460,7 +480,8 @@ private constructor(
     runtimeContainers.forEach {
       if (it.containerId == null) {
         LOG.warn(
-            "During shutdown container ${it.hostname} has no container id, thus it's not running already.")
+            "During shutdown container ${it.hostname} has no container id, thus it's not running already."
+        )
         return@forEach
       }
       try {
@@ -508,18 +529,22 @@ private constructor(
           HttpRequest.newBuilder()
               .uri(
                   URI.create(
-                      "http://localhost:${getContainerPort(RESTATE_RUNTIME, RUNTIME_ADMIN_ENDPOINT_PORT)}/query"))
+                      "http://localhost:${getContainerPort(RESTATE_RUNTIME, RUNTIME_ADMIN_ENDPOINT_PORT)}/query"
+                  )
+              )
               .header("accept", "application/json")
               .header("content-type", "application/json")
               .POST(
-                  HttpRequest.BodyPublishers.ofString(
-                      """{"query": "SELECT * FROM ${tableName}"}"""))
+                  HttpRequest.BodyPublishers.ofString("""{"query": "SELECT * FROM ${tableName}"}""")
+              )
               .timeout(10.seconds.toJavaDuration())
               .build()
 
       val response =
           client.send(
-              request, BodyHandlers.ofFile(Paths.get(testReportDir, "${tableName}_dump.json")))
+              request,
+              BodyHandlers.ofFile(Paths.get(testReportDir, "${tableName}_dump.json")),
+          )
 
       LOG.info("Dumped SQL table $tableName to ${response.body()}")
     } catch (e: Throwable) {
@@ -530,7 +555,8 @@ private constructor(
   internal fun getContainerPort(hostName: String, port: Int): Int {
     return deployedContainers[hostName]?.getMappedPort(port)
         ?: throw java.lang.IllegalStateException(
-            "Requested port for container $hostName, but the container or the port was not found")
+            "Requested port for container $hostName, but the container or the port was not found"
+        )
   }
 
   internal fun getLocalEndpointURI(): URI {
@@ -542,16 +568,20 @@ private constructor(
   fun getContainerHandle(hostName: String): ContainerHandle {
     if (!deployedContainers.containsKey(hostName)) {
       // If it's service spec with local forward, then this is expected
-      if (serviceSpecs
-          .find { it.name == hostName }
-          ?.let {
-            config.getServiceDeploymentConfig(it.name) is LocalForwardServiceDeploymentConfig
-          } == true) {
+      if (
+          serviceSpecs
+              .find { it.name == hostName }
+              ?.let {
+                config.getServiceDeploymentConfig(it.name) is LocalForwardServiceDeploymentConfig
+              } == true
+      ) {
         throw java.lang.IllegalArgumentException(
-            "This test cannot run in debug mode, because it requires to manually start/stop the service container '$hostName'. Run the test without run mode.")
+            "This test cannot run in debug mode, because it requires to manually start/stop the service container '$hostName'. Run the test without run mode."
+        )
       }
       throw IllegalArgumentException(
-          "Cannot find container $hostName. Most likely, there is a bug in the test code.")
+          "Cannot find container $hostName. Most likely, there is a bug in the test code."
+      )
     }
     return deployedContainers[hostName]!!
   }

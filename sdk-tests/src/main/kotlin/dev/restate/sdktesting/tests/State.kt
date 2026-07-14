@@ -34,7 +34,8 @@ class State {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension = RestateDeployerExtension {
       withServiceSpec(
-          ServiceSpec.defaultBuilder().withServices(Counter::class, Proxy::class, MapObject::class))
+          ServiceSpec.defaultBuilder().withServices(Counter::class, Proxy::class, MapObject::class)
+      )
     }
   }
 
@@ -67,7 +68,9 @@ class State {
                     extractServiceName(Counter::class.java),
                     counterId,
                     "add",
-                    Json.encodeToString(1).encodeToByteArray()))
+                    Json.encodeToString(1).encodeToByteArray(),
+                )
+            )
           }
           .options(idempotentCallOptions)
           .call()
@@ -108,11 +111,8 @@ class State {
 
     // Check the other service instance was left untouched
     assertThat(
-            anotherMapObj
-                .request { get("my-key-2") }
-                .options(idempotentCallOptions)
-                .call()
-                .response)
+            anotherMapObj.request { get("my-key-2") }.options(idempotentCallOptions).call().response
+        )
         .isEqualTo("my-value-2")
   }
 }

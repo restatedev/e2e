@@ -11,6 +11,7 @@ package dev.restate.sdktesting.tests
 import dev.restate.client.Client
 import dev.restate.client.kotlin.attachSuspend
 import dev.restate.client.kotlin.response
+import dev.restate.client.kotlin.toService
 import dev.restate.client.kotlin.toVirtualObject
 import dev.restate.sdk.annotation.Handler
 import dev.restate.sdk.annotation.Name
@@ -32,7 +33,6 @@ import java.net.URI
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration.Companion.seconds
-import kotlinx.serialization.json.Json
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.withAlias
@@ -115,7 +115,6 @@ class ConcurrencyLimitTest {
   @Test
   @DisplayName("Concurrency limit on a scope holds excess invocations and releases on completion")
   fun concurrencyLimitIsRespected(
-      @InjectIngressURI ingressURI: URI,
       @InjectAdminURI adminURI: URI,
       @InjectContainerHandle(hostName = RESTATE_RUNTIME) runtimeHandle: ContainerHandle,
       @InjectClient ingressClient: Client,
@@ -134,11 +133,15 @@ class ConcurrencyLimitTest {
             upsertConcurrencyRule(adminURI, pattern = scope, concurrency = limit).version
         awaitRuleBookApplied(runtimeHandle, ruleVersion)
 
-        val outerIds =
-            blockerKeys.map { key ->
-              sendInvocationWithScope(
-                  ingressURI, scope, "BlockingProxy", "block", Json.encodeToString(key))
-            }
+        val outerIds = blockerKeys.map { key ->
+          ingressClient
+              .scope(scope)
+              .toService<BlockingProxy>()
+              .request { block(key) }
+              .options(idempotentCallOptions)
+              .send()
+              .invocationId()
+        }
 
         // Wait until exactly `limit` scoped invocations are running; the rest are held by the rule.
         //
@@ -167,17 +170,16 @@ class ConcurrencyLimitTest {
           await withAlias
               "find a Blocker (among unresolved keys) that has registered its awakeable" untilAsserted
               {
-                val found =
-                    unresolvedKeys.firstNotNullOfOrNull { key ->
-                      val awkId =
-                          ingressClient
-                              .toVirtualObject<Blocker>(key)
-                              .request { getAwakeable() }
-                              .options(idempotentCallOptions)
-                              .call()
-                              .response
-                      if (awkId.isNotEmpty()) key else null
-                    }
+                val found = unresolvedKeys.firstNotNullOfOrNull { key ->
+                  val awkId =
+                      ingressClient
+                          .toVirtualObject<Blocker>(key)
+                          .request { getAwakeable() }
+                          .options(idempotentCallOptions)
+                          .call()
+                          .response
+                  if (awkId.isNotEmpty()) key else null
+                }
                 assertThat(found).isNotNull
                 activeKey = found
               }

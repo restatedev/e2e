@@ -39,7 +39,8 @@ class ServiceToServiceCommunication {
     val deployerExt: RestateDeployerExtension = RestateDeployerExtension {
       withServiceSpec(
           ServiceSpec.defaultBuilder()
-              .withServices(Proxy::class, TestUtilsService::class, Counter::class))
+              .withServices(Proxy::class, TestUtilsService::class, Counter::class)
+      )
     }
   }
 
@@ -57,11 +58,14 @@ class ServiceToServiceCommunication {
                           extractServiceName(TestUtilsService::class.java),
                           null,
                           "uppercaseEcho",
-                          Json.encodeToString("ping").encodeToByteArray()))
+                          Json.encodeToString("ping").encodeToByteArray(),
+                      )
+                  )
                 }
                 .options(idempotentCallOptions)
                 .call()
-                .response)
+                .response
+        )
         .isEqualTo(Json.encodeToString("PING").encodeToByteArray())
   }
 
@@ -79,7 +83,9 @@ class ServiceToServiceCommunication {
                   extractServiceName(Counter::class.java),
                   counterId,
                   "add",
-                  Json.encodeToString(1).encodeToByteArray()))
+                  Json.encodeToString(1).encodeToByteArray(),
+              )
+          )
         }
         .options(idempotentCallOptions)
         .call()
@@ -109,7 +115,9 @@ class ServiceToServiceCommunication {
                         counterId,
                         "add",
                         Json.encodeToString(1).encodeToByteArray(),
-                        idempotencyKey = idempotencyKey))
+                        idempotencyKey = idempotencyKey,
+                    )
+                )
               }
               .call()
         }
@@ -124,10 +132,12 @@ class ServiceToServiceCommunication {
                 .idempotentInvocationHandle(
                     Target.virtualObject(extractServiceName(Counter::class.java), counterId, "add"),
                     idempotencyKey,
-                    TypeTag.of(CounterUpdateResponse::class.java))
+                    TypeTag.of(CounterUpdateResponse::class.java),
+                )
                 .getOutputSuspend()
                 .response
-                .value)
+                .value
+        )
         .isEqualTo(CounterUpdateResponse(0, 1))
   }
 
@@ -151,7 +161,9 @@ class ServiceToServiceCommunication {
                             counterId,
                             "add",
                             Json.encodeToString(1).encodeToByteArray(),
-                            idempotencyKey = idempotencyKey))
+                            idempotencyKey = idempotencyKey,
+                        )
+                    )
                   }
                   .call()
                   .response
@@ -170,10 +182,12 @@ class ServiceToServiceCommunication {
             ingressClient
                 .idempotentInvocationHandle<CounterUpdateResponse>(
                     Target.virtualObject(extractServiceName(Counter::class.java), counterId, "add"),
-                    idempotencyKey)
+                    idempotencyKey,
+                )
                 .getOutputSuspend()
                 .response
-                .value)
+                .value
+        )
         .isEqualTo(CounterUpdateResponse(0, 1))
   }
 
@@ -198,7 +212,9 @@ class ServiceToServiceCommunication {
                           Json.encodeToString(1).encodeToByteArray(),
                           // This is a reasonably long time to avoid that the timeToAssert
                           // generates too many false positives
-                          delayMillis = 5000))
+                          delayMillis = 5000,
+                      )
+                  )
                 }
                 .options(idempotentCallOptions)
                 .call()

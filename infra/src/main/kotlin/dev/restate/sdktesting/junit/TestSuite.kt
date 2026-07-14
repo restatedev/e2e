@@ -48,7 +48,7 @@ class TestSuite(
       baseReportDir: Path,
       filters: List<Filter<*>>,
       printToStdout: Boolean,
-      parallel: Boolean
+      parallel: Boolean,
   ): ExecutionResult {
     val reportDir = baseReportDir.resolve(name)
     terminal.println(
@@ -56,7 +56,8 @@ class TestSuite(
               |==== ${bold(name)}
               |🗈 Report directory: $reportDir
           """
-            .trimMargin())
+            .trimMargin()
+    )
 
     // Prepare Log4j2 configuration
     val log4j2Configuration = prepareLog4j2Config(reportDir, printToStdout)
@@ -68,7 +69,8 @@ class TestSuite(
             .copy(
                 additionalRuntimeEnvs = additionalEnvs,
                 restateNodes = restateNodes,
-                useNewClient = useNewClient)
+                useNewClient = useNewClient,
+            )
     registerGlobalConfig(restateDeployerConfig)
 
     // Prepare launch request
@@ -86,23 +88,30 @@ class TestSuite(
             .configurationParameter(LauncherConstants.CAPTURE_STDERR_PROPERTY_NAME, "true")
             // Config option used by RestateDeployer extensions
             .configurationParameter(
-                BaseRestateDeployerExtension.REPORT_DIR_PROPERTY_NAME, reportDir.toString())
+                BaseRestateDeployerExtension.REPORT_DIR_PROPERTY_NAME,
+                reportDir.toString(),
+            )
             .configurationParameter(
                 "junit.jupiter.execution.parallel.mode.classes.default",
-                if (parallel) "concurrent" else "same_thread")
+                if (parallel) "concurrent" else "same_thread",
+            )
 
     // Disable lifecycle timeout
     if (restateDeployerConfig.retainAfterEnd) {
       builder =
           builder.configurationParameter(
-              "junit.jupiter.execution.timeout.lifecycle.method.default", "360m")
+              "junit.jupiter.execution.timeout.lifecycle.method.default",
+              "360m",
+          )
     }
 
     // Reduce parallelism in three nodes setup
     if (restateDeployerConfig.restateNodes > 1 && parallel) {
       builder =
           builder.configurationParameter(
-              "junit.jupiter.execution.parallel.config.dynamic.factor", "0.5")
+              "junit.jupiter.execution.parallel.config.dynamic.factor",
+              "0.5",
+          )
     }
 
     val request = builder.build()
@@ -116,7 +125,8 @@ class TestSuite(
         RedirectStdoutAndStderrListener(
             reportDir.resolve("testrunner.stdout"),
             reportDir.resolve("testrunner.stderr"),
-            errWriter)
+            errWriter,
+        )
     val logTestEventsListener = LogTestEventsToTerminalListener(name, terminal)
     val injectLoggingContextListener = InjectLog4jContextListener(name)
 
@@ -128,7 +138,8 @@ class TestSuite(
           logTestEventsListener,
           xmlReportListener,
           redirectStdoutAndStderrListener,
-          injectLoggingContextListener)
+          injectLoggingContextListener,
+      )
       launcher.execute(request)
     }
 
@@ -151,7 +162,8 @@ class TestSuite(
                     "%notEmpty{[%X{containerHostname}]}" +
                     "%notEmpty{[%X{restateInvocationTarget}]}" +
                     "%notEmpty{[%X{restateInvocationId}]}" +
-                    " %c{1.2.*} - %m%n")
+                    " %c{1.2.*} - %m%n",
+            )
 
     val testRunnerFileAppender =
         builder
@@ -178,14 +190,19 @@ class TestSuite(
                                     .newAppender("testRunnerLog-\${ctx:${TEST_CLASS}}", "File")
                                     .addAttribute(
                                         "fileName",
-                                        "${reportDir}/\${ctx:${TEST_CLASS}}/testRunner.log")
-                                    .add(layout)))
+                                        "${reportDir}/\${ctx:${TEST_CLASS}}/testRunner.log",
+                                    )
+                                    .add(layout)
+                            )
+                    )
                     .addComponent(
                         // Default route to noop (still for XML magicians)
                         builder
                             .newComponent("Route")
                             .addAttribute("key", "\${ctx:${TEST_CLASS}}")
-                            .addAttribute("ref", "nullAppender")))
+                            .addAttribute("ref", "nullAppender")
+                    )
+            )
 
     val restateLogger =
         builder

@@ -32,7 +32,8 @@ class Signals {
     val deployerExt: RestateDeployerExtension = RestateDeployerExtension {
       withServiceSpec(
           ServiceSpec.defaultBuilder()
-              .withServices(VirtualObjectCommandInterpreter::class, TestUtilsService::class))
+              .withServices(VirtualObjectCommandInterpreter::class, TestUtilsService::class)
+      )
     }
   }
 

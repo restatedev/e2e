@@ -12,7 +12,8 @@ import dev.restate.sdktesting.contracts.VirtualObjectCommandInterpreter
 
 fun VirtualObjectCommandInterpreter.InterpretRequest.Companion.getEnvVariable(env: String) =
     VirtualObjectCommandInterpreter.InterpretRequest(
-        listOf(VirtualObjectCommandInterpreter.GetEnvVariable(env)))
+        listOf(VirtualObjectCommandInterpreter.GetEnvVariable(env))
+    )
 
 fun VirtualObjectCommandInterpreter.InterpretRequest.Companion.awaitAwakeable(
     awakeableKey: String
@@ -20,4 +21,7 @@ fun VirtualObjectCommandInterpreter.InterpretRequest.Companion.awaitAwakeable(
     VirtualObjectCommandInterpreter.InterpretRequest(
         listOf(
             VirtualObjectCommandInterpreter.AwaitOne(
-                VirtualObjectCommandInterpreter.CreateAwakeable(awakeableKey))))
+                VirtualObjectCommandInterpreter.CreateAwakeable(awakeableKey)
+            )
+        )
+    )

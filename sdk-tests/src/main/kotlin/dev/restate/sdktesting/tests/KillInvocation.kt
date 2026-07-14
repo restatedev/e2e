@@ -31,7 +31,11 @@ class KillInvocation {
       withServiceSpec(
           ServiceSpec.defaultBuilder()
               .withServices(
-                  KillTest.Runner::class, KillTest.Singleton::class, AwakeableHolder::class))
+                  KillTest.Runner::class,
+                  KillTest.Singleton::class,
+                  AwakeableHolder::class,
+              )
+      )
     }
   }
 

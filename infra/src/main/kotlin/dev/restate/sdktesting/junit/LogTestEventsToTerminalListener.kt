@@ -26,7 +26,7 @@ class LogTestEventsToTerminalListener(val suiteName: String, val terminal: Termi
 
   override fun executionFinished(
       testIdentifier: TestIdentifier,
-      testExecutionResult: TestExecutionResult
+      testExecutionResult: TestExecutionResult,
   ) {
     if (testIdentifier.isTest) {
       val name = describeTestIdentifier(suiteName, testPlan!!, testIdentifier)

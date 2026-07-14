@@ -19,7 +19,7 @@ class ServiceDeploymentContainer(
     private val hostname: String,
     network: Network,
     restateURI: String,
-    envs: Map<String, String>
+    envs: Map<String, String>,
 ) : GenericContainer<ServiceDeploymentContainer>(dockerImageName) {
 
   init {

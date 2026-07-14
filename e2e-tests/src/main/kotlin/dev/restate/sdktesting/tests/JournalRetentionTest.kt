@@ -63,7 +63,8 @@ class JournalRetentionTest {
                   SysJournalEntry(0, "Command: Input"),
                   SysJournalEntry(1, "Command: Sleep"),
                   SysJournalEntry(2, "Notification: Sleep"),
-                  SysJournalEntry(3, "Command: Output"))
+                  SysJournalEntry(3, "Command: Output"),
+              )
         }
   }
 }

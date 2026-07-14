@@ -138,10 +138,13 @@ class KafkaTest {
               SHARED_HANDLER_TOPIC,
               COUNTER_TOPIC,
               EVENT_HANDLER_TOPIC,
-              TRACING_TOPIC))
+              TRACING_TOPIC,
+          ),
+      )
       withConfig(RestateConfigSchema().apply(Tracing.configSchema))
       withEndpoint(
-          Endpoint.bind(MyWorkflow()).bind(Counter()).bind(EventHandler()).bind(TracingCounter()))
+          Endpoint.bind(MyWorkflow()).bind(Counter()).bind(EventHandler()).bind(TracingCounter())
+      )
     }
 
     fun produceMessagesToKafka(port: Int, topic: String, values: List<Pair<String?, String>>) {
@@ -169,7 +172,10 @@ class KafkaTest {
                 .properties(
                     mapOf(
                         "bootstrap.servers" to
-                            "PLAINTEXT://kafka:${KafkaContainer.KAFKA_NETWORK_PORT}")))
+                            "PLAINTEXT://kafka:${KafkaContainer.KAFKA_NETWORK_PORT}"
+                    )
+                )
+        )
       }
     }
 
@@ -177,7 +183,7 @@ class KafkaTest {
         adminURI: URI,
         topic: String,
         serviceName: String,
-        handlerName: String
+        handlerName: String,
     ) {
       val subscriptionsClient =
           SubscriptionApi(ApiClient().setHost(adminURI.host).setPort(adminURI.port))
@@ -186,7 +192,8 @@ class KafkaTest {
             CreateSubscriptionRequest()
                 .source(URI.create("kafka://my-cluster/$topic"))
                 .sink(URI.create("service://$serviceName/$handlerName"))
-                .options(mapOf("auto.offset.reset" to "earliest")))
+                .options(mapOf("auto.offset.reset" to "earliest"))
+        )
       }
     }
 
@@ -205,15 +212,22 @@ class KafkaTest {
       @InjectAdminURI adminURI: URI,
       @InjectContainerPort(hostName = "kafka", port = KafkaContainer.KAFKA_EXTERNAL_PORT)
       kafkaPort: Int,
-      @InjectClient ingressClient: Client
+      @InjectClient ingressClient: Client,
   ) = runTest {
     createKafkaSubscription(
-        adminURI, WORKFLOW_TOPIC, extractServiceName(MyWorkflow::class.java), "run")
+        adminURI,
+        WORKFLOW_TOPIC,
+        extractServiceName(MyWorkflow::class.java),
+        "run",
+    )
 
     val keyMessages = linkedMapOf("a" to "1", "b" to "2", "c" to "3")
 
     produceMessagesToKafka(
-        kafkaPort, WORKFLOW_TOPIC, keyMessages.map { it.key to Json.encodeToString(it.value) })
+        kafkaPort,
+        WORKFLOW_TOPIC,
+        keyMessages.map { it.key to Json.encodeToString(it.value) },
+    )
 
     for (keyMessage in keyMessages) {
       await withAlias
@@ -222,9 +236,12 @@ class KafkaTest {
             assertThat(
                     ingressClient
                         .workflowHandle<String>(
-                            extractServiceName(MyWorkflow::class.java), keyMessage.key)
+                            extractServiceName(MyWorkflow::class.java),
+                            keyMessage.key,
+                        )
                         .attachSuspend()
-                        .response)
+                        .response
+                )
                 .isEqualTo("Run ${keyMessage.value}")
           }
     }
@@ -236,10 +253,13 @@ class KafkaTest {
             assertThat(
                     ingressClient
                         .workflowHandle<String>(
-                            extractServiceName(MyWorkflow::class.java), keyMessage.key)
+                            extractServiceName(MyWorkflow::class.java),
+                            keyMessage.key,
+                        )
                         .getOutputSuspend()
                         .response
-                        .value)
+                        .value
+                )
                 .isEqualTo("Run ${keyMessage.value}")
           }
     }
@@ -251,17 +271,22 @@ class KafkaTest {
       @InjectAdminURI adminURI: URI,
       @InjectContainerPort(hostName = "kafka", port = KafkaContainer.KAFKA_EXTERNAL_PORT)
       kafkaPort: Int,
-      @InjectClient ingressClient: Client
+      @InjectClient ingressClient: Client,
   ) = runTest {
     createKafkaSubscription(
-        adminURI, SHARED_HANDLER_TOPIC, extractServiceName(MyWorkflow::class.java), "setPromise")
+        adminURI,
+        SHARED_HANDLER_TOPIC,
+        extractServiceName(MyWorkflow::class.java),
+        "setPromise",
+    )
 
     val keyMessages = linkedMapOf("a" to "a", "b" to "b", "c" to "c")
 
     produceMessagesToKafka(
         kafkaPort,
         SHARED_HANDLER_TOPIC,
-        keyMessages.map { it.key to Json.encodeToString(it.value) })
+        keyMessages.map { it.key to Json.encodeToString(it.value) },
+    )
 
     for (keyMessage in keyMessages) {
       await withAlias
@@ -272,7 +297,8 @@ class KafkaTest {
                         .toWorkflow<MyWorkflow>(keyMessage.key)
                         .request { getPromise() }
                         .call()
-                        .response)
+                        .response
+                )
                 .isEqualTo(keyMessage.value)
           }
     }
@@ -284,20 +310,24 @@ class KafkaTest {
       @InjectAdminURI adminURI: URI,
       @InjectContainerPort(hostName = "kafka", port = KafkaContainer.KAFKA_EXTERNAL_PORT)
       kafkaPort: Int,
-      @InjectClient ingressClient: Client
+      @InjectClient ingressClient: Client,
   ) = runTest {
     val counter = UUID.randomUUID().toString()
 
     createKafkaSubscription(adminURI, COUNTER_TOPIC, "Counter", "add")
 
     produceMessagesToKafka(
-        kafkaPort, COUNTER_TOPIC, listOf(counter to "1", counter to "2", counter to "3"))
+        kafkaPort,
+        COUNTER_TOPIC,
+        listOf(counter to "1", counter to "2", counter to "3"),
+    )
 
     await withAlias
         "Updates from Kafka are visible in the counter" untilAsserted
         {
           assertThat(
-                  ingressClient.toVirtualObject<Counter>(counter).request { get() }.call().response)
+                  ingressClient.toVirtualObject<Counter>(counter).request { get() }.call().response
+              )
               .isEqualTo(6L)
         }
   }
@@ -308,7 +338,7 @@ class KafkaTest {
       @InjectAdminURI adminURI: URI,
       @InjectContainerPort(hostName = "kafka", port = KafkaContainer.KAFKA_EXTERNAL_PORT)
       kafkaPort: Int,
-      @InjectClient ingressClient: Client
+      @InjectClient ingressClient: Client,
   ) = runTest {
     val counter = UUID.randomUUID().toString()
 
@@ -320,13 +350,16 @@ class KafkaTest {
         listOf(
             null to Json.encodeToString(EventHandler.ProxyRequest(counter, 1)),
             null to Json.encodeToString(EventHandler.ProxyRequest(counter, 2)),
-            null to Json.encodeToString(EventHandler.ProxyRequest(counter, 3))))
+            null to Json.encodeToString(EventHandler.ProxyRequest(counter, 3)),
+        ),
+    )
 
     await withAlias
         "Updates from Kafka are visible in the counter" untilAsserted
         {
           assertThat(
-                  ingressClient.toVirtualObject<Counter>(counter).request { get() }.call().response)
+                  ingressClient.toVirtualObject<Counter>(counter).request { get() }.call().response
+              )
               .isEqualTo(6L)
         }
   }
@@ -340,7 +373,11 @@ class KafkaTest {
       kafkaPort: Int,
   ) = runTest {
     createKafkaSubscription(
-        adminURI, TRACING_TOPIC, extractServiceName(TracingCounter::class.java), "set")
+        adminURI,
+        TRACING_TOPIC,
+        extractServiceName(TracingCounter::class.java),
+        "set",
+    )
 
     produceMessagesToKafka(kafkaPort, TRACING_TOPIC, listOf("a" to Json.encodeToString("a")))
 
@@ -364,7 +401,8 @@ class KafkaTest {
                   .flatMap { it.spans }
                   .filter {
                     it.name.contains(
-                        "ingress_kafka ${extractServiceName(TracingCounter::class.java)}/{key}/set")
+                        "ingress_kafka ${extractServiceName(TracingCounter::class.java)}/{key}/set"
+                    )
                   }
 
           assertThat(counterAddSpans).isNotEmpty()
@@ -374,7 +412,8 @@ class KafkaTest {
           assertThat(attributes)
               .containsEntry(
                   "restate.invocation.target",
-                  "${extractServiceName(TracingCounter::class.java)}/a/set")
+                  "${extractServiceName(TracingCounter::class.java)}/a/set",
+              )
               .containsEntry("messaging.system", "kafka")
               .containsEntry("messaging.source.name", TRACING_TOPIC)
               .containsEntry("messaging.operation.type", "process")
@@ -382,7 +421,8 @@ class KafkaTest {
                   "restate.invocation.id",
                   "messaging.consumer.group.name",
                   "messaging.kafka.offset",
-                  "messaging.source.partition.id")
+                  "messaging.source.partition.id",
+              )
         }
   }
 }

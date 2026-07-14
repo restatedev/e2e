@@ -10,7 +10,7 @@ plugins {
   id("com.github.jk1.dependency-license-report")
 }
 
-kotlin { jvmToolchain(21) }
+kotlin { jvmToolchain(25) }
 
 dependencies {
   implementation(project(":infra"))
@@ -72,7 +72,8 @@ tasks.named("check") { dependsOn("checkLicense") }
 licenseReport {
   renderers =
       arrayOf<com.github.jk1.license.render.ReportRenderer>(
-          com.github.jk1.license.render.CsvReportRenderer())
+          com.github.jk1.license.render.CsvReportRenderer()
+      )
 
   excludeBoms = true
 
@@ -89,5 +90,8 @@ licenseReport {
   filters =
       arrayOf(
           com.github.jk1.license.filter.LicenseBundleNormalizer(
-              "$rootDir/config/license-normalizer-bundle.json", true))
+              "$rootDir/config/license-normalizer-bundle.json",
+              true,
+          )
+      )
 }

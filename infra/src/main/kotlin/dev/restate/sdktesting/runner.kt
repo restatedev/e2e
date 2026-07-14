@@ -62,7 +62,9 @@ private class RestateE2ETests : CliktCommand() {
     // tl;dr this makes sure a single log4j2 configuration exists for the whole JVM,
     // important to make Configurator.reconfigure work
     System.setProperty(
-        "log4j2.contextSelector", "org.apache.logging.log4j.core.selector.BasicContextSelector")
+        "log4j2.contextSelector",
+        "org.apache.logging.log4j.core.selector.BasicContextSelector",
+    )
     // The default keep alive time is way too long, and this is a problem when we stop and restart
     // containers.
     System.setProperty("jdk.httpclient.keepalive.timeout", "5")
@@ -83,7 +85,8 @@ private class TestRunnerOptions : OptionGroup() {
       option()
           .enum<PullPolicy>()
           .help(
-              "Pull policy for container images. ALWAYS skips pulling images prefixed with restate.local or localhost")
+              "Pull policy for container images. ALWAYS skips pulling images prefixed with restate.local or localhost"
+          )
           .default(PullPolicy.ALWAYS)
   val customTestsFile by
       option("--custom-tests", "--custom-tests-file")
@@ -112,7 +115,8 @@ private class FilterOptions(suites: SuiteProvider) : OptionGroup() {
       option()
           .required()
           .help(
-              "Test suite to run. Available: ${listOf("all") + suites.allSuites().map { it.name }}")
+              "Test suite to run. Available: ${listOf("all") + suites.allSuites().map { it.name }}"
+          )
   val testName by option().help("Name of the test class to run within the suite")
 }
 
@@ -130,11 +134,13 @@ private class Run(private val suites: SuiteProvider) :
       option()
           .flag("--sequential", default = true)
           .help(
-              "Run tests in parallel (default). Use --sequential with Podman or to reduce resource usage.")
+              "Run tests in parallel (default). Use --sequential with Podman or to reduce resource usage."
+          )
   val serviceContainerImage by
       option("--service-container-image", envvar = "SERVICE_CONTAINER_IMAGE")
           .help(
-              "Docker image for the service under test. If omitted, no service container is deployed.")
+              "Docker image for the service under test. If omitted, no service container is deployed."
+          )
   val serviceContainerEnvFile by
       option("--service-container-env-file")
           .help(".env file whose variables are injected into the service container")
@@ -153,13 +159,15 @@ private class Run(private val suites: SuiteProvider) :
         if (serviceContainerImage != null) {
           mapOf(
               ServiceSpec.DEFAULT_SERVICE_NAME to
-                  ContainerServiceDeploymentConfig(serviceContainerImage!!, additionalServiceEnvs))
+                  ContainerServiceDeploymentConfig(serviceContainerImage!!, additionalServiceEnvs)
+          )
         } else {
           mapOf()
         }
 
     registerGlobalConfig(
-        testRunnerOptions.applyToDeployerConfig(RestateDeployerConfig(serviceDeploymentConfig)))
+        testRunnerOptions.applyToDeployerConfig(RestateDeployerConfig(serviceDeploymentConfig))
+    )
 
     val testSuites = suites.resolveSuites(filter?.testSuite)
 
@@ -194,7 +202,8 @@ private class Run(private val suites: SuiteProvider) :
               testRunnerOptions.reportDir,
               exclusionsFilters + cliOptionFilter,
               false,
-              parallel)
+              parallel,
+          )
 
       reports.add(report)
       report.printFailuresToFiles(testRunnerOptions.reportDir)
@@ -242,7 +251,8 @@ private class Run(private val suites: SuiteProvider) :
             $classesInfoLine
             * Execution time: $totalDuration
         """
-            .trimIndent())
+            .trimIndent()
+    )
 
     for (report in reports) {
       report.printFailuresToTerminal(terminal)
@@ -254,12 +264,14 @@ private class Run(private val suites: SuiteProvider) :
 
 private class Debug(private val suites: SuiteProvider) :
     TestRunCommand(
-        "Run a single test without a service container, forwarding to a local process.") {
+        "Run a single test without a service container, forwarding to a local process."
+    ) {
   val testSuite by
       option()
           .default(suites.defaultSuite.name)
           .help(
-              "Test suite to use for environment setup. Available: ${suites.allSuites().map { it.name }}")
+              "Test suite to use for environment setup. Available: ${suites.allSuites().map { it.name }}"
+          )
   val testName by option().required().help("Name of the test class to run")
   val localContainers by
       argument()
@@ -290,7 +302,8 @@ private class Debug(private val suites: SuiteProvider) :
             localIngressPort = this.localIngressPort,
             localNodePort = this.localNodePort,
             stateDirectoryMount = this.mountStateDirectory,
-            retainAfterEnd = this.retainAfterEnd)
+            retainAfterEnd = this.retainAfterEnd,
+        )
     registerGlobalConfig(testRunnerOptions.applyToDeployerConfig(restateDeployerConfig))
 
     val suite = suites.resolveSuites(testSuite)[0]

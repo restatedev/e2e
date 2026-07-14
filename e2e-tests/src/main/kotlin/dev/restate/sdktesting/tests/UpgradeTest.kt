@@ -111,7 +111,8 @@ class UpgradeWithNewInvocation {
                       .request { getVersion() }
                       .options(idempotentCallOptions)
                       .call()
-                      .response)
+                      .response
+              )
               .isEqualTo("v2")
         }
   }
@@ -176,7 +177,8 @@ class UpgradeWithInFlightInvocation {
                       .request { getVersion() }
                       .options(idempotentCallOptions)
                       .call()
-                      .response)
+                      .response
+              )
               .isEqualTo("v2")
         }
   }

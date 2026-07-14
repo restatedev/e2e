@@ -31,7 +31,8 @@ internal constructor(
     logger.info(
         "Going to terminate and restart the container {} with hostnames {}.",
         container.containerName,
-        container.networkAliases.joinToString())
+        container.networkAliases.joinToString(),
+    )
     retryDockerClientCommand { dockerClient, containerId ->
       dockerClient.restartContainerCmd(containerId).exec()
     }
@@ -43,7 +44,8 @@ internal constructor(
     logger.info(
         "Going to kill and restart the container {} with hostnames {}.",
         container.containerName,
-        container.networkAliases.joinToString())
+        container.networkAliases.joinToString(),
+    )
     retryDockerClientCommand { dockerClient, containerId ->
       dockerClient.restartContainerCmd(containerId).withSignal("SIGKILL").withTimeout(0).exec()
     }
@@ -59,7 +61,8 @@ internal constructor(
     logger.info(
         "Going to terminate the container {} with hostnames {}.",
         container.containerName,
-        container.networkAliases.joinToString())
+        container.networkAliases.joinToString(),
+    )
     retryDockerClientCommand { dockerClient, containerId ->
       dockerClient.stopContainerCmd(containerId).withTimeout(timeout.inWholeSeconds.toInt()).exec()
     }
@@ -69,7 +72,8 @@ internal constructor(
     logger.info(
         "Going to kill the container {} with hostnames {}.",
         container.containerName,
-        container.networkAliases.joinToString())
+        container.networkAliases.joinToString(),
+    )
     retryDockerClientCommand { dockerClient, containerId ->
       dockerClient.killContainerCmd(containerId).exec()
     }
@@ -80,7 +84,8 @@ internal constructor(
       logger.info(
           "Going to start the container {} with hostnames {}.",
           container.containerName,
-          container.networkAliases.joinToString())
+          container.networkAliases.joinToString(),
+      )
       retryDockerClientCommand { dockerClient, containerId ->
         dockerClient.startContainerCmd(containerId).exec()
       }
@@ -134,7 +139,8 @@ internal constructor(
         delay(20.milliseconds)
         logger.warn(
             "Error when trying to execute docker command: {}. This might be a problem with the local docker daemon.",
-            exception.message)
+            exception.message,
+        )
         lastException = exception
       }
     }

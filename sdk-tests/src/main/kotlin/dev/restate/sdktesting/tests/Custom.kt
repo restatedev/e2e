@@ -83,7 +83,8 @@ class Custom {
 
         if (exitCode != 0) {
           throw AssertionError(
-              "Command '${config.command}' failed with exit code $exitCode\n\nCheck the test runner log for more info.")
+              "Command '${config.command}' failed with exit code $exitCode\n\nCheck the test runner log for more info."
+          )
         }
       }
 }

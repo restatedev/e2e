@@ -41,7 +41,8 @@ class RunRetry {
                 .request { sideEffectSucceedsAfterGivenAttempts(attempts) }
                 .options(idempotentCallOptions)
                 .call()
-                .response)
+                .response
+        )
         .isGreaterThanOrEqualTo(attempts)
   }
 
@@ -57,7 +58,8 @@ class RunRetry {
                 .request { sideEffectFailsAfterGivenAttempts(attempts) }
                 .options(idempotentCallOptions)
                 .call()
-                .response)
+                .response
+        )
         .isGreaterThanOrEqualTo(attempts)
   }
 
@@ -73,7 +75,8 @@ class RunRetry {
                 .request { sideEffectFailsAfterGivenAttempts(attempts) }
                 .options(idempotentCallOptions)
                 .call()
-                .response)
+                .response
+        )
         .isGreaterThanOrEqualTo(attempts)
   }
 }

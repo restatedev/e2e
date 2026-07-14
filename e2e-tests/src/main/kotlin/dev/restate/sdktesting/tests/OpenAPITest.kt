@@ -73,7 +73,9 @@ class OpenAPITest {
               mapOf(
                   "dateLibrary" to "java8",
                   "artifactId" to "restate-generated-client",
-                  "artifactVersion" to "1.0.0"))
+                  "artifactVersion" to "1.0.0",
+              )
+          )
         }
 
     // Generate the client code

@@ -18,7 +18,7 @@ import org.testcontainers.containers.output.OutputFrame
 /** Logger to dump to specific files the stdout and stderr of the containers */
 internal class ContainerLogger(
     private val testReportDirectory: String,
-    private val loggerName: String
+    private val loggerName: String,
 ) : Consumer<OutputFrame> {
 
   private var startCount = 0
@@ -56,7 +56,11 @@ internal class ContainerLogger(
 
     val writer =
         Files.newBufferedWriter(
-            path, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.APPEND)
+            path,
+            StandardOpenOption.CREATE,
+            StandardOpenOption.WRITE,
+            StandardOpenOption.APPEND,
+        )
 
     if (fileExists) {
       writer.newLine()

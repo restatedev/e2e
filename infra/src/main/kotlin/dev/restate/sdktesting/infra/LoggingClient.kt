@@ -39,14 +39,15 @@ internal class LoggingClient(private val delegate: Client) : Client {
             request.target,
             response.statusCode(),
             response.headers().toLowercaseMap(),
-            formatBody(response.response()))
+            formatBody(response.response()),
+        )
       }
     }
   }
 
   override fun <Req, Res> sendAsync(
       request: Request<Req, Res>,
-      delay: Duration?
+      delay: Duration?,
   ): CompletableFuture<SendResponse<Res>> {
     LOG.info("→ SEND {}", formatRequest(request))
     return delegate.sendAsync(request, delay).whenComplete { response, ex ->
@@ -58,7 +59,8 @@ internal class LoggingClient(private val delegate: Client) : Client {
             request.target,
             response.statusCode(),
             response.invocationId(),
-            response.sendStatus())
+            response.sendStatus(),
+        )
       }
     }
   }
@@ -69,20 +71,20 @@ internal class LoggingClient(private val delegate: Client) : Client {
 
   override fun <Res> invocationHandle(
       invocationId: String,
-      resTypeTag: TypeTag<Res>
+      resTypeTag: TypeTag<Res>,
   ): Client.InvocationHandle<Res> = delegate.invocationHandle(invocationId, resTypeTag)
 
   override fun <Res> idempotentInvocationHandle(
       target: dev.restate.common.Target,
       idempotencyKey: String,
-      resTypeTag: TypeTag<Res>
+      resTypeTag: TypeTag<Res>,
   ): Client.IdempotentInvocationHandle<Res> =
       delegate.idempotentInvocationHandle(target, idempotencyKey, resTypeTag)
 
   override fun <Res> workflowHandle(
       workflowName: String,
       workflowId: String,
-      resTypeTag: TypeTag<Res>
+      resTypeTag: TypeTag<Res>,
   ): Client.WorkflowHandle<Res> = delegate.workflowHandle(workflowName, workflowId, resTypeTag)
 
   private fun formatRequest(request: Request<*, *>): String = buildString {

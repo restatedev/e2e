@@ -143,11 +143,13 @@ class IngressTest {
                       it.idempotencyRetention = 0.seconds
                       it.journalRetention = 0.seconds
                     }
-                  })
+                  },
+              )
               .bind(CounterProxy())
               .bind(AwakeableHolder())
               .bind(PrivateGreeter(), { it.ingressPrivate = true })
-              .bind(ProxyGreeter()))
+              .bind(ProxyGreeter())
+      )
 
       // We need the short cleanup interval b/c of the tests with the idempotent invoke.
       withEnv("RESTATE_WORKER__CLEANUP_INTERVAL", "1s")
@@ -195,7 +197,8 @@ class IngressTest {
                       .request { add(2) }
                       .options { idempotencyKey = myIdempotencyId }
                       .call()
-                      .response)
+                      .response
+              )
               .returns(2, CounterUpdateResponse::oldValue)
               .returns(4, CounterUpdateResponse::newValue)
         }
@@ -282,15 +285,20 @@ class IngressTest {
                 .request { run() }
                 .options { idempotencyKey = myIdempotencyId }
                 .send()
-                .sendStatus())
+                .sendStatus()
+        )
         .isEqualTo(SendStatus.ACCEPTED)
 
     val invocationHandle =
         ingressClient.idempotentInvocationHandle(
             Target.virtualObject(
-                extractServiceName(AwakeableHolder::class.java), interpreterId, "run"),
+                extractServiceName(AwakeableHolder::class.java),
+                interpreterId,
+                "run",
+            ),
             myIdempotencyId,
-            TypeTag.of(String::class.java))
+            TypeTag.of(String::class.java),
+        )
 
     // Attach to request
     val blockedFut = invocationHandle.attachAsync()
@@ -322,7 +330,8 @@ class IngressTest {
 
   @Test
   @DisplayName(
-      "Make a handler ingress private and try to call it both directly and through a proxy service")
+      "Make a handler ingress private and try to call it both directly and through a proxy service"
+  )
   fun privateService(
       @InjectAdminURI adminURI: URI,
       @InjectClient ingressClient: Client,
@@ -349,12 +358,15 @@ class IngressTest {
                 .request { greet("Francesco") }
                 .options(idempotentCallOptions)
                 .call()
-                .response)
+                .response
+        )
         .isEqualTo("Hello Francesco")
 
     // Make the service public again
     adminServiceClient.modifyService(
-        extractServiceName(PrivateGreeter::class.java), ModifyServiceRequest()._public(true))
+        extractServiceName(PrivateGreeter::class.java),
+        ModifyServiceRequest()._public(true),
+    )
 
     // Wait to get the correct count
     await withAlias

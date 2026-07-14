@@ -42,7 +42,9 @@ class Cancellation {
                   CancelTest.BlockingService::class,
                   AwakeableHolder::class,
                   Proxy::class,
-                  TestUtilsService::class))
+                  TestUtilsService::class,
+              )
+      )
     }
   }
 
@@ -118,7 +120,9 @@ class Cancellation {
                       serviceName = extractServiceName(CancelTest.Runner::class.java),
                       virtualObjectKey = key,
                       handlerName = "startTest",
-                      message = Json.encodeToString(blockingOperation).toByteArray()))
+                      message = Json.encodeToString(blockingOperation).toByteArray(),
+                  )
+              )
             }
             .options(idempotentCallOptions)
             .call()

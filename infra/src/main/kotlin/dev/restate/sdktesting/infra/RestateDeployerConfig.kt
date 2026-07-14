@@ -14,14 +14,14 @@ sealed interface ServiceDeploymentConfig
 
 data class ContainerServiceDeploymentConfig(
     val imageName: String,
-    val additionalEnvs: Map<String, String>
+    val additionalEnvs: Map<String, String>,
 ) : ServiceDeploymentConfig
 
 data class LocalForwardServiceDeploymentConfig(val port: Int = 9080) : ServiceDeploymentConfig
 
 enum class PullPolicy {
   ALWAYS,
-  CACHED
+  CACHED,
 }
 
 internal fun dev.restate.sdktesting.infra.PullPolicy.toTestContainersImagePullPolicy():
