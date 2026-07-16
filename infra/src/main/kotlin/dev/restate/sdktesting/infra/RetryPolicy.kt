@@ -16,16 +16,21 @@ sealed class RetryPolicy {
 
   object None : RetryPolicy() {
     override fun toInvokerSetupEnv(): Map<String, String> {
-      return mapOf("RESTATE_WORKER__INVOKER__RETRY_POLICY__TYPE" to "none")
+      return mapOf(
+          "RESTATE_DEFAULT_RETRY_POLICY__MAX_ATTEMPTS" to "1",
+          "RESTATE_DEFAULT_RETRY_POLICY__ON_MAX_ATTEMPTS" to "kill",
+      )
     }
   }
 
   class FixedDelay(private val interval: String, private val maxAttempts: Int) : RetryPolicy() {
     override fun toInvokerSetupEnv(): Map<String, String> {
       return mapOf(
-          "RESTATE_WORKER__INVOKER__RETRY_POLICY__TYPE" to "fixed-delay",
-          "RESTATE_WORKER__INVOKER__RETRY_POLICY__INTERVAL" to interval,
-          "RESTATE_WORKER__INVOKER__RETRY_POLICY__MAX_ATTEMPTS" to maxAttempts.toString(),
+          "RESTATE_DEFAULT_RETRY_POLICY__INITIAL_INTERVAL" to interval,
+          "RESTATE_DEFAULT_RETRY_POLICY__MAX_INTERVAL" to interval,
+          "RESTATE_DEFAULT_RETRY_POLICY__EXPONENTIATION_FACTOR" to "1.0",
+          "RESTATE_DEFAULT_RETRY_POLICY__MAX_ATTEMPTS" to maxAttempts.toString(),
+          "RESTATE_DEFAULT_RETRY_POLICY__ON_MAX_ATTEMPTS" to "kill",
       )
     }
   }
