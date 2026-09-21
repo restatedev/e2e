@@ -12,7 +12,6 @@ import dev.restate.common.reflections.ReflectionUtils
 import java.net.URI
 import kotlin.reflect.KClass
 import org.apache.logging.log4j.LogManager
-import org.testcontainers.Testcontainers
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.Network
 import org.testcontainers.utility.DockerImageName
@@ -81,7 +80,7 @@ data class ServiceSpec(
             )
       }
       is LocalForwardServiceDeploymentConfig -> {
-        Testcontainers.exposeHostPorts(serviceConfig.port)
+        exposeHostPort(serviceConfig.port)
         LOG.warn(
             """
               Service spec '$name' won't deploy a container, but will use locally running service deployment:
