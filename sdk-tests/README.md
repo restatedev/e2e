@@ -4,7 +4,7 @@ Conformance tests for Restate SDK implementations. Given a Docker image that imp
 
 ## Requirements
 
-- JVM >= 21
+- JVM >= 25 (both modules build with toolchain 25, and the released JAR targets it)
 - Docker
 
 ## Running locally
@@ -14,19 +14,19 @@ Conformance tests for Restate SDK implementations. Given a Docker image that imp
 Run all suites against a service image:
 
 ```shell
-./gradlew :sdk-tests:run --args='run <service-image>'
+./gradlew :sdk-tests:run --args='run --service-container-image=<service-image>'
 ```
 
 Run a specific suite:
 
 ```shell
-./gradlew :sdk-tests:run --args='run --test-suite=default <service-image>'
+./gradlew :sdk-tests:run --args='run --test-suite=default --service-container-image=<service-image>'
 ```
 
 Run a single test:
 
 ```shell
-./gradlew :sdk-tests:run --args='run --test-suite=default --test-name=State <service-image>'
+./gradlew :sdk-tests:run --args='run --test-suite=default --test-name=State --service-container-image=<service-image>'
 ```
 
 ### From the pre-built JAR
@@ -34,8 +34,8 @@ Run a single test:
 Download the latest JAR from [GitHub Releases](https://github.com/restatedev/e2e/releases) and run:
 
 ```shell
-java -jar sdk-tests.jar run <service-image>
-java -jar sdk-tests.jar run --test-suite=default <service-image>
+java -jar sdk-tests.jar run --service-container-image=<service-image>
+java -jar sdk-tests.jar run --test-suite=default --service-container-image=<service-image>
 ```
 
 ### Debug mode (service running locally, not in a container)
@@ -58,6 +58,7 @@ Options available in debug mode:
 | `--mount-state-directory` | Mount a local directory as Restate data directory |
 | `--local-ingress-port` | Bind Restate ingress to a specific host port |
 | `--local-admin-port` | Bind Restate admin to a specific host port |
+| `--local-node-port` | Bind the Restate node-to-node port to a specific host port |
 
 ## Available test suites
 
@@ -78,10 +79,11 @@ Pass `all` (the default) to run all suites sequentially.
 
 | Option | Env var | Description |
 |--------|---------|-------------|
+| `--service-container-image` | `SERVICE_CONTAINER_IMAGE` | Docker image for the service under test. If omitted, no service container is deployed |
 | `--restate-container-image` | `RESTATE_CONTAINER_IMAGE` | Restate runtime image (default: `ghcr.io/restatedev/restate:main`) |
 | `--image-pull-policy` | | `ALWAYS` (default) or `CACHED` |
 | `--report-dir` | `TEST_REPORT_DIR` | Output directory for test reports (default: `test_report/<timestamp>`) |
-| `--exclusions-file` | | YAML file listing tests to skip |
+| `--exclusions-file` | `TEST_EXCLUSIONS_FILE` | YAML file listing tests to skip |
 | `--service-container-env-file` | | `.env` file whose variables are injected into the service container |
 | `--custom-tests-file` | | YAML file defining custom test commands (for `customTests` suite) |
 | `--sequential` | | Disable parallel test execution |

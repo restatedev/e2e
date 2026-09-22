@@ -33,6 +33,13 @@ class UserErrors {
   companion object {
     @RegisterExtension
     val deployerExt: RestateDeployerExtension = RestateDeployerExtension {
+      // invocationWithEventualSuccess needs SUCCESS_ATTEMPT attempts to go through, so retry fast
+      // and give up (killing the invocation) well after that, rather than pausing it.
+      withEnv("RESTATE_DEFAULT_RETRY_POLICY__INITIAL_INTERVAL", "10ms")
+      withEnv("RESTATE_DEFAULT_RETRY_POLICY__MAX_INTERVAL", "10ms")
+      withEnv("RESTATE_DEFAULT_RETRY_POLICY__EXPONENTIATION_FACTOR", "1.0")
+      withEnv("RESTATE_DEFAULT_RETRY_POLICY__MAX_ATTEMPTS", "unlimited")
+      withEnv("RESTATE_DEFAULT_RETRY_POLICY__ON_MAX_ATTEMPTS", "kill")
       withServiceSpec(ServiceSpec.defaultBuilder().withServices(Failing::class, Counter::class))
     }
 
