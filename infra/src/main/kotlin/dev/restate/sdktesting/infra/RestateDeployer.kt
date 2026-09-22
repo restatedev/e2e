@@ -36,7 +36,6 @@ import org.apache.logging.log4j.CloseableThreadContext
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.ThreadContext
 import org.rnorth.ducttape.unreliables.Unreliables
-import org.testcontainers.Testcontainers
 import org.testcontainers.containers.*
 import org.testcontainers.images.builder.Transferable
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter
@@ -279,7 +278,7 @@ private constructor(
 
       val port = it.actualPort()
       LOG.debug("Started local endpoint on port {}", port)
-      Testcontainers.exposeHostPorts(port)
+      exposeHostPort(port)
 
       port
     }

@@ -15,12 +15,12 @@ import dev.restate.admin.model.RegisterDeploymentRequest
 import dev.restate.admin.model.RegisterHttpDeploymentRequest
 import dev.restate.sdk.endpoint.Endpoint
 import dev.restate.sdk.http.vertx.RestateHttpServer
+import dev.restate.sdktesting.infra.exposeHostPort
 import io.vertx.core.http.HttpServer
 import java.net.URI
 import java.util.concurrent.TimeUnit
 import org.apache.logging.log4j.LogManager
 import org.awaitility.Awaitility
-import org.testcontainers.Testcontainers
 
 private val LOG = LogManager.getLogger("dev.restate.sdktesting.tests")
 
@@ -64,7 +64,7 @@ fun startAndRegisterLocalEndpoint(endpoint: Endpoint, adminURI: URI): LocalEndpo
   server.listen(0).toCompletionStage().toCompletableFuture().join()
   val port = server.actualPort()
   LOG.debug("Started local endpoint on port {}", port)
-  Testcontainers.exposeHostPorts(port)
+  exposeHostPort(port)
   val uri = "http://host.testcontainers.internal:$port"
 
   // Register the new endpoint with the runtime
