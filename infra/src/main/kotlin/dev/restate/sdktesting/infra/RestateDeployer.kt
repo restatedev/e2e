@@ -8,7 +8,6 @@
 // https://github.com/restatedev/sdk-test-suite/blob/main/LICENSE
 package dev.restate.sdktesting.infra
 
-import dev.restate.admin.api.ClusterHealthApi
 import dev.restate.admin.api.DeploymentApi
 import dev.restate.admin.client.ApiClient
 import dev.restate.admin.client.ApiException
@@ -18,6 +17,8 @@ import dev.restate.sdk.endpoint.Endpoint
 import dev.restate.sdk.http.vertx.RestateHttpServer
 import dev.restate.sdktesting.infra.runtimeconfig.IngressOptions
 import dev.restate.sdktesting.infra.runtimeconfig.RestateConfigSchema
+import io.grpc.ManagedChannelBuilder
+import io.grpc.StatusRuntimeException
 import io.vertx.core.http.HttpServer
 import java.io.File
 import java.net.URI
@@ -41,6 +42,8 @@ import org.testcontainers.images.builder.Transferable
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider
 import org.testcontainers.shaded.com.github.dockerjava.core.DockerClientConfig
+import restate.cluster_ctrl.ClusterCtrlSvcGrpc
+import restate.cluster_ctrl.ClusterCtrlSvcOuterClass.ClusterStateRequest
 
 class RestateDeployer
 private constructor(
@@ -390,18 +393,22 @@ private constructor(
     Unreliables.retryUntilTrue(60, TimeUnit.SECONDS) {
       try {
         val randomRestateNode = runtimeContainers.random()
-        val adminPort = randomRestateNode.getMappedPort(RUNTIME_ADMIN_ENDPOINT_PORT)
-        val client =
-            ClusterHealthApi(
-                ApiClient(HttpClient.newBuilder(), apiClient.objectMapper, null)
-                    .setHost("localhost")
-                    .setPort(adminPort)
-            )
-        client.clusterHealth().metadataClusterHealth?.members?.size == numberRestateNodes
-      } catch (e: ApiException) {
+        val nodePort = randomRestateNode.getMappedPort(RUNTIME_NODE_PORT)
+        val channel = ManagedChannelBuilder.forAddress("localhost", nodePort).usePlaintext().build()
+        try {
+          val clusterState =
+              ClusterCtrlSvcGrpc.newBlockingStub(channel)
+                  .withDeadlineAfter(5, TimeUnit.SECONDS)
+                  .getClusterState(ClusterStateRequest.getDefaultInstance())
+                  .clusterState
+          clusterState.nodesMap.values.count { it.hasAlive() } == numberRestateNodes
+        } finally {
+          channel.shutdownNow()
+        }
+      } catch (e: StatusRuntimeException) {
         Thread.sleep(200)
         throw IllegalStateException(
-            "Error when checking cluster health, got status code ${e.code} with body: ${e.responseBody}",
+            "Error when checking cluster state via gRPC: ${e.status}",
             e,
         )
       }

@@ -7,6 +7,7 @@ plugins {
 
   id("org.jsonschema2pojo")
   alias(libs.plugins.openapi.generator)
+  alias(libs.plugins.protobuf)
 
   id("com.diffplug.spotless")
   id("com.github.jk1.dependency-license-report")
@@ -16,10 +17,17 @@ kotlin { jvmToolchain(25) }
 
 val generatedJ2SPDir = layout.buildDirectory.dir("generated/j2sp")
 val generatedOpenapi = layout.buildDirectory.dir("generated/openapi")
+val generatedProto = layout.buildDirectory.dir("generated/sources/proto/main/java")
+val generatedGrpc = layout.buildDirectory.dir("generated/sources/proto/main/grpc")
 
 sourceSets {
   main {
-    java.srcDirs(generatedJ2SPDir, layout.buildDirectory.dir("generated/openapi/src/main/java"))
+    java.srcDirs(
+        generatedJ2SPDir,
+        layout.buildDirectory.dir("generated/openapi/src/main/java"),
+        generatedProto,
+        generatedGrpc,
+    )
   }
 }
 
@@ -65,6 +73,19 @@ dependencies {
 
   implementation(libs.assertj)
   implementation(libs.awaitility)
+
+  implementation(libs.grpc.netty.shaded)
+  implementation(libs.grpc.protobuf)
+  implementation(libs.grpc.stub)
+  implementation(libs.protobuf.java)
+}
+
+protobuf {
+  protoc { artifact = "com.google.protobuf:protoc:${libs.versions.protobuf.get()}" }
+  plugins {
+    create("grpc") { artifact = "io.grpc:protoc-gen-grpc-java:${libs.versions.grpc.get()}" }
+  }
+  generateProtoTasks { all().configureEach { plugins { create("grpc") } } }
 }
 
 jsonSchema2Pojo {
@@ -99,6 +120,7 @@ openApiGenerate {
 
 tasks {
   withType<KotlinCompile>().configureEach {
+    dependsOn("generateProto")
     dependsOn(openApiGenerate)
     dependsOn(generateJsonSchema2Pojo)
     dependsOn(withType<GenerateTask>())

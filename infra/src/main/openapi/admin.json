@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Admin API",
-    "description": "This API exposes the admin operations of a Restate cluster, such as registering new service deployments, interacting with running invocations, register Kafka subscriptions, retrieve service metadata. For an overview, check out the [Operate documentation](https://docs.restate.dev/operate/). If you're looking for how to call your services, check out the [Ingress HTTP API](https://docs.restate.dev/invoke/http) instead.",
+    "description": "This API exposes the admin operations of a Restate cluster, such as registering new service deployments, interacting with running invocations, register Kafka subscriptions, retrieve service metadata. For an overview, check out the [Server documentation](https://docs.restate.dev/server/overview). If you're looking for how to call your services, check out the [Ingress HTTP API](https://docs.restate.dev/invoke/http) instead.",
     "contact": {
       "name": "restate.dev"
     },
@@ -10,51 +10,9 @@
       "name": "MIT",
       "url": "https://opensource.org/license/mit"
     },
-    "version": "1.7.0-dev"
+    "version": "1.8.0-dev"
   },
   "paths": {
-    "/cluster-health": {
-      "get": {
-        "tags": [
-          "cluster_health"
-        ],
-        "summary": "Cluster state endpoint",
-        "operationId": "cluster_health",
-        "responses": {
-          "200": {
-            "description": "Cluster health information",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ClusterHealthResponse"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal Server Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorDescriptionResponse"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "The cluster does not seem to be provisioned yet.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorDescriptionResponse"
-                }
-              }
-            }
-          }
-        },
-        "deprecated": true
-      }
-    },
     "/deployments": {
       "get": {
         "tags": [
@@ -1090,8 +1048,36 @@
                   "type": "null"
                 },
                 {
-                  "type": "string",
-                  "description": "Specifies which deployment to use. Use 'keep' to keep the currently pinned deployment, 'latest' to use the latest deployment, or provide a specific deployment ID."
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "description": "Keep the currently pinned deployment",
+                      "enum": [
+                        "Keep"
+                      ]
+                    },
+                    {
+                      "type": "string",
+                      "description": "Use the latest deployment",
+                      "enum": [
+                        "Latest"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "description": "Use a specific deployment ID",
+                      "required": [
+                        "Id"
+                      ],
+                      "properties": {
+                        "Id": {
+                          "type": "string",
+                          "description": "Use a specific deployment ID"
+                        }
+                      }
+                    }
+                  ],
+                  "description": "Specifies which deployment to use when resuming or restarting an invocation."
                 }
               ]
             }
@@ -1322,8 +1308,36 @@
                   "type": "null"
                 },
                 {
-                  "type": "string",
-                  "description": "Specifies which deployment to use. Use 'keep' to keep the currently pinned deployment, 'latest' to use the latest deployment, or provide a specific deployment ID."
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "description": "Keep the currently pinned deployment",
+                      "enum": [
+                        "Keep"
+                      ]
+                    },
+                    {
+                      "type": "string",
+                      "description": "Use the latest deployment",
+                      "enum": [
+                        "Latest"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "description": "Use a specific deployment ID",
+                      "required": [
+                        "Id"
+                      ],
+                      "properties": {
+                        "Id": {
+                          "type": "string",
+                          "description": "Use a specific deployment ID"
+                        }
+                      }
+                    }
+                  ],
+                  "description": "Specifies which deployment to use when resuming or restarting an invocation."
                 }
               ]
             }
@@ -2149,7 +2163,7 @@
           "service"
         ],
         "summary": "Modify service state",
-        "description": "Modifies the K/V state of a Virtual Object. For a detailed description of this API and how to use it, see the [state documentation](https://docs.restate.dev/operate/invocation#modifying-service-state).",
+        "description": "Modifies the K/V state of a Virtual Object. For a detailed description of this API and how to use it, see the [state documentation](https://docs.restate.dev/services/introspection#inspecting-application-state).",
         "operationId": "modify_service_state",
         "parameters": [
           {
@@ -2246,7 +2260,7 @@
           "subscription"
         ],
         "summary": "Create subscription",
-        "description": "Creates a new subscription that connects an event source (e.g., a Kafka topic) to a Restate service handler.\nFor more information, see the [subscription documentation](https://docs.restate.dev/operate/invocation#managing-kafka-subscriptions).",
+        "description": "Creates a new subscription that connects an event source (e.g., a Kafka topic) to a Restate service handler.\nFor more information, see the [subscription documentation](https://docs.restate.dev/services/invocation/kafka#managing-kafka-subscriptions).",
         "operationId": "create_subscription",
         "requestBody": {
           "content": {
@@ -2403,6 +2417,86 @@
           }
         }
       }
+    },
+    "/vqueues/{vqueue_id}/pause": {
+      "post": {
+        "tags": [
+          "vqueue"
+        ],
+        "summary": "Pauses a virtual queue.",
+        "operationId": "pause_vqueue",
+        "parameters": [
+          {
+            "name": "vqueue_id",
+            "in": "path",
+            "description": "The virtual queue ID.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Virtual queue pause accepted and will be applied asynchronously"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "405": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/vqueues/{vqueue_id}/resume": {
+      "post": {
+        "tags": [
+          "vqueue"
+        ],
+        "summary": "Resumes a virtual queue.",
+        "operationId": "resume_vqueue",
+        "parameters": [
+          {
+            "name": "vqueue_id",
+            "in": "path",
+            "description": "The virtual queue ID.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Virtual queue resume accepted and will be applied asynchronously"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "405": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2416,30 +2510,6 @@
           "https://my-host/",
           "unix:/data/restate-data/ingress.sock"
         ]
-      },
-      "ClusterHealthResponse": {
-        "type": "object",
-        "description": "Cluster health information",
-        "required": [
-          "cluster_name"
-        ],
-        "properties": {
-          "cluster_name": {
-            "type": "string",
-            "description": "Cluster name"
-          },
-          "metadata_cluster_health": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/EmbeddedMetadataClusterHealth",
-                "description": "Embedded metadata cluster health if it was enabled"
-              }
-            ]
-          }
-        }
       },
       "CreateKafkaClusterRequest": {
         "type": "object",
@@ -2522,7 +2592,7 @@
         "type": "string"
       },
       "DeploymentResponse": {
-        "anyOf": [
+        "oneOf": [
           {
             "type": "object",
             "title": "HttpDeploymentResponse",
@@ -2541,6 +2611,17 @@
               "additional_headers": {
                 "$ref": "#/components/schemas/SerdeableHeaderHashMap",
                 "description": "# Additional headers\n\nAdditional headers used to invoke this service deployment."
+              },
+              "auth": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/HttpAuth",
+                    "description": "# Authentication\n\nPer-deployment authentication, if configured."
+                  }
+                ]
               },
               "created_at": {
                 "type": "string"
@@ -2697,7 +2778,7 @@
         ]
       },
       "DetailedDeploymentResponse": {
-        "anyOf": [
+        "oneOf": [
           {
             "type": "object",
             "title": "HttpDetailedDeploymentResponse",
@@ -2716,6 +2797,17 @@
               "additional_headers": {
                 "$ref": "#/components/schemas/SerdeableHeaderHashMap",
                 "description": "# Additional headers\n\nAdditional headers used to invoke this service deployment."
+              },
+              "auth": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/HttpAuth",
+                    "description": "# Authentication\n\nPer-deployment authentication, if configured."
+                  }
+                ]
               },
               "created_at": {
                 "type": "string"
@@ -2872,21 +2964,6 @@
         ],
         "description": "Detailed information about Restate deployments"
       },
-      "EmbeddedMetadataClusterHealth": {
-        "type": "object",
-        "required": [
-          "members"
-        ],
-        "properties": {
-          "members": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/PlainNodeId"
-            },
-            "description": "Current members of the embedded metadata cluster"
-          }
-        }
-      },
       "EndpointLambdaCompression": {
         "type": "string",
         "description": "Lambda compression",
@@ -2910,6 +2987,32 @@
               "null"
             ],
             "description": "# Restate code\n\nRestate error code describing this error"
+          }
+        }
+      },
+      "GoogleIdTokenAuth": {
+        "type": "object",
+        "properties": {
+          "audience": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Explicit OIDC `aud` claim. Leave unset to automatically derive from the deployment URL."
+          },
+          "impersonate_service_account": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Service account email to impersonate via `iamcredentials:generateIdToken`. Leave unset to\nuse the ambient ADC identity."
+          },
+          "workload_identity_provider": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Full resource name of a GCP workload identity federation provider, e.g.\n`//iam.googleapis.com/projects/N/locations/global/workloadIdentityPools/P/providers/R`.\nWhen set, use AWS-to-GCP federation instead of ambient Application Default Credentials.\nRequires `impersonate_service_account`."
           }
         }
       },
@@ -3007,6 +3110,17 @@
             "$ref": "#/components/schemas/HandlerRetryPolicyMetadata",
             "description": "# Retry policy\n\nRetry policy overrides applied for this handler."
           },
+          "state_preload_policy": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/StatePreloadPolicy",
+                "description": "# State preload policy\n\nWhich state is preloaded (sent eagerly) at the start of an invocation to this handler.\nThis is relevant only for Workflows and Virtual Objects.\n\nIf set, it overrides the service-level policy.\n\n`\"All\"` preloads all state eagerly; `{\"Partial\": [\"key\", ...]}` preloads only the listed\nkeys eagerly (an empty list means fully lazy state)."
+              }
+            ]
+          },
           "ty": {
             "oneOf": [
               {
@@ -3074,6 +3188,22 @@
             ]
           }
         }
+      },
+      "HttpAuth": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "GoogleIdToken"
+            ],
+            "properties": {
+              "GoogleIdToken": {
+                "$ref": "#/components/schemas/GoogleIdTokenAuth"
+              }
+            }
+          }
+        ],
+        "description": "HTTP authentication details."
       },
       "KafkaClusterName": {
         "type": "string",
@@ -3298,11 +3428,6 @@
           "Kill"
         ]
       },
-      "PlainNodeId": {
-        "type": "integer",
-        "format": "int32",
-        "minimum": 0
-      },
       "Precondition": {
         "oneOf": [
           {
@@ -3406,9 +3531,20 @@
                   }
                 ]
               },
+              "auth": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/HttpAuth",
+                    "description": "# Authentication\n\nOptional per-deployment authentication configuration. When set to `GoogleIdToken`,\nRestate mints a Google-signed OIDC ID token for each request and attaches it as\n`X-Serverless-Authorization: Bearer <token>`. Cloud Run validates this header in\nprecedence over `Authorization` and strips it before forwarding to the container, so any\n`Authorization` placed in `additional_headers` passes through to the workload unchanged."
+                  }
+                ]
+              },
               "breaking": {
                 "type": "boolean",
-                "description": "# Breaking\n\nIf `true`, it allows registering new service revisions with\nschemas incompatible with previous service revisions, such as changing the service type.\n\nSee the [versioning documentation](https://docs.restate.dev/operate/versioning) for more information."
+                "description": "# Breaking\n\nIf `true`, it allows registering new service revisions with\nschemas incompatible with previous service revisions, such as changing the service type.\n\nSee the [versioning documentation](https://docs.restate.dev/services/versioning) for more information."
               },
               "dry_run": {
                 "type": "boolean",
@@ -3419,7 +3555,7 @@
                   "boolean",
                   "null"
                 ],
-                "description": "# Force\n\nIf `true`, it overrides, if existing, any deployment using the same `uri`.\nBeware that this can lead inflight invocations to an unrecoverable error state.\n\nWhen set to `true`, it implies `breaking = true`.\n\nSee the [versioning documentation](https://docs.restate.dev/operate/versioning) for more information.",
+                "description": "# Force\n\nIf `true`, it overrides, if existing, any deployment using the same `uri`.\nBeware that this can lead inflight invocations to an unrecoverable error state.\n\nWhen set to `true`, it implies `breaking = true`.\n\nSee the [versioning documentation](https://docs.restate.dev/services/versioning) for more information.",
                 "default": true
               },
               "metadata": {
@@ -3475,7 +3611,7 @@
               },
               "breaking": {
                 "type": "boolean",
-                "description": "# Breaking\n\nIf `true`, it allows registering new service revisions with\nschemas incompatible with previous service revisions, such as changing the service type.\n\nSee the [versioning documentation](https://docs.restate.dev/operate/versioning) for more information."
+                "description": "# Breaking\n\nIf `true`, it allows registering new service revisions with\nschemas incompatible with previous service revisions, such as changing the service type.\n\nSee the [versioning documentation](https://docs.restate.dev/services/versioning) for more information."
               },
               "dry_run": {
                 "type": "boolean",
@@ -3486,7 +3622,7 @@
                   "boolean",
                   "null"
                 ],
-                "description": "# Force\n\nIf `true`, it overrides, if existing, any deployment using the same `uri`.\nBeware that this can lead inflight invocations to an unrecoverable error state.\n\nThis implies `breaking = true`.\n\nSee the [versioning documentation](https://docs.restate.dev/operate/versioning) for more information.",
+                "description": "# Force\n\nIf `true`, it overrides, if existing, any deployment using the same `uri`.\nBeware that this can lead inflight invocations to an unrecoverable error state.\n\nThis implies `breaking = true`.\n\nSee the [versioning documentation](https://docs.restate.dev/services/versioning) for more information.",
                 "default": true
               },
               "metadata": {
@@ -3709,6 +3845,10 @@
             "$ref": "#/components/schemas/u32",
             "description": "# Revision\n\nLatest revision of the service."
           },
+          "state_preload_policy": {
+            "$ref": "#/components/schemas/StatePreloadPolicy",
+            "description": "# State preload policy\n\nWhich state is preloaded (sent eagerly) at the start of an invocation to this service.\nThis is relevant only for Workflows and Virtual Objects.\n\n`\"All\"` preloads all state eagerly; `{\"Partial\": [\"key\", ...]}` preloads only the listed\nkeys eagerly (an empty list means fully lazy state)."
+          },
           "ty": {
             "$ref": "#/components/schemas/ServiceType",
             "description": "# Type\n\nService type"
@@ -3814,6 +3954,34 @@
             }
           }
         }
+      },
+      "StatePreloadPolicy": {
+        "oneOf": [
+          {
+            "type": "string",
+            "description": "Preload all state eagerly (up to the invoker's eager state size limit).",
+            "enum": [
+              "All"
+            ]
+          },
+          {
+            "type": "object",
+            "description": "Preload only these exact state keys (best-effort, capped by the invoker's eager state size\nlimit); everything else is served on demand. An empty list means fully lazy state.",
+            "required": [
+              "Partial"
+            ],
+            "properties": {
+              "Partial": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Preload only these exact state keys (best-effort, capped by the invoker's eager state size\nlimit); everything else is served on demand. An empty list means fully lazy state."
+              }
+            }
+          }
+        ],
+        "description": "Eager/lazy state preload policy for an invocation.\n\nThis is both the resolved policy handed to the invoker and the per-handler state preload\nconfiguration persisted in the schema (see the schema metadata module)."
       },
       "String": {
         "type": "string"
@@ -4134,7 +4302,7 @@
       "name": "invocation",
       "description": "Invocation management",
       "externalDocs": {
-        "url": "https://docs.restate.dev/operate/invocation",
+        "url": "https://docs.restate.dev/services/invocation/http",
         "description": "Invocations documentation"
       }
     },
@@ -4142,7 +4310,7 @@
       "name": "subscription",
       "description": "Subscription management",
       "externalDocs": {
-        "url": "https://docs.restate.dev/operate/invocation#managing-kafka-subscriptions",
+        "url": "https://docs.restate.dev/services/invocation/kafka#managing-kafka-subscriptions",
         "description": "Kafka subscriptions documentation"
       }
     },
@@ -4157,6 +4325,10 @@
     {
       "name": "service_handler",
       "description": "Service handlers metadata"
+    },
+    {
+      "name": "vqueue",
+      "description": "Virtual queue management"
     },
     {
       "name": "cluster_health",
@@ -4180,7 +4352,7 @@
     }
   ],
   "externalDocs": {
-    "url": "https://docs.restate.dev/operate/",
-    "description": "Restate operations documentation"
+    "url": "https://docs.restate.dev/server/overview",
+    "description": "Restate server documentation"
   }
 }

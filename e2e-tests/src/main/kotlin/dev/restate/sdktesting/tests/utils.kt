@@ -18,6 +18,11 @@ import dev.restate.sdk.http.vertx.RestateHttpServer
 import dev.restate.sdktesting.infra.exposeHostPort
 import io.vertx.core.http.HttpServer
 import java.net.URI
+import java.net.URLEncoder
+import java.net.http.HttpClient
+import java.net.http.HttpRequest
+import java.net.http.HttpResponse
+import java.nio.charset.StandardCharsets
 import java.util.concurrent.TimeUnit
 import org.apache.logging.log4j.LogManager
 import org.awaitility.Awaitility
@@ -39,6 +44,43 @@ fun <T> retryOnServiceUnavailable(block: () -> T): T {
       .pollInterval(100, TimeUnit.MILLISECONDS)
       .ignoreExceptionsMatching { e -> e is ApiException && e.code == 503 }
       .until({ block() }) { true }
+}
+
+/** Resume an invocation using the query encoding expected by Restate's untagged deployment enum. */
+fun resumeInvocation(adminURI: URI, invocationId: String, deployment: String) {
+  sendPatch(
+      adminURI.resolve(
+          "invocations/${urlEncode(invocationId)}/resume?deployment=${urlEncode(deployment)}"
+      )
+  )
+}
+
+/** Restart an invocation using the query encoding expected by Restate's deployment enum. */
+fun restartAsNewInvocation(
+    adminURI: URI,
+    invocationId: String,
+    from: Int?,
+    deployment: String,
+): String {
+  val query =
+      listOfNotNull(from?.let { "from=$it" }, "deployment=${urlEncode(deployment)}")
+          .joinToString("&")
+  val response =
+      sendPatch(adminURI.resolve("invocations/${urlEncode(invocationId)}/restart-as-new?$query"))
+  return ApiClient().objectMapper.readTree(response).get("new_invocation_id").asText()
+}
+
+private fun urlEncode(value: String): String =
+    URLEncoder.encode(value, StandardCharsets.UTF_8).replace("+", "%20")
+
+private fun sendPatch(uri: URI): String {
+  val request =
+      HttpRequest.newBuilder().uri(uri).method("PATCH", HttpRequest.BodyPublishers.noBody()).build()
+  val response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString())
+  if (response.statusCode() / 100 != 2) {
+    throw ApiException(response.statusCode(), response.headers(), response.body())
+  }
+  return response.body()
 }
 
 /** Generate a random alphanumeric string of the given length. Resists compression. */

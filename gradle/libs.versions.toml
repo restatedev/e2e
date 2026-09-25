@@ -6,6 +6,8 @@ junit = "6.0.3"
 assertj = "3.27.6"
 testcontainers = "2.0.4"
 awaitility = "4.3.0"
+grpc = "1.68.1"
+protobuf = "4.28.2"
 
 [libraries]
 # Restate SDK
@@ -56,6 +58,10 @@ docker = { module = "com.github.docker-java:docker-java", version = "3.7.0" }
 # Utilities
 dotenv = { module = "io.github.cdimascio:dotenv-kotlin", version = "6.5.1" }
 awaitility = { module = "org.awaitility:awaitility-kotlin", version.ref = "awaitility" }
+grpc-netty-shaded = { module = "io.grpc:grpc-netty-shaded", version.ref = "grpc" }
+grpc-protobuf = { module = "io.grpc:grpc-protobuf", version.ref = "grpc" }
+grpc-stub = { module = "io.grpc:grpc-stub", version.ref = "grpc" }
+protobuf-java = { module = "com.google.protobuf:protobuf-java", version.ref = "protobuf" }
 
 # Serialization & Coroutines
 kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version = "1.9.0" }
@@ -66,4 +72,5 @@ kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-t
 
 [plugins]
 openapi-generator = { id = "org.openapi.generator", version = "7.5.0" }
+protobuf = { id = "com.google.protobuf", version = "0.10.0" }
 shadow = { id = "com.gradleup.shadow", version = "8.3.5" }
