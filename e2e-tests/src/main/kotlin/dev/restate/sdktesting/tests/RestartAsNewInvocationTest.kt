@@ -8,8 +8,6 @@
 // https://github.com/restatedev/sdk-test-suite/blob/main/LICENSE
 package dev.restate.sdktesting.tests
 
-import dev.restate.admin.api.InvocationApi
-import dev.restate.admin.client.ApiClient
 import dev.restate.client.Client
 import dev.restate.client.IngressException
 import dev.restate.client.kotlin.*
@@ -95,13 +93,9 @@ class RestartAsNewInvocationTest {
     RestartInvocation.ctxRunResult.set("new")
 
     // Now restart invocation
-    val adminClient = ApiClient().setHost(adminURI.host).setPort(adminURI.port)
-    val invocationApi = InvocationApi(adminClient)
-    val newInvocationId =
-        retryOnServiceUnavailable {
-              invocationApi.restartAsNewInvocation(sendResult.invocationId(), null, "latest")
-            }
-            .newInvocationId
+    val newInvocationId = retryOnServiceUnavailable {
+      restartAsNewInvocation(adminURI, sendResult.invocationId(), null, "Latest")
+    }
 
     // Assert this returns the input
     val newInvocationResult =
@@ -153,13 +147,9 @@ class RestartAsNewInvocationTest {
     RestartInvocation.ctxRunResult.set("new")
 
     // Now restart invocation
-    val adminClient = ApiClient().setHost(adminURI.host).setPort(adminURI.port)
-    val invocationApi = InvocationApi(adminClient)
-    val newInvocationId =
-        retryOnServiceUnavailable {
-              invocationApi.restartAsNewInvocation(sendResult.invocationId(), 1, "latest")
-            }
-            .newInvocationId
+    val newInvocationId = retryOnServiceUnavailable {
+      restartAsNewInvocation(adminURI, sendResult.invocationId(), 1, "Latest")
+    }
 
     // Assert this returns the input
     val newInvocationResult =

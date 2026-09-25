@@ -1,0 +1,222 @@
+// Copyright (c) 2024 - Restate Software, Inc., Restate GmbH
+//
+// This file is part of the Restate service protocol, which is
+// released under the MIT license.
+//
+// You can find a copy of the license in file LICENSE in the root
+// directory of this repository or package, or at
+// https://github.com/restatedev/proto/blob/main/LICENSE
+
+syntax = "proto3";
+
+import "restate/common.proto";
+import "restate/cluster.proto";
+import "google/protobuf/empty.proto";
+
+package restate.cluster_ctrl;
+
+service ClusterCtrlSvc {
+  rpc GetClusterState(ClusterStateRequest) returns (ClusterStateResponse);
+
+  rpc ListLogs(ListLogsRequest) returns (ListLogsResponse);
+
+  rpc DescribeLog(DescribeLogRequest) returns (DescribeLogResponse);
+
+  rpc TrimLog(TrimLogRequest) returns (google.protobuf.Empty);
+
+  rpc CreatePartitionSnapshot(CreatePartitionSnapshotRequest)
+      returns (CreatePartitionSnapshotResponse);
+
+  rpc SealAndExtendChain(SealAndExtendChainRequest)
+      returns (SealAndExtendChainResponse);
+
+  rpc SealChain(SealChainRequest) returns (SealChainResponse);
+
+  rpc FindTail(FindTailRequest) returns (FindTailResponse);
+
+  rpc GetClusterConfiguration(GetClusterConfigurationRequest)
+      returns (GetClusterConfigurationResponse);
+
+  rpc SetClusterConfiguration(SetClusterConfigurationRequest)
+      returns (SetClusterConfigurationResponse);
+
+  rpc Query(QueryRequest) returns (stream QueryResponse);
+
+  rpc MigrateMetadata(MigrateMetadataRequest) returns (MigrateMetadataResponse);
+
+  // Signal the cluster controller to re-fetch epoch metadata for the given
+  // partitions. An empty list means all known partitions.
+  rpc SyncEpochMetadata(SyncEpochMetadataRequest)
+      returns (SyncEpochMetadataResponse);
+}
+
+message SetClusterConfigurationResponse {}
+message SetClusterConfigurationRequest {
+  restate.cluster.ClusterConfiguration cluster_configuration = 1;
+}
+
+message GetClusterConfigurationRequest {}
+message GetClusterConfigurationResponse {
+  restate.cluster.ClusterConfiguration cluster_configuration = 1;
+}
+
+message ClusterStateRequest {}
+
+message ClusterStateResponse { restate.cluster.ClusterState cluster_state = 1; }
+
+message ListLogsRequest {}
+
+message ListLogsResponse {
+  // Serialized restate_types::logs::metadata::Logs
+  bytes logs = 1;
+}
+
+enum TailState {
+  TailState_UNKNOWN = 0;
+  OPEN = 1;
+  SEALED = 2;
+}
+
+message DescribeLogRequest { uint32 log_id = 1; }
+
+message DescribeLogResponse {
+  uint32 log_id = 5;
+  uint32 logs_version = 6;
+  // Serialized restate_types::logs::metadata::Chain
+  bytes chain = 1;
+  TailState tail_state = 2;
+  uint64 tail_offset = 3;
+  uint64 trim_point = 4;
+  // Serialized restate_types::nodes_config::NodesConfiguration
+  bytes nodes_configuration = 7;
+}
+
+message TrimLogRequest {
+  uint32 log_id = 1;
+  uint64 trim_point = 2;
+}
+
+// Requests a partition snapshot to be archived. Optionally, a minimum
+// target LSN for the snapshot may be set and the log can be trimmed to the
+// archived LSN at the same time. It is safe to retry this operation on
+// error with the same inputs.
+message CreatePartitionSnapshotRequest {
+  uint32 partition_id = 1;
+  // Minimum LSN (inclusive) which must be covered by the snapshot; if set it is
+  // treated as a hard requirement and the operation will return an error if it
+  // cannot be met
+  optional uint64 min_target_lsn = 2;
+  // Optionally, also trim the log to the archived LSN; trim only occurs after a
+  // successful snapshot and so will honor the min_target_lsn requirement, if
+  // set to true
+  bool trim_log = 3;
+}
+
+message CreatePartitionSnapshotResponse {
+  string snapshot_id = 1;
+  uint32 log_id = 2;
+  // Minimum LSN (inclusive) which is guaranteed to be covered by the snapshot
+  uint64 min_applied_lsn = 3;
+}
+
+message ChainExtension {
+  // segment_index will be automatically selected (to the index of last segment)
+  // if not set.
+  optional uint32 segment_index = 2;
+  // check `ProviderKind` for possible values.
+  string provider = 4;
+
+  // [deprecated] We return an error if this
+  // field is set.
+  string params = 5;
+
+  // replication_property is required if provider=="replicated"
+  optional restate.cluster.ReplicationProperty replication = 6;
+  // optional if provider=="replicated", otherwise ignored
+  optional restate.common.NodeId sequencer = 7;
+  // optional if provider="replicated", otherwise ignored
+  repeated restate.common.NodeId nodeset = 8;
+}
+
+message SealAndExtendChainRequest {
+  uint32 log_id = 1;
+  restate.common.Version min_version = 2;
+  optional ChainExtension extension = 3;
+}
+
+message SealedSegment {
+  // segment provider
+  string provider = 1;
+  // segment params
+  string params = 2;
+  // tail offset lsn
+  uint64 tail_offset = 3;
+}
+
+message SealAndExtendChainResponse {
+  uint32 new_segment_index = 1;
+  SealedSegment sealed_segment = 2;
+}
+
+message SealChainRequest {
+  uint32 log_id = 1;
+  // segment_index will be automatically selected (to the index of last segment)
+  // if not set.
+  optional uint32 segment_index = 2;
+  map<string, string> context = 3;
+  // forces the tail LSN to this value. This is extremely dangerous and should be
+  // used with extreme caution. If not set, the tail LSN is safely determined automatically.
+  optional uint64 tail_lsn = 4;
+  // todo: option for permanently sealing the chain when this is fully supported
+}
+
+message SealChainResponse {
+  // tail offset lsn
+  uint64 tail_offset = 1;
+}
+
+message FindTailRequest { uint32 log_id = 1; }
+
+message FindTailResponse {
+  uint32 log_id = 1;
+  uint32 segment_index = 2;
+  TailState tail_state = 3;
+  uint64 tail_lsn = 4;
+}
+
+message QueryRequest {
+  // SQL query
+  string query = 1;
+}
+
+message QueryResponse {
+  // arrow encoded record batch
+  bytes encoded = 1;
+  // Per-node errors encountered during distributed query execution.
+  // Populated on the final response message when some nodes failed but
+  // partial results are still available.
+  repeated QueryWarning warnings = 2;
+}
+
+message QueryWarning {
+  // Node identifier (e.g. "N1", "N2") where the error originated
+  string node_id = 1;
+  // Human-readable error message
+  string message = 2;
+}
+
+message MigrateMetadataRequest {
+  // force override target metadata store
+  bool force_override = 1;
+  // target MetadataClientOptions in json format
+  bytes target_client_config = 2;
+}
+
+message MigrateMetadataResponse {}
+
+message SyncEpochMetadataRequest {
+  // Partitions to re-fetch. Empty = all known partitions.
+  repeated uint32 partition_ids = 1;
+}
+
+message SyncEpochMetadataResponse {}
