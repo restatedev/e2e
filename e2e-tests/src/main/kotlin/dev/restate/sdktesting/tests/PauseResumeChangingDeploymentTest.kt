@@ -8,8 +8,6 @@
 // https://github.com/restatedev/sdk-test-suite/blob/main/LICENSE
 package dev.restate.sdktesting.tests
 
-import dev.restate.admin.api.InvocationApi
-import dev.restate.admin.client.ApiClient
 import dev.restate.client.Client
 import dev.restate.client.kotlin.attachSuspend
 import dev.restate.client.kotlin.toService
@@ -86,9 +84,9 @@ class PauseResumeChangingDeploymentTest {
     startAndRegisterLocalEndpoint(Endpoint.bind(FixedRetryableService()).build(), adminURI).use {
         local ->
       // Resume the paused invocation on the specific endpoint
-      val adminClient = ApiClient().setHost(adminURI.host).setPort(adminURI.port)
-      val invocationApi = InvocationApi(adminClient)
-      retryOnServiceUnavailable { invocationApi.resumeInvocation(invocationId, local.deploymentId) }
+      retryOnServiceUnavailable {
+        resumeInvocation(adminURI, invocationId, local.deploymentId)
+      }
 
       assertThat(sendResult.attachSuspend().response()).isEqualTo("Success in new version!")
 

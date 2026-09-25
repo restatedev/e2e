@@ -1,0 +1,131 @@
+// Copyright (c) 2024 - 2026 Restate Software, Inc., Restate GmbH.
+// All rights reserved.
+//
+// Use of this software is governed by the Business Source License
+// included in the LICENSE file.
+//
+// As of the Change Date specified in that file, in accordance with
+// the Business Source License, use of this software will be governed
+// by the Apache License, Version 2.0.
+
+syntax = "proto3";
+
+import "restate/common.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+package restate.cluster;
+
+message ClusterState {
+  google.protobuf.Duration last_refreshed = 1;
+  restate.common.Version nodes_config_version = 2;
+  restate.common.Version partition_table_version = 3;
+  map<uint32, NodeState> nodes = 4;
+  restate.common.Version logs_metadata_version = 5;
+}
+
+message NodeState {
+  reserved 3;
+  oneof state {
+    AliveNode alive = 1;
+    DeadNode dead = 2;
+  }
+}
+
+message AliveNode {
+  restate.common.GenerationalNodeId generational_node_id = 1;
+  google.protobuf.Timestamp last_heartbeat_at = 2;
+  // partition id is u16 but protobuf doesn't support u16. This must be a value
+  // that's safe to convert to u16
+  map<uint32, PartitionProcessorStatus> partitions = 3;
+  // uptime of node since the daemon started in seconds
+  uint64 uptime_s = 4;
+}
+
+message DeadNode { google.protobuf.Timestamp last_seen_alive = 1; }
+
+enum RunMode {
+  RunMode_UNKNOWN = 0;
+  LEADER = 1;
+  FOLLOWER = 2;
+}
+
+// Since v1.7.3 (if missing, use effective_mode)
+enum DetailedRunMode {
+  DetailedRunMode_UNKNOWN = 0;
+  DetailedRunMode_CANDIDATE = 1;
+  DetailedRunMode_FOLLOWER = 2;
+  // The node is leader but is currently performing data migrations or enabling
+  // certain features. During this time, the node will not be responding to RPC requests
+  // until it completes the process and transitions to Leader (or Follower).
+  DetailedRunMode_BECOMING_LEADER = 3;
+  DetailedRunMode_LEADER = 4;
+}
+
+enum ReplayStatus {
+  ReplayStatus_UNKNOWN = 0;
+  STARTING = 1;
+  ACTIVE = 2;
+  CATCHING_UP = 3;
+}
+
+// Why a partition processor has been parked on a node. A parked processor is
+// not retried automatically; it needs operator intervention to recover.
+// Since v1.7.3
+enum BrokenReason {
+  // The partition processor is not broken.
+  BrokenReason_NOT_BROKEN = 0;
+  // The local partition store's applied LSN is ahead of the log tail, which
+  // indicates data loss in the log. The store has been sealed and must be
+  // replaced before this node can run the partition again.
+  BrokenReason_AHEAD_OF_LOG = 1;
+}
+
+message PartitionProcessorStatus {
+  reserved 8, 16;
+  google.protobuf.Timestamp updated_at = 1;
+  RunMode planned_mode = 2;
+  RunMode effective_mode = 3;
+  optional restate.common.LeaderEpoch last_observed_leader_epoch = 4;
+  optional restate.common.NodeId last_observed_leader_node = 5;
+  optional restate.common.Lsn last_applied_log_lsn = 6;
+  optional google.protobuf.Timestamp last_record_applied_at = 7;
+  ReplayStatus replay_status = 9;
+  optional restate.common.Lsn durable_lsn = 10;
+  optional restate.common.Lsn last_archived_log_lsn = 12;
+  // Set if replay_status is CATCHING_UP
+  optional restate.common.Lsn target_tail_lsn = 11;
+  optional restate.common.Version last_applied_rule_book_version = 13;
+  optional restate.common.Version last_applied_schema_version = 14;
+  // Names of state-machine features currently enabled on this partition
+  // processor. Carried as strings so that older clients can render feature
+  // names they don't recognise.
+  repeated string enabled_features = 15;
+  DetailedRunMode detailed_effective_mode = 17;
+  // Set when this node has parked the partition processor instead of retrying
+  // it. All other fields carry their defaults in that case.
+  BrokenReason broken_reason = 18;
+
+  // Partition-store on-disk local storage features
+  repeated string enabled_storage_features = 19;
+}
+
+message ReplicationProperty { string replication_property = 1; }
+
+message BifrostProvider {
+  string provider = 1;
+  // only required if provider = "replicated"
+  optional ReplicationProperty replication_property = 2;
+  // only required if provider = "replicated"
+  // The default target for new nodesets. 0 (default) auto-chooses a
+  // nodeset-size that balances read and write availability. It's a reasonable
+  // default for most cases.
+  uint32 target_nodeset_size = 3;
+}
+
+message ClusterConfiguration {
+  uint32 num_partitions = 1;
+  optional ReplicationProperty partition_replication = 2;
+  BifrostProvider bifrost_provider = 3;
+}
