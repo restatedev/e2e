@@ -8,8 +8,10 @@ testcontainers = "2.0.4"
 awaitility = "4.3.0"
 grpc = "1.68.1"
 protobuf = "4.28.2"
+openapi = "7.21.0"
 
 [libraries]
+openapi-generator = { module = "org.openapitools:openapi-generator", version.ref = "openapi" }
 # Restate SDK
 restate-sdk-client-kotlin = { module = "dev.restate:client-kotlin", version.ref = "restate" }
 restate-sdk-kotlin-http = { module = "dev.restate:sdk-kotlin-http", version.ref = "restate" }
@@ -71,6 +73,6 @@ kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-c
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version = "1.10.1" }
 
 [plugins]
-openapi-generator = { id = "org.openapi.generator", version = "7.5.0" }
+openapi-generator = { id = "org.openapi.generator", version.ref = "openapi" }
 protobuf = { id = "com.google.protobuf", version = "0.10.0" }
 shadow = { id = "com.gradleup.shadow", version = "8.3.5" }

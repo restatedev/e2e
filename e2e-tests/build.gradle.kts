@@ -48,7 +48,16 @@ dependencies {
   // Used at runtime by some e2e tests to interact with Kafka
   implementation("org.apache.kafka:kafka-clients:3.5.0")
   // Runtime dep for e2e-specific functionality
-  implementation("org.openapitools:openapi-generator:7.21.0")
+  implementation(libs.openapi.generator)
+
+  // javac compiles the candidate's generated client during the OpenAPI test.
+  runtimeOnly(libs.tomcat.annotations)
+  runtimeOnly(libs.google.findbugs.jsr305)
+}
+
+// Reuse the shared client's checked-in specification as the compatibility baseline.
+tasks.processResources {
+  from(project(":infra").file("src/main/openapi/admin.json")) { into("openapi/baseline") }
 }
 
 allOpen {
@@ -60,6 +69,11 @@ allOpen {
 application { mainClass = "dev.restate.sdktesting.MainKt" }
 
 spotless {
+  java {
+    target("src/main/resources/openapi/*.java")
+    googleJavaFormat()
+    licenseHeaderFile("$rootDir/config/license-header")
+  }
   kotlin {
     ktfmt()
     licenseHeaderFile("$rootDir/config/license-header")

@@ -4,7 +4,7 @@ End-to-end tests for the Restate runtime. Tests are deployed as Docker container
 
 ## Requirements
 
-- JVM >= 21
+- JDK 25 (the Gradle toolchain can provision it)
 - Docker
 
 ## Running locally
@@ -26,6 +26,31 @@ Run a single test class within a suite:
 ```shell
 ./gradlew :e2e-tests:run --args='run --test-suite=default --test-name=IngressTest'
 ```
+
+## OpenAPI contract checks
+
+Run the OpenAPI checks against a locally built candidate image (replace the image tag as needed):
+
+```shell
+./gradlew :e2e-tests:run --args='run --test-suite=default --test-name=OpenAPITest --restate-container-image=localhost/restatedev/restate:openapi'
+```
+
+Omit `--restate-container-image` to test `ghcr.io/restatedev/restate:main`.
+Reports and generated files are saved under `<report-dir>/default/OpenAPITest/openapi/`.
+
+### Updating the Admin baseline
+
+To update [`infra/src/main/openapi/admin.json`](../infra/src/main/openapi/admin.json),
+run from the **Restate** checkout with this repository at `../e2e`:
+
+```shell
+set -o pipefail
+cargo xtask generate-rest-api-doc | jq . > ../e2e/infra/src/main/openapi/admin.json
+```
+
+Review the diff and rerun the checks before committing the updated baseline. The shared Admin
+client regenerates automatically. Updating the baseline accepts those changes for future
+compatibility comparisons.
 
 ## Available test suites
 
