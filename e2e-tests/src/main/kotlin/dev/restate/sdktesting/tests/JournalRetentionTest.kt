@@ -9,6 +9,7 @@
 package dev.restate.sdktesting.tests
 
 import dev.restate.client.Client
+import dev.restate.client.kotlin.attachSuspend
 import dev.restate.client.kotlin.toService
 import dev.restate.sdk.annotation.Handler
 import dev.restate.sdk.annotation.Service
@@ -50,8 +51,18 @@ class JournalRetentionTest {
       @InjectAdminURI adminURI: URI,
   ) = runTest {
     val client = ingressClient.toService<MyService>()
-    val invocationId =
-        client.request { greet("Francesco") }.options(idempotentCallOptions).send().invocationId()
+    val sendResult = client.request { greet("Francesco") }.options(idempotentCallOptions).send()
+    val invocationId = sendResult.invocationId()
+
+    val expectedJournal = buildList {
+      add(SysJournalEntry(0, "Command: Input"))
+      add(SysJournalEntry(1, "Command: Sleep"))
+      add(SysJournalEntry(2, "Notification: Sleep"))
+      // When the output is stored outside the journal, no Output command is written
+      if (!isOutputExcludedFromJournal()) {
+        add(SysJournalEntry(3, "Command: Output"))
+      }
+    }
 
     await withAlias
         "got the invocation completed, with the journal retained" untilAsserted
@@ -59,12 +70,10 @@ class JournalRetentionTest {
           assertThat(getInvocationStatus(adminURI, invocationId))
               .isEqualTo(SysInvocationEntry(id = invocationId, status = "completed"))
           assertThat(getJournal(adminURI, invocationId).rows)
-              .containsExactly(
-                  SysJournalEntry(0, "Command: Input"),
-                  SysJournalEntry(1, "Command: Sleep"),
-                  SysJournalEntry(2, "Notification: Sleep"),
-                  SysJournalEntry(3, "Command: Output"),
-              )
+              .containsExactlyElementsOf(expectedJournal)
         }
+
+    // The output must still be retrievable, regardless of where it is stored
+    assertThat(sendResult.attachSuspend().response()).isEqualTo("Francesco")
   }
 }

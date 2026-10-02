@@ -170,6 +170,17 @@ private suspend fun queryAdmin(adminURI: URI, query: String): String {
  * @param adminURI The URI of the Restate admin API
  * @return The parsed result of the query
  */
+/**
+ * Whether the runtime stores the invocation output outside the journal, hence no `Command: Output`
+ * entry is appended to it. Currently gated by `RESTATE_EXPERIMENTAL_ENABLE_WRITE_OUTPUT_TABLE`,
+ * which is forwarded to the runtime container from the test runner environment.
+ */
+fun isOutputExcludedFromJournal(): Boolean =
+    System.getenv().entries.any {
+      it.key.equals("RESTATE_EXPERIMENTAL_ENABLE_WRITE_OUTPUT_TABLE", ignoreCase = true) &&
+          it.value.equals("true", ignoreCase = true)
+    }
+
 suspend fun getJournal(adminURI: URI, invocationId: String): JournalQueryResult {
   val body =
       queryAdmin(adminURI, "SELECT index, entry_type FROM sys_journal WHERE id = '$invocationId'")
