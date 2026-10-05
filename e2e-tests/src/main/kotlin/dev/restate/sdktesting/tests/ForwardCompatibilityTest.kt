@@ -8,7 +8,8 @@
 // https://github.com/restatedev/sdk-test-suite/blob/main/LICENSE
 package dev.restate.sdktesting.tests
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import dev.restate.admin.api.DeploymentApi
+import dev.restate.admin.client.ApiClient
 import dev.restate.client.Client
 import dev.restate.client.SendResponse
 import dev.restate.client.kotlin.*
@@ -31,9 +32,6 @@ import dev.restate.sdk.kotlin.state
 import dev.restate.sdktesting.infra.*
 import dev.restate.serde.kotlinx.jsonSerde
 import java.net.URI
-import java.net.http.HttpClient
-import java.net.http.HttpRequest
-import java.net.http.HttpResponse.BodyHandlers
 import java.nio.file.Files
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
@@ -262,40 +260,40 @@ class ForwardCompatibilityTest {
         @InjectAdminURI adminURI: URI,
         @InjectLocalEndpointURI localEndpointURI: URI,
     ) {
-      // The Admin client is generated from the current specification and need not support older
-      // servers. In particular, v1.7 deployment responses lack the `type` discriminator, making
-      // HTTP/Lambda deserialization ambiguous. Although v1.7.3 supports PATCH, updateDeployment()
-      // also deserializes its response and would fail even if we ignored the return value.
-      // Keep both GET and PATCH raw until LAST_COMPATIBLE_RESTATE_SERVER_VERSION is raised to a
-      // server whose deployment responses include `type` and work with the generated client.
-      // Then replace these requests with DeploymentApi.listDeployments()/updateDeployment().
-      val httpClient = HttpClient.newHttpClient()
-      val mapper = ObjectMapper()
-      val listResponse =
-          httpClient.send(
-              HttpRequest.newBuilder(adminURI.resolve("deployments")).GET().build(),
-              BodyHandlers.ofString(),
-          )
-      check(listResponse.statusCode() == 200) {
-        "listDeployments call failed with: ${listResponse.statusCode()} - ${listResponse.body()}"
-      }
-      val deployments = mapper.readTree(listResponse.body()).required("deployments")
-      check(deployments.isArray && !deployments.isEmpty) { "Expected registered deployments" }
+      // Create Admin API client with the provided admin URI
+      val adminClient = ApiClient().setHost(adminURI.host).setPort(adminURI.port)
+      val adminApi = DeploymentApi(adminClient)
+
+      // List all deployments
+      val deployments = adminApi.listDeployments()
 
       LOG.info("Patching all deployments to use endpoint URI: {}", localEndpointURI)
 
-      val body = mapper.writeValueAsString(mapOf("uri" to localEndpointURI.toString()))
-      for (deployment in deployments) {
-        val deploymentId = deployment.required("id").asText()
+      // For each deployment, update its URI.
+      // NOTE: We use a raw PUT request here instead of adminApi.updateDeployment() because
+      // the generated client uses PATCH (per the current OpenAPI spec), but this test runs
+      // against an OLDER server version that only supports PUT on this endpoint.
+      // When the minimum supported version includes PATCH support, replace this block with:
+      //   adminApi.updateDeployment(deployment.httpDeploymentResponse.id, updateRequest)
+      val httpClient = java.net.http.HttpClient.newHttpClient()
+      for (deployment in deployments.deployments) {
+        val deploymentId = deployment.httpDeploymentResponse.id
+        val body = """{"uri":"$localEndpointURI"}"""
         val request =
-            HttpRequest.newBuilder(adminURI.resolve("deployments/$deploymentId"))
+            java.net.http.HttpRequest.newBuilder()
+                .uri(
+                    URI.create(
+                        "http://${adminURI.host}:${adminURI.port}/v2/deployments/$deploymentId"
+                    )
+                )
                 .header("Content-Type", "application/json")
-                .method("PATCH", HttpRequest.BodyPublishers.ofString(body))
+                .PUT(java.net.http.HttpRequest.BodyPublishers.ofString(body))
                 .build()
 
         try {
-          val response = httpClient.send(request, BodyHandlers.ofString())
-          check(response.statusCode() == 200) {
+          val response =
+              httpClient.send(request, java.net.http.HttpResponse.BodyHandlers.ofString())
+          check(response.statusCode() / 100 == 2) {
             "updateDeployment call failed with: ${response.statusCode()} - ${response.body()}"
           }
           LOG.info(

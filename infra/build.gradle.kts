@@ -118,11 +118,6 @@ openApiGenerate {
   configOptions.put("openApiNullable", "false")
 }
 
-tasks.named<GenerateTask>("openApiGenerate") {
-  // Removed schemas must not survive regeneration as stale Java sources.
-  doFirst { delete(generatedOpenapi) }
-}
-
 tasks {
   withType<KotlinCompile>().configureEach {
     dependsOn("generateProto")

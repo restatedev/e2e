@@ -10,7 +10,7 @@
       "name": "MIT",
       "url": "https://opensource.org/license/mit"
     },
-    "version": "1.8.0-rc.1"
+    "version": "1.8.0-dev"
   },
   "paths": {
     "/deployments": {
@@ -311,15 +311,15 @@
             "schema": {
               "oneOf": [
                 {
+                  "type": "null"
+                },
+                {
                   "type": "string",
                   "enum": [
                     "Cancel",
                     "Kill",
                     "Purge"
                   ]
-                },
-                {
-                  "type": "null"
                 }
               ]
             }
@@ -375,21 +375,53 @@
             "description": "Cancellation request accepted and will be processed asynchronously"
           },
           "400": {
-            "description": "A request field is invalid.",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorDescriptionResponse"
+                  "type": "object",
+                  "description": "# Error description response\n\nError details of the response",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "restate_code": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "# Restate code\n\nRestate error code describing this error"
+                    }
+                  }
                 }
               }
             }
           },
           "404": {
-            "description": "The invocation was not found.",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorDescriptionResponse"
+                  "type": "object",
+                  "description": "# Error description response\n\nError details of the response",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "restate_code": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "# Restate code\n\nRestate error code describing this error"
+                    }
+                  }
                 }
               }
             }
@@ -399,7 +431,23 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorDescriptionResponse"
+                  "type": "object",
+                  "description": "# Error description response\n\nError details of the response",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "restate_code": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "# Restate code\n\nRestate error code describing this error"
+                    }
+                  }
                 }
               }
             }
@@ -409,7 +457,23 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorDescriptionResponse"
+                  "type": "object",
+                  "description": "# Error description response\n\nError details of the response",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "restate_code": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "# Restate code\n\nRestate error code describing this error"
+                    }
+                  }
                 }
               }
             }
@@ -441,21 +505,53 @@
             "description": "Invocation killed successfully"
           },
           "400": {
-            "description": "A request field is invalid.",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorDescriptionResponse"
+                  "type": "object",
+                  "description": "# Error description response\n\nError details of the response",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "restate_code": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "# Restate code\n\nRestate error code describing this error"
+                    }
+                  }
                 }
               }
             }
           },
           "404": {
-            "description": "The invocation was not found.",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorDescriptionResponse"
+                  "type": "object",
+                  "description": "# Error description response\n\nError details of the response",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "restate_code": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "# Restate code\n\nRestate error code describing this error"
+                    }
+                  }
                 }
               }
             }
@@ -465,7 +561,23 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorDescriptionResponse"
+                  "type": "object",
+                  "description": "# Error description response\n\nError details of the response",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "restate_code": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "# Restate code\n\nRestate error code describing this error"
+                    }
+                  }
                 }
               }
             }
@@ -475,7 +587,23 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorDescriptionResponse"
+                  "type": "object",
+                  "description": "# Error description response\n\nError details of the response",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "restate_code": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "# Restate code\n\nRestate error code describing this error"
+                    }
+                  }
                 }
               }
             }
@@ -509,21 +637,53 @@
             "description": "Pausing invocation"
           },
           "400": {
-            "description": "A request field is invalid.",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorDescriptionResponse"
+                  "type": "object",
+                  "description": "# Error description response\n\nError details of the response",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "restate_code": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "# Restate code\n\nRestate error code describing this error"
+                    }
+                  }
                 }
               }
             }
           },
           "404": {
-            "description": "The invocation was not found.",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorDescriptionResponse"
+                  "type": "object",
+                  "description": "# Error description response\n\nError details of the response",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "restate_code": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "# Restate code\n\nRestate error code describing this error"
+                    }
+                  }
                 }
               }
             }
@@ -533,7 +693,23 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorDescriptionResponse"
+                  "type": "object",
+                  "description": "# Error description response\n\nError details of the response",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "restate_code": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "# Restate code\n\nRestate error code describing this error"
+                    }
+                  }
                 }
               }
             }
@@ -543,7 +719,23 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorDescriptionResponse"
+                  "type": "object",
+                  "description": "# Error description response\n\nError details of the response",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "restate_code": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "# Restate code\n\nRestate error code describing this error"
+                    }
+                  }
                 }
               }
             }
@@ -575,21 +767,53 @@
             "description": "Invocation purged successfully"
           },
           "400": {
-            "description": "A request field is invalid.",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorDescriptionResponse"
+                  "type": "object",
+                  "description": "# Error description response\n\nError details of the response",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "restate_code": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "# Restate code\n\nRestate error code describing this error"
+                    }
+                  }
                 }
               }
             }
           },
           "404": {
-            "description": "The invocation was not found.",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorDescriptionResponse"
+                  "type": "object",
+                  "description": "# Error description response\n\nError details of the response",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "restate_code": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "# Restate code\n\nRestate error code describing this error"
+                    }
+                  }
                 }
               }
             }
@@ -599,7 +823,23 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorDescriptionResponse"
+                  "type": "object",
+                  "description": "# Error description response\n\nError details of the response",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "restate_code": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "# Restate code\n\nRestate error code describing this error"
+                    }
+                  }
                 }
               }
             }
@@ -609,7 +849,23 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorDescriptionResponse"
+                  "type": "object",
+                  "description": "# Error description response\n\nError details of the response",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "restate_code": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "# Restate code\n\nRestate error code describing this error"
+                    }
+                  }
                 }
               }
             }
@@ -641,21 +897,53 @@
             "description": "Invocation journal purged successfully, metadata retained"
           },
           "400": {
-            "description": "A request field is invalid.",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorDescriptionResponse"
+                  "type": "object",
+                  "description": "# Error description response\n\nError details of the response",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "restate_code": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "# Restate code\n\nRestate error code describing this error"
+                    }
+                  }
                 }
               }
             }
           },
           "404": {
-            "description": "The invocation was not found.",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorDescriptionResponse"
+                  "type": "object",
+                  "description": "# Error description response\n\nError details of the response",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "restate_code": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "# Restate code\n\nRestate error code describing this error"
+                    }
+                  }
                 }
               }
             }
@@ -665,7 +953,23 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorDescriptionResponse"
+                  "type": "object",
+                  "description": "# Error description response\n\nError details of the response",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "restate_code": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "# Restate code\n\nRestate error code describing this error"
+                    }
+                  }
                 }
               }
             }
@@ -675,7 +979,23 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorDescriptionResponse"
+                  "type": "object",
+                  "description": "# Error description response\n\nError details of the response",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "restate_code": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "# Restate code\n\nRestate error code describing this error"
+                    }
+                  }
                 }
               }
             }
@@ -707,12 +1027,14 @@
             "description": "From which entry index the invocation should restart from.\nBy default the invocation restarts from the beginning (equivalent to 'from = 0'), retaining only the input of the original invocation.\nWhen greater than 0, the new invocation will copy the old journal prefix up to 'from' included, plus eventual completions for commands in the given prefix.\nIf the journal prefix contains commands that have not been completed, this operation will fail.",
             "required": false,
             "schema": {
-              "type": [
-                "integer",
-                "null"
-              ],
-              "format": "int32",
-              "minimum": 0
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "$ref": "#/components/schemas/u32"
+                }
+              ]
             }
           },
           {
@@ -723,11 +1045,39 @@
             "schema": {
               "oneOf": [
                 {
-                  "type": "string",
-                  "description": "Which deployment to use: `keep` to keep the currently pinned deployment, `latest` to use the latest deployment, or a specific deployment ID."
+                  "type": "null"
                 },
                 {
-                  "type": "null"
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "description": "Keep the currently pinned deployment",
+                      "enum": [
+                        "Keep"
+                      ]
+                    },
+                    {
+                      "type": "string",
+                      "description": "Use the latest deployment",
+                      "enum": [
+                        "Latest"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "description": "Use a specific deployment ID",
+                      "required": [
+                        "Id"
+                      ],
+                      "properties": {
+                        "Id": {
+                          "type": "string",
+                          "description": "Use a specific deployment ID"
+                        }
+                      }
+                    }
+                  ],
+                  "description": "Specifies which deployment to use when resuming or restarting an invocation."
                 }
               ]
             }
@@ -749,17 +1099,49 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorDescriptionResponse"
+                  "type": "object",
+                  "description": "# Error description response\n\nError details of the response",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "restate_code": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "# Restate code\n\nRestate error code describing this error"
+                    }
+                  }
                 }
               }
             }
           },
           "404": {
-            "description": "The invocation was not found.",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorDescriptionResponse"
+                  "type": "object",
+                  "description": "# Error description response\n\nError details of the response",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "restate_code": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "# Restate code\n\nRestate error code describing this error"
+                    }
+                  }
                 }
               }
             }
@@ -769,7 +1151,23 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorDescriptionResponse"
+                  "type": "object",
+                  "description": "# Error description response\n\nError details of the response",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "restate_code": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "# Restate code\n\nRestate error code describing this error"
+                    }
+                  }
                 }
               }
             }
@@ -779,7 +1177,23 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorDescriptionResponse"
+                  "type": "object",
+                  "description": "# Error description response\n\nError details of the response",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "restate_code": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "# Restate code\n\nRestate error code describing this error"
+                    }
+                  }
                 }
               }
             }
@@ -789,7 +1203,23 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorDescriptionResponse"
+                  "type": "object",
+                  "description": "# Error description response\n\nError details of the response",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "restate_code": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "# Restate code\n\nRestate error code describing this error"
+                    }
+                  }
                 }
               }
             }
@@ -799,7 +1229,23 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorDescriptionResponse"
+                  "type": "object",
+                  "description": "# Error description response\n\nError details of the response",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "restate_code": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "# Restate code\n\nRestate error code describing this error"
+                    }
+                  }
                 }
               }
             }
@@ -809,7 +1255,23 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorDescriptionResponse"
+                  "type": "object",
+                  "description": "# Error description response\n\nError details of the response",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "restate_code": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "# Restate code\n\nRestate error code describing this error"
+                    }
+                  }
                 }
               }
             }
@@ -843,11 +1305,39 @@
             "schema": {
               "oneOf": [
                 {
-                  "type": "string",
-                  "description": "Which deployment to use: `keep` to keep the currently pinned deployment, `latest` to use the latest deployment, or a specific deployment ID."
+                  "type": "null"
                 },
                 {
-                  "type": "null"
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "description": "Keep the currently pinned deployment",
+                      "enum": [
+                        "Keep"
+                      ]
+                    },
+                    {
+                      "type": "string",
+                      "description": "Use the latest deployment",
+                      "enum": [
+                        "Latest"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "description": "Use a specific deployment ID",
+                      "required": [
+                        "Id"
+                      ],
+                      "properties": {
+                        "Id": {
+                          "type": "string",
+                          "description": "Use a specific deployment ID"
+                        }
+                      }
+                    }
+                  ],
+                  "description": "Specifies which deployment to use when resuming or restarting an invocation."
                 }
               ]
             }
@@ -862,17 +1352,49 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorDescriptionResponse"
+                  "type": "object",
+                  "description": "# Error description response\n\nError details of the response",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "restate_code": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "# Restate code\n\nRestate error code describing this error"
+                    }
+                  }
                 }
               }
             }
           },
           "404": {
-            "description": "The invocation was not found.",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorDescriptionResponse"
+                  "type": "object",
+                  "description": "# Error description response\n\nError details of the response",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "restate_code": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "# Restate code\n\nRestate error code describing this error"
+                    }
+                  }
                 }
               }
             }
@@ -882,7 +1404,23 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorDescriptionResponse"
+                  "type": "object",
+                  "description": "# Error description response\n\nError details of the response",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "restate_code": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "# Restate code\n\nRestate error code describing this error"
+                    }
+                  }
                 }
               }
             }
@@ -892,7 +1430,23 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorDescriptionResponse"
+                  "type": "object",
+                  "description": "# Error description response\n\nError details of the response",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "restate_code": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "# Restate code\n\nRestate error code describing this error"
+                    }
+                  }
                 }
               }
             }
@@ -902,7 +1456,23 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorDescriptionResponse"
+                  "type": "object",
+                  "description": "# Error description response\n\nError details of the response",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "restate_code": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "# Restate code\n\nRestate error code describing this error"
+                    }
+                  }
                 }
               }
             }
@@ -1931,7 +2501,7 @@
   },
   "components": {
     "schemas": {
-      "AdvertisedAddress_HttpIngressPort": {
+      "AdvertisedAddress-http-ingress-server_HttpIngressPort": {
         "type": "string",
         "title": "advertised address",
         "description": "An externally accessible URI address for http-ingress-server. This can be set to unix:restate-data/ingress.sock to advertise the automatically created unix-socket instead of using tcp if needed",
@@ -2022,40 +2592,377 @@
         "type": "string"
       },
       "DeploymentResponse": {
-        "oneOf": [
+        "anyOf": [
           {
-            "$ref": "#/components/schemas/HttpDeploymentResponse"
+            "type": "object",
+            "title": "HttpDeploymentResponse",
+            "description": "Deployment response for HTTP deployments",
+            "required": [
+              "id",
+              "uri",
+              "protocol_type",
+              "http_version",
+              "created_at",
+              "min_protocol_version",
+              "max_protocol_version",
+              "services"
+            ],
+            "properties": {
+              "additional_headers": {
+                "$ref": "#/components/schemas/SerdeableHeaderHashMap",
+                "description": "# Additional headers\n\nAdditional headers used to invoke this service deployment."
+              },
+              "auth": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/HttpAuth",
+                    "description": "# Authentication\n\nPer-deployment authentication, if configured."
+                  }
+                ]
+              },
+              "created_at": {
+                "type": "string"
+              },
+              "http_version": {
+                "type": "string",
+                "description": "# HTTP Version\n\nHTTP Version used to invoke this service deployment."
+              },
+              "id": {
+                "$ref": "#/components/schemas/DeploymentId",
+                "description": "# Deployment ID"
+              },
+              "info": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/SchemaInfo"
+                },
+                "description": "# Info\n\nList of configuration/deprecation information related to this deployment."
+              },
+              "max_protocol_version": {
+                "type": "integer",
+                "format": "int32",
+                "description": "# Maximum Service Protocol version\n\nDuring registration, the SDKs declare a range from minimum (included) to maximum (included) Service Protocol supported version."
+              },
+              "metadata": {
+                "type": "object",
+                "description": "# Metadata\n\nDeployment metadata.",
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "propertyNames": {
+                  "type": "string"
+                }
+              },
+              "min_protocol_version": {
+                "type": "integer",
+                "format": "int32",
+                "description": "# Minimum Service Protocol version\n\nDuring registration, the SDKs declare a range from minimum (included) to maximum (included) Service Protocol supported version."
+              },
+              "protocol_type": {
+                "$ref": "#/components/schemas/ProtocolType",
+                "description": "# Protocol Type\n\nProtocol type used to invoke this service deployment."
+              },
+              "sdk_version": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "# SDK version\n\nSDK library and version declared during registration."
+              },
+              "services": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ServiceNameRevPair"
+                },
+                "description": "# Services\n\nList of services exposed by this deployment."
+              },
+              "uri": {
+                "type": "string",
+                "format": "uri",
+                "description": "# Deployment URI\n\nURI used to invoke this service deployment."
+              }
+            }
           },
           {
-            "$ref": "#/components/schemas/LambdaDeploymentResponse"
+            "type": "object",
+            "title": "LambdaDeploymentResponse",
+            "description": "Deployment response for Lambda deployments",
+            "required": [
+              "id",
+              "arn",
+              "created_at",
+              "min_protocol_version",
+              "max_protocol_version",
+              "services"
+            ],
+            "properties": {
+              "additional_headers": {
+                "$ref": "#/components/schemas/SerdeableHeaderHashMap",
+                "description": "# Additional headers\n\nAdditional headers used to invoke this service deployment."
+              },
+              "arn": {
+                "$ref": "#/components/schemas/LambdaARN",
+                "description": "# Lambda ARN\n\nLambda ARN used to invoke this service deployment."
+              },
+              "assume_role_arn": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "# Assume role ARN\n\nAssume role ARN used to invoke this deployment. Check https://docs.restate.dev/category/aws-lambda for more details."
+              },
+              "compression": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/EndpointLambdaCompression",
+                    "description": "# Compression\n\nCompression algorithm used for invoking Lambda."
+                  }
+                ]
+              },
+              "created_at": {
+                "type": "string"
+              },
+              "id": {
+                "$ref": "#/components/schemas/DeploymentId",
+                "description": "# Deployment ID"
+              },
+              "info": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/SchemaInfo"
+                },
+                "description": "# Info\n\nList of configuration/deprecation information related to this deployment."
+              },
+              "max_protocol_version": {
+                "type": "integer",
+                "format": "int32",
+                "description": "# Maximum Service Protocol version\n\nDuring registration, the SDKs declare a range from minimum (included) to maximum (included) Service Protocol supported version."
+              },
+              "metadata": {
+                "type": "object",
+                "description": "# Metadata\n\nDeployment metadata.",
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "propertyNames": {
+                  "type": "string"
+                }
+              },
+              "min_protocol_version": {
+                "type": "integer",
+                "format": "int32",
+                "description": "# Minimum Service Protocol version\n\nDuring registration, the SDKs declare a range from minimum (included) to maximum (included) Service Protocol supported version."
+              },
+              "sdk_version": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "# SDK version\n\nSDK library and version declared during registration."
+              },
+              "services": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ServiceNameRevPair"
+                },
+                "description": "# Services\n\nList of services exposed by this deployment."
+              }
+            }
           }
-        ],
-        "description": "Registered deployment. The `type` field tells HTTP and Lambda deployments apart.",
-        "discriminator": {
-          "propertyName": "type",
-          "mapping": {
-            "http": "#/components/schemas/HttpDeploymentResponse",
-            "lambda": "#/components/schemas/LambdaDeploymentResponse"
-          }
-        }
+        ]
       },
       "DetailedDeploymentResponse": {
-        "oneOf": [
+        "anyOf": [
           {
-            "$ref": "#/components/schemas/HttpDetailedDeploymentResponse"
+            "type": "object",
+            "title": "HttpDetailedDeploymentResponse",
+            "description": "Detailed deployment response for HTTP deployments",
+            "required": [
+              "id",
+              "uri",
+              "protocol_type",
+              "http_version",
+              "created_at",
+              "min_protocol_version",
+              "max_protocol_version",
+              "services"
+            ],
+            "properties": {
+              "additional_headers": {
+                "$ref": "#/components/schemas/SerdeableHeaderHashMap",
+                "description": "# Additional headers\n\nAdditional headers used to invoke this service deployment."
+              },
+              "auth": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/HttpAuth",
+                    "description": "# Authentication\n\nPer-deployment authentication, if configured."
+                  }
+                ]
+              },
+              "created_at": {
+                "type": "string"
+              },
+              "http_version": {
+                "type": "string",
+                "description": "# HTTP Version\n\nHTTP Version used to invoke this service deployment."
+              },
+              "id": {
+                "$ref": "#/components/schemas/DeploymentId",
+                "description": "# Deployment ID"
+              },
+              "info": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/SchemaInfo"
+                },
+                "description": "# Info\n\nList of configuration/deprecation information related to this deployment."
+              },
+              "max_protocol_version": {
+                "type": "integer",
+                "format": "int32",
+                "description": "# Maximum Service Protocol version\n\nDuring registration, the SDKs declare a range from minimum (included) to maximum (included) Service Protocol supported version."
+              },
+              "metadata": {
+                "type": "object",
+                "description": "# Metadata\n\nDeployment metadata.",
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "propertyNames": {
+                  "type": "string"
+                }
+              },
+              "min_protocol_version": {
+                "type": "integer",
+                "format": "int32",
+                "description": "# Minimum Service Protocol version\n\nDuring registration, the SDKs declare a range from minimum (included) to maximum (included) Service Protocol supported version."
+              },
+              "protocol_type": {
+                "$ref": "#/components/schemas/ProtocolType",
+                "description": "# Protocol Type\n\nProtocol type used to invoke this service deployment."
+              },
+              "sdk_version": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "# SDK version\n\nSDK library and version declared during registration."
+              },
+              "services": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ServiceMetadata"
+                },
+                "description": "# Services\n\nList of services exposed by this deployment."
+              },
+              "uri": {
+                "type": "string",
+                "format": "uri",
+                "description": "# Deployment URI\n\nURI used to invoke this service deployment."
+              }
+            }
           },
           {
-            "$ref": "#/components/schemas/LambdaDetailedDeploymentResponse"
+            "type": "object",
+            "title": "LambdaDetailedDeploymentResponse",
+            "description": "Detailed deployment response for Lambda deployments",
+            "required": [
+              "id",
+              "arn",
+              "created_at",
+              "min_protocol_version",
+              "max_protocol_version",
+              "services"
+            ],
+            "properties": {
+              "additional_headers": {
+                "$ref": "#/components/schemas/SerdeableHeaderHashMap",
+                "description": "# Additional headers\n\nAdditional headers used to invoke this service deployment."
+              },
+              "arn": {
+                "$ref": "#/components/schemas/LambdaARN",
+                "description": "# Lambda ARN\n\nLambda ARN used to invoke this service deployment."
+              },
+              "assume_role_arn": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "# Assume role ARN\n\nAssume role ARN used to invoke this deployment. Check https://docs.restate.dev/category/aws-lambda for more details."
+              },
+              "compression": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/EndpointLambdaCompression",
+                    "description": "# Compression\n\nCompression algorithm used for invoking Lambda."
+                  }
+                ]
+              },
+              "created_at": {
+                "type": "string"
+              },
+              "id": {
+                "$ref": "#/components/schemas/DeploymentId",
+                "description": "# Deployment ID"
+              },
+              "info": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/SchemaInfo"
+                },
+                "description": "# Info\n\nList of configuration/deprecation information related to this deployment."
+              },
+              "max_protocol_version": {
+                "type": "integer",
+                "format": "int32",
+                "description": "# Maximum Service Protocol version\n\nDuring registration, the SDKs declare a range from minimum (included) to maximum (included) Service Protocol supported version."
+              },
+              "metadata": {
+                "type": "object",
+                "description": "# Metadata\n\nDeployment metadata.",
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "propertyNames": {
+                  "type": "string"
+                }
+              },
+              "min_protocol_version": {
+                "type": "integer",
+                "format": "int32",
+                "description": "# Minimum Service Protocol version\n\nDuring registration, the SDKs declare a range from minimum (included) to maximum (included) Service Protocol supported version."
+              },
+              "sdk_version": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "# SDK version\n\nSDK library and version declared during registration."
+              },
+              "services": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ServiceMetadata"
+                },
+                "description": "# Services\n\nList of services exposed by this deployment."
+              }
+            }
           }
         ],
-        "description": "Detailed information about a registered deployment, including the metadata of its services.\nThe `type` field tells HTTP and Lambda deployments apart.",
-        "discriminator": {
-          "propertyName": "type",
-          "mapping": {
-            "http": "#/components/schemas/HttpDetailedDeploymentResponse",
-            "lambda": "#/components/schemas/LambdaDetailedDeploymentResponse"
-          }
-        }
+        "description": "Detailed information about Restate deployments"
       },
       "EndpointLambdaCompression": {
         "type": "string",
@@ -2206,22 +3113,22 @@
           "state_preload_policy": {
             "oneOf": [
               {
-                "$ref": "#/components/schemas/StatePreloadPolicy",
-                "description": "# State preload policy\n\nWhich state is preloaded (sent eagerly) at the start of an invocation to this handler.\nThis is relevant only for Workflows and Virtual Objects.\n\nIf set, it overrides the service-level policy.\n\n`\"All\"` preloads all state eagerly; `{\"Partial\": [\"key\", ...]}` preloads only the listed\nkeys eagerly (an empty list means fully lazy state)."
+                "type": "null"
               },
               {
-                "type": "null"
+                "$ref": "#/components/schemas/StatePreloadPolicy",
+                "description": "# State preload policy\n\nWhich state is preloaded (sent eagerly) at the start of an invocation to this handler.\nThis is relevant only for Workflows and Virtual Objects.\n\nIf set, it overrides the service-level policy.\n\n`\"All\"` preloads all state eagerly; `{\"Partial\": [\"key\", ...]}` preloads only the listed\nkeys eagerly (an empty list means fully lazy state)."
               }
             ]
           },
           "ty": {
             "oneOf": [
               {
-                "$ref": "#/components/schemas/HandlerMetadataType",
-                "description": "# Type\n\nThe handler type."
+                "type": "null"
               },
               {
-                "type": "null"
+                "$ref": "#/components/schemas/HandlerMetadataType",
+                "description": "# Type\n\nThe handler type."
               }
             ]
           }
@@ -2272,11 +3179,11 @@
           "on_max_attempts": {
             "oneOf": [
               {
-                "$ref": "#/components/schemas/OnMaxAttempts",
-                "description": "# On max attempts\n\nBehavior when max attempts are reached."
+                "type": "null"
               },
               {
-                "type": "null"
+                "$ref": "#/components/schemas/OnMaxAttempts",
+                "description": "# On max attempts\n\nBehavior when max attempts are reached."
               }
             ]
           }
@@ -2297,210 +3204,6 @@
           }
         ],
         "description": "HTTP authentication details."
-      },
-      "HttpDeploymentResponse": {
-        "type": "object",
-        "description": "Deployment response for HTTP deployments",
-        "required": [
-          "type",
-          "id",
-          "uri",
-          "protocol_type",
-          "http_version",
-          "created_at",
-          "min_protocol_version",
-          "max_protocol_version",
-          "services"
-        ],
-        "properties": {
-          "additional_headers": {
-            "$ref": "#/components/schemas/SerdeableHeaderHashMap",
-            "description": "# Additional headers\n\nAdditional headers used to invoke this service deployment."
-          },
-          "auth": {
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/HttpAuth",
-                "description": "# Authentication\n\nPer-deployment authentication, if configured."
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "created_at": {
-            "type": "string"
-          },
-          "http_version": {
-            "type": "string",
-            "description": "# HTTP Version\n\nHTTP Version used to invoke this service deployment."
-          },
-          "id": {
-            "$ref": "#/components/schemas/DeploymentId",
-            "description": "# Deployment ID"
-          },
-          "info": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SchemaInfo"
-            },
-            "description": "# Info\n\nList of configuration/deprecation information related to this deployment."
-          },
-          "max_protocol_version": {
-            "type": "integer",
-            "format": "int32",
-            "description": "# Maximum Service Protocol version\n\nDuring registration, the SDKs declare a range from minimum (included) to maximum (included) Service Protocol supported version."
-          },
-          "metadata": {
-            "type": "object",
-            "description": "# Metadata\n\nDeployment metadata.",
-            "additionalProperties": {
-              "type": "string"
-            },
-            "propertyNames": {
-              "type": "string"
-            }
-          },
-          "min_protocol_version": {
-            "type": "integer",
-            "format": "int32",
-            "description": "# Minimum Service Protocol version\n\nDuring registration, the SDKs declare a range from minimum (included) to maximum (included) Service Protocol supported version."
-          },
-          "protocol_type": {
-            "$ref": "#/components/schemas/ProtocolType",
-            "description": "# Protocol Type\n\nProtocol type used to invoke this service deployment."
-          },
-          "sdk_version": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "# SDK version\n\nSDK library and version declared during registration."
-          },
-          "services": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ServiceNameRevPair"
-            },
-            "description": "# Services\n\nList of services exposed by this deployment."
-          },
-          "type": {
-            "$ref": "#/components/schemas/HttpDeploymentType",
-            "description": "# Type\n\nDeployment type discriminator, always `http`."
-          },
-          "uri": {
-            "type": "string",
-            "format": "uri",
-            "description": "# Deployment URI\n\nURI used to invoke this service deployment."
-          }
-        }
-      },
-      "HttpDeploymentType": {
-        "type": "string",
-        "description": "Discriminator value for HTTP deployments.",
-        "enum": [
-          "http"
-        ]
-      },
-      "HttpDetailedDeploymentResponse": {
-        "type": "object",
-        "description": "Detailed deployment response for HTTP deployments",
-        "required": [
-          "type",
-          "id",
-          "uri",
-          "protocol_type",
-          "http_version",
-          "created_at",
-          "min_protocol_version",
-          "max_protocol_version",
-          "services"
-        ],
-        "properties": {
-          "additional_headers": {
-            "$ref": "#/components/schemas/SerdeableHeaderHashMap",
-            "description": "# Additional headers\n\nAdditional headers used to invoke this service deployment."
-          },
-          "auth": {
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/HttpAuth",
-                "description": "# Authentication\n\nPer-deployment authentication, if configured."
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "created_at": {
-            "type": "string"
-          },
-          "http_version": {
-            "type": "string",
-            "description": "# HTTP Version\n\nHTTP Version used to invoke this service deployment."
-          },
-          "id": {
-            "$ref": "#/components/schemas/DeploymentId",
-            "description": "# Deployment ID"
-          },
-          "info": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SchemaInfo"
-            },
-            "description": "# Info\n\nList of configuration/deprecation information related to this deployment."
-          },
-          "max_protocol_version": {
-            "type": "integer",
-            "format": "int32",
-            "description": "# Maximum Service Protocol version\n\nDuring registration, the SDKs declare a range from minimum (included) to maximum (included) Service Protocol supported version."
-          },
-          "metadata": {
-            "type": "object",
-            "description": "# Metadata\n\nDeployment metadata.",
-            "additionalProperties": {
-              "type": "string"
-            },
-            "propertyNames": {
-              "type": "string"
-            }
-          },
-          "min_protocol_version": {
-            "type": "integer",
-            "format": "int32",
-            "description": "# Minimum Service Protocol version\n\nDuring registration, the SDKs declare a range from minimum (included) to maximum (included) Service Protocol supported version."
-          },
-          "protocol_type": {
-            "$ref": "#/components/schemas/ProtocolType",
-            "description": "# Protocol Type\n\nProtocol type used to invoke this service deployment."
-          },
-          "sdk_version": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "# SDK version\n\nSDK library and version declared during registration."
-          },
-          "services": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ServiceMetadata"
-            },
-            "description": "# Services\n\nList of services exposed by this deployment."
-          },
-          "type": {
-            "$ref": "#/components/schemas/HttpDeploymentType",
-            "description": "# Type\n\nDeployment type discriminator, always `http`."
-          },
-          "uri": {
-            "type": "string",
-            "format": "uri",
-            "description": "# Deployment URI\n\nURI used to invoke this service deployment."
-          }
-        }
-      },
-      "InvocationId": {
-        "type": "string"
       },
       "KafkaClusterName": {
         "type": "string",
@@ -2553,199 +3256,6 @@
       },
       "LambdaARN": {
         "type": "string"
-      },
-      "LambdaDeploymentResponse": {
-        "type": "object",
-        "description": "Deployment response for Lambda deployments",
-        "required": [
-          "type",
-          "id",
-          "arn",
-          "created_at",
-          "min_protocol_version",
-          "max_protocol_version",
-          "services"
-        ],
-        "properties": {
-          "additional_headers": {
-            "$ref": "#/components/schemas/SerdeableHeaderHashMap",
-            "description": "# Additional headers\n\nAdditional headers used to invoke this service deployment."
-          },
-          "arn": {
-            "$ref": "#/components/schemas/LambdaARN",
-            "description": "# Lambda ARN\n\nLambda ARN used to invoke this service deployment."
-          },
-          "assume_role_arn": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "# Assume role ARN\n\nAssume role ARN used to invoke this deployment. Check https://docs.restate.dev/category/aws-lambda for more details."
-          },
-          "compression": {
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/EndpointLambdaCompression",
-                "description": "# Compression\n\nCompression algorithm used for invoking Lambda."
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "created_at": {
-            "type": "string"
-          },
-          "id": {
-            "$ref": "#/components/schemas/DeploymentId",
-            "description": "# Deployment ID"
-          },
-          "info": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SchemaInfo"
-            },
-            "description": "# Info\n\nList of configuration/deprecation information related to this deployment."
-          },
-          "max_protocol_version": {
-            "type": "integer",
-            "format": "int32",
-            "description": "# Maximum Service Protocol version\n\nDuring registration, the SDKs declare a range from minimum (included) to maximum (included) Service Protocol supported version."
-          },
-          "metadata": {
-            "type": "object",
-            "description": "# Metadata\n\nDeployment metadata.",
-            "additionalProperties": {
-              "type": "string"
-            },
-            "propertyNames": {
-              "type": "string"
-            }
-          },
-          "min_protocol_version": {
-            "type": "integer",
-            "format": "int32",
-            "description": "# Minimum Service Protocol version\n\nDuring registration, the SDKs declare a range from minimum (included) to maximum (included) Service Protocol supported version."
-          },
-          "sdk_version": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "# SDK version\n\nSDK library and version declared during registration."
-          },
-          "services": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ServiceNameRevPair"
-            },
-            "description": "# Services\n\nList of services exposed by this deployment."
-          },
-          "type": {
-            "$ref": "#/components/schemas/LambdaDeploymentType",
-            "description": "# Type\n\nDeployment type discriminator, always `lambda`."
-          }
-        }
-      },
-      "LambdaDeploymentType": {
-        "type": "string",
-        "description": "Discriminator value for Lambda deployments.",
-        "enum": [
-          "lambda"
-        ]
-      },
-      "LambdaDetailedDeploymentResponse": {
-        "type": "object",
-        "description": "Detailed deployment response for Lambda deployments",
-        "required": [
-          "type",
-          "id",
-          "arn",
-          "created_at",
-          "min_protocol_version",
-          "max_protocol_version",
-          "services"
-        ],
-        "properties": {
-          "additional_headers": {
-            "$ref": "#/components/schemas/SerdeableHeaderHashMap",
-            "description": "# Additional headers\n\nAdditional headers used to invoke this service deployment."
-          },
-          "arn": {
-            "$ref": "#/components/schemas/LambdaARN",
-            "description": "# Lambda ARN\n\nLambda ARN used to invoke this service deployment."
-          },
-          "assume_role_arn": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "# Assume role ARN\n\nAssume role ARN used to invoke this deployment. Check https://docs.restate.dev/category/aws-lambda for more details."
-          },
-          "compression": {
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/EndpointLambdaCompression",
-                "description": "# Compression\n\nCompression algorithm used for invoking Lambda."
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "created_at": {
-            "type": "string"
-          },
-          "id": {
-            "$ref": "#/components/schemas/DeploymentId",
-            "description": "# Deployment ID"
-          },
-          "info": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SchemaInfo"
-            },
-            "description": "# Info\n\nList of configuration/deprecation information related to this deployment."
-          },
-          "max_protocol_version": {
-            "type": "integer",
-            "format": "int32",
-            "description": "# Maximum Service Protocol version\n\nDuring registration, the SDKs declare a range from minimum (included) to maximum (included) Service Protocol supported version."
-          },
-          "metadata": {
-            "type": "object",
-            "description": "# Metadata\n\nDeployment metadata.",
-            "additionalProperties": {
-              "type": "string"
-            },
-            "propertyNames": {
-              "type": "string"
-            }
-          },
-          "min_protocol_version": {
-            "type": "integer",
-            "format": "int32",
-            "description": "# Minimum Service Protocol version\n\nDuring registration, the SDKs declare a range from minimum (included) to maximum (included) Service Protocol supported version."
-          },
-          "sdk_version": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "# SDK version\n\nSDK library and version declared during registration."
-          },
-          "services": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ServiceMetadata"
-            },
-            "description": "# Services\n\nList of services exposed by this deployment."
-          },
-          "type": {
-            "$ref": "#/components/schemas/LambdaDeploymentType",
-            "description": "# Type\n\nDeployment type discriminator, always `lambda`."
-          }
-        }
       },
       "ListDeploymentsResponse": {
         "type": "object",
@@ -3013,22 +3523,22 @@
               "additional_headers": {
                 "oneOf": [
                   {
-                    "$ref": "#/components/schemas/SerdeableHeaderHashMap",
-                    "description": "# Additional headers\n\nAdditional headers added to every discover/invoke request to the deployment.\n\nYou typically want to include here API keys and other tokens required to send requests to deployments."
+                    "type": "null"
                   },
                   {
-                    "type": "null"
+                    "$ref": "#/components/schemas/SerdeableHeaderHashMap",
+                    "description": "# Additional headers\n\nAdditional headers added to every discover/invoke request to the deployment.\n\nYou typically want to include here API keys and other tokens required to send requests to deployments."
                   }
                 ]
               },
               "auth": {
                 "oneOf": [
                   {
-                    "$ref": "#/components/schemas/HttpAuth",
-                    "description": "# Authentication\n\nOptional per-deployment authentication configuration. When set to `GoogleIdToken`,\nRestate mints a Google-signed OIDC ID token for each request and attaches it as\n`X-Serverless-Authorization: Bearer <token>`. Cloud Run validates this header in\nprecedence over `Authorization` and strips it before forwarding to the container, so any\n`Authorization` placed in `additional_headers` passes through to the workload unchanged."
+                    "type": "null"
                   },
                   {
-                    "type": "null"
+                    "$ref": "#/components/schemas/HttpAuth",
+                    "description": "# Authentication\n\nOptional per-deployment authentication configuration. When set to `GoogleIdToken`,\nRestate mints a Google-signed OIDC ID token for each request and attaches it as\n`X-Serverless-Authorization: Bearer <token>`. Cloud Run validates this header in\nprecedence over `Authorization` and strips it before forwarding to the container, so any\n`Authorization` placed in `additional_headers` passes through to the workload unchanged."
                   }
                 ]
               },
@@ -3080,11 +3590,11 @@
               "additional_headers": {
                 "oneOf": [
                   {
-                    "$ref": "#/components/schemas/SerdeableHeaderHashMap",
-                    "description": "# Additional headers\n\nAdditional headers added to every discover/invoke request to the deployment."
+                    "type": "null"
                   },
                   {
-                    "type": "null"
+                    "$ref": "#/components/schemas/SerdeableHeaderHashMap",
+                    "description": "# Additional headers\n\nAdditional headers added to every discover/invoke request to the deployment."
                   }
                 ]
               },
@@ -3179,7 +3689,7 @@
         ],
         "properties": {
           "new_invocation_id": {
-            "$ref": "#/components/schemas/InvocationId",
+            "$ref": "#/components/schemas/String",
             "description": "The invocation id of the new invocation."
           }
         }
@@ -3332,10 +3842,8 @@
             "description": "# Retry policy\n\nRetry policy applied to invocations of this service.\n\nIf unset, it returns the default values configured in the Restate configuration."
           },
           "revision": {
-            "type": "integer",
-            "format": "int32",
-            "description": "# Revision\n\nLatest revision of the service.",
-            "minimum": 0
+            "$ref": "#/components/schemas/u32",
+            "description": "# Revision\n\nLatest revision of the service."
           },
           "state_preload_policy": {
             "$ref": "#/components/schemas/StatePreloadPolicy",
@@ -3365,9 +3873,7 @@
             "type": "string"
           },
           "revision": {
-            "type": "integer",
-            "format": "int32",
-            "minimum": 0
+            "$ref": "#/components/schemas/u32"
           }
         }
       },
@@ -3477,6 +3983,9 @@
         ],
         "description": "Eager/lazy state preload policy for an invocation.\n\nThis is both the resolved policy handed to the invoker and the per-handler state preload\nconfiguration persisted in the schema (see the schema metadata module)."
       },
+      "String": {
+        "type": "string"
+      },
       "SubscriptionId": {
         "type": "string"
       },
@@ -3520,11 +4029,11 @@
               "additional_headers": {
                 "oneOf": [
                   {
-                    "$ref": "#/components/schemas/SerdeableHeaderHashMap",
-                    "description": "# Additional headers\n\nAdditional headers added to the discover/invoke requests to the deployment.\nWhen provided, this will overwrite all the headers previously configured for this deployment."
+                    "type": "null"
                   },
                   {
-                    "type": "null"
+                    "$ref": "#/components/schemas/SerdeableHeaderHashMap",
+                    "description": "# Additional headers\n\nAdditional headers added to the discover/invoke requests to the deployment.\nWhen provided, this will overwrite all the headers previously configured for this deployment."
                   }
                 ]
               },
@@ -3561,11 +4070,11 @@
               "additional_headers": {
                 "oneOf": [
                   {
-                    "$ref": "#/components/schemas/SerdeableHeaderHashMap",
-                    "description": "# Additional headers\n\nAdditional headers added to the discover/invoke requests to the deployment.\nWhen provided, this will overwrite all the headers previously configured for this deployment."
+                    "type": "null"
                   },
                   {
-                    "type": "null"
+                    "$ref": "#/components/schemas/SerdeableHeaderHashMap",
+                    "description": "# Additional headers\n\nAdditional headers added to the discover/invoke requests to the deployment.\nWhen provided, this will overwrite all the headers previously configured for this deployment."
                   }
                 ]
               },
@@ -3689,11 +4198,11 @@
           "ingress_endpoint": {
             "oneOf": [
               {
-                "$ref": "#/components/schemas/AdvertisedAddress_HttpIngressPort",
-                "description": "# Ingress endpoint\n\nIngress endpoint that the Web UI should use to interact with."
+                "type": "null"
               },
               {
-                "type": "null"
+                "$ref": "#/components/schemas/AdvertisedAddress-http-ingress-server_HttpIngressPort",
+                "description": "# Ingress endpoint\n\nIngress endpoint that the Web UI should use to interact with."
               }
             ]
           },
@@ -3714,6 +4223,11 @@
             "description": "# Admin server version\n\nVersion of the admin server"
           }
         }
+      },
+      "u32": {
+        "type": "integer",
+        "format": "int32",
+        "minimum": 0
       }
     },
     "responses": {
@@ -3815,6 +4329,10 @@
     {
       "name": "vqueue",
       "description": "Virtual queue management"
+    },
+    {
+      "name": "cluster_health",
+      "description": "Cluster health"
     },
     {
       "name": "health",
