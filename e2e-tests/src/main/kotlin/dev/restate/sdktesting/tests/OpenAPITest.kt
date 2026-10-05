@@ -19,8 +19,9 @@ import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.nio.file.Files
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.openapitools.codegen.DefaultGenerator
 import org.openapitools.codegen.config.CodegenConfigurator
 
@@ -42,15 +43,18 @@ class OpenAPITest {
     }
   }
 
-  @Test
-  fun shouldGenerateValidOpenAPI(@InjectAdminURI adminURI: URI) = runTest {
+  @ParameterizedTest(name = "Should generate valid OpenAPI for {0}")
+  @ValueSource(
+      strings =
+          [
+              "services/GreeterService/openapi",
+              "openapi",
+          ]
+  )
+  fun shouldGenerateValidOpenAPI(path: String, @InjectAdminURI adminURI: URI) = runTest {
     // Download OpenAPI spec from Admin API
     val httpClient = HttpClient.newHttpClient()
-    val request =
-        HttpRequest.newBuilder()
-            .uri(URI.create("${adminURI}services/GreeterService/openapi"))
-            .GET()
-            .build()
+    val request = HttpRequest.newBuilder().uri(URI.create("${adminURI}${path}")).GET().build()
 
     val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString())
     assertThat(response.statusCode()).isEqualTo(200)
