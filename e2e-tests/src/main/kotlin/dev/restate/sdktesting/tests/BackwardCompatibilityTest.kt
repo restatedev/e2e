@@ -8,10 +8,6 @@
 // https://github.com/restatedev/sdk-test-suite/blob/main/LICENSE
 package dev.restate.sdktesting.tests
 
-import dev.restate.admin.api.DeploymentApi
-import dev.restate.admin.client.ApiClient
-import dev.restate.admin.model.UpdateDeploymentRequest
-import dev.restate.admin.model.UpdateHttpDeploymentRequest
 import dev.restate.client.Client
 import dev.restate.client.SendResponse
 import dev.restate.client.kotlin.*
@@ -271,37 +267,8 @@ class BackwardCompatibilityTest {
         @InjectAdminURI adminURI: URI,
         @InjectLocalEndpointURI localEndpointURI: URI,
     ) {
-      // Create Admin API client with the provided admin URI
-      val adminApi = DeploymentApi(ApiClient().setHost(adminURI.host).setPort(adminURI.port))
-
-      // List all deployments
-      val deployments = adminApi.listDeployments()
-
-      LOG.info("Patching all deployments to use endpoint URI: {}", localEndpointURI)
-
-      // For each deployment, update its URI
-      for (deployment in deployments.deployments) {
-        val updateRequest =
-            UpdateDeploymentRequest(
-                UpdateHttpDeploymentRequest().uri(URI.create(localEndpointURI.toString()))
-            )
-
-        try {
-          adminApi.updateDeployment(deployment.httpDeploymentResponse.id, updateRequest)
-          LOG.info(
-              "Successfully updated deployment {} to use URI {}",
-              deployment.httpDeploymentResponse.id,
-              localEndpointURI,
-          )
-        } catch (e: Exception) {
-          LOG.error(
-              "Failed to update deployment {}: {}",
-              deployment.httpDeploymentResponse.id,
-              e.message,
-          )
-          throw e
-        }
-      }
+      // Raw HTTP instead of the generated Admin client, see patchAllDeploymentsUri for details.
+      patchAllDeploymentsUri(adminURI, localEndpointURI)
     }
 
     @Test
