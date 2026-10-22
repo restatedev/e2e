@@ -8,6 +8,7 @@
 // https://github.com/restatedev/sdk-test-suite/blob/main/LICENSE
 package dev.restate.sdktesting.tests
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import dev.restate.admin.api.DeploymentApi
 import dev.restate.admin.client.ApiClient
 import dev.restate.admin.client.ApiException
@@ -128,4 +129,59 @@ fun startAndRegisterLocalEndpoint(endpoint: Endpoint, adminURI: URI): LocalEndpo
       }
 
   return LocalEndpointHandle(uri, deploymentId, server)
+}
+
+/**
+ * Patches all registered deployments to use [endpointURI], using raw HTTP requests instead of the
+ * generated Admin client.
+ *
+ * The Admin client is generated from the current specification and does not support v1.7 servers:
+ * their deployment responses lack the `type` discriminator, making HTTP/Lambda deserialization
+ * ambiguous. Both listDeployments() and updateDeployment() deserialize such responses.
+ *
+ * This is needed by:
+ * * [ForwardCompatibilityTest], which runs against LAST_COMPATIBLE_RESTATE_SERVER_VERSION (v1.7.x).
+ * * [BackwardCompatibilityTest], whose NewVersion is the server under test. This is a v1.7.x server
+ *   when the restatedev/restate release/1.7 branch runs these tests.
+ *
+ * Remove this workaround and use DeploymentApi.listDeployments()/updateDeployment() again once
+ * LAST_COMPATIBLE_RESTATE_SERVER_VERSION is at least v1.8.0 and release/1.7 no longer runs these
+ * tests (i.e. there are no more v1.7.x patch releases).
+ */
+fun patchAllDeploymentsUri(adminURI: URI, endpointURI: URI) {
+  val httpClient = HttpClient.newHttpClient()
+  val mapper = ObjectMapper()
+  val listResponse =
+      httpClient.send(
+          HttpRequest.newBuilder(adminURI.resolve("deployments")).GET().build(),
+          HttpResponse.BodyHandlers.ofString(),
+      )
+  check(listResponse.statusCode() == 200) {
+    "listDeployments call failed with: ${listResponse.statusCode()} - ${listResponse.body()}"
+  }
+  val deployments = mapper.readTree(listResponse.body()).required("deployments")
+  check(deployments.isArray && !deployments.isEmpty) { "Expected registered deployments" }
+
+  LOG.info("Patching all deployments to use endpoint URI: {}", endpointURI)
+
+  val body = mapper.writeValueAsString(mapOf("uri" to endpointURI.toString()))
+  for (deployment in deployments) {
+    val deploymentId = deployment.required("id").asText()
+    val request =
+        HttpRequest.newBuilder(adminURI.resolve("deployments/$deploymentId"))
+            .header("Content-Type", "application/json")
+            .method("PATCH", HttpRequest.BodyPublishers.ofString(body))
+            .build()
+
+    try {
+      val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString())
+      check(response.statusCode() == 200) {
+        "updateDeployment call failed with: ${response.statusCode()} - ${response.body()}"
+      }
+      LOG.info("Successfully updated deployment {} to use URI {}", deploymentId, endpointURI)
+    } catch (e: Exception) {
+      LOG.error("Failed to update deployment {}: {}", deploymentId, e.message)
+      throw e
+    }
+  }
 }
