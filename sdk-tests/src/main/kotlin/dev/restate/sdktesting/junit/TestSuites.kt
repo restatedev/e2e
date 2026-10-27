@@ -12,6 +12,7 @@ import dev.restate.sdktesting.tests.CallOrdering
 import dev.restate.sdktesting.tests.Cancellation
 import dev.restate.sdktesting.tests.Combinators
 import dev.restate.sdktesting.tests.Custom
+import dev.restate.sdktesting.tests.GetStateWithProjection
 import dev.restate.sdktesting.tests.Ingress
 import dev.restate.sdktesting.tests.KillInvocation
 import dev.restate.sdktesting.tests.KillRuntime
@@ -42,6 +43,7 @@ object TestSuites : SuiteProvider {
               clazz<Cancellation>(),
               clazz<Combinators>(),
               clazz<Custom>(),
+              clazz<GetStateWithProjection>(),
               clazz<Ingress>(),
               clazz<KillInvocation>(),
               clazz<KillRuntime>(),
@@ -77,6 +79,7 @@ object TestSuites : SuiteProvider {
               clazz<Sleep>(),
               clazz<SleepWithFailures>(),
               clazz<State>(),
+              clazz<GetStateWithProjection>(),
               clazz<UserErrors>(),
               clazz<WorkflowAPI>(),
               clazz<Signals>(),
@@ -162,7 +165,7 @@ object TestSuites : SuiteProvider {
           mapOf(
               "RESTATE_WORKER__INVOKER__DISABLE_EAGER_STATE" to "true",
           ),
-          listOf(clazz<State>()),
+          listOf(clazz<State>(), clazz<GetStateWithProjection>()),
       )
 
   private val LAZY_STATE_ALWAYS_SUSPENDING_SUITE =
