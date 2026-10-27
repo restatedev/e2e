@@ -15,11 +15,16 @@ import dev.restate.sdktesting.contracts.TestUtilsService.RejectSignalRequest
 import dev.restate.sdktesting.contracts.TestUtilsService.ResolveSignalRequest
 import dev.restate.sdktesting.contracts.VirtualObjectCommandInterpreter
 import dev.restate.sdktesting.contracts.VirtualObjectCommandInterpreter.AwaitOne
+import dev.restate.sdktesting.contracts.VirtualObjectCommandInterpreter.CreateAwakeable
 import dev.restate.sdktesting.contracts.VirtualObjectCommandInterpreter.CreateSignal
 import dev.restate.sdktesting.contracts.VirtualObjectCommandInterpreter.InterpretRequest
+import dev.restate.sdktesting.contracts.VirtualObjectCommandInterpreter.ResolveAwakeable
 import dev.restate.sdktesting.infra.*
+import java.net.URI
 import java.util.UUID
 import org.assertj.core.api.Assertions.assertThat
+import org.awaitility.kotlin.await
+import org.awaitility.kotlin.withAlias
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
@@ -89,5 +94,80 @@ class Signals {
     assertThat(runCatching { sendResponse.attachSuspend().response }.exceptionOrNull())
         .message()
         .contains("boom")
+  }
+
+  @Test
+  @DisplayName(
+      "Same signal delivered twice while awaiting something else is observed twice, in order"
+  )
+  @Execution(ExecutionMode.CONCURRENT)
+  fun sameSignalDeliveredTwiceWhileAwaitingSomethingElse(
+      @InjectClient ingressClient: Client,
+      @InjectAdminURI adminURI: URI,
+  ) = runTest {
+    val testId = UUID.randomUUID().toString()
+    val interpreterClient = ingressClient.toVirtualObject<VirtualObjectCommandInterpreter>(testId)
+    val utilsClient = ingressClient.toService<TestUtilsService>()
+
+    val sendResponse =
+        interpreterClient
+            .request {
+              interpretCommands(
+                  InterpretRequest(
+                      listOf(
+                          AwaitOne(CreateAwakeable("awk")),
+                          AwaitOne(CreateSignal("mysignal")),
+                          AwaitOne(CreateSignal("mysignal")),
+                      )
+                  )
+              )
+            }
+            .options(idempotentCallOptions)
+            .send()
+    val invocationId = sendResponse.invocationId()
+
+    await withAlias
+        "awakeable is registered" untilAsserted
+        {
+          assertThat(interpreterClient.request { hasAwakeable("awk") }.call().response).isTrue()
+        }
+
+    // Deliver the same signal twice while the handler is still blocked on the awakeable
+    utilsClient
+        .request { resolveSignal(ResolveSignalRequest(invocationId, "mysignal", "first")) }
+        .options(idempotentCallOptions)
+        .call()
+    utilsClient
+        .request { resolveSignal(ResolveSignalRequest(invocationId, "mysignal", "second")) }
+        .options(idempotentCallOptions)
+        .call()
+
+    // Signal delivery is asynchronous: wait for both notifications to be in the journal, so they
+    // come before the awakeable completion.
+    await withAlias
+        "both signals are in the journal" untilAsserted
+        {
+          assertThat(
+                  getJournal(adminURI, invocationId).rows.filter {
+                    it.entryType == "Notification: Signal"
+                  }
+              )
+              .hasSize(2)
+        }
+
+    interpreterClient
+        .request { resolveAwakeable(ResolveAwakeable("awk", "awk-result")) }
+        .options(idempotentCallOptions)
+        .call()
+
+    // Both deliveries must be observed, in order. Poll the results rather than attaching, so that a
+    // lost delivery fails with the observed values instead of hanging on the second signal.
+    await withAlias
+        "both signal deliveries are observed in order" untilAsserted
+        {
+          assertThat(interpreterClient.request { getResults() }.call().response)
+              .containsExactly("awk-result", "first", "second")
+        }
+    assertThat(sendResponse.attachSuspend().response).isEqualTo("second")
   }
 }
