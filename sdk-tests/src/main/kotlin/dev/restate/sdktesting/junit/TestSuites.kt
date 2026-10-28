@@ -22,6 +22,7 @@ import dev.restate.sdktesting.tests.RunRetry
 import dev.restate.sdktesting.tests.ServiceToServiceCommunication
 import dev.restate.sdktesting.tests.ServiceToServiceScopeConcurrency
 import dev.restate.sdktesting.tests.Signals
+import dev.restate.sdktesting.tests.SignalsFuzz
 import dev.restate.sdktesting.tests.Sleep
 import dev.restate.sdktesting.tests.SleepWithFailures
 import dev.restate.sdktesting.tests.State
@@ -56,6 +57,7 @@ object TestSuites : SuiteProvider {
               clazz<UserErrors>(),
               clazz<WorkflowAPI>(),
               clazz<Signals>(),
+              clazz<SignalsFuzz>(),
           ),
       )
 
@@ -80,6 +82,7 @@ object TestSuites : SuiteProvider {
               clazz<UserErrors>(),
               clazz<WorkflowAPI>(),
               clazz<Signals>(),
+              clazz<SignalsFuzz>(),
           ),
           3,
       )
@@ -103,6 +106,7 @@ object TestSuites : SuiteProvider {
               clazz<UserErrors>(),
               clazz<WorkflowAPI>(),
               clazz<Signals>(),
+              clazz<SignalsFuzz>(),
           ),
       )
 
@@ -125,6 +129,7 @@ object TestSuites : SuiteProvider {
               clazz<UserErrors>(),
               clazz<WorkflowAPI>(),
               clazz<Signals>(),
+              clazz<SignalsFuzz>(),
           ),
           3,
       )
@@ -153,6 +158,7 @@ object TestSuites : SuiteProvider {
               clazz<UserErrors>(),
               clazz<WorkflowAPI>(),
               clazz<Signals>(),
+              clazz<SignalsFuzz>(),
           ),
       )
 

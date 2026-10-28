@@ -112,6 +112,14 @@ tests:
 
 The environment variables `RESTATE_INGRESS_URL` and `RESTATE_ADMIN_URL` are available to each command.
 
+## Reproducing a `SignalsFuzz` failure
+
+`SignalsFuzz` uses a random seed per run, shown in the test name. Rerun a seed with:
+
+```shell
+SIGNALS_FUZZ_SEED=<seed> ./gradlew :sdk-tests:run --args='run --test-suite=<suite> --test-name=SignalsFuzz --service-container-image=<service-image>'
+```
+
 ## Using as a GitHub Action
 
 ```yaml
