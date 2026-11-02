@@ -20,8 +20,7 @@ workflows:
         - 'actions/setup-java@v4.9.1'
         - 'gradle/actions@v4.4.3'
         - 'softprops/action-gh-release@v2.6.2'
-    '.github/workflows/verify-lockfile.yml':
-        - 'actions/checkout@v4.4.0'
+    '.github/workflows/verify-lockfile.yml': []
 dependencies:
     'actions/checkout@v4.4.0':
         ref: 'v4.4.0'
