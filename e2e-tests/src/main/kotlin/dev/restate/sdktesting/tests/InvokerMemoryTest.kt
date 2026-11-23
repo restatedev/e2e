@@ -46,9 +46,10 @@ import org.junit.jupiter.api.extension.RegisterExtension
  * 2. State loading pressure: 50 virtual objects each with 64 KiB of state (2 × 32 KiB entries)
  *    invoked concurrently, forcing yields when loading state exhausts the memory pool.
  * 3. Oversized payload: A single invocation producing a run output (512 KiB) that exceeds the
- *    per-invocation memory limit (256 KiB), verifying the server pauses rather than looping.
- * 4. Oversized state: A virtual object with 512 KiB of state (injected via admin API) that exceeds
- *    the per-invocation memory limit (256 KiB), verifying the server pauses when it cannot load the
+ *    largest message the invoker accepts from a service (272 KiB), verifying the server pauses
+ *    rather than looping.
+ * 4. Oversized state: A virtual object with 576 KiB of state (injected via admin API) that exceeds
+ *    the per-invocation memory limit (528 KiB), verifying the server pauses when it cannot load the
  *    state within the memory budget.
  *
  * The yield tests verify invocations eventually complete correctly. The oversized tests verify the
@@ -99,7 +100,13 @@ class InvokerMemoryTest {
       // Tight memory budget to force yield behavior
       withEnv("RESTATE_WORKER__INVOKER__MEMORY_LIMIT", "1MiB")
       withEnv("RESTATE_WORKER__INVOKER__PER_INVOCATION_INITIAL_MEMORY", "16KiB")
-      withEnv("RESTATE_WORKER__INVOKER__PER_INVOCATION_MEMORY_LIMIT", "256KiB")
+      // The invoker accepts messages up to the message size limit plus 256 KiB of framing
+      // headroom (272 KiB here). The per-invocation memory limit is never smaller than that plus
+      // 256 KiB for the stored entry envelope (528 KiB here), so every accepted entry can be read
+      // back. The oversized tests exceed these two limits. The message size limit is kept small
+      // so that the oversized state still fits in the admin API's 2 MiB request body limit.
+      withEnv("RESTATE_WORKER__INVOKER__MESSAGE_SIZE_LIMIT", "16KiB")
+      withEnv("RESTATE_WORKER__INVOKER__PER_INVOCATION_MEMORY_LIMIT", "528KiB")
       // Enable the experimental invoker yield feature
       withEnv("RESTATE_EXPERIMENTAL_ENABLE_INVOKER_YIELD", "true")
       // Explicit retry policy: fast retries, pause on max attempts.
@@ -265,8 +272,8 @@ class InvokerMemoryTest {
   }
 
   @Test
-  @DisplayName("Invocation is paused when single run output exceeds per-invocation memory limit")
-  fun invocationPausedWhenRunExceedsMemoryLimit(
+  @DisplayName("Invocation is paused when single run output exceeds invoker message size limit")
+  fun invocationPausedWhenRunExceedsMessageSizeLimit(
       @InjectClient ingressClient: Client,
       @InjectAdminURI adminURI: URI,
       @InjectContainerPort(hostName = RESTATE_RUNTIME, port = RUNTIME_NODE_PORT) metricsPort: Int,
@@ -274,7 +281,7 @@ class InvokerMemoryTest {
     val client = ingressClient.toService<MemoryPressureService>()
 
     // Send invocation that produces a single run output (512KiB) exceeding the
-    // per-invocation memory limit (256KiB). Use send() so we don't block waiting.
+    // largest message the invoker accepts (272KiB). Use send() so we don't block waiting.
     val sendResult =
         client.request { generateOversized("oversized") }.options(idempotentCallOptions).send()
     val invocationId = sendResult.invocationId()
@@ -308,10 +315,12 @@ class InvokerMemoryTest {
   ) = runTest {
     val objectKey = "oversized-state-obj"
 
-    // Inject a 512KiB state entry via admin API, bypassing the invoker memory limit.
+    // Inject a 576KiB state entry via admin API, bypassing the invoker message size limit.
     // The SDK serializes String state as JSON, so we JSON-encode the value.
+    // The admin API sends each byte as a decimal number, and rejects bodies above 2 MiB.
+    // Uppercase letters keep every byte at two digits (~1.7 MiB request).
     val serviceApi = ServiceApi(ApiClient().setHost(adminURI.host).setPort(adminURI.port))
-    val largeValue = randomString(512.kb)
+    val largeValue = String(CharArray(576.kb) { ('A'..'Z').random() })
     val stateBytes = Json.encodeToString(largeValue).toByteArray().map { it.toInt() }
     val request =
         ModifyServiceStateRequest()
@@ -324,8 +333,8 @@ class InvokerMemoryTest {
           serviceApi.modifyServiceState("StatefulObject", request)
         }
 
-    // Invoke the handler — it needs to load 512KiB of state which exceeds
-    // the 256KiB per-invocation memory limit. Use send() so we don't block.
+    // Invoke the handler — it needs to load 576KiB of state which exceeds
+    // the 528KiB per-invocation memory limit. Use send() so we don't block.
     val client = ingressClient.toVirtualObject<StatefulObject>(objectKey)
     val sendResult = client.request { readLargeState("read") }.options(idempotentCallOptions).send()
     val invocationId = sendResult.invocationId()
