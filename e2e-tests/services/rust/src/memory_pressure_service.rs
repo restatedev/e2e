@@ -40,8 +40,8 @@ impl MemoryPressureService for MemoryPressureServiceImpl {
         ctx: Context<'_>,
         input: String,
     ) -> Result<String, HandlerError> {
-        // 512 KiB single side effect — exceeds the 256 KiB per-invocation memory
-        // limit so the runtime should pause the invocation.
+        // 512 KiB single side effect — exceeds the largest message the runtime accepts
+        // in InvokerMemoryTest (272 KiB), so the runtime should pause the invocation.
         ctx.run(|| async { Ok::<_, HandlerError>(random_string(512 * KB)) })
             .await?;
         Ok(format!("ok-{input}"))
